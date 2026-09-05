@@ -66,6 +66,22 @@
   不自行设币种/换算。待 30 §17 errata 终裁。
 - 验收：reserved 补列与 reserve/settle 语义一致；终裁后对齐。
 
+### BUG-V3-007 — `original_sha256` 与 `document_source_versions` 基数关系未冻结
+- Status: Open
+- 登记：2026-09-05 22:30:34
+- 现象：段 B seal 幂等的 version identity 语义存在 spec 张力——30 §16「幂等由 source_version
+  唯一（原始文件内容 hash）」与 40 §2「seal 幂等（原始文件 hash 唯一）」暗示一文件一 version；
+  但 10 §4.2 `role` 枚举（native/ocr_ppsv3/canonical）+ §4.5 `document_active_sources` 复合
+  PK `(document_id, role)` 明确支持一文档多 source_version；且 30 §16 LE 公式
+  contract_domain 含 role/provider → 不同 role 得不同 logical_execution_hash。
+- 根因：spec 未明确「一个 original_sha256 对应几个 sealed version」（document identity 与
+  seal execution identity 关系未统一）。
+- 处置：段 B 保守按 10 §3「唯一约束作用于 (stage,hash)」LE 幂等 + 10 §4.1 document 级
+  `original_sha256` 复用实现；Gate B1 只断言「同文件+同 role/provider/contract → 恰 1
+  version」；跨 role 版本基数留给 errata 终裁，不自行创造唯一性规则。
+- 验收：errata 终裁后按最终语义对齐（若裁决一文件一 version，则需补 UNIQUE；若允许多
+  role 多 version，则保持现状并确认幂等键）。
+
 ## Resolved Bugs
 
 （暂无。）

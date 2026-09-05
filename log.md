@@ -213,3 +213,26 @@
 - **下一步**：进入 40 §2 段 B 规划——Source Seal（documents/source_versions/source_lines/
   figures 密封）+ OCR 引擎接入；沿用既定验证模式（Frozen-Spec 计划 → 机器可判定 Exit Gate
   → 真实对抗测试 → 修复重复验证 → 关闭）。
+
+### 2026-09-05 22:50:58（40 §2 段 B 骨架实现完成）
+
+- **背景**：按已批准计划实现段 B（B 域 seal + line/figure 索引；OCR 双源接线）。
+- **决策/实现**：独立 `OCRGateway`（三态 disabled/mock/live，live 四前置同 LLMGateway；
+  `extract(file_bytes)` 协议）；`app/ai/ocr/`（result dataclass / providers
+  Native·Cloud·Mock / gateway）；`app/domains/source/`（line_index 纯函数 + SealService
+  幂等编排）；config/errors/`.env.example`/pyproject 扩展（OCR surface + pymupdf）。
+- **架构边界（P0）**：SealService 只请求 OCR + 确定性编排（line index→hash→persist→seal），
+  **不操作 audit/budget、不 import/不直调 CloudOCRProvider**；cloud 路径经 OCRGateway
+  （mock 测试证实）。**实现细化（如实）**：OCRGateway 与 LLMGateway 同构保持骨架——live 四
+  前置检查 + provider 唯一调用点；budget reserve→audit→settle 的 DB 写编排不在段 B 落地，
+  因无 task（30 §6 live 前置含 task context，tasks 段 H 建）+ 30 §11 对 seal 预算账户映射
+  未冻结 + 段 C audit 终态行语义未接 → 留段 H task 驱动统一接入，避免发明 reserve 语义。
+- **验证**：Gate B1（幂等 1 doc+1 version）B2（确定性+DB unique）B3（sealed 禁 UPDATE +
+  append-only）B4（DB rebuild+hash）B5（integrity 敏感）B6（五前置缺一拒+零副作用）B7
+  （native 零 audit/budget）**全 PASS**；60 tests ×2 连续两遍（既有 43 不回归 + 新 17），
+  coverage 92%；实证 E0–E3（sealed+stage、DB unique 列、raw UPDATE sealed rowcount 1=DB
+  无 trigger 如实、dup line_ref IntegrityError）。
+- **缺口登记**：BUG-V3-007（original_sha256 与 source_version 基数未冻结，段 B 保守按
+  (stage,hash) LE 幂等，Gate B1 只断言明确部分）。
+- **影响**：本地确定性 seal 可用（native）；cloud OCR 有合法放行结构（段 H task 后接全
+  lifecycle + live smoke）；40 §2 序 A→C→B 三闸齐。下一步：段 D（Annotation stage）。

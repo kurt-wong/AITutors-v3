@@ -143,3 +143,15 @@ Date: 2026-09-05
   cloud PaddleOCR-VL 走 C 闸）——锚 10 §1/§4 B 域、30 §16、50 §3；A→C→B 序成立，cloud OCR
   经 C 闸合法放行。
 - **待办不变**：T/F↔A/B 映射段 G 前补；BUG-V3-001..006 errata 裁决；quarantine 物理卷人工核。
+
+### 2026-09-05 22:50:58
+
+- **Status: 段 B 骨架完成**（本地确定性 seal + 独立 OCRGateway）。
+- **交付**：`app/ai/ocr/`（OCRGateway 三态 + Native/Cloud/Mock provider）+ `app/domains/source/`
+  （line_index 纯函数 + SealService 幂等编排）。Gate B1–B7 全 PASS（60 tests ×2 连续两遍，
+  既有 43 不回归；coverage 92%）。实证 E0–E3（sealed+stage / DB unique / raw UPDATE sealed
+  rowcount 1 如实 app 层 / dup line_ref 拦截）。
+- **架构边界**：SealService 不碰 audit/budget、不直调 CloudOCRProvider（P0）；OCRGateway
+  与 LLMGateway 同构骨架，budget/audit full lifecycle 段 H task 驱动统一接入（如实细化）。
+- **缺口**：BUG-V3-007（original_sha256 与 source_version 基数未冻结）登记 Open。
+- **下一步**：40 §2 段 D（Annotation stage）。待办不变：T/F↔A/B 映射段 G 前补。

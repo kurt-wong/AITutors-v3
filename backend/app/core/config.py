@@ -46,5 +46,11 @@ class Settings(BaseSettings):
     mimo_vl_model: str = ""
     llm_request_timeout_seconds: float = 30.0
 
+    # ---- cloud OCR（30 §6/§16 external：段 B OCRGateway 接线；disabled/mock 不要求 token）----
+    ocr_gateway_mode: str = "disabled"
+    paddleocr_model: str = "PaddleOCR-VL-1.6"
+    paddleocr_poll_interval_seconds: float = 5.0
+    paddleocr_timeout_seconds: float = 300.0
+
 
 settings = Settings()

@@ -27,3 +27,20 @@ async def session():
     async with async_session_maker() as s:
         yield s
         await s.rollback()
+
+
+@pytest.fixture
+def pdf_bytes() -> bytes:
+    """PyMuPDF 生成的两页文本层 PDF（本地确定性，非外部资产）。"""
+    import fitz
+
+    doc = fitz.open()
+    page = doc.new_page(width=595, height=842)
+    page.insert_text((72, 72), "Alpha 1 first line")
+    page.insert_text((72, 96), "Beta 2 second line")
+    page2 = doc.new_page(width=595, height=842)
+    page2.insert_text((72, 72), "Gamma 3 third line")
+    data = doc.tobytes()
+    doc.close()
+    return data
+

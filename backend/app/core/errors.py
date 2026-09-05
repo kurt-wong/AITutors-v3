@@ -43,3 +43,15 @@ class BudgetExceededError(V3Error):
     """五账户任一超限 → 拒绝（30 §11）。"""
 
     error_type = "conflict"
+
+
+class OCRProviderError(V3Error):
+    """OCR provider 语义失败（如解析结果异常，30 §6 external provider 层）。"""
+
+    error_type = "provider_error"
+
+
+class OCRNetworkError(V3Error):
+    """OCR 网络/API 传输失败（连接、超时、非 2xx；30 §6 external 网络层）。"""
+
+    error_type = "network_error"
