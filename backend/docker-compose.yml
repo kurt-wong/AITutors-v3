@@ -1,0 +1,21 @@
+services:
+  # 段 A 仅提供 PostgreSQL 基础设施；应用由 uvicorn 手动启动（骨架非部署系统）。
+  # backend/worker 服务占位：段 C（external gate）起才实装，且 worker 是独立进程（30 §2）。
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: aitutors
+      POSTGRES_PASSWORD: change-me
+      POSTGRES_DB: aitutors
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aitutors -d aitutors"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:

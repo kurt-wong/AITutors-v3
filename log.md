@@ -115,3 +115,18 @@
   （keyring）+ 本机代理；未写任何全局 git config。
 - **验证**：本地/远端 HEAD 一致 `88e7a29`；`main` 已跟踪 `origin/main`。
 - **影响**：V3 全程受控版本管理；此后文档/代码变更先 commit 再推送，密钥恒走 `.env`。
+
+### 2026-09-05 20:31:32（40 §2 段 A 骨架完成）
+
+- **背景**：按已批准计划实现段 A（config / DB 19 表 / Repository / canonical hashing）。
+- **决策/实现**：`backend/` 骨架（pyproject / .env.example / alembic.ini / docker-compose
+  仅 postgres / Dockerfile）；`app/`（core: config+hashing；db: base/session/mixins；
+  models: A/B/C 三域 19 表；repositories: sealed/append-only/decision 唯一入口防护；
+  main: /health）；Alembic baseline `0001`（19 表一次建齐，DDL 源 = Base.metadata）。
+- **验证**：Gate A1（启动零外部副作用，导入路径仅 app/app.main）A2（19 表 exact、
+  ORM==DB、7 组唯一性存在、link 无额外 UNIQUE）A3（sealed UPDATE→异常、append-only、
+  decision_status 唯一入口）A4（hash 确定性/身份语义）A5（/health ok）**全 PASS**；
+  26 tests、coverage 93%。
+- **缺口登记**：BUG-V3-001..005（documents 域归类 / selection_events 列冻结缺失 /
+  embedding 模型名 / replay 措辞 / 浮点 precision），不改冻结正文，均待 errata/终裁。
+- **影响**：段 A 出口闸通过；按 A→C→B 序进入段 C（Gateway/audit/budget external 闸）。

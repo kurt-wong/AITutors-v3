@@ -89,3 +89,14 @@ Date: 2026-09-05
 - 资产目录现 real/3 + contract/4 + structure/7 + quarantine/1（15 份原样 +1 已隔离）。
 - 待办不变：DISPLAY_CONTRACT T/F↔A/B 映射段 G 前补；物理卷人工核对出 quarantine；
   段 D/E 前补样。实现序 A→C→B 不变。
+
+### 2026-09-05 20:31:32
+
+- **Status: 实现开始——段 A 完成**（规范仍 Baseline—Frozen）。
+- **段 A 骨架落地**：`backend/app`（core: config+hashing；db: base/session/mixins；
+  models: A/B/C 三域 19 表；repositories: sealed/append-only/decision 唯一入口防护；
+  main: /health）+ Alembic baseline 0001。Gate A1–A5 **全 PASS**（26 tests / coverage 93%）。
+- **缺口**：BUG-V3-001..005 登记 `bugs.md`（documents 归类 / selection_events 列 /
+  embedding 模型名 / replay 措辞 / 浮点 precision），不改冻结正文。
+- **下一步**：40 §2 段 C（Gateway + audit + budget external 闸）。因 A→C→B，B 的 cloud OCR
+  需 C 段先完成。待办不变：T/F↔A/B 映射段 G 前补。
