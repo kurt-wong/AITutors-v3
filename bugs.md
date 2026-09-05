@@ -96,6 +96,27 @@
   值，或归并 ocr_ppsv3/ppsv3）。
 - 验收：errata 终裁后按最终值域对齐。
 
+### BUG-V3-009 — `get_default_annotation` 最新排序依据未冻结（20 §4.7）
+- Status: Open
+- 登记：2026-09-06 00:08:31
+- 现象：20 §4.7「消费该 source_version 上最新未 superseded 的 valid annotation」，但未定义
+  「最新」的排序依据（created_at DESC / id DESC / 其他）。
+- 根因：spec 使用「最新」自然语言而未冻结排序字段。
+- 处置：段 D `get_default_annotation` 实现用 `created_at DESC` 作**实现冻结**（不声称 Frozen
+  Spec 授权）；在代码注释标注「implementation choice for unresolved BUG-V3-009」。errata
+  终裁后按最终排序对齐。
+- 验收：errata 终裁后按最终语义对齐。
+
+### BUG-V3-010 — `json.loads` 失败时 invalid annotation payload 形态未冻结（10 §5.1）
+- Status: Open
+- 登记：2026-09-06 00:08:31
+- 现象：10 §5.1 `payload JSONB NOT NULL`，但未定义 invalid annotation（LLM 输出非法 JSON）
+  的 payload 内容。
+- 根因：spec 未覆盖 parse 失败场景的 payload 形态。
+- 处置：段 D 落库 `payload={"parse_error": str(exc)}`（NOT NULL 占位，非正文，不触发禁字段
+  检查）；登记 bugs.md 待 errata。
+- 验收：errata 终裁后按最终语义对齐。
+
 ## Resolved Bugs
 
 （暂无。）

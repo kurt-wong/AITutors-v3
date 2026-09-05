@@ -267,3 +267,26 @@
   Open deferred——B 不自行改 Frozen Spec，Errata 统一。
 - **下一步**：进入 40 §2 段 D（Annotation stage）。段 D 第一原则继续沿用 A/B/C 经验：
   先读 Frozen Spec、明确 D 对象与 Entry/Exit Gate、再实施，不因 B 留下 bug 反向改 B。
+
+### 2026-09-06 00:41:47（40 §2 段 D 骨架实现完成）
+
+- **背景**：按已批准计划实现段 D（Annotation stage：forbidden-field 校验 + 幂等 + supersede）。
+- **决策/实现**：`app/domains/annotation/`（validator 纯函数 + service AnnotationService）；
+  `snapshot_repository` 扩展（prompt_version/model_config_hash 收紧 required +
+  find_annotation_by_le_hash + set_annotation_status valid→superseded）；
+  `test_annotation.py`（D1 validator + D4 golden fixture）+ `test_annotation_dbflow.py`
+  （D2 幂等+supersede + D3 persistence boundary 真 DB roundtrip）。
+- **D0 Contract Audit PASS**：核对 C LLMGateway.complete(prompt)->str、A hashing helper、
+  A semantic_annotations 列定义——无 spec/实现冲突。
+- **验证**：Gate D1（forbidden-field validator 正确性，深嵌套路径完整）D2（LE 幂等+显式
+  supersede，create 不自动修改旧行）D3（valid 落库无禁字段；invalid schema 落库 status=invalid
+  + payload 保留 + raise；json.loads 失败落库 parse_error + raise——两者同时发生）D4（正/反
+  fixture golden 回归种子）**全 PASS**；79 tests ×2 连续两遍；coverage 93%；DB 边界 E0–E3
+  （annotation insert / raw UPDATE rowcount 1=DB 无 trigger 如实 / UNIQUE(stage,hash)
+  IntegrityError / validator forbidden detected）。
+- **关键纪律**：validator 只做 20 §4.3 递归禁字段检查（P1-a：不自行升级 JSON Schema）；
+  supersede 显式（P2-a：create 不自动修改旧行）；mock fixture 不进 LE hash（P2-b）；
+  `created_at DESC` 是 BUG-V3-009 实现选择非 Frozen Contract。
+- **影响**：annotation 可合法写入（mock）；schema 校验拦截禁字段；(stage,hash) 幂等 + 显式
+  supersede；段 D 到 semantic_annotations 为止（Resolver/Compiler/Gate 未碰）。
+- **下一步**：段 D 是否关闭由用户裁决；若关闭进入 40 §2 段 E（Source Resolver）。

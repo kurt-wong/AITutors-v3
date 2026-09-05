@@ -2,11 +2,13 @@
 
 import uuid
 
+from sqlalchemy import select
+
 from app.models.snapshot import (
     AdmissionCandidate,
     SemanticAnnotation,
 )
-from app.repositories.base import AppendOnlyViolation, BaseRepository
+from app.repositories.base import AppendOnlyViolation, BaseRepository, RepositoryError
 
 
 class SnapshotRepository(BaseRepository):
@@ -19,8 +21,8 @@ class SnapshotRepository(BaseRepository):
         status: str,
         logical_execution_stage: str,
         logical_execution_hash: str,
-        prompt_version: str | None = None,
-        model_config_hash: str | None = None,
+        prompt_version: str,
+        model_config_hash: str,
         attempt_id: uuid.UUID | None = None,
     ) -> SemanticAnnotation:
         annotation = SemanticAnnotation(
@@ -81,3 +83,31 @@ class SnapshotRepository(BaseRepository):
         raise AppendOnlyViolation(
             "decision_status only via approve()/reject() unique entry (segment G)"
         )
+
+    async def find_annotation_by_le_hash(
+        self, *, logical_execution_stage: str, logical_execution_hash: str
+    ) -> SemanticAnnotation | None:
+        """幂等查找：(stage, hash) 查既有 annotation（valid 或 superseded）。invalid 不复用。"""
+        res = await self._session.execute(
+            select(SemanticAnnotation).where(
+                SemanticAnnotation.logical_execution_stage == logical_execution_stage,
+                SemanticAnnotation.logical_execution_hash == logical_execution_hash,
+                SemanticAnnotation.status.in_(["valid", "superseded"]),
+            )
+        )
+        return res.scalars().first()
+
+    async def set_annotation_status(
+        self, annotation_id: uuid.UUID, new_status: str
+    ) -> SemanticAnnotation:
+        """只允许 valid→superseded 流转（20 §4.7；不作通用 UPDATE）。"""
+        row = await self._session.get(SemanticAnnotation, annotation_id)
+        if row is None:
+            raise RepositoryError(f"annotation {annotation_id} not found")
+        if row.status != "valid" or new_status != "superseded":
+            raise RepositoryError(
+                f"invalid status transition: {row.status!r} → {new_status!r} "
+                f"(only valid→superseded allowed)"
+            )
+        row.status = new_status
+        return row

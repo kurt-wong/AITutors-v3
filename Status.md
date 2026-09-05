@@ -182,3 +182,16 @@ Date: 2026-09-05
 - **明确未实现**：PP-StructureV3 / MinIO / object storage / semantic annotation /
   resolver / compiler / gate / tasks / worker / lease / live OCR smoke。
 - **待办不变**：T/F↔A/B 映射段 G 前补。
+
+### 2026-09-06 00:41:47
+
+- **Status: 段 D 骨架完成**（Annotation stage：forbidden-field 校验 + 幂等 + supersede）。
+- **交付**：`app/domains/annotation/`（validator + service）+ snapshot_repository 扩展
+  （find/set_status + required 收紧）。Gate D1–D4 全 PASS（79 tests ×2，coverage 93%）；
+  DB 边界 E0–E3 实证（insert/UPDATE/UNIQUE/validator）。
+- **关键纪律**：validator 只做禁字段检查（P1-a）；supersede 显式（P2-a）；mock fixture 不进
+  LE（P2-b）；`created_at DESC` 是 BUG-V3-009 实现选择非 Frozen Contract。
+- **延续 Bug**：BUG-V3-007/008（B 阶段延续）+ BUG-V3-009（latest 排序）+ BUG-V3-010
+  （parse error payload 形态）保持 Open / deferred。
+- **下一步**：段 D 是否关闭由用户裁决；若关闭进入 40 §2 段 E（Source Resolver）。待办不变：
+  T/F↔A/B 映射段 G 前补。
