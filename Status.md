@@ -100,3 +100,11 @@ Date: 2026-09-05
   embedding 模型名 / replay 措辞 / 浮点 precision），不改冻结正文。
 - **下一步**：40 §2 段 C（Gateway + audit + budget external 闸）。因 A→C→B，B 的 cloud OCR
   需 C 段先完成。待办不变：T/F↔A/B 映射段 G 前补。
+
+### 2026-09-05 20:40:02
+
+- **Status: 实现开始——段 A 完成（经对抗审查修正）**，不变。
+- **段 A 对抗性审查修正（R1–R3）**：Repository 创建候选固定 `pending_review`（30 §12 唯一
+  入口无旁路）；6 处列收紧 NOT NULL（10 未标 NULL 即 required）；撤 6 列 server_default →
+  python default；migration `0002`。R4–R7 作实现说明记录。27 tests / coverage 94%。
+- 下一步：段 C 不变；待办不变：T/F↔A/B 映射段 G 前补。

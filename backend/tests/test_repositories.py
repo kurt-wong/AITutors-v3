@@ -1,5 +1,7 @@
 """Gate A3 — Persistence Boundary：Repository 写路径保护（sealed/append-only/唯一入口）。"""
 
+import uuid
+
 import pytest
 
 from app.models.source import DocumentSourceLine
@@ -93,3 +95,19 @@ async def test_content_create_success(session) -> None:
     )
     await cr.flush()
     assert question.id is not None
+
+
+async def test_candidate_created_pending_review(session) -> None:
+    """decision_status 唯一入口：Repository 创建候选固定 pending_review，不接受任意值（R1）。"""
+    snap = SnapshotRepository(session)
+    candidate = await snap.create_admission_candidate(
+        unit_type="standalone_unit",
+        source_version_id=uuid.uuid4(),
+        annotation_id=uuid.uuid4(),
+        build_versions={},
+        input_identity={},
+        payload={},
+        logical_execution_stage="compile",
+        logical_execution_hash="b" * 64,
+    )
+    assert candidate.decision_status == "pending_review"

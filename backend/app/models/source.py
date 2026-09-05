@@ -18,7 +18,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
-from app.db.mixins import ProvenanceMixin, TimestampMixin, UUIDPrimaryKeyMixin
+from app.db.mixins import ProvenanceMixin, TimestampMixin, UUIDPrimaryKeyMixin, _utcnow
 
 
 class Document(UUIDPrimaryKeyMixin, Base):
@@ -109,7 +109,7 @@ class DocumentActiveSource(Base):
         Uuid, ForeignKey("document_source_versions.id"), nullable=False
     )
     selected_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
+        DateTime(timezone=True), nullable=False, default=_utcnow
     )
     selection_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
 

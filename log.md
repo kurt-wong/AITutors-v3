@@ -130,3 +130,18 @@
 - **缺口登记**：BUG-V3-001..005（documents 域归类 / selection_events 列冻结缺失 /
   embedding 模型名 / replay 措辞 / 浮点 precision），不改冻结正文，均待 errata/终裁。
 - **影响**：段 A 出口闸通过；按 A→C→B 序进入段 C（Gateway/audit/budget external 闸）。
+
+### 2026-09-05 20:40:02（段 A 对抗性审查修正 R1–R3）
+
+- **背景**：对段 A 完成内容做第一性 × V3SPEC 对抗复核，检出 1 阻断 + 2 中/高 + 4 低。
+- **关键发现**：R1 `create_admission_candidate` 暴露 `decision_status` 参数，可被 future
+  以 `approved` 越权创建（违反 30 §12/20 §8.2 唯一入口，段 G 地雷）；R2 多列可空性放宽
+  （10 以显式 NULL 表可空、未标即 required：`prompt_version`/`model_config_hash`/
+  `annotation_id`/`question_number(_range)`/`source_span`×2）；R3 `server_default=now()`
+  为越权 default（段 A 计划明令禁止自行加 default）。
+- **决策/修正**：Repository 创建候选**固定 `pending_review`**（不暴露 decision_status 参数）
+  + 回归测试；6 处列收紧 NOT NULL；撤 6 列 server_default → python default（`_utcnow`）；
+  migration `0002`。R4–R7（link 复合 PK、figure-links 以 PK 实现唯一、/health 不校验
+  DATABASE_URL、浮点 nan 说明）作为实现说明记录，不改。
+- **验证**：27 tests PASS、coverage 94%、模型↔DB 一致（0002 已应用）。
+- **影响**：进段 C 前 schema 可空/默认与 10 冻结正文对齐；approve 唯一入口无旁路面。

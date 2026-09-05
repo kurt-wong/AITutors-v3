@@ -15,7 +15,7 @@ from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
-from app.db.mixins import UUIDPrimaryKeyMixin
+from app.db.mixins import UUIDPrimaryKeyMixin, _utcnow
 
 
 class SemanticAnnotation(UUIDPrimaryKeyMixin, Base):
@@ -30,8 +30,8 @@ class SemanticAnnotation(UUIDPrimaryKeyMixin, Base):
         Uuid, ForeignKey("document_source_versions.id"), nullable=False
     )
     annotation_schema_version: Mapped[str] = mapped_column(String, nullable=False)
-    prompt_version: Mapped[str | None] = mapped_column(String, nullable=True)
-    model_config_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    prompt_version: Mapped[str] = mapped_column(String, nullable=False)
+    model_config_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     payload: Mapped[dict] = mapped_column(JSONB, nullable=False)
     status: Mapped[str] = mapped_column(String, nullable=False)
     logical_execution_stage: Mapped[str] = mapped_column(String, nullable=False)
@@ -51,8 +51,8 @@ class AdmissionCandidate(UUIDPrimaryKeyMixin, Base):
     source_version_id: Mapped[uuid.UUID] = mapped_column(
         Uuid, ForeignKey("document_source_versions.id"), nullable=False
     )
-    annotation_id: Mapped[uuid.UUID | None] = mapped_column(
-        Uuid, ForeignKey("semantic_annotations.id"), nullable=True
+    annotation_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("semantic_annotations.id"), nullable=False
     )
     decision_status: Mapped[str] = mapped_column(String, nullable=False)
     gate_decision: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
@@ -61,7 +61,7 @@ class AdmissionCandidate(UUIDPrimaryKeyMixin, Base):
     payload: Mapped[dict] = mapped_column(JSONB, nullable=False)
     review_trail: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
+        DateTime(timezone=True), nullable=False, default=_utcnow
     )
     decided_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
@@ -80,7 +80,7 @@ class AdmissionEvent(UUIDPrimaryKeyMixin, Base):
         Uuid, ForeignKey("admission_candidates.id"), nullable=False, unique=True
     )
     materialized_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
+        DateTime(timezone=True), nullable=False, default=_utcnow
     )
     created_question_ids: Mapped[list[uuid.UUID] | None] = mapped_column(
         ARRAY(Uuid), nullable=True

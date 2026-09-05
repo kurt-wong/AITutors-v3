@@ -52,8 +52,8 @@ class QuestionInstance(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         Uuid, ForeignKey("unit_groups.id"), nullable=True
     )
     occurrence_key: Mapped[str] = mapped_column(String(64), nullable=False)
-    question_number: Mapped[str | None] = mapped_column(String, nullable=True)
-    question_number_range: Mapped[str | None] = mapped_column(String, nullable=True)
+    question_number: Mapped[str] = mapped_column(String, nullable=False)
+    question_number_range: Mapped[str] = mapped_column(String, nullable=False)
     page_no: Mapped[int] = mapped_column(Integer, nullable=False)
     instance_order: Mapped[int] = mapped_column(Integer, nullable=False)
     logical_execution_stage: Mapped[str | None] = mapped_column(String, nullable=True)
@@ -77,7 +77,7 @@ class InstanceRoleContent(UUIDPrimaryKeyMixin, Base):
     role_index: Mapped[int] = mapped_column(Integer, nullable=False)
     text: Mapped[str] = mapped_column(Text, nullable=False)
     text_hash: Mapped[str] = mapped_column(String(64), nullable=False)
-    source_span: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    source_span: Mapped[dict] = mapped_column(JSONB, nullable=False)
     answer_status: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
 
 
@@ -93,7 +93,7 @@ class Material(UUIDPrimaryKeyMixin, Base):
     )
     text: Mapped[str] = mapped_column(Text, nullable=False)
     text_hash: Mapped[str] = mapped_column(String(64), nullable=False)
-    source_span: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    source_span: Mapped[dict] = mapped_column(JSONB, nullable=False)
     dedup_key: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
 

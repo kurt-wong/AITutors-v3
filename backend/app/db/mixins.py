@@ -1,11 +1,15 @@
 """通用 mixin：UUID v4 PK / TIMESTAMPTZ / 10 §3 标准 provenance 列。"""
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, String, Uuid, func
+from sqlalchemy import DateTime, String, Uuid
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
+
+
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc)
 
 
 class UUIDPrimaryKeyMixin:
@@ -14,7 +18,7 @@ class UUIDPrimaryKeyMixin:
 
 class TimestampMixin:
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
+        DateTime(timezone=True), nullable=False, default=_utcnow
     )
 
 
