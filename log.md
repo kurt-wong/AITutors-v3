@@ -202,3 +202,14 @@
 - **说明**：budget raw SQL 须显式给 id/updated_at（DB 无 server_default——与段 A R3
   「撤 server default」一致，非缺陷）。取证脚本初版自身漏列报错已纠正，最终取证有效。
 - **影响**：段 C 测试可重入、预算表不被污染；Gateway/audit/budget 骨架经真证据验证。
+
+### 2026-09-05 21:52:36（40 §2 段 C 正式关闭）
+
+- **背景**：段 C 实证对抗审查通过（真实缺陷修复 + D1–D4 边界实证），用户宣布段 C 正式关闭。
+- **决策**：关闭段 C。依据 = Gate C1–C4 全 PASS + 连续两遍 pytest 43 passed（无未解决 FAIL）
+  + 对抗证据记录（budget 可重入缺陷修复 `3a6628f`）。
+- **影响**：A→C→B 序成立——段 B（Source Seal + OCR）现可启用 cloud OCR（PaddleOCR-VL），
+  走段 C 已建的 external 闸（Gateway + audit + budget）。
+- **下一步**：进入 40 §2 段 B 规划——Source Seal（documents/source_versions/source_lines/
+  figures 密封）+ OCR 引擎接入；沿用既定验证模式（Frozen-Spec 计划 → 机器可判定 Exit Gate
+  → 真实对抗测试 → 修复重复验证 → 关闭）。

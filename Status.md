@@ -131,3 +131,15 @@ Date: 2026-09-05
   /providers/live_guard/audit/budget 五账户原子）+ 运行域 repository。Gate C1–C4 全 PASS
   （43 tests / coverage 93%，既有 28 不回归）。BUG-V3-006（reserved 补列）登记。
 - 下一步：段 B（Source Seal + OCR，cloud 走 C 闸）。待办不变：T/F↔A/B 映射段 G 前补。
+
+### 2026-09-05 21:52:36
+
+- **Status: 段 C 正式关闭（用户裁决 C1–C4 全通过）→ 进入 40 §2 段 B。**
+- **关闭依据**：Gate C1–C4 全 PASS；**连续两遍 pytest 43 passed**（可重入修复后）；无未解决
+  FAIL；实证证据 D1–D4（disabled 零 HTTP client / audit append-only Repository 层如实 /
+  budget UNIQUE NULLS NOT DISTINCT 真唯一 / LE 同 hash 不同 stage 独立行）已记录。真实缺陷
+  （budget 测试不可重入）已修复并重复验证。BUG-V3-006（reserved 补列）挂起待 errata。
+- **段 B 范围**：Source Seal + OCR（documents/source_versions/source_lines/figures 密封 +
+  cloud PaddleOCR-VL 走 C 闸）——锚 10 §1/§4 B 域、30 §16、50 §3；A→C→B 序成立，cloud OCR
+  经 C 闸合法放行。
+- **待办不变**：T/F↔A/B 映射段 G 前补；BUG-V3-001..006 errata 裁决；quarantine 物理卷人工核。
