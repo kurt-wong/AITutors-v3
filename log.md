@@ -100,3 +100,18 @@
   `MANIFEST.csv` 逐份指纹+来源分级；loader 纪律：llm/explanation 拒作真值；README v0.2。
 - **验证**：MANIFEST 15 行 sha256 落盘；quarantine 移动确认；目录= real/3 + contract/4 +
   structure/7 + quarantine/1；JSON 本体零改动。
+
+### 2026-09-05 19:43:36（V3 git 仓库建立 + 首次推送）
+
+- **背景**：用户指示 V3 立**严格版本管理**，提供 GitHub private 空仓库
+  `kurt-wong/AITutors-v3`，并补充本机访问 GitHub 走 `127.0.0.1:55219` 代理。
+- **决策**：`git init -b main`；`.gitignore`（密钥/token 绝不入 git，保留 `.env.example`）+
+  `.gitattributes`（统一 LF 防 CRLF 抖动）；本地身份 `kurt-wong /
+  kurt-wong@users.noreply.github.com`（复用 V2，仅 local，未改 global）；根 `README.md`
+  （文档地图 + Git 纪律）。
+- **首提交 `88e7a29`**：123 文件 / 42035 行——spec 六册 + reference 契约文档 +
+  `assets/annotations_src` 15 份源料 + docs_archive 归档 + 状态四件套；secret 预扫描 CLEAN。
+- **推送**：`remote add origin` + `push -u origin main`，凭据经 `gh auth git-credential`
+  （keyring）+ 本机代理；未写任何全局 git config。
+- **验证**：本地/远端 HEAD 一致 `88e7a29`；`main` 已跟踪 `origin/main`。
+- **影响**：V3 全程受控版本管理；此后文档/代码变更先 commit 再推送，密钥恒走 `.env`。
