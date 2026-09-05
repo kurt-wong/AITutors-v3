@@ -162,3 +162,13 @@
 - **验证**：28 tests PASS、coverage **94% → 99%**（content/snapshot repository 100%，
   source 92%——余 3 行错误分支未覆盖）。
 - **影响**：Repository create 面全部经真实 DB 验证；段 A 验收证据链完整。
+
+### 2026-09-05 20:55:39（段 A 正式关闭）
+
+- **决策**：用户宣布 40 §2 段 A 正式完成、A1–A5 全通过，关闭该阶段。
+- **交付盘点**：段 A 五交付（config/密钥校验、DB+Alembic+19 表、Repository、canonical
+  hashing、/health）+ Gate A1–A5 PASS + 28 tests / coverage 99% + E1–E3 实库核验 +
+  B1/B2 边界记录 + BUG-V3-001..005 挂起。
+- **下一步**：进入 40 §2 段 C——Gateway（disabled/mock/live）+ audit（不可变）+
+  budget（五账户）+ 运行域 4 表（30 §6/§10/§11/§17）；cloud OCR external 同闸；
+  A→C→B。段 C 为架构类实现，计划前遍阅 V3-Spec 段 C 约束。

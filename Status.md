@@ -112,8 +112,14 @@ Date: 2026-09-05
 ### 2026-09-05 20:44:51
 
 - **Status: 段 A 完成（实证复核通过）**，不变。
-- **实证对抗审查**：E1/E2（required/nullable 实库核）、E3（server_default 撤净）通过；
-  B1/B2 证实 sealed 不可变与 decision_status 唯一入口**仅应用层保证、DB 无 trigger**
-  （如实记录，DB 级 enforcement 待 Spec 授权）。补 DB 往返全链路测试后 **28 tests /
-  coverage 99%**（此前 create 方法无 DB 往返，是真实缺口，已补）。
 - 下一步：段 C 不变；待办不变：T/F↔A/B 映射段 G 前补。
+
+### 2026-09-05 20:55:39
+
+- **Status: 段 A 正式关闭（用户裁决 A1–A5 全通过）→ 进入 40 §2 段 C。**
+- 段 A 交付不变：28 tests / coverage 99%、E1–E3 实库核验通过、B1/B2 边界如实记录
+  （sealed/decision 唯一入口为应用层，DB 级 enforcement 待 Spec 授权）；BUG-V3-001..005
+  挂起待 errata。
+- **段 C 范围**：Gateway（disabled/mock/live 组合放行）+ audit（llm_call_audit 不可变）+
+  budget（五账户）+ 运行域 4 表（tasks/task_claims/llm_call_audit/budget）——锚 30
+  §6/§10/§11/§17；cloud OCR external 走同一闸（30 §16）。A→C→B，段 C 完成后方启 B cloud。
