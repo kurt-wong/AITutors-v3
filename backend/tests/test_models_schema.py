@@ -68,17 +68,24 @@ async def _snapshot():
         return await conn.run_sync(_schema_snapshot)
 
 
+_RUNTIME = {"llm_call_audit", "budget"}  # 30 运行域（段 C），由 test_runtime_schema 单独断
+
+
+async def _content_tables(tables):
+    return tables - {"alembic_version"} - _RUNTIME
+
+
 async def test_db_tables_exact_19() -> None:
     tables, _, _ = await _snapshot()
-    db_tables = tables - {"alembic_version"}
+    db_tables = await _content_tables(tables)
     assert db_tables == EXPECTED_TABLES
     assert len(db_tables) == 19
 
 
 async def test_orm_metadata_matches_db() -> None:
     tables, _, _ = await _snapshot()
-    db_tables = tables - {"alembic_version"}
-    assert set(Base.metadata.tables) == db_tables
+    db_tables = await _content_tables(tables)
+    assert set(Base.metadata.tables) - _RUNTIME == db_tables
 
 
 async def test_declared_uniques_present() -> None:
@@ -97,6 +104,7 @@ async def test_link_tables_have_no_unique_constraint() -> None:
 async def test_no_unauthorized_unique_constraints() -> None:
     """全库非-PK UNIQUE 约束总数须恰为 6（声明表），无越权。"""
     tables, uniq, _ = await _snapshot()
+    tables = tables - _RUNTIME  # 内容域 19 表；runtime 唯一性由 test_runtime_schema 断
     declared_flat = {frozenset(c) for c in DECLARED_UNIQUES.values()}
     seen = []
     for table in tables:

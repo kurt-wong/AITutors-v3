@@ -123,3 +123,11 @@ Date: 2026-09-05
 - **段 C 范围**：Gateway（disabled/mock/live 组合放行）+ audit（llm_call_audit 不可变）+
   budget（五账户）+ 运行域 4 表（tasks/task_claims/llm_call_audit/budget）——锚 30
   §6/§10/§11/§17；cloud OCR external 走同一闸（30 §16）。A→C→B，段 C 完成后方启 B cloud。
+
+### 2026-09-05 21:18:44
+
+- **Status: 段 C 骨架完成**（external side-effect control plane）。
+- **交付**：运行域 2 表（llm_call_audit + budget，migration 0003）+ `app/ai/`（Gateway 三态
+  /providers/live_guard/audit/budget 五账户原子）+ 运行域 repository。Gate C1–C4 全 PASS
+  （43 tests / coverage 93%，既有 28 不回归）。BUG-V3-006（reserved 补列）登记。
+- 下一步：段 B（Source Seal + OCR，cloud 走 C 闸）。待办不变：T/F↔A/B 映射段 G 前补。

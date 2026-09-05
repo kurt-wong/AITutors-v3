@@ -172,3 +172,18 @@
 - **下一步**：进入 40 §2 段 C——Gateway（disabled/mock/live）+ audit（不可变）+
   budget（五账户）+ 运行域 4 表（30 §6/§10/§11/§17）；cloud OCR external 同闸；
   A→C→B。段 C 为架构类实现，计划前遍阅 V3-Spec 段 C 约束。
+
+### 2026-09-05 21:18:44（40 §2 段 C 骨架完成）
+
+- **背景**：按已批准计划实现段 C（Gateway 三态 + audit + budget 五账户）。
+- **决策/实现**：运行域 2 表（llm_call_audit 24 列 + budget 含 reserved 补列，migration
+  `0003`）；`app/ai/`（gateway 三态 live 四前置、providers base/mock/http、live_guard、
+  audit idempotency_key、budget 五账户原子）；`repositories/runtime_repository.py`
+  （audit append-only + budget 条件 UPDATE）；`core/errors.py` 八分类。
+- **验证**：Gate C1（disabled 抛错零外部）C2（audit 不可变）C3-A（同 scope 并发仅一成功）
+  C3-B（五账户 rollback 无残留）C4（LE 跨 attempt 共享/正交）**全 PASS**；43 tests /
+  coverage 93%（既有 28 不回归）。
+- **缺口登记**：BUG-V3-006（budget reserved 补列）；audit 列类型/跨段 FK 时序/预算单位
+  未冻结按自由度实现并记录。
+- **影响**：external side-effect control plane 建立；段 C 出口闸通过；段 B 的 cloud OCR
+  路径现在有合法放行闸（A→C→B 顺序成立）。

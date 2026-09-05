@@ -35,5 +35,16 @@ class Settings(BaseSettings):
     minio_secure: bool = False
     admin_api_key: str | None = None
 
+    # ---- live provider 凭证（30 §6：仅 live 态校验当前 provider；disabled/mock 不要求）----
+    deepseek_api_key: str | None = None
+    deepseek_base_url: str = "https://api.deepseek.com"
+    deepseek_model: str = ""
+    deepseek_vl_model: str = ""
+    mimo_api_key: str | None = None
+    mimo_base_url: str = ""
+    mimo_model: str = ""
+    mimo_vl_model: str = ""
+    llm_request_timeout_seconds: float = 30.0
+
 
 settings = Settings()

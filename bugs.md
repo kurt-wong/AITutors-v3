@@ -55,6 +55,17 @@
   LE hash 身份输入不含 float，不阻塞。待 30 §16 终裁。
 - 验收：终裁后 utility 版本递增 + 走 Rebuild。
 
+### BUG-V3-006 — `budget` 列清单遗漏 reserved 数值列（30 §17 vs §11）
+- Status: Open
+- 登记：2026-09-05 21:18:44
+- 现象：30 §11 明确预算三量「额度/已用量/预留量」，§17 `budget` 列清单只有 limit/used/
+  reserved_at，无 reserved 数值列。
+- 根因：spec 字段级缺漏。
+- 处置：段 C 按冻结语义补 `budget.reserved NUMERIC` 列实现（reserve→settle 需预留量）；
+  `limit`/`used`/`reserved` 单位与精度（token/调用/金额）未冻结 → 以调用方同单位数值实现，
+  不自行设币种/换算。待 30 §17 errata 终裁。
+- 验收：reserved 补列与 reserve/settle 语义一致；终裁后对齐。
+
 ## Resolved Bugs
 
 （暂无。）
