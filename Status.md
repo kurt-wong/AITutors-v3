@@ -195,3 +195,21 @@ Date: 2026-09-05
   （parse error payload 形态）保持 Open / deferred。
 - **下一步**：段 D 是否关闭由用户裁决；若关闭进入 40 §2 段 E（Source Resolver）。待办不变：
   T/F↔A/B 映射段 G 前补。
+
+### 2026-09-06 07:26:21
+
+- **Status: 段 D 正式关闭（COMPLETE / CLOSED）**。此前曾因测试隔离缺陷暂时阻塞 Exit Gate
+  （Temporary Gate Block — RESOLVED），修复后全量回归通过，用户裁决关闭。
+- **对抗审查纠偏闭环**：对 A/B/C/D 做第一性 × V3SPEC 对抗审查，检出真实缺陷 FAIL-1
+  （cross-tx 测试 cleanup 泄漏 documents 域数据污染 B seal 测试），已修复。
+  FAIL-2（sealed 无 DB trigger）/ FAIL-3（三处 UNIQUE 缺失）经 Frozen Spec 原文核对后
+  **撤销 FAIL**：10 §4.2 明确 sealed 由 Repository 抛错强制（实现合规）；
+  semantic_annotations/admission_candidates 的 (stage,hash) UNIQUE 实已存在；
+  audit idempotency_key 作用域 30 自登记 LOW 开放；document_source_versions 幂等唯一性
+  归 BUG-V3-007 errata。
+- **修复验证**：cleanup 改按 FK 序删净（source_lines→versions→documents）后，连续两遍
+  pytest **81 passed, 0 failed**（无中间清理），DB 复查 docs=0 / vers=0 / anns=0。
+  commit `fd9919a`（test，生产代码零改动）。
+- **延续 Bug**：BUG-V3-001..010 全部保持 Open / deferred（不改已关闭阶段）。
+- **下一步**：进入 40 §2 段 E（Source Resolver）。待办不变：T/F↔A/B 映射段 G 前补；
+  BUG-V3-007/008 errata 终裁；quarantine 物理卷人工核。

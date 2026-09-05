@@ -290,3 +290,28 @@
 - **影响**：annotation 可合法写入（mock）；schema 校验拦截禁字段；(stage,hash) 幂等 + 显式
   supersede；段 D 到 semantic_annotations 为止（Resolver/Compiler/Gate 未碰）。
 - **下一步**：段 D 是否关闭由用户裁决；若关闭进入 40 §2 段 E（Source Resolver）。
+
+### 2026-09-06 07:26:21（段 D 对抗审查纠偏 + Exit Gate 恢复）
+
+- **背景**：对 A/B/C/D 交付物做第一性 × V3SPEC 对抗审查，要求每结论带真实测试证据。
+- **真实缺陷（FAIL-1）**：`test_d2_cross_transaction_idempotency` 调用 `session.commit()`
+  （使 conftest rollback fixture 失效）后，finally cleanup 只删 `semantic_annotations`，
+  documents / source_versions / source_lines 残留 → 后续 B seal 测试 `n_docs == 1` 断言
+  失败（3 failed / 78 passed）。根因是 cross-tx 测试隔离不彻底，**非 Annotation 业务失败**
+  （D2 幂等/DB UNIQUE 本身经 T5 等实证正确）。
+- **修复**：cleanup 改按 FK 序删净——反查 document_id → 删 source_lines → versions →
+  documents（注释标注 FAIL-1 修复）。**生产代码零改动**。
+- **验证**：清库 → pytest #1 **81 passed**；无中间清理 pytest #2 **81 passed**；
+  DB 复查 docs=0 / vers=0 / anns=0。commit `fd9919a`。
+- **纠偏（FAIL-2）**：原报「sealed 无 DB trigger = FAIL」，经 10 §4.2 原文核对撤销——
+  Spec 逐字指定「status=sealed 后禁止任何 UPDATE（**Repository 抛错**）」，实现
+  `SealedVersionError` 即合规；DB 层不自行加 trigger/RLS（个人规模非"数据库安全系统"）。
+- **纠偏（FAIL-3）**：原报「三处 UNIQUE 缺失 = FAIL」逐项核对撤销——semantic_annotations
+  / admission_candidates 的 (stage,hash) UNIQUE **实已存在**（10 §5.1/§5.2 明确「唯一」）；
+  documents.original_sha256 为身份规则非 DB 约束（10 §4.1 未声明 UNIQUE）；
+  audit idempotency_key 作用域 30 §10 定义为「同一 LE+attempt 内」+ 30 自登记 LOW 开放
+  （line 480），加全局 UNIQUE 反可能错误；document_source_versions 幂等唯一性
+  归 **BUG-V3-007 errata**（role 多版本语义未决，不自行冻结）。
+- **裁决**：用户确认 FAIL-1 修复有效、FAIL-2/3 撤销、段 D **COMPLETE / CLOSED**。
+  BUG-V3-001..010 保持 Open / deferred。
+- **下一步**：进入 40 §2 段 E（Source Resolver）。待办不变：T/F↔A/B 映射段 G 前补。
