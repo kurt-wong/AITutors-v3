@@ -1,0 +1,2 @@
+# 统一 LF，防 Windows CRLF 抖动
+* text=auto eol=lf

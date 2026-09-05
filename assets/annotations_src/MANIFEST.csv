@@ -1,0 +1,16 @@
+v3_path,v2_source,sha256_16,nq,answer_sources,explanation_sources,needs_manual,pdf_in_V2,flag
+contract/chemistry_2026_bashi_contract_golden.json,test/annotations/golden/chemistry_2026_bashi_contract_golden.json,6a262f669c0d2312,3,document_answer_table,-,,Y,ok_structure_demo
+contract/chinese_2026_chaoyang_contract_golden.json,test/annotations/golden/chinese_2026_chaoyang_contract_golden.json,3a69c724af147ca4,3,document_answer_table,-,,Y,ok_structure_demo
+contract/english_2026_dongcheng_real_golden.json,test/annotations/golden/english_2026_dongcheng_real_golden.json,3398bea7ef983e13,11,document_answer_table,-,,Y,ok_structure_demo
+contract/math_2026_chaoyang_contract_golden.json,test/annotations/golden/math_2026_chaoyang_contract_golden.json,57a2d573131bc0e4,4,document_answer_table,llm_fallback,,Y,superseded_by_math_real_golden
+quarantine/physics_2026_chaoyang_contract_golden.json,test/annotations/golden/physics_2026_chaoyang_contract_golden.json,b17ca1ad42883696,3,document_answer_table|llm_fallback,llm_fallback,Y,Y,quarantine
+real/english_exercise_2024.json,test/annotations/golden/english_exercise_2024.json,33d7f16b42d9cf97,10,document_answer_table,document_inline_explanation,,,exercise_pdf_missing
+real/math_exercise_2024.json,test/annotations/golden/math_exercise_2024.json,801486d4eb5fc798,7,document_answer_table|document_inline_answer,document_inline_explanation,,,exercise_pdf_missing
+real/math_real_golden.json,test/annotations/golden/math_real_golden.json,a225ca00b1e2ab63,8,document_answer_table,llm_fallback,,Y,ok_human_answer
+structure/biology_2026_daxing.paper_structure.json,test/annotations/structure/biology_2026_daxing.paper_structure.json,47c47f3a514b62b4,40,-,-,,Y,structure
+structure/chemistry_2026_bashi.paper_structure.json,test/annotations/structure/chemistry_2026_bashi.paper_structure.json,bc1bcedeb903685b,20,-,-,,Y,structure
+structure/chinese_2026_chaoyang.paper_structure.json,test/annotations/structure/chinese_2026_chaoyang.paper_structure.json,3ff683962cfa2e0a,8,-,-,,Y,structure
+structure/english_2026_chaoyang.paper_structure.json,test/annotations/structure/english_2026_chaoyang.paper_structure.json,189d0e4fc653422e,19,-,-,,Y,structure
+structure/english_2026_dongcheng.paper_structure.json,test/annotations/structure/english_2026_dongcheng.paper_structure.json,8a8e807405d173d0,11,-,-,,Y,structure
+structure/math_2026_chaoyang.paper_structure.json,test/annotations/structure/math_2026_chaoyang.paper_structure.json,917e5aa38ee72099,21,-,-,,Y,structure
+structure/physics_2026_chaoyang.paper_structure.json,test/annotations/structure/physics_2026_chaoyang.paper_structure.json,12009f9205681640,20,-,-,,Y,structure

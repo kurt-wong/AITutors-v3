@@ -1,0 +1,91 @@
+# AI Tutor V3 — 项目状态（Status）
+
+Version: v1.0
+Status: V3 Spec Baseline — Frozen（实现未开始）
+Date: 2026-09-05
+
+> 本文件**取代 V2 的 `PROJECT_STATUS.md`**。
+> **更新规范（2026-09-05 起按规则二）**：每次更新含当前时间戳，**在文档末尾按时间顺序
+> 流式追加状态快照**；不覆盖既有结论、不置顶。初始「当前结论」即首条快照；最新状态 =
+> 文末最新一条。细节变更进 `log.md`；缺陷进 `bugs.md`；架构规则一律在 `Docs/V3_SPEC/`。
+
+## 当前结论（2026-09-05）
+
+- **Status: Baseline — Frozen（实现未开始）**。
+- `Docs/V3_SPEC/` 六册 + README 已冻结（00 v1.2 / 10 v1.2.1 / 20 v1.2 / 30 v1.1 /
+  40 v1.1 / 50 v1.1 / README v1.1）；7 份起草输入已归档
+  `docs_archive/2026-09-05_v3_draft/`。
+- **实现入口**：按 `40 §2` 的 A→I 出口闸推进；**前置** = 按 `50 §3` 完成可复用资产
+  清点（OCR 引擎 / 真实 PDF / 知识·题型种子 / DISPLAY_CONTRACT），再开段 A/B。
+
+## 当前阶段
+
+- **文档基线**：✅ V3 Baseline — Frozen（00 服从性证据：`Docs/V3_SPEC/README.md §1.2`）。
+- **实现**：⏳ 未开始（段 A 骨架待建；资产清点先于段 B）。
+
+## 关键验收（文档期）
+
+| 项 | 状态 |
+|---|---|
+| 00-50 + README 收敛冻结 | ✅ Baseline—Frozen |
+| 跨册对抗性审查（无结构性冲突） | ✅ |
+| 起草输入归档 | ✅ `docs_archive/2026-09-05_v3_draft/` |
+| 实现段 A-I | ⏳ 未开始 |
+
+## 下一步
+
+1. 资产清点（`Docs/V3_SPEC/50 §3`）：OCR 引擎、真实 PDF、knowledge/题型种子、
+   DISPLAY_CONTRACT。
+2. `40 §2` 段 A：骨架（配置/密钥校验、DB+Alembic+A/B/C 表、Repository、canonical
+   hashing utility），过 A 出口闸。
+3. 按 A→I 依次推进，逐段过闸（`40 §2`）。
+
+---
+
+### 2026-09-05 16:53:15
+
+- **Status: Baseline — Frozen（实现未开始），不变**。
+- 变更：采纳两条协作规则（计划受 V3-Spec 约束 / 状态文档末尾流式更新）——本文件自本条起
+  改为**文末按时间顺序流式追加**（见顶部更新规范）。
+- 其余：六册 + README 冻结、起草归档、00 服从性证据位置不变（`Docs/V3_SPEC/README.md §1.2`）。
+
+### 2026-09-05 17:12:14
+
+- **Status: Baseline — Frozen（实现未开始），不变**。
+- **待办登记（进段 G 前完成，勿丢）**：`Docs/reference/DISPLAY_CONTRACT.md` 补
+  **T/F↔A/B canonical 映射**（20 §8.4 strict-auto 前置；未完成则 true_false 只走
+  pending_review）。已同步：记忆、restart-prompt、本文件三处。
+- 其他已知前置：资产清点（50 §3）先于段 A/B；见顶部"下一步"。
+
+### 2026-09-05 17:18:07
+
+- **Status: Baseline — Frozen；实现未开始，资产清点已完成**（`Docs/reference/ASSET_INVENTORY.md` v0.1）。
+- 资产两裁决：**①样本 PDF 用户自有可随时补，V3 不复制**；**②M1 启用 cloud OCR（PaddleOCR-VL）**。
+- **实现顺序影响**：因启用 cloud OCR（external），40 §2 段序前置修正为
+  **A（骨架）→ C（Gateway/audit/budget external 闸）→ B（seal，可用 cloud VL）**——
+  B 依赖 C 完成方可启用 cloud；其余 D-I 顺序不变。token 走 `.env`，不入 git。
+
+### 2026-09-05 17:22:41
+
+- **Status: Baseline — Frozen（实现未开始），不变**。
+- **标注源料迁移（golden 裁决更新）**：剔 2 份机器草稿，迁 15 份入
+  `assets/annotations_src/`（real/3 human 验收级 + contract/5 契约标注 0.4 +
+  structure/7 卷面分组）。契约标注族 + structure = 用户协助 LLM 完成的契约文档，作
+  V3 结构·语义重标源料（50 §4.2），JSON 原样、PDF 仍用户自有。
+- **资产清单 §3 修正**：`english/physics_2026_real_golden` 实为 `0.1-draft` 草稿（非
+  human），清点误判已改。
+- 资产决策三落定：① PDF 用户自有不复制；② M1 启用 cloud OCR（序 A→C→B）；
+  ③ 标注源料 15 份已迁 V3。待办不变：DISPLAY_CONTRACT T/F↔A/B 映射段 G 前补。
+
+### 2026-09-05 19:34:46
+
+- **Status: Baseline — Frozen（实现未开始），不变**。
+- **迁移物对抗性审查修正完成**：对 `assets/annotations_src/`（15 份）做第一性 × V3SPEC
+  审查，检出 LLM 污染漏网——`physics_2026_chaoyang_contract_golden` 含 llm answer +
+  needs_manual（物理朝阳卷无人工 answer 真值）→ 移 `quarantine/`；`math_chaoyang_contract`
+  标 superseded（answer 以 human `math_real_golden` 权威）；human 版 explanation 全
+  llm_fallback → 一律非真值。建 `MANIFEST.csv`（sha256 + 来源分级）+ README v0.2
+  可靠性矩阵。覆盖缺口登记：大兴生物/朝阳英语/朝阳语文无 human golden，exercise×2 PDF 断链。
+- 资产目录现 real/3 + contract/4 + structure/7 + quarantine/1（15 份原样 +1 已隔离）。
+- 待办不变：DISPLAY_CONTRACT T/F↔A/B 映射段 G 前补；物理卷人工核对出 quarantine；
+  段 D/E 前补样。实现序 A→C→B 不变。

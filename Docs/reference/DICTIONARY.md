@@ -1,0 +1,587 @@
+# AI Tutor Personal Edition — 项目字典
+
+Version: 1.1
+Status: Phase 0 文档冻结基线；语义管线术语已冻结，旧链术语标记 legacy
+Date: 2026-09-04
+
+---
+
+## 1. 用途
+
+本文件用于统一项目沟通中的字段名、功能名和概念名。
+
+所有文档、代码、接口、聊天和任务描述尽量使用本字典中的名称。出现新字段或新功能时，必须同步更新本文件，并在文末“更新记录”追加完整时间戳。
+
+---
+
+## 2. 命名约定
+
+| 场景 | 约定 |
+|---|---|
+| 数据库字段 | 小写 snake_case |
+| 后端字段 | 小写 snake_case |
+| API JSON 字段 | 小写 snake_case |
+| 枚举值 | 小写 snake_case |
+| 类型/领域对象 | PascalCase |
+| 文件路径 | 沿用现有目录结构 |
+
+示例：
+
+```text
+question_id
+source_type
+review_status
+background_task
+Question Aggregate
+```
+
+---
+
+## 3. 角色
+
+| 字段/名称 | 含义 |
+|---|---|
+| admin | 管理员，维护文档、题库、审核、统计、配置和 AI 生成 |
+| student | 学生，上传错题、做练习、查看错题本和学习统计 |
+
+---
+
+## 4. 核心概念
+
+| 名称 | 含义 |
+|---|---|
+| Question Aggregate | 一道题的完整档案，包含内容、配图、元数据、来源、质量和统计 |
+| Question Instance | 同一道题在某份来源文档或某个错题场景中的一次出现实例 |
+| Background Task | 统一后台任务，用于文档解析、AI 生成、导出、错题识别等异步能力 |
+| Domain Event | 系统内部事件，用于解耦统计、推荐、Agent 和学习分析 |
+| Knowledge Tree | 管理员维护的标准知识点树，AI 只能映射，不能随意创建节点 |
+| Question Type | 按学科维护的细粒度题型规范 |
+| OcrPage | PP-StructureV3/OCR 输出的一页 Markdown、公式、表格与图片引用 |
+| ParsedQuestion | 文档解析后尚未入库的结构化题目草稿 |
+| Question Aggregate JSON | 文档解析与 AI 生成共用的结构化题目交换格式 |
+| Native L1 | raw source provider；PyMuPDF 从 PDF 文本层提取，用于 source version 行证据 |
+| PPSV3 L1 | raw source provider；PP-StructureV3 从视觉版面识别生成 |
+| Canonical L1 | 代码按证据从 Native/PP 双源选择后的 canonical raw source，保留 provenance |
+| L1 Source Arbitration (legacy) | 旧 LLM 行级仲裁；新链不再使用 |
+| L1 Markdown | 旧文本别名；新链使用 Source Version/Source Index |
+| L2 Annotation Mirror (legacy) | 旧 LLM 行号标注镜像；新链使用 Semantic Annotation |
+| Line-range Annotation (legacy) | 旧“LLM 输出粗略行号”范式；新链禁止 |
+| Coarse Line Range (legacy) | 旧 LLM 行范围字段；新链禁止 |
+| Anchor Correction (legacy) | 旧锚点校正范式；新链由 Source Resolver 替代 |
+| Corrected Anchor (legacy) | 旧校正后行号范围；新链使用 Resolved Span |
+| Anchor Status (legacy) | 旧 exact/nearest/missing/retry；新链使用 Resolver Status |
+| Image Placement | 配图在文档中的位置元数据：`page_no/bbox/placement/source` |
+| Source Provenance | 题目/答案/详解/图片的来源与生成方式，用于可追溯和审核 |
+| Document Artifact Layer (legacy) | 旧 L0-L3 分层；新链按 Source/Annotation/IR/Question 分层 |
+| Review Queue | 低置信度或待确认内容进入的人工审核队列 |
+| Wrong Question Book | 学生的错题本 |
+| Practice Session | 一次练习批次 |
+| Mastery Level | 学生在某知识点上的掌握程度 |
+| Generation Task | AI 生成练习或试卷的任务 |
+| content_hash | 规范化文本的 SHA256，用于精确去重。覆盖题干+选项+题型。 |
+| mapping_source | 知识点映射来源：llm / rule / manual |
+| review_status | 映射审核状态：approved / pending / rejected |
+| Structure Signature (legacy) | 旧 LLM structure_signature；新链结构进入 Semantic IR/Compiler |
+| Annotation ≠ 事实 | LLM 输出是对 source 的 claim，不是最终事实；Resolver/Compiler/Gate 后才落 Question |
+| Question Family | 一组结构/解法高度相似的题构成的族（Phase 2D 实现，暂不建表） |
+| Primary Family | 每道题唯一的统计归属 Family（Phase 2D 实现） |
+| 统计视图 ≠ Family | Knowledge Point × Question Type × Year 是统计视图，不是 Family |
+| Exact Duplicate | 文本 hash 完全相同的题，合并为同一 Question 的不同 Instance |
+| Similarity | 两道不同题之间的相似关系（Phase 2D 实现） |
+| Agent Interface | 供 Codex/Claude 等智能体调用的可选 MCP 接口层 |
+| L1Line | L1 行对象，line_ref 在 source version 内唯一 |
+| L1Document | L1 文档对象，作为 seal 前构造输入 |
+| L2QuestionAnnotation (legacy) | 旧 L2 单题标注；新链不得复用 |
+| Quality Gate (legacy) | 旧按题质量门；新链使用 Structural/Provenance/Semantic/Admission Gate |
+| Admission Gate (legacy) | 旧 R01-R18 门禁；新链 canonical 为 Semantic/Evidence Gate |
+| Question Candidate | Semantic/Evidence Gate 判定 candidate 的候选题，approved 后迁移为正式题；rejected 删除候选并写审计 |
+| Immutable Source | 文档解析后不可变、可回放的原始事实层 |
+| Source Version | 一次 sealed 持久化的完整 raw/canonical source，禁止 UPDATE |
+| Source Index | source version 下用于定位的 line/image/fragment/cell 索引 |
+| line_ref | 单一 source version 内程序使用的稳定行引用，不是 LLM 输出 |
+| Seal | 完成 hash/完整性校验后把 draft source 置为 sealed 的操作 |
+| Integrity Hash | source body + line index + provenance 的 SHA256 |
+| Semantic Annotation | LLM 语义 claim 的受控结构化输出，禁止坐标和正文 |
+| Semantic Unit | Annotation 中一个可编译的 question/composite 单元 |
+| Standalone Unit | 不依赖共享材料即可独立建模的 question unit |
+| Composite Unit | 共享组件 + 依赖组件的若干子题，是原子 Admission Unit |
+| Semantic Reference | LLM 指认源位置的 role/label/marker，非最终坐标 |
+| Source Resolver | 把 Semantic Reference 解析为 Resolved Span 的程序模块 |
+| Resolved Span | Resolver 输出的 line/character/table_cell/fragment 级 source 范围 |
+| Semantic IR | Resolver 后 Compiler 前保存已解析 question/dependency/span 的唯一中间表示 |
+| Deterministic Compiler | 把 Semantic IR 编译为 DISPLAY_CONTRACT question/composite 的程序 |
+| Gate 分层 | Structural / Provenance / Semantic / Admission |
+| Answer Status 三字段 | source_located / complete / verified_correct 必须分离 |
+| original_question_type | Annotation 可携带的 LLM 原始题型 claim；不做 canonical 判定 |
+| canonical_question_type | 只属于 Semantic IR/Compiler 输出的规范化题型 |
+| Content Roles | 按题型声明 stem/options/answer/explanation 等 required/optional/nullable role |
+| Allowed-Answer Grammar | 题型级答案 token 集合与规范化规则；strict auto verified_correct 的前置 DoD |
+| Recursive Subquestion | sub_questions/sub_sub_questions 任意递归层，各层关系必须闭合 |
+| Resolver Status | exact / normalized / contextual / fuzzy / ambiguous / missing / invalid |
+| IR Status | draft / ready / incomplete / invalid；非 ready 不进入 Compiler/Gate |
+
+---
+
+## 5. 字段字典
+
+### 5.1 users
+
+| 字段 | 含义 |
+|---|---|
+| id | 用户 ID |
+| username | 登录名 |
+| password_hash | 密码哈希 |
+| role | 用户角色：admin / student |
+| created_at | 创建时间 |
+| updated_at | 更新时间 |
+
+### 5.2 documents
+
+| 字段 | 含义 |
+|---|---|
+| id | 文档 ID |
+| filename | 原始文件名 |
+| file_type | 文件类型：pdf / docx |
+| object_key | 对象存储中的文件 key |
+| subject | 上传时填写的学科 |
+| grade | 上传时填写的年级 |
+| year | 上传时填写的年份 |
+| school | 上传时填写的学校 |
+| upload_status | 上传状态 |
+| processing_status | 处理状态 |
+| error_message | 失败原因 |
+| native_markdown | legacy 只读镜像：Native L1 文本 |
+| ocr_markdown | legacy 只读镜像：OCR/L1 文本 |
+| llm_annotated_markdown | legacy 只读镜像：旧 L2 标注 JSON |
+
+### 5.3 questions
+
+| 字段 | 含义 |
+|---|---|
+| id | 题目 ID |
+| subject_id | 学科 ID |
+| grade | 年级 |
+| question_type_id | 题型 ID |
+| original_question_type | LLM 原始细粒度题型 code（cloze/grammar_fill/seven_to_five/essay/writing 等），可为空 |
+| section_id | 来源卷面 section/共享材料区标识，可为空 |
+| score | 分值 |
+| difficulty | 难度 1-5 |
+| stem | 题干 |
+| options | 选项 |
+| answer | 标准答案 |
+| answer_structure | 结构化答案元数据：可包含 accepted_answers / range 等，可为空 |
+| word_bank | 选词填空题组共享词库，可为空 |
+| shared_material | 综合题共享材料/文章/情境，可为空 |
+| shared_material_notes | 共享材料注释（如文言文注释），可为空 |
+| scoring_standard | 评分标准/作答要求，可为空 |
+| stem_region / answer_region / explanation_region | 展示区块边界元数据，可为空 |
+| explanation | 详解 |
+| content_hash | 规范化文本 SHA256（Phase 2A 新增） |
+| source_type | 题目来源：document / generated / student |
+| source_document_name | 来源文档名 |
+| status | 题目状态 |
+| confidence | 置信度 0-1 |
+| occurrence_count | 出现次数（Phase 2A 改为派生值） |
+| created_at | 创建时间 |
+| updated_at | 更新时间 |
+
+> Phase 2A：移除 year/school（移到 question_instances），新增 content_hash，occurrence_count 改为 COUNT(instances) 派生。
+
+### 5.4 question_instances
+
+| 字段 | 含义 |
+|---|---|
+| id | 出现实例 ID |
+| question_id | 关联题目 ID |
+| document_id | 来源文档 ID（Phase 2A 新增，替代 source_document_name） |
+| source_type | 来源类型 |
+| source_document_name | 来源文档名（Phase 2A 后由 document_id 替代） |
+| source_page | 来源页码 |
+| source_question_number | 来源原始题号 |
+| year | 来源年份 |
+| school | 来源学校 |
+| occurrence_no | 同来源内出现序号 |
+| source_version_id | Phase 1 planned：来源 sealed source version |
+| annotation_run_id | Phase 2 planned：来源 semantic annotation run |
+| resolver_run_id | Phase 3 planned：来源 resolver run |
+| ir_snapshot_id | Phase 3 planned：来源 Semantic IR snapshot |
+
+> Phase 2A：新增 document_id FK，加 (document_id, source_question_number) 唯一约束。
+
+### 5.5 question_images
+
+| 字段 | 含义 |
+|---|---|
+| id | 图片关联 ID |
+| question_id | 关联题目 ID |
+| image_key | 图片对象存储 key |
+| image_type | 图片类型：diagram / question_image / formula_image |
+| description | 图片描述 |
+| image_order | 图片排序 |
+| page_no | 配图来源页码 |
+| bbox | 配图在来源页面上的坐标 |
+| placement | 配图位置：stem / options / answer / explanation / page_context |
+| sub_question_qno | 答案图绑定的子题号，可为空 |
+| source | 配图来源：native / paddleocr / vl / manual |
+| figure_id | 同一物理图在文档级去重中的稳定标识 |
+
+### 5.6 knowledge_nodes
+
+| 字段 | 含义 |
+|---|---|
+| id | 知识点节点 ID |
+| subject_id | 学科 ID |
+| parent_id | 父节点 ID |
+| code | 节点编码 |
+| name | 节点名称 |
+| level | 节点层级 |
+| description | 节点说明 |
+
+### 5.7 question_knowledge
+
+| 字段 | 含义 |
+|---|---|
+| id | 映射 ID |
+| question_id | 题目 ID |
+| knowledge_node_id | 知识点节点 ID |
+| confidence | 映射置信度 |
+| is_primary | 是否主知识点 |
+| mapping_source | 映射来源：llm / rule / manual（Phase 2A 新增） |
+| review_status | 审核状态：approved / pending / rejected（Phase 2A 新增） |
+
+### 5.8 question_types
+
+| 字段 | 含义 |
+|---|---|
+| id | 题型 ID |
+| subject_id | 学科 ID |
+| parent_id | 父题型 ID |
+| code | 题型编码 |
+| name | 细粒度题型名 |
+| sort_order | 排序 |
+
+### 5.9 question_embeddings
+
+| 字段 | 含义 |
+|---|---|
+| id | embedding ID |
+| question_id | 题目 ID |
+| embedding | 向量 |
+| embedding_provider | embedding Provider |
+| embedding_dimension | 固定 2560（qwen3-embedding:4b） |
+
+### 5.10 background_tasks
+
+| 字段 | 含义 |
+|---|---|
+| id | 任务 ID |
+| task_type | 任务类型 |
+| status | 任务状态 |
+| progress | 进度 0-1 |
+| current_stage | 当前阶段 |
+| error_detail | 失败原因 |
+| payload_json | 任务入参 |
+| result_json | 任务结果摘要 |
+| created_at | 创建时间 |
+| updated_at | 更新时间 |
+
+### 5.11 domain_events
+
+| 字段 | 含义 |
+|---|---|
+| id | 事件 ID |
+| event_type | 事件类型 |
+| entity_type | 实体类型 |
+| entity_id | 实体 ID |
+| payload_json | 事件数据 |
+| created_at | 事件时间 |
+| processed_at | 消费时间 |
+
+### 5.12 wrong_questions
+
+| 字段 | 含义 |
+|---|---|
+| id | 错题记录 ID |
+| user_id | 学生 ID |
+| question_id | 题目 ID |
+| source_type | 来源：practice / jpg_upload |
+| error_type | 错误类型 |
+| wrong_count | 错题次数 |
+| last_wrong_time | 最近错题时间 |
+| mastery_status | 掌握状态 |
+| review_count | 复习次数 |
+| last_review_at | 最近复习时间 |
+
+### 5.13 practice_sessions
+
+| 字段 | 含义 |
+|---|---|
+| id | 练习批次 ID |
+| user_id | 学生 ID |
+| trigger_type | 触发方式：manual / recommendation / admin |
+| question_count | 题目数量 |
+| status | 练习状态 |
+| started_at | 开始时间 |
+| completed_at | 完成时间 |
+
+### 5.14 practice_answers
+
+| 字段 | 含义 |
+|---|---|
+| id | 作答记录 ID |
+| session_id | 练习批次 ID |
+| question_id | 题目 ID |
+| question_snapshot | 题目快照 |
+| student_answer | 孩子答案 |
+| is_correct | 是否正确 |
+| duration_seconds | 用时 |
+| knowledge_point_ids | 关联知识点 |
+
+### 5.15 mastery_records
+
+| 字段 | 含义 |
+|---|---|
+| id | 掌握度记录 ID |
+| user_id | 学生 ID |
+| knowledge_node_id | 知识点节点 ID |
+| mastery_level | 掌握等级 |
+| total_attempts | 总尝试次数 |
+| correct_count | 正确次数 |
+| recent_correct_rate | 近期正确率 |
+
+### 5.16 generation_jobs
+
+| 字段 | 含义 |
+|---|---|
+| id | 生成任务业务 ID |
+| task_id | 统一后台任务 ID |
+| task_type | 生成类型 |
+| subject | 学科 |
+| grade | 年级 |
+| parameters | 生成参数 |
+| ratio_snapshot | 比例快照 |
+
+### 5.17 generation_results
+
+| 字段 | 含义 |
+|---|---|
+| id | 生成结果 ID |
+| job_id | 生成任务业务 ID |
+| question_id | 生成题 ID |
+| review_status | 审核状态 |
+| review_comment | 审核意见 |
+
+### 5.18 system_configs
+
+| 字段 | 含义 |
+|---|---|
+| id | 配置 ID |
+| config_key | 配置键 |
+| config_value | 配置值 |
+| description | 配置说明 |
+| updated_at | 更新时间 |
+
+### 5.19 question_candidates
+
+保存 Semantic/Evidence Gate 判定为 `candidate` 的候选题内容、Gate 原因和
+provenance 快照。`approved` 迁移到 questions，不入本表；`rejected` 删除本表记录并写
+Domain Event/审计。旧 `gate_decision=review/reject` 仅作 legacy 迁移兼容。
+
+| 字段 | 含义 |
+|---|---|
+| stem | 候选题干 |
+| options | 候选选项 |
+| answer | 候选答案 |
+| explanation | 候选详解 |
+| gate_decision | legacy Admission Gate 决策：review / reject；新链以 admission_status=candidate 为准 |
+| gate_reason | 未通过的规则或原因 |
+| gate_checks | Gate 完整校验结果快照 |
+| admission_version | Gate 规则版本 |
+| answer_provenance_json | Gate 前答案来源证据 |
+| explanation_provenance_json | Gate 前详解来源证据 |
+| sub_qno_status | 子题 qno 完整性状态 |
+| document_id | 来源文档 ID |
+| source_version_id | Phase 1 planned：候选来源 sealed source version |
+| annotation_run_id | Phase 2 planned：候选来源 annotation run |
+| resolver_run_id | Phase 3 planned：候选来源 resolver run |
+| ir_snapshot_id | Phase 3 planned：候选来源 semantic IR snapshot |
+| admission_status | Phase 5 canonical：本表行恒为 candidate；approved/rejected 不入本表 |
+| content_hash | 规范化内容 SHA256 |
+| is_composite | 是否综合题 |
+| sub_questions | 综合题子题 |
+
+---
+
+## 6. 功能字典
+
+| 功能 | 描述 | 归属 |
+|---|---|---|
+| 文档上传与解析 | 上传 PDF/DOCX，提取题目、配图、答案、详解和元数据 | admin |
+| 人工审核 | 对低置信度题目、生成题、JPG 错题进行确认或修正 | admin |
+| 题库管理 | 查询、查看、编辑、删除题目和配图 | admin |
+| Semantic/Evidence Gate 候选审核 | 查看、approve、reject canonical candidate/rejected 候选题 | admin |
+| Immutable Source Seal | raw/canonical source 校验并封存，生成 source version | 系统 |
+| Semantic Annotation Run | LLM 输出 semantic units/references/relations 并持久化 | 系统 |
+| Source Resolver / IR | 把语义 reference 解析为 resolved span，生成 Semantic IR | 系统 |
+| Deterministic Compiler | 从 ready IR 编译题目/综合题对象 | 系统 |
+| 去重合并 | 将同一题的出现实例合并为一道题 | 系统 |
+| 统计与分析 | 题型、年份、知识点、难度、错题、学习趋势统计 | admin / student |
+| AI 生成实验 | 输入知识点、题型、难度，生成单题实验，不自动入库 | admin |
+| AI 完整生成 | 根据趋势、频率、占比生成新题，审核后入库 | admin |
+| 试卷导出 | 导出学生版试卷，以及答案和详解独立版 | admin |
+| 错题上传 | 学生上传 JPG，系统自动切分、识别、匹配或新建 | student |
+| 错题本 | 列表、筛选、详情、重练、标记已掌握 | student |
+| 练习 | 生成练习、作答、自动判分、记录历史 | student |
+| 学习统计 | 查看错题趋势、掌握度和薄弱点 | student |
+| 系统配置 | 管理 API Key、模型路由、知识树、题型规范 | admin |
+| 系统健康检查 | 返回后端运行状态和当前环境 | system |
+| Agent 接口 | 可选 MCP Tool，供 Codex/Claude 等调用系统能力 | agent |
+
+---
+
+## 7. 状态枚举
+
+| 枚举 | 取值 | 含义 |
+|---|---|---|
+| source_type | document / generated / student | 题目来源 |
+| admission_status | approved / candidate / rejected | Semantic/Evidence Gate canonical 状态；approved→questions；candidate→question_candidates；rejected→删除候选/审计 |
+| question_status | approved / rejected | 新链 questions 状态；new chain 不写 reviewing/candidate；legacy reviewing 仅旧记录 |
+| question_candidate_status | candidate | question_candidates 表状态；approved/rejected 不入该表 |
+| task_status | queued / running / succeeded / failed / review_required | 后台任务状态 |
+| review_status | pending / approved / rejected | 审核状态 |
+| gate_decision | review / reject | legacy：旧 Admission Gate 候选决策；仅供迁移/审计，新链使用 admission_status=candidate |
+| mastery_status | mastered / reviewing / not_mastered | 掌握状态 |
+| upload_status | queued / processing / completed / failed | 上传状态 |
+| processing_status | pending / parsing / annotating / reviewing / completed / failed / scanned | 文档处理状态（scanned=扫描版 PDF，2026-08-25 新增，跳过 OCR 后续集中处理） |
+| trigger_type | manual / recommendation / admin | 练习触发方式 |
+
+---
+
+## 8. 事件类型
+
+| 事件 | 含义 |
+|---|---|
+| DocumentUploaded | 文档已上传并进入解析队列 |
+| DocumentRetryQueued | 文档已重新进入解析队列 |
+| TaskQueued | 后台任务已重新入队 |
+| QuestionCreated | 题目已创建 |
+| AdmissionRejected | candidate 被拒绝：删除候选并保存原因/审核人/审核时间 |
+
+---
+
+## 9. 更新记录
+
+### 2026-08-10 22:17:19
+
+- 创建本文件，用于统一项目字段、功能和状态枚举。
+
+### 2026-08-10 22:41:06
+
+- 新增“系统健康检查”功能条目。
+
+### 2026-08-11
+
+- 补充 `processing_status` 的 `failed` 状态。
+- 新增事件类型字典：文档上传、文档重试、任务重试、题目创建。
+
+### 2026-08-11 00:45:41
+
+- 新增文档解析阶段概念：`OcrPage`、`ParsedQuestion`、`Question Aggregate JSON`。
+- 同步 P2 文档解析验证使用的结构化交换格式约定。
+
+### 2026-08-11 07:07:42
+
+- 新增 V1 教训固化概念：`Native Markdown`、`L1 Markdown`、`L2 Annotation Mirror`、`Line-range Annotation`、`Image Placement`、`Source Provenance`、`Document Artifact Layer`。
+- 补充 `question_images.page_no/bbox/placement/source/figure_id` 字段语义。
+- 修正更新记录章节编号为 `9`。
+
+### 2026-08-11 07:19:47
+
+- 明确 `Line-range Annotation` 是粗略行号标注。
+- 新增 `Coarse Line Range`、`Anchor Correction`、`Corrected Anchor`、`Anchor Status`。
+
+### 2026-08-11
+
+- 版本升至 0.7：新增 L1/L2 数据模型概念和 Quality Gate 概念。
+- 新增 `L1Line`、`L1Document`、`L2QuestionAnnotation`、`Quality Gate` 条目。
+
+### 2026-08-11 23:49:10
+
+- 版本升至 0.8：新增 Native L1、PPSV3 L1、Canonical L1、L1 Source Arbitration 概念。
+- 修正 Native Markdown/L1 Markdown 定义，明确 PyMuPDF 为辅助源。
+
+### 2026-08-26 08:06:54
+
+- `processing_status` 新增 `scanned` 状态：纯扫描版 PDF（无文本层，
+  text_coverage 极低）OCR 题号不可靠，标记后跳过 OCR/LLM，后续集中处理。
+
+
+### 2026-08-28 23:50:00
+
+- questions 新增 original_question_type：LLM 原始细粒度题型 code。
+- questions 新增 section_id：来源 section/共享材料区标识。
+
+
+### 2026-08-29 00:05:00
+
+- sub_questions 支持递归 sub_sub_questions，用于多层子问结构。
+- P0-3 完成：后端数据结构、解析、切片、入库、API/JSONB、前端递归渲染均已支持。
+
+
+### 2026-08-29 00:15:00
+
+- questions 新增 answer_structure JSONB：多答案、数值范围、展示/判分扩展结构。
+
+
+### 2026-08-29 00:35:00
+
+- questions 新增 word_bank JSONB：词库独立存储。
+- 细粒度题型统计：question_type_id 可使用 cloze/grammar_fill/seven_to_five/essay/writing 等原始细粒度码。
+
+### 2026-08-29 12:30:00
+
+- P0-2 写作题 canonical：essay/writing 作为原始细粒度题型 code；内部按 short_answer 处理，入库 question_type_id 可创建 essay/writing。
+- P1-3 孤立数字保护：英语正文中的年龄/年份/日期/页码/范围/百分数不再被误标为填空位。
+- P1-4 七选五 A-G 完整性：子题选项标签缺失时生成 sub_options retry 锚点并触发重试。
+- P2-2 展示增强：前端高亮正确选项并在答案区显示对应选项文本。
+- P2-1 保持现状：指令文本继续保留在题干区，符合当前展示标准，不新增 instruction 字段。
+
+### 2026-08-29 15:30:00
+
+- P0-5 化学式标准化：新增 chemistry_formula.py，OCR 括号式下标/上标归一化为 Cl₂、OH⁻、Fe₂O₃、Fe³⁺、Mg(OH)₂ 等。
+- P1-2 答案图子题绑定：question_images 新增 sub_question_qno；空间邻近算法绑定答案图到最近子题。
+
+
+### 2026-08-29 21:38:34
+
+- 固化 `Docs/00_Requirements/DISPLAY_CONTRACT.md` v0.4。
+- 新增展示契约字段：`shared_material`、`shared_material_notes`、`scoring_standard`、`stem_region/answer_region/explanation_region`。
+- 语文表格答案使用 `answer_structure`；写作范文放 `answer`；大写作直接按一道题建模。
+
+### 2026-09-03 23:15:44
+
+- 新增 `question_candidates` 表概念与字段字典，补齐 Admission Gate 候选闭环命名。
+- 新增 `gate_decision` 状态枚举：review / reject。
+- 新增功能字典条目：Admission Gate 候选审核。
+
+### 2026-09-03 23:57:03
+
+- 版本升至 1.1，进入 Phase 0 文档冻结基线。
+- 新增并冻结语义管线术语：Immutable Source、Source Version、Source Index、
+  Semantic Annotation、Semantic Unit、Standalone/Composite Unit、Semantic
+  Reference、Source Resolver、Resolved Span、Semantic IR、Deterministic Compiler、
+  Gate 分层、Answer Status 三字段、Resolver/IR Status、Content Roles、
+  Recursive Subquestion 等。
+- 旧 Line-range Annotation、Anchor Correction、Corrected Anchor、Anchor Status、
+  L2 Annotation Mirror、Quality Gate、Admission Gate 等标记 legacy。
+- 状态字典统一 `admission_status=approved/candidate/rejected`，并给出与
+  question_status、gate_decision 的映射；gate_decision 标记 legacy。
+- documents/instances/candidates 字段补充 legacy 镜像与 planned provenance 字段。
+
+### 2026-09-04 00:16:28
+
+- 修正候选状态模型：approved→questions、candidate→question_candidates、
+  rejected→删除候选并写审计；question_status 新链只写 approved/rejected。
+- gate_decision 仅保留 legacy 迁移/审计用途。
+- 新增 `question_candidate_status=candidate` 与 `AdmissionRejected` 事件。
+- 新增 Allowed-Answer Grammar 概念；strict auto verified_correct 前置 DoD。
