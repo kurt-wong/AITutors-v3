@@ -108,3 +108,12 @@ Date: 2026-09-05
   入口无旁路）；6 处列收紧 NOT NULL（10 未标 NULL 即 required）；撤 6 列 server_default →
   python default；migration `0002`。R4–R7 作实现说明记录。27 tests / coverage 94%。
 - 下一步：段 C 不变；待办不变：T/F↔A/B 映射段 G 前补。
+
+### 2026-09-05 20:44:51
+
+- **Status: 段 A 完成（实证复核通过）**，不变。
+- **实证对抗审查**：E1/E2（required/nullable 实库核）、E3（server_default 撤净）通过；
+  B1/B2 证实 sealed 不可变与 decision_status 唯一入口**仅应用层保证、DB 无 trigger**
+  （如实记录，DB 级 enforcement 待 Spec 授权）。补 DB 往返全链路测试后 **28 tests /
+  coverage 99%**（此前 create 方法无 DB 往返，是真实缺口，已补）。
+- 下一步：段 C 不变；待办不变：T/F↔A/B 映射段 G 前补。

@@ -145,3 +145,20 @@
   DATABASE_URL、浮点 nan 说明）作为实现说明记录，不改。
 - **验证**：27 tests PASS、coverage 94%、模型↔DB 一致（0002 已应用）。
 - **影响**：进段 C 前 schema 可空/默认与 10 冻结正文对齐；approve 唯一入口无旁路面。
+
+### 2026-09-05 20:44:51（段 A 实证对抗审查）
+
+- **背景**：按用户要求以**真实运行证据**复核段 A（不推测、不降标准）。
+- **实证**：E1 审计 7 required 列实库全 NOT NULL；E2 nullable 列全 YES（审计清单曾误加
+  `documents.processing_status`——实为 required，非缺陷）；E3 全库 `column_default` 残留
+  = 无（0002 已撤净）；B1 raw UPDATE sealed version → rowcount 1、B2 raw UPDATE
+  decision_status → rowcount 1（**DB 层无 trigger 强制**，sealed/decision 唯一入口当前
+  仅 Repository/Service 应用层保证——如实记录，DB 级 enforcement 待 Spec 授权）。
+- **缺口补测**：此前 `create_role_content`/`create_material`/`create_unit_group`/
+  `create_semantic_annotation`/`create_admission_candidate(flush)`/`append_figure` 等
+  create 方法**未曾在真实 DB 往返执行**（coverage 行证）；新增 DB 往返全链路测试
+  （B→A→C 依赖链 flush）。初跑暴露测试自身 client-default 时序缺陷（id 于 flush 才赋值），
+  修正后通过。
+- **验证**：28 tests PASS、coverage **94% → 99%**（content/snapshot repository 100%，
+  source 92%——余 3 行错误分支未覆盖）。
+- **影响**：Repository create 面全部经真实 DB 验证；段 A 验收证据链完整。
