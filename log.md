@@ -187,3 +187,18 @@
   未冻结按自由度实现并记录。
 - **影响**：external side-effect control plane 建立；段 C 出口闸通过；段 B 的 cloud OCR
   路径现在有合法放行闸（A→C→B 顺序成立）。
+
+### 2026-09-05 21:40:39（段 C 实证对抗审查）
+
+- **背景**：按用户要求以真实运行证据复核段 C（不推测、不降标准）。
+- **真实缺陷发现**：连续两遍 pytest，**第一遍即 2 FAIL**（test_budget C3-A/C4）——上一轮
+  43 passed 是残留为空的首跑；此前 committed 的 budget 行（固定 scope R1/HX）跨会话残留，
+  使 budget 测试**不可重入且污染预算表**。修复：budget 测试每 run 用唯一 scope
+  （uuid4 hex），连续两遍后 43 passed 稳定。
+- **边界实证**：D1 disabled 加载不 import httpx（无 HTTP client）；D2 raw SQL UPDATE
+  audit → rowcount 1（append-only 为 Repository 层 enforcement，DB 无 trigger，如实）；
+  D3 budget UNIQUE(account_dim,scope_id,stage) NULLS NOT DISTINCT 真唯一（同
+  (request,scope,NULL) 第二行 IntegrityError）；D4 le 同 hash 不同 stage 两行 OK。
+- **说明**：budget raw SQL 须显式给 id/updated_at（DB 无 server_default——与段 A R3
+  「撤 server default」一致，非缺陷）。取证脚本初版自身漏列报错已纠正，最终取证有效。
+- **影响**：段 C 测试可重入、预算表不被污染；Gateway/audit/budget 骨架经真证据验证。
