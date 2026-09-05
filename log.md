@@ -256,3 +256,14 @@
   test_ocr_gateway build 三态/mock 无 provider/markdown parse）；临时探针删除。
 - **验证**：66 tests ×2 连续两遍（既有 60 不回归 + 新 6），coverage 不变达标。
 - **结论**：段 B 无未解决 FAIL、无结构缺陷；发现均为观察/边界 + 1 登记（BUG-V3-008）。
+
+### 2026-09-05 23:20:46（40 §2 段 B 正式关闭）
+
+- **决策**：用户宣布 40 §2 段 B 正式完成、B1–B7 + 对抗探针全通过，关闭该阶段。
+- **交付盘点**：B 五交付（config/errors/OCR 网关+provider/seal domain service/测试）+
+  Gate B1–B7 PASS + 对抗探针 11 项 PASS + 6 项转正式回归（66 tests ×2）+ 真实 DB 边界
+  验证（E0–E3 + T1 跨事务）+ coverage 达标 + 无 unresolved FAIL。
+- **延续 Bug**：BUG-V3-007（source_version 基数）+ BUG-V3-008（cloud OCR provider 值域）
+  Open deferred——B 不自行改 Frozen Spec，Errata 统一。
+- **下一步**：进入 40 §2 段 D（Annotation stage）。段 D 第一原则继续沿用 A/B/C 经验：
+  先读 Frozen Spec、明确 D 对象与 Entry/Exit Gate、再实施，不因 B 留下 bug 反向改 B。

@@ -167,3 +167,18 @@ Date: 2026-09-05
   role → 多 version（007 设计允许）。
 - **下一步**：段 B 是否关闭由用户裁决；若关闭进入 40 §2 段 D（Annotation stage）。待办不变：
   T/F↔A/B 映射段 G 前补。
+
+### 2026-09-05 23:20:46
+
+- **Status: 段 B 正式关闭（用户裁决 COMPLETE / CLOSED）→ 进入 40 §2 段 D。**
+- **交付盘点**：Gate B1–B7 全 PASS + 对抗探针 11 项全 PASS + 6 项转正式回归（66 tests ×2）+
+  真实 DB 边界验证 + coverage 达标 + 无 unresolved FAIL。
+- **延续 Bug**：BUG-V3-007（source_version 基数 / original_sha256 语义）+ BUG-V3-008
+  （cloud OCR provider 值域）保持 Open / deferred——B 阶段不自行改 Frozen Spec，待
+  Errata 统一裁决。**Open bug ≠ B failure**。
+- **实现清单（按 Frozen Spec）**：Source Seal 幂等/line_ref/body_rebuild/integrity/
+  sealed 禁 UPDATE / 独立 OCRGateway（P0 独占 external 入口）/ Native PyMuPDF /
+  CloudOCRProvider 骨架（transport 未接线）/ BUG-V3-007/008 登记。
+- **明确未实现**：PP-StructureV3 / MinIO / object storage / semantic annotation /
+  resolver / compiler / gate / tasks / worker / lease / live OCR smoke。
+- **待办不变**：T/F↔A/B 映射段 G 前补。
