@@ -155,3 +155,15 @@ Date: 2026-09-05
   与 LLMGateway 同构骨架，budget/audit full lifecycle 段 H task 驱动统一接入（如实细化）。
 - **缺口**：BUG-V3-007（original_sha256 与 source_version 基数未冻结）登记 Open。
 - **下一步**：40 §2 段 D（Annotation stage）。待办不变：T/F↔A/B 映射段 G 前补。
+
+### 2026-09-05 23:07:10
+
+- **Status: 段 B 实证对抗审查通过**（无未解决 FAIL、无结构缺陷）。
+- **证据**：对抗探针 11 项全 PASS（跨事务幂等 / extract 失败→failed / hash 分层确定性 /
+  integrity DB 复算 / gateway 分支 / native 行粒度观察）；66 tests ×2 连续两遍；coverage 达标。
+- **登记**：BUG-V3-008（cloud OCR role/provider 值域未冻结，10 §4.2 vs OCR_PROVIDER_POLICY
+  L1 双模型）Open。
+- **边界记录**：seal 跨事务幂等成立、无 DB UNIQUE 并发兜底（BUG-V3-007 延伸）；同文件双
+  role → 多 version（007 设计允许）。
+- **下一步**：段 B 是否关闭由用户裁决；若关闭进入 40 §2 段 D（Annotation stage）。待办不变：
+  T/F↔A/B 映射段 G 前补。

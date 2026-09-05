@@ -86,3 +86,36 @@ async def test_b6_live_all_gates_calls_provider_once():
     r = await g.extract(b"hello")
     assert r.provider == "rec"
     assert p.calls == [5]
+
+
+async def test_build_gateway_disabled_and_live_no_token(monkeypatch):
+    """build_ocr_gateway：disabled → extract 抛；live 无 token → live_provider None → deny。"""
+    from app.ai.ocr.gateway import build_ocr_gateway
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "ocr_gateway_mode", "disabled")
+    g = build_ocr_gateway()
+    with pytest.raises(GatewayDisabledError):
+        await g.extract(b"x")
+    monkeypatch.setattr(settings, "ocr_gateway_mode", "live")
+    monkeypatch.setattr(settings, "paddleocr_vl_token", None)
+    g2 = build_ocr_gateway()
+    with pytest.raises(GatewayDeniedError) as exc:
+        await g2.extract(b"x")
+    assert "no live OCR provider" in str(exc.value)
+
+
+async def test_mock_without_provider_raises():
+    """OCRGateway('mock') 未配置 mock_provider → GatewayDisabledError（不静默）。"""
+    g = OCRGateway("mock")
+    with pytest.raises(GatewayDisabledError):
+        await g.extract(b"x")
+
+
+async def test_cloud_markdown_lines_parse_helper():
+    """CloudOCRProvider.markdown_lines_to_ocr_lines：空行剔除、保内空格、page 标定。"""
+    from app.ai.ocr.providers import CloudOCRProvider
+
+    ls = CloudOCRProvider.markdown_lines_to_ocr_lines("a\n\nb  \nc", 1)
+    assert [x.text for x in ls] == ["a", "b  ", "c"]
+    assert all(x.page_no == 1 for x in ls)

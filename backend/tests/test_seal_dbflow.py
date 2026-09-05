@@ -149,3 +149,118 @@ async def test_cloud_path_goes_through_gateway_mock(session, pdf_bytes):
     assert hashlib.sha256(pdf_bytes).hexdigest()  # 同一文件本体复用 document
     n_docs = (await session.execute(select(func.count()).select_from(Document))).scalar()
     assert n_docs == 1
+
+
+async def test_b1_cross_transaction_idempotency(session, pdf_bytes):
+    """B1 跨事务强化：commit 后新事务同文件 seal → 仍恰 1 sealed version（非仅同事务）。"""
+    from sqlalchemy import text
+
+    from app.db.session import async_session_maker
+
+    sha = hashlib.sha256(pdf_bytes).hexdigest()
+    async with async_session_maker() as s1:
+        v1 = await _seal(s1, pdf_bytes)
+        await s1.flush()
+        await s1.commit()
+        vid = v1.id
+    try:
+        async with async_session_maker() as s2:
+            v2 = await _seal(s2, pdf_bytes)  # 新事务，DB 已持久化
+            await s2.flush()
+            assert v2.id == vid
+            n = (
+                await s2.execute(select(func.count()).select_from(DocumentSourceVersion))
+            ).scalar()
+            assert n == 1
+    finally:
+        async with async_session_maker() as sc:
+            vids = (
+                await sc.execute(
+                    text(
+                        "SELECT v.id FROM document_source_versions v JOIN documents d "
+                        "ON d.id=v.document_id WHERE d.original_sha256=:s"
+                    ),
+                    {"s": sha},
+                )
+            ).scalars().all()
+            for rid in vids:
+                await sc.execute(
+                    text("DELETE FROM document_source_lines WHERE source_version_id=:x"),
+                    {"x": rid},
+                )
+                await sc.execute(
+                    text("DELETE FROM document_source_versions WHERE id=:x"), {"x": rid}
+                )
+            await sc.execute(text("DELETE FROM documents WHERE original_sha256=:s"), {"s": sha})
+            await sc.commit()
+
+
+class _BoomProvider:
+    name = "boom"
+
+    async def extract(self, file_bytes: bytes):
+        raise RuntimeError("boom")
+
+
+async def test_extract_failure_marks_document_failed(session, pdf_bytes):
+    """extractor 抛错 → document.processing_status='failed'（seal except 分支，防静默残留）。"""
+    svc = SealService(session)
+    with pytest.raises(RuntimeError):
+        await svc.seal_document(
+            file_bytes=pdf_bytes,
+            file_name="boom.pdf",
+            file_type="pdf",
+            role="native",
+            provider="native",
+            extractor=_BoomProvider().extract,
+        )
+    await session.flush()
+    sha = hashlib.sha256(pdf_bytes).hexdigest()
+    doc = (
+        await session.execute(select(Document).where(Document.original_sha256 == sha))
+    ).scalar_one_or_none()
+    assert doc is not None
+    assert doc.processing_status == "failed"
+
+
+async def test_seal_integrity_recomputable_from_db(session, pdf_bytes):
+    """integrity 完整性：seal 后从 DB lines 读回复算 line_hashes/body/integrity == 存储值。"""
+    from app.domains.source.line_index import (
+        compute_body_hash,
+        compute_integrity_hash,
+        compute_line_hash,
+    )
+
+    v = await _seal(session, pdf_bytes)
+    await session.flush()
+    rows = (
+        await session.execute(
+            select(DocumentSourceLine)
+            .where(DocumentSourceLine.source_version_id == v.id)
+            .order_by(DocumentSourceLine.seq)
+        )
+    ).scalars().all()
+    body = "\n".join(r.text for r in rows)
+    line_hashes = [
+        compute_line_hash(
+            text=r.text,
+            raw_sources=r.raw_sources,
+            selected_source=r.selected_source,
+            evidence=r.evidence,
+        )
+        for r in rows
+    ]
+    ih = compute_integrity_hash(
+        body_hash=compute_body_hash(body),
+        line_hashes=line_hashes,
+        figure_hashes=[],
+        provenance={"role": v.role, "provider": v.provider, "artifact_kind": v.artifact_kind},
+    )
+    assert ih == v.integrity_hash
+    for r in rows:
+        assert r.line_hash == compute_line_hash(
+            text=r.text,
+            raw_sources=r.raw_sources,
+            selected_source=r.selected_source,
+            evidence=r.evidence,
+        )

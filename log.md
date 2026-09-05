@@ -236,3 +236,23 @@
   (stage,hash) LE 幂等，Gate B1 只断言明确部分）。
 - **影响**：本地确定性 seal 可用（native）；cloud OCR 有合法放行结构（段 H task 后接全
   lifecycle + live smoke）；40 §2 序 A→C→B 三闸齐。下一步：段 D（Annotation stage）。
+
+### 2026-09-05 23:07:10（段 B 实证对抗审查）
+
+- **背景**：按用户要求对段 B 完成内容做第一性 × V3SPEC 实证对抗审查（不降标准、不自我
+  合理化、不强解、不推测）。
+- **对抗探针取证**：临时探针 11 项全 PASS——跨事务幂等（B1 原只测同事务，commit 后新事务
+  同文件仍恰 1 version）；extract 失败→doc failed（seal except 分支实测工作）；hash 分层
+  确定性（同文本不同 bytes → body/integrity 同、le 异）；build_ocr_gateway 三态/mock 无
+  provider/markdown parse 均正常；integrity 可从 DB lines 复算一致（真覆盖）；native 行
+  粒度观察（提取片段可碎为词级，词保序非丢字符，body 为提取 line 序列非视觉行还原——
+  cloud OCR 段 F 处理）。
+- **真实发现（登记）**：BUG-V3-008——cloud OCR（PaddleOCR-VL）落库 provider 值
+  'paddleocr-vl' 不在 10 §4.2 provider 冻结枚举（native/ppsv3/docx）；OCR_PROVIDER_POLICY
+  L1 双模型 vs 10 schema 只列 ppsv3，值域未冻结。段 B cloud 仅 mock 占位，待 errata。
+- **边界记录**：seal 幂等跨事务成立但无 DB UNIQUE 兜底（并发同文件 seal 极端场景不保证，
+  BUG-V3-007 延伸）；同文件双 role → document 复用 + 多 version（BUG-V3-007 设计允许）。
+- **补强落地**：6 项正式补测并入（test_seal_dbflow 跨事务幂等/extract fail/integrity 复算；
+  test_ocr_gateway build 三态/mock 无 provider/markdown parse）；临时探针删除。
+- **验证**：66 tests ×2 连续两遍（既有 60 不回归 + 新 6），coverage 不变达标。
+- **结论**：段 B 无未解决 FAIL、无结构缺陷；发现均为观察/边界 + 1 登记（BUG-V3-008）。
