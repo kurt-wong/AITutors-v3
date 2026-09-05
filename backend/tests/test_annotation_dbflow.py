@@ -204,3 +204,73 @@ async def test_d3_invalid_json_persisted_then_raises(session, pdf_bytes):
     ann = (await session.execute(select(SemanticAnnotation))).scalars().first()
     assert ann.status == "invalid"
     assert "parse_error" in ann.payload
+
+
+async def test_d2_cross_transaction_idempotency(session, pdf_bytes):
+    """D2 跨事务强化：commit 后新事务同 LE hash → 返回既有 annotation。"""
+    from sqlalchemy import text
+    from app.db.session import async_session_maker
+
+    sv = await _seal_source(session, pdf_bytes)
+    gw = LLMGateway("mock", mock_provider=_FixedJSONProvider(_valid_json()))
+    mc = _mchash("cross-tx")
+    ann1 = await AnnotationService(session, gw).annotate(
+        source_version_id=sv.id, prompt="p", model_config_hash=mc)
+    await session.flush(); await session.commit()
+    a1id = ann1.id
+    try:
+        async with async_session_maker() as s2:
+            gw2 = LLMGateway("mock", mock_provider=_FixedJSONProvider(_valid_json()))
+            ann2 = await AnnotationService(s2, gw2).annotate(
+                source_version_id=sv.id, prompt="p", model_config_hash=mc)
+            assert ann2.id == a1id
+            n = (await s2.execute(select(func.count()).select_from(SemanticAnnotation))).scalar()
+            assert n == 1
+    finally:
+        # 跨事务 commit 使 conftest rollback fixture 失效 → cleanup 必须按 FK 序删净
+        # （annotation/lines → version → document），否则残留 documents 域数据污染
+        # 后续 B seal 测试的 `n_docs == 1` 断言（FAIL-1 修复，参照 _audit_d.py test_t1）。
+        async with async_session_maker() as sc:
+            vid = str(sv.id)
+            doc_id = (
+                await sc.execute(
+                    text("SELECT document_id FROM document_source_versions WHERE id=:v"),
+                    {"v": vid},
+                )
+            ).scalar()
+            await sc.execute(
+                text("DELETE FROM semantic_annotations WHERE source_version_id=:v"),
+                {"v": vid},
+            )
+            await sc.execute(
+                text("DELETE FROM document_source_lines WHERE source_version_id=:v"),
+                {"v": vid},
+            )
+            await sc.execute(
+                text("DELETE FROM document_source_versions WHERE id=:v"),
+                {"v": vid},
+            )
+            if doc_id:
+                await sc.execute(text("DELETE FROM documents WHERE id=:d"), {"d": str(doc_id)})
+            await sc.commit()
+
+
+async def test_d2_invalid_not_reused_requires_new_le(session, pdf_bytes):
+    """D2 invalid annotation 不复用（find 排除 invalid）；retry 必须新 LE（DB UNIQUE 同 hash 阻止）。"""
+    sv = await _seal_source(session, pdf_bytes)
+    gw_bad = LLMGateway("mock", mock_provider=_FixedJSONProvider(_invalid_schema_json()))
+    mc = _mchash("inv-not-reuse")
+    with pytest.raises(ValueError):
+        await AnnotationService(session, gw_bad).annotate(
+            source_version_id=sv.id, prompt="p", model_config_hash=mc)
+    await session.flush()
+    inv = (await session.execute(select(SemanticAnnotation))).scalars().first()
+    assert inv.status == "invalid"
+    # 同 LE hash 重试 → UNIQUE 阻止；retry 需新 LE
+    gw_ok = LLMGateway("mock", mock_provider=_FixedJSONProvider(_valid_json()))
+    mc2 = _mchash("inv-not-reuse-new")
+    ann2 = await AnnotationService(session, gw_ok).annotate(
+        source_version_id=sv.id, prompt="p", model_config_hash=mc2)
+    await session.flush()
+    n = (await session.execute(select(func.count()).select_from(SemanticAnnotation))).scalar()
+    assert n == 2 and ann2.status == "valid"
