@@ -546,3 +546,27 @@
   单证据，全通过。BUG-V3-001..028 Open 不变。
 - **下一步**：commit Step 2（独立提交点，含 Status.md/log.md/restart-prompt v1.6 收口）→ plan
   Step 3（Audit Lifecycle / Phase 3：`finalize_audit` exactly-once terminalization）。
+
+### 2026-09-07 00:36（H Step 3 实现 + Baseline 对抗审查 + F-1 采纳 + F-2 分层）
+
+- **Baseline 对抗审查（只读）**：llm_call_audit 现状 = create_audit(started) + update_audit 抛
+  AppendOnlyViolation，无 terminal 路径；status 无 DB CHECK、idempotency_key 无唯一约束；无生产
+  调用方。**两不变量分离**——A「不重复写 terminal audit」=finalize 条件 UPDATE；B「不重复执行/不
+  重复建账」=request_id 复用+attempt+(stage,hash) ON CONFLICT，**finalize no-op 不等于整体
+  exactly-once**（你警示的核心）。
+- **裁决**：F-1 采纳（缺行 raise，缺行≠已终态 no-op，不被 0 行掩盖）；F-2 分层采纳（Phase 3 供
+  STARTED→UNKNOWN primitive；「何时判 orphan」归 Phase 4，绑 task lease/worker liveness，禁按 audit
+  年龄判死——防重蹈 Step 2 F-2）；F-2b 归 Phase 4；F-3/F-4 carry-forward → Phase 4/5。
+- **实现**：`LlmCallAuditRepository.finalize_audit` 四态判定（缺行→AuditNotFoundError / started→
+  `UPDATE … WHERE request_id=:id AND status='started' RETURNING status` 恰一迁移 / 已终态→no-op 返
+  回既有终态不改写 / 并发败者 0 行→reread 确认 terminal）。`AUDIT_TERMINAL_STATUSES` 值域门；
+  `update_audit` 仍抛；`"end"` 保留字引号（踩坑修正）；end 缺省 COALESCE now()（DB 单源）。零越界
+  （无 reconciliation/task lease/executor/budget/attempt/schema 扩展）。
+- **验证**：test_audit.py 3→8（+5：三向终态化 / 二次 no-op 不改写 end·usage / 缺行 raise / 非法
+  status raise / 双 session 并发 completed-vs-failed 恰一迁移 + DB 终态=胜者请求态）。全量 pytest
+  **234 passed ×2** 可重入。
+- **下一步**：commit Step 3（独立基线）→ plan **Step 4 LLMExecutor 唯一执行入口**（Phase 4）——
+  先 Baseline/对抗审查：① 真单入口（禁 Domain→Gateway/Provider 旁路）；② mock/disabled/live 同
+  径；③ retry 计数点 = Provider Invocation Port（Lock-4/Note-1）；④ reserve→audit STARTED→
+  invocation→terminal→settle 接线（Lock-6）+ ⑤ Attempt·LE 分离；F-3 request identity 由真实请求
+  模型定夺（不预加 request_seq）。

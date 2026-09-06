@@ -1,5 +1,8 @@
 """运行域 Repository：audit append-only + budget 条件 UPDATE（30 §10/§11，段 C）。
 
+llm_call_audit 唯一受控写 = finalize_audit 的 STARTED→terminal 迁移（30 §10；
+update_audit 仍拒改）；budget reserve/settle 条件 UPDATE 并发安全。
+
 段 H（Step 2）：tasks/task_claims 状态机写路径——claim 原子（UPDATE tasks + INSERT
 task_claims 证据同事务）、heartbeat/complete/fail 四元组 token 条件写（zombie 保护）、
 recover/retry。
@@ -22,6 +25,14 @@ class TaskStateError(RepositoryError):
 
 class LeaseConflict(RepositoryError):
     """heartbeat/complete/fail 四元组不匹配（zombie 保护）或 lease 状态不符。"""
+
+
+class AuditNotFoundError(RepositoryError):
+    """finalize_audit 指向不存在的 request_id（缺行 ≠ 已终态 no-op，F-1）。"""
+
+
+# 30 §10 终态值域（无 DB CHECK；finalize 唯一合法 terminal 出口）
+AUDIT_TERMINAL_STATUSES = frozenset({"completed", "failed", "unknown"})
 
 
 class LlmCallAuditRepository(BaseRepository):
@@ -55,8 +66,71 @@ class LlmCallAuditRepository(BaseRepository):
         return row
 
     async def update_audit(self, *_args: object, **_kwargs: object) -> None:
-        """llm_call_audit append-only 不可变：UPDATE → 抛错（Gate C2）。"""
+        """llm_call_audit append-only 不可变：任意 UPDATE → 抛错（Gate C2）。
+
+        唯一例外是 finalize_audit 的受控 STARTED→terminal 迁移；update_audit 保持拒改，
+        防绕过该受控路径的随意改写。
+        """
         raise AppendOnlyViolation("llm_call_audit is append-only immutable")
+
+    async def finalize_audit(
+        self,
+        request_id: uuid.UUID,
+        *,
+        status: str,
+        end: datetime | None = None,
+        input_tokens: int | None = None,
+        output_tokens: int | None = None,
+        reasoning_tokens: int | None = None,
+        total_tokens: int | None = None,
+        estimated_cost: Decimal | None = None,
+        error_type: str | None = None,
+        oversized_output: bool | None = None,
+    ) -> str:
+        """STARTED → terminal（completed/failed/unknown）exactly-once（30 §10，F-1 语义）。
+
+        三态严格区分，绝不把「缺行」伪装成「已终态 no-op」：
+          request_id 不存在            → raise AuditNotFoundError（编程错误）
+          存在且 status='started'      → 条件 UPDATE 迁移，返回新终态（恰一迁移）
+          存在且已是 terminal           → no-op（幂等），返回既有终态（不改写）
+          并发两 finalize 争同一行      → 条件 UPDATE 保证恰一成功；败者 0 行后 reread
+                                        确认 terminal，返回该终态（不抛、不二次迁移）
+        只做状态迁移 primitive：不判 orphan / 不看 task lease / 不碰 budget——「何时应置
+        UNKNOWN」的判定属 Phase 4（F-2 分层）。DB now() 单一来源：end 缺省取 now()。
+        """
+        if status not in AUDIT_TERMINAL_STATUSES:
+            raise ValueError(
+                f"finalize status must be one of {sorted(AUDIT_TERMINAL_STATUSES)}, got {status!r}"
+            )
+        existing = await self._session.execute(
+            select(LlmCallAudit.status).where(LlmCallAudit.request_id == request_id)
+        )
+        cur = existing.scalar_one_or_none()
+        if cur is None:
+            raise AuditNotFoundError(f"llm_call_audit not found: {request_id}")
+        if cur != "started":
+            return cur  # 已终态 → no-op（幂等），不改写行
+        res = await self._session.execute(
+            text(
+                "UPDATE llm_call_audit SET status=:s, \"end\"=COALESCE(:e, now()), "
+                "input_tokens=:it, output_tokens=:ot, reasoning_tokens=:rt, "
+                "total_tokens=:tt, estimated_cost=:ec, error_type=:et, oversized_output=:os "
+                "WHERE request_id=:id AND status='started' RETURNING status"
+            ),
+            {
+                "s": status, "e": end, "id": request_id,
+                "it": input_tokens, "ot": output_tokens, "rt": reasoning_tokens,
+                "tt": total_tokens, "ec": estimated_cost, "et": error_type, "os": oversized_output,
+            },
+        )
+        row = res.mappings().first()
+        if row is not None:
+            return row["status"]  # 恰一迁移
+        # 并发败者：读到 started 但 UPDATE 0 行 → 另一事务已终态化 → reread 确认终态
+        after = await self._session.execute(
+            select(LlmCallAudit.status).where(LlmCallAudit.request_id == request_id)
+        )
+        return after.scalar_one()
 
 
 class BudgetRepository(BaseRepository):

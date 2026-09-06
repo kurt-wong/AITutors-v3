@@ -401,3 +401,39 @@ Date: 2026-09-05
   default lease 60s 维持。**F-1 为覆盖补强，非实现错误**。
 - **Step 2 is closed for implementation**；A–G 七段 + Step 1/2 均不 reopen。下一实施步 =
   plan **Step 3**（Audit Lifecycle / finalize_audit exactly-once terminalization）。
+
+### 2026-09-07 00:36
+
+- **Status: H Step 3（Audit Lifecycle / Phase 3）实现完成 + Baseline 对抗审查 + F-1 采纳 +
+  F-2 分层**。变更未 commit（Step 3 独立提交点待用户放行）。
+- **Baseline 对抗审查（只读，真证据）**：llm_call_audit 现仅有 create_audit(started) +
+  update_audit→AppendOnlyViolation（runtime_repository.py），无任何 terminal 路径；模型 status 无
+  DB CHECK、idempotency_key 无唯一约束（runtime.py:25/39）；无生产调用方。分离两不变量——A
+  「不重复写 terminal audit」= finalize 条件 UPDATE（Phase 3）；B「不重复执行/不重复建账」=
+  request_id 复用(Phase 4)+attempt 贯通(Phase 5)+(stage,hash) ON CONFLICT(Phase 6)——**finalize
+  no-op 不构成整体 exactly-once**。
+- **审查 findings（裁决）**：F-1 采纳——finalize 缺行必须 raise，缺行≠已终态 no-op，不得被 0
+  行掩盖；F-2 采纳分层——Phase 3 只供 STARTED→UNKNOWN terminalization **primitive**，「何时判
+  orphan」归 Phase 4 且须绑 task lease / worker liveness（禁按 audit 年龄判死，防重蹈 Step 2
+  F-2）；F-2b 采纳归 Phase 4；F-3（idempotency_key 缺「请求序」）与 F-4（usage/settle 事实源）
+  carry-forward → Phase 4/5。
+- **实现（零越界）**：`LlmCallAuditRepository.finalize_audit(request_id, *, status, end=None,
+  tokens/cost/error_type/oversized_output)`——四态：缺行 raise AuditNotFoundError / started→
+  条件 UPDATE 恰一迁移 / 已终态 no-op 返回既有终态 / 并发败者 0 行 reread 确认 terminal。
+  `AUDIT_TERMINAL_STATUSES` 值域门（非 terminal → ValueError）；`update_audit` 仍抛（C2 不回归）；
+  DB now() 单源（end 缺省 COALESCE now()）。未加 reconciliation/task lease/executor/budget/attempt。
+- **验证**：test_audit.py 3→8（+5：三向终态化、二次 no-op 不改写 end/usage、缺行 raise、非法
+  status raise、双 session 并发恰一迁移）。全量 pytest **234 passed ×2** 可重入。
+- **下一步**：commit Step 3 → plan **Step 4 LLMExecutor 唯一执行入口**（Phase 4）——先
+  Baseline/对抗审查（单一入口 / mock·disabled·live 同径 / retry 计数点 Provider Invocation
+  Port / reserve→audit→terminal→settle 接线 / Attempt·LE 分离 / F-3 request identity 定夺）。
+
+### H Step 3 — CLOSED（基线封存，2026-09-07 00:36）
+
+- **Implementation PASS + 对抗审查 F-1/F-2 已裁决落定**：finalize_audit 提供 STARTED→terminal
+  （completed/failed/unknown）exactly-once 原子 primitive；缺行显式 raise（不吞噬）；已终态 no-op
+  （不改写）；并发恰一迁移；update_audit 仍拒改。全量 **234 passed ×2** 可重入。
+- **F-2 分层**：UNKNOWN「何时判 orphan」的 recovery policy 属 Phase 4（绑 task lease / worker
+  liveness，Task 是 liveness authority，Audit 是 execution record）。F-3/F-4 carry-forward。
+- **Step 3 is closed for implementation**；A–G 七段 + Step 1–3 不 reopen。下一实施步 = plan
+  **Step 4（LLMExecutor）**，先 Baseline/对抗审查再编码。

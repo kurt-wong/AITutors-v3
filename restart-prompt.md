@@ -1,38 +1,33 @@
 # AI Tutor V3 — RESTART PROMPT
 
-Version: v1.6
-Status: 段 H 编码进行中 — Step 2 Task State Machine 完成 + F-2/F-1 最小修复收口（229 passed ×2）；Step 2 待 commit
+Version: v1.7
+Status: 段 H 编码进行中 — Step 3 Audit Lifecycle 完成 + F-1/F-2 分层收口（234 passed ×2）；Step 3 待 commit
 Date: 2026-09-07
 
-## 0.0 当前结论（2026-09-07 00:04）
+## 0.0 当前结论（2026-09-07 00:36）
 
-- **H Step 2（Task State Machine）实现完成 + 第一性原理对抗审查（F-2/F-1）+ 最小修复 +
-  收口（229 passed ×2，可重入）**。A–G 七段仍定格（`8a57a92`）。Step 2 交付：
-  `app/repositories/runtime_repository.py` +TaskRepository/TaskClaimRepository（条件 UPDATE…
-  RETURNING 原子 claim / heartbeat / terminal / retry / recover；task_claims append-only）；
-  `app/domains/task/`（TaskService：tasks/task_claims 状态机唯一入口，**不 commit**，
-  调用方持事务，claim 的 tasks 状态更新与 task_claims 证据原子同事务）；Lock-1
-  （worker_id/lease_token 只进 lease_snapshot JSONB）。`tests/test_task_service.py` 17 测试。
-- **对抗审查发现（真 DB 探针 `tests/_audit_h2_task.py` 实证）**：**F-2（CONFIRMED，最高）**
-  ——heartbeat 只更 heartbeat_at、**不滑动 lease_expires_at**，recover 只看 lease 不看
-  liveness → 持续健康心跳但运行超初始租约（默认 60s）的长任务会被误中断。**F-1（CONFIRMED，
-  覆盖缺口）**——无真并发 claim 永久回归（实现已正确，P3 实证恰一胜 + 单证据）。
-- **用户裁决（不改 Frozen Spec，只修实现语义）**：F-2 采纳——heartbeat = **滑动续租**
-  （liveness renewal，**非 reclaim/recovery**）：`SET heartbeat_at=now(),
-  lease_expires_at=now()+make_interval(secs=>:lease) WHERE id/worker_id/lease_token/
-  status='running' AND lease_expires_at>now()`（DB now() 单一来源，应用层不回写旧 lease；
-  **已过期 claim 的 heartbeat 拒** → 由 recover 接管，绝不靠心跳抢救失效 claim）。F-1 采纳
-  ——P3 真并发转正。记录为实现/状态机语义缺陷，非 Spec 变更。
-- **修复与回归（4 新测试）**：heartbeat 增 `lease_seconds` 参数 + 续租 + 过期拒。F2-1 lease
-  跨事务严格后移；F2-2 持续心跳（间隔<lease、穿过原 lease 边界）不被 recover；F2-3 停止心跳
-  超 lease → heartbeat 拒（LeaseConflict）+ recover interrupted；F-1 两 session
-  `asyncio.gather` 并发 claim → 恰一 winner（claim_round=1）+ 恰一证据行 + status=running。
-- **验证**：全量 pytest **229 passed ×2**（无中间清理，可重入）。探针 P1 lease 严格后移 /
-  P2 心跳任务不中断（running）/ P3 过期拒 + 停止可回收（interrupted）/ P4 并发恰一胜单证据
-  全部通过。
-- **下一步**：commit Step 2（独立提交点，含本文件 + Status.md + log.md 收口）后，按 plan
-  严格 Step 顺序进入 **Step 3**（Audit Lifecycle / Phase 3：`finalize_audit` exactly-once
-  terminalization）。
+- **H Step 3（Audit Lifecycle / Phase 3）实现完成 + Baseline 对抗审查 + 收口（234 passed ×2，
+  可重入）**。A–G 七段仍定格（`8a57a92`）。Step 2（Task 状态机）已 CLOSED（commit be9df51）。
+  Step 3 交付：`LlmCallAuditRepository.finalize_audit` = STARTED→terminal（completed/failed/
+  unknown）exactly-once 原子 primitive（runtime_repository.py）。
+- **对抗审查核心分离**：两不变量不同——A「不重复写 terminal audit」（finalize 条件 UPDATE，Phase
+  3）≠ B「不重复执行/不重复建账」（request_id 复用 Phase 4 + attempt 贯通 Phase 5 + (stage,hash)
+  ON CONFLICT Phase 6）。**finalize no-op ≠ 整体 exactly-once**。
+- **裁决**：F-1 采纳——finalize 缺行 **raise AuditNotFoundError**（缺行≠已终态 no-op，不得被 0 行
+  掩盖）；存在且 started→恰一迁移；存在且已终态→no-op 不改写；并发败者 reread 确认 terminal。
+  F-2 分层采纳——Phase 3 只供 STARTED→UNKNOWN **primitive**；「何时判 orphan」归 Phase 4 且**绑
+  task lease / worker liveness（Task=liveness authority，Audit=execution record），禁按 audit
+  年龄判死**（防重蹈 Step 2 F-2）。F-3（idempotency_key 缺请求序）/F-4（usage/settle 事实源）
+  carry-forward → Phase 4/5 定夺。
+- **验证**：test_audit.py 3→8（三向终态化 / 二次 no-op 不改写 / 缺行 raise / 非法 status raise /
+  双 session 并发恰一迁移）；全量 **234 passed ×2**。零越界（无 reconciliation/task lease/executor/
+  budget/attempt/schema 扩展）。
+- **下一步**：commit Step 3（独立基线，含本文件 + Status.md + log.md 收口）→ plan **Step 4
+  LLMExecutor 唯一执行入口**（Phase 4）——先 Baseline/对抗审查再编码：① 真单入口（禁 Domain→
+  Gateway/Provider 旁路）；② mock/disabled/live 同径；③ retry 计数点 = Provider Invocation Port
+  （Lock-4/Note-1，actual invocations 非 attempt 数）；④ reserve→audit STARTED 同事务(Lock-6)→
+  invocation→terminal→settle 接线；⑤ Attempt·LE 分离（Attempt 是运行历史非业务身份）；F-3 request
+  identity 由 M1 真实请求模型定夺，不预加 request_seq。
 - 重启后第一任务：读本文件 → Status.md 尾 → log.md 尾 → 打开 plan 文件
   （`~/.claude/plans/giggly-enchanting-volcano.md`）恢复上下文 → 按当前 Step 继续 H 段
   实现（或等待用户新指令）。
