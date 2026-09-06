@@ -1,13 +1,27 @@
-"""运行域 Repository：audit append-only + budget 条件 UPDATE（30 §10/§11，段 C）。"""
+"""运行域 Repository：audit append-only + budget 条件 UPDATE（30 §10/§11，段 C）。
+
+段 H（Step 2）：tasks/task_claims 状态机写路径——claim 原子（UPDATE tasks + INSERT
+task_claims 证据同事务）、heartbeat/complete/fail 四元组 token 条件写（zombie 保护）、
+recover/retry。
+"""
 
 import uuid
+from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import text
+from sqlalchemy import select, text
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
-from app.models.runtime import Budget, LlmCallAudit
-from app.repositories.base import AppendOnlyViolation, BaseRepository
+from app.models.runtime import Budget, LlmCallAudit, Task, TaskClaim
+from app.repositories.base import AppendOnlyViolation, BaseRepository, RepositoryError
+
+
+class TaskStateError(RepositoryError):
+    """tasks 状态迁移被拒（claim 非 queued / retry 非 failed·interrupted）。"""
+
+
+class LeaseConflict(RepositoryError):
+    """heartbeat/complete/fail 四元组不匹配（zombie 保护）或 lease 状态不符。"""
 
 
 class LlmCallAuditRepository(BaseRepository):
@@ -108,3 +122,146 @@ class BudgetRepository(BaseRepository):
             {"s": older_than_seconds},
         )
         return len(res.all())
+
+
+class TaskRepository(BaseRepository):
+    """tasks：任务状态行。所有状态写走条件 UPDATE（30 §5 claim/heartbeat/zombie）。"""
+
+    async def create(
+        self, *, task_type: str, task_params: dict, status: str = "queued",
+        created_by: str | None = None,
+    ) -> Task:
+        row = Task(task_type=task_type, task_params=task_params,
+                   status=status, created_by=created_by)
+        self._session.add(row)
+        await self._session.flush()
+        return row
+
+    async def find(self, task_id: uuid.UUID) -> Task | None:
+        res = await self._session.execute(select(Task).where(Task.id == task_id))
+        return res.scalar_one_or_none()
+
+    async def claim(
+        self, *, task_id: uuid.UUID, worker_id: str, lease_token: str, lease_seconds: int
+    ) -> dict:
+        """原子 claim：单 UPDATE 从 queued → running + claim_round+1（禁 SELECT→判断→UPDATE）。
+
+        返回 claim_round + started_at + lease_expires_at（DB now() 单一来源），供同事务写
+        task_claims 证据。无返回 = 已非 queued → TaskStateError。
+        """
+        res = await self._session.execute(
+            text(
+                "UPDATE tasks SET status='running', worker_id=:w, lease_token=:t, "
+                "claim_round = claim_round + 1, started_at = now(), "
+                "heartbeat_at = now(), "
+                "lease_expires_at = now() + make_interval(secs => :lease) "
+                "WHERE id = :id AND status = 'queued' "
+                "RETURNING id, claim_round, started_at, lease_expires_at"
+            ),
+            {"id": task_id, "w": worker_id, "t": lease_token, "lease": lease_seconds},
+        )
+        row = res.mappings().first()
+        if row is None:
+            raise TaskStateError(f"task not claimable (not queued): {task_id}")
+        return {
+            "id": row["id"],
+            "claim_round": row["claim_round"],
+            "started_at": row["started_at"],
+            "lease_expires_at": row["lease_expires_at"],
+        }
+
+    async def heartbeat(
+        self, *, task_id: uuid.UUID, worker_id: str, lease_token: str, lease_seconds: int
+    ) -> None:
+        """四元组条件续租（30 §5）：有效 running claim 把 lease 滑到 now()+lease。
+
+        heartbeat = liveness renewal，不是 reclaim/recovery——仅当 lease 未过期
+        （lease_expires_at > now()）才续租；已失效 claim 的 heartbeat 与错
+        token/worker 同被拒（LeaseConflict），交由 recover 接管。DB now() 单一来源，
+        不在应用层回写旧 lease。
+        """
+        res = await self._session.execute(
+            text(
+                "UPDATE tasks SET heartbeat_at = now(), "
+                "lease_expires_at = now() + make_interval(secs => :lease) "
+                "WHERE id = :id AND worker_id = :w AND lease_token = :t "
+                "AND status = 'running' AND lease_expires_at > now() "
+                "RETURNING id"
+            ),
+            {"id": task_id, "w": worker_id, "t": lease_token, "lease": lease_seconds},
+        )
+        if res.first() is None:
+            raise LeaseConflict(f"heartbeat rejected (zombie/lease expired): {task_id}")
+
+    async def complete(self, *, task_id: uuid.UUID, worker_id: str, lease_token: str) -> dict:
+        """running → succeeded 终态；条件四元组写（zombie 拒）。释放运行中 lease 字段。"""
+        return await self._terminal(task_id, worker_id, lease_token, status="succeeded")
+
+    async def fail(self, *, task_id: uuid.UUID, worker_id: str, lease_token: str) -> dict:
+        return await self._terminal(task_id, worker_id, lease_token, status="failed")
+
+    async def _terminal(self, task_id, worker_id, lease_token, *, status: str) -> dict:
+        res = await self._session.execute(
+            text(
+                "UPDATE tasks SET status=:st, decided_at = now(), heartbeat_at = now(), "
+                "worker_id = NULL, lease_token = NULL, lease_expires_at = NULL, "
+                "started_at = NULL "
+                "WHERE id = :id AND worker_id = :w AND lease_token = :t "
+                "AND status = 'running' RETURNING id, claim_round"
+            ),
+            {"st": status, "id": task_id, "w": worker_id, "t": lease_token},
+        )
+        row = res.mappings().first()
+        if row is None:
+            raise LeaseConflict(f"{status} rejected (zombie/lease mismatch): {task_id}")
+        return {"id": row["id"], "claim_round": row["claim_round"]}
+
+    async def retry(self, task_id: uuid.UUID) -> None:
+        """人工显式 retry：failed/interrupted → queued（开新 claim_round 于下次 claim）。"""
+        res = await self._session.execute(
+            text(
+                "UPDATE tasks SET status='queued', decided_at = NULL, worker_id = NULL, "
+                "lease_token = NULL, started_at = NULL, heartbeat_at = NULL, "
+                "lease_expires_at = NULL "
+                "WHERE id = :id AND status IN ('failed', 'interrupted') RETURNING id"
+            ),
+            {"id": task_id},
+        )
+        if res.first() is None:
+            raise TaskStateError(f"task not retryable (must be failed/interrupted): {task_id}")
+
+    async def list_expired(self, cutoff: datetime) -> list[uuid.UUID]:
+        """失效租约查询（recover dry-run；lease 过期但仍 running）。"""
+        res = await self._session.execute(
+            select(Task.id).where(Task.status == "running", Task.lease_expires_at < cutoff)
+        )
+        return list(res.scalars().all())
+
+    async def recover_expired(self, cutoff: datetime) -> list[uuid.UUID]:
+        """失效租约 running → interrupted（不等价重跑；下次经 retry 人工放行）。"""
+        res = await self._session.execute(
+            text(
+                "UPDATE tasks SET status='interrupted', heartbeat_at = now() "
+                "WHERE status = 'running' AND lease_expires_at < :c RETURNING id"
+            ),
+            {"c": cutoff},
+        )
+        return [r["id"] for r in res.mappings().all()]
+
+
+class TaskClaimRepository(BaseRepository):
+    """task_claims（30 §17，append-only）：task 级租约证据，非 LE attempt（Lock-1）。"""
+
+    async def create(
+        self, *, task_id: uuid.UUID, claim_round: int, start: datetime | None = None,
+        lease_snapshot: dict | None = None,
+    ) -> TaskClaim:
+        row = TaskClaim(task_id=task_id, claim_round=claim_round,
+                        start=start, lease_snapshot=lease_snapshot)
+        self._session.add(row)
+        await self._session.flush()
+        return row
+
+    async def update_claim(self, *_args: object, **_kwargs: object) -> None:
+        """task_claims append-only：任意 UPDATE → 抛错（30 §17）。"""
+        raise AppendOnlyViolation("task_claims is append-only immutable")

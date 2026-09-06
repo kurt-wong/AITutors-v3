@@ -360,3 +360,44 @@ Date: 2026-09-05
   不阻塞 Step 2；A–G 不 reopen，仅保留 migration historical erratum。
 - **Step 1 is closed for implementation**；后续（H/J）再遇 migration replay 问题时，以
   BUG-V3-028 状态为准，不产生「是否已解决」歧义。
+
+### 2026-09-07 00:04
+
+- **Status: H Step 2（Task State Machine）实现完成 + 第一性原理对抗审查（F-2/F-1）+ 最小
+  修复收口**。变更未 commit（Step 2 独立提交点待用户放行）。
+- **Step 2 交付**：`runtime_repository.py` +TaskRepository/TaskClaimRepository（条件 UPDATE…
+  RETURNING：claim 原子 / heartbeat / terminal / retry / recover；task_claims append-only）；
+  `app/domains/task/` TaskService（状态机唯一入口，不 commit，调用方持事务——claim 的 tasks
+  更新与 task_claims 证据原子同事务；Lock-1 worker_id/lease_token 只进 lease_snapshot）；
+  `tests/test_task_service.py` 13 测试。
+- **对抗审查实证（真 DB 探针 _audit_h2_task.py）**：**F-2（CONFIRMED）** heartbeat 只更
+  heartbeat_at 不滑动 lease_expires_at，recover 只看 lease 不看 liveness——「持续健康心跳但
+  运行超初始租约」的长任务会被误中断（实证：lease 已过期但刚心跳的任务仍被 recover 置
+  interrupted）。**F-1（CONFIRMED，覆盖缺口）** 无真并发 claim 永久回归（P3 实证实现正确：
+  恰一胜 + 单证据）。
+- **用户裁决（最小修复，不改 Frozen Spec）**：F-2 采纳——heartbeat = 滑动续租（liveness
+  renewal，**非 reclaim**）：`UPDATE … SET heartbeat_at=now(), lease_expires_at=
+  now()+make_interval(secs=>:lease) WHERE id/worker_id/lease_token/status='running'
+  AND lease_expires_at>now()`（DB now() 单源；**已过期 claim 的 heartbeat 拒** → recover
+  接管）。记录为实现/状态机语义缺陷。F-1 采纳——真并发转正。default lease 60s 维持（不靠
+  放大掩盖错误）。
+- **修复与回归（13→17）**：repo/service heartbeat 增 `lease_seconds` 透传 + 续租 + 过期拒。
+  新增 4 测试——`test_heartbeat_slides_lease_expiry`（F2-1 lease 跨事务严格后移）、
+  `test_continuous_heartbeat_survives_initial_lease`（F2-2 间隔<lease 连续心跳穿过原 lease
+  边界不被 recover）、`test_expired_claim_heartbeat_refused_then_recovered`（F2-3 停止心跳超
+  lease → heartbeat 拒 + recover interrupted）、`test_concurrent_claim_exactly_one_winner`
+  （F-1 两 session gather 并发 → 恰一 winner/claim_round=1/单证据/status=running）。
+- **验证**：全量 pytest **229 passed ×2**（可重入）。探针 P1 lease 严格后移 / P2 心跳任务不被
+  recover / P3 过期拒 + 停止可回收 / P4 并发恰一胜单证据，全通过。BUG-V3-001..028 Open 不变。
+- **下一步**：commit Step 2（独立提交点）→ plan Step 3（Audit Lifecycle / Phase 3：
+  finalize_audit exactly-once terminalization）。
+
+### H Step 2 — CLOSED（基线封存，2026-09-07 00:04）
+
+- **Implementation PASS + 对抗审查 F-2/F-1 最小修复已落定**：heartbeat 滑动续租（liveness
+  renewal，非 reclaim，过期拒）语义经真实 DB 回归 + 探针双重实证；真并发 claim 恰一胜已转正
+  为永久回归。全量 **229 passed ×2** 可重入。
+- **F-2 属实现/状态机语义缺陷（非 Spec 变更）**：不改 Frozen Spec、不改 8a57a92、不重开 A–G；
+  default lease 60s 维持。**F-1 为覆盖补强，非实现错误**。
+- **Step 2 is closed for implementation**；A–G 七段 + Step 1/2 均不 reopen。下一实施步 =
+  plan **Step 3**（Audit Lifecycle / finalize_audit exactly-once terminalization）。
