@@ -143,6 +143,28 @@ class SourceRepository(BaseRepository):
         )
         return res.scalar_one_or_none()
 
+    async def get_lines_by_version(
+        self, version_id: uuid.UUID
+    ) -> list[DocumentSourceLine]:
+        """读某 sealed version 的全部行，按 seq 升序（确定性，20 §5.1 Exact Replay 前提）。"""
+        res = await self._session.execute(
+            select(DocumentSourceLine)
+            .where(DocumentSourceLine.source_version_id == version_id)
+            .order_by(DocumentSourceLine.seq)
+        )
+        return list(res.scalars().all())
+
+    async def get_figures_by_version(
+        self, version_id: uuid.UUID
+    ) -> list[SourceFigure]:
+        """读某 sealed version 的图，按 figure_id 稳定排序（确定性定位）。"""
+        res = await self._session.execute(
+            select(SourceFigure)
+            .where(SourceFigure.source_version_id == version_id)
+            .order_by(SourceFigure.figure_id)
+        )
+        return list(res.scalars().all())
+
     async def set_document_status(self, document_id: uuid.UUID, status: str) -> None:
         """documents.processing_status 写（Source 内容生命周期，10 §4.1，非 sealed 表）。"""
         doc = await self._session.get(Document, document_id)
