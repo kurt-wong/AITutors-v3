@@ -313,6 +313,25 @@
   constraint 兜底；重复 Question 风险登记待 errata 裁决是否补 UNIQUE。
 - 验收：errata 终裁后按最终约束对齐。
 
+### BUG-V3-028 — 历史 migration full-metadata bootstrap 使 from-empty replay 的 revision ownership 失效（0001/0003）
+- Status: Open
+- 登记：2026-09-06 23:39:54
+- 现象：0001/0003 用 `Base.metadata.create_all(bind)`（全量 metadata）建表。H Step 1 后
+  Task/TaskClaim 已注册进 Base.metadata → 在**全新空库**逐步 `upgrade 0001→0004` 实证
+  （tests/_audit_h1_migration.py）：0001 一次性建出 24 表**含 tasks/task_claims**（以及
+  budget/llm_call_audit），0002/0003/0004 均 `added=[]`。即「tasks/task_claims 由 0004 首次
+  创建」只在 A–G 时代**增量库**成立；空库上创建者是 0001。
+- 根因：早期 migration 用当前 models 的全量 metadata bootstrap，属「以当前模型为快照」；
+  后加入的模型会被**较早 revision** 提前建出 → revision ownership 在 incremental vs
+  from-empty 两库间不一致，迁移链不具历史保真，且未来新模型/新列会与「按其 revision 首次
+  出现」的预期分叉。
+- 处置：**B 语义（用户 2026-09-06 裁决）**——不修改 0001/0003/0004（A–G 冻结基线不动）；
+  0004 保持 tables 限定的专责语义（增量库建表，空库可能 no-op）。已补双路径测试
+  `test_migration_replay.py`：from-empty 终态 shape == ORM metadata；incremental
+  0003→0004 delta == {tasks, task_claims}。Owner = A–G migration history；Resolution:
+  deferred（若未来真处理 A 再按 A–G Reconciliation 重审迁移）。
+- 验收：from-empty / incremental 双路径测试全绿；0004 专责语义不因空库 no-op 而误导。
+
 ## Resolved Bugs
 
 （暂无。）

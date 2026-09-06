@@ -8,7 +8,8 @@ import uuid
 from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import Boolean, DateTime, Integer, Numeric, String, UniqueConstraint, Uuid
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Numeric, String, UniqueConstraint, Uuid
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -67,3 +68,51 @@ class Budget(Base):
     reserved: Mapped[Decimal] = mapped_column(Numeric, nullable=False, default=Decimal("0"))
     reserved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=_utcnow)
+
+
+class Task(Base):
+    """tasks（30 §17 + §5 lease）。运行域任务状态行；状态迁移只能经 Task Service 显式接口。
+
+    §5 lease 顶层列（worker_id/lease_token/started_at/heartbeat_at/lease_expires_at）是运行中
+    租约状态；task_params 只存目标引用 id（documents.id 等），不内嵌内容正文。
+    """
+
+    __tablename__ = "tasks"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    task_type: Mapped[str] = mapped_column(String, nullable=False)
+    # created/queued/running/succeeded/failed/interrupted（无 DB CHECK，30 §17）
+    status: Mapped[str] = mapped_column(String, nullable=False)
+    task_params: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    claim_round: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    current_stage: Mapped[str | None] = mapped_column(String, nullable=True)
+    created_by: Mapped[str | None] = mapped_column(String, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=_utcnow
+    )
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # §5 lease：运行中的租约状态（task 级，非 LE attempt）
+    worker_id: Mapped[str | None] = mapped_column(String, nullable=True)
+    lease_token: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    heartbeat_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    lease_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class TaskClaim(Base):
+    """task_claims（30 §17，append-only）。task 级租约记录，非 LE attempt。
+
+    Lock-1：worker_id/lease_token 仅经 lease_snapshot JSONB 保存 Claim Runtime Evidence，
+    不进 task_claims 顶层列（与 tasks 顶层的运行中租约状态是不同来源）。
+    """
+
+    __tablename__ = "task_claims"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    task_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("tasks.id"), nullable=False)
+    claim_round: Mapped[int] = mapped_column(Integer, nullable=False)
+    start: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    end: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    outcome: Mapped[str | None] = mapped_column(String, nullable=True)
+    error_type: Mapped[str | None] = mapped_column(String, nullable=True)
+    lease_snapshot: Mapped[dict | None] = mapped_column(JSONB, nullable=True)

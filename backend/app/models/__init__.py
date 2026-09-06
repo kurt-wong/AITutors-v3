@@ -15,7 +15,7 @@ from app.models.content import (
     UnitGroup,
     UnitGroupMember,
 )
-from app.models.runtime import Budget, LlmCallAudit
+from app.models.runtime import Budget, LlmCallAudit, Task, TaskClaim
 from app.models.snapshot import AdmissionCandidate, AdmissionEvent, SemanticAnnotation
 from app.models.source import (
     Document,
@@ -48,4 +48,6 @@ __all__ = [
     "QuestionKnowledgeLink",
     "LlmCallAudit",
     "Budget",
+    "Task",
+    "TaskClaim",
 ]

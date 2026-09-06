@@ -1,25 +1,28 @@
 # AI Tutor V3 — RESTART PROMPT
 
-Version: v1.4
-Status: 段 H 实现计划已冻结（H Contract Audit PASS；未开始编码；Step 1–7 待执行）
+Version: v1.5
+Status: 段 H 编码进行中 — Step 1 Runtime Schema 完成 + 对抗审查 Remediation 关闭（212 passed ×2）；Step 2 待执行
 Date: 2026-09-06
 
-## 0.0 当前结论（2026-09-06 20:34:06）
+## 0.0 当前结论（2026-09-06 23:39:54）
 
-- **H Contract Audit PASS → H Implementation Plan Final 冻结（未开始编码）**。A–G 七段已
-  关闭定格（commit `8a57a92`，确定性主链 Source→A 域物化闭环，201 passed ×2）；H0 Runtime
-  Readiness Audit 落盘 `Docs/reference/H0_RUNTIME_READINESS_AUDIT.md`（commit 8032af3，总判
-  A–G = Runtime-ready foundation）；H Contract Reconciliation 五条最终裁决 + H Implementation
-  Plan Final 均已完成。
-- **H 实施计划冻结于** `~/.claude/plans/giggly-enchanting-volcano.md`，含 **6 Locks + 4 Notes
-  + 3 Clarifications + 严格 Step 1–7 实施顺序**。核心边界：LLMExecutor 唯一入口（Domain 不
-  依赖 Gateway）、Attempt 不可恢复续跑、Runtime/Business Identity 隔离、Duplicate≠Discard、
-  Replay≠New Occurrence、New Occurrence≠New Question、Similarity 不进 H。详见 Status.md /
-  log.md 20:34:06 条目。
-- **下一步**：按 **Step 1–7** 开始 H 段编码，第一步 = **Runtime Schema**（tasks/task_claims
-  模型 + migration 0004 限定 tables + schema guard）。**尚未 commit H 计划**。
+- **H Step 1（Runtime Schema）实现完成 + 第一性原理对抗审查 + Remediation 关闭（212 passed
+  ×2，可重入）**。A–G 七段仍定格（commit `8a57a92`）。Step 1 交付：models/runtime.py
+  +Task/TaskClaim（14/8 列，30 §17 + §5 lease）、`alembic/versions/20260906_0004_tasks.py`
+  （Note-4 tables 限定）、test_task_schema（schema guard）、test_models_schema._RUNTIME 扩容。
+- **对抗审查发现 F-1 → 用户裁决 B**：0001/0003 全量 metadata bootstrap 使空库 replay 时
+  tasks/task_claims 由 0001 建出、0004 no-op（只在 A–G 增量库 0004 建表）。已登记
+  **BUG-V3-028**（Open/deferred，Owner = A–G migration history）。**不修改 0001/0003/0004、
+  不重开 A–G、不引入 checksum/ownership registry**（Closed means closed）。
+- **Remediation**：test_task_schema 强化结构契约（SQL type/nullable/PK/FK/Lock-1 + ORM
+  contract）；新增 `tests/test_migration_replay.py` 两层回归（from-empty HEAD shape =
+  ORM metadata；incremental 0003→0004 delta = {tasks, task_claims}）。0004 docstring / plan
+  Note-4 措辞改 B 语义。详见 Status.md / log.md 23:39:54 条目。
+- **下一步**：按 plan 严格 Step 顺序进入 **Step 2 Task State Machine**（Phase 2：
+  TaskRepository/TaskClaimRepository + TaskService——原子 claim 同事务写 claim 证据 +
+  lease/zombie + recover/retry）。Step 1 变更尚未 commit（含 BUG-V3-028 登记）。
 - 重启后第一任务：读本文件 → Status.md 尾 → log.md 尾 → 打开 plan 文件
-  （`~/.claude/plans/giggly-enchanting-volcano.md`）恢复上下文 → 按 Step 1 开始 H 段
+  （`~/.claude/plans/giggly-enchanting-volcano.md`）恢复上下文 → 按 Step 2 开始 H 段
   Runtime Schema 实现（或等待用户新指令）。
 
 ## 0. 当前工作状态（2026-09-06 20:34:06）

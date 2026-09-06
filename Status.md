@@ -327,3 +327,36 @@ Date: 2026-09-05
 - **下一步**：按 **Step 1–7** 开始 H 段编码，第一步 = **Runtime Schema**（tasks/task_claims
   + migration 0004 限定 tables + schema guard）。尚未 commit H 计划。
 - **待办不变**：BUG-V3-001..027 errata 终裁。
+
+### 2026-09-06 23:39:54
+
+- **Status: H Step 1（Runtime Schema）实现完成 + 第一性原理对抗审查 + Remediation 关闭**。
+  commit 未做（Step 1 变更尚未提交）。
+- **Step 1 交付**：`models/runtime.py` +Task/TaskClaim（14/8 列，30 §17 + §5 lease）；
+  `alembic/versions/20260906_0004_tasks.py`（Note-4 tables 限定）；test_models_schema._RUNTIME
+  扩容；test_task_schema（schema guard）。增量库 0004 建两表，alembic 往返干净，207 passed ×2。
+- **对抗审查实证（用户第一性原理要求）**：scratch 空库逐步迁移证实 **F-1**——0001/0003 全量
+  metadata bootstrap 使空库 replay 时 tasks/task_claims（含 budget/llm_call_audit）由 **0001**
+  建出，0004 no-op；「0004 建表」只在 A–G 时代增量库成立。F-2 guard 未锁 nullable/type/PK；
+  F-3 无 from-empty/差分测试。
+- **用户裁决（Closed means closed）**：F-1 选 **B**——登记 BUG-V3-028、**不修改 0001/0003/
+  0004**、不重开 A–G、8a57a92 不动、不引入 checksum/ownership registry；F-2 采纳；F-3 采纳
+  按 B 语义重定义。
+- **Remediation**：test_task_schema 强化为结构契约（SQL type/nullable/PK/FK/Lock-1 + ORM
+  contract）；新增 test_migration_replay（层 1 from-empty HEAD shape；层 2 incremental
+  0003→0004 delta = +2）；0004 docstring / plan Note-4 措辞改 B 语义；bugs.md 登记 BUG-V3-028
+  （Open/deferred，Owner = A–G migration history）。
+- **验证**：全量 pytest **212 passed ×2**（无中间清理，可重入）。BUG-V3-001..028 Open 不变。
+- **下一步**：按 plan 严格 Step 顺序进入 **Step 2 Task State Machine**（Phase 2 原子 claim +
+  claim 证据同事务 + lease/zombie + recover/retry）。变更未 commit，待用户决定提交节奏。
+
+### H Step 1 — CLOSED（基线封存，2026-09-06 23:45）
+
+- **Implementation PASS + Known Historical Erratum Open**（非「Migration Architecture Fully
+  Correct」）：Runtime Schema（Task/TaskClaim）+ migration 0004 + F-2 结构契约强化 +
+  F-3 from-empty/incremental 双路径回归全部落定；212 passed ×2；from-empty replay 与
+  incremental 0003→head 均实证。
+- **F-1 = B 维持**：BUG-V3-028（A–G full-metadata bootstrap）**仍 Open / deferred**，
+  不阻塞 Step 2；A–G 不 reopen，仅保留 migration historical erratum。
+- **Step 1 is closed for implementation**；后续（H/J）再遇 migration replay 问题时，以
+  BUG-V3-028 状态为准，不产生「是否已解决」歧义。

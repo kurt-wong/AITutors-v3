@@ -68,7 +68,12 @@ async def _snapshot():
         return await conn.run_sync(_schema_snapshot)
 
 
-_RUNTIME = {"llm_call_audit", "budget"}  # 30 运行域（段 C），由 test_runtime_schema 单独断
+_RUNTIME = {
+    "llm_call_audit",
+    "budget",
+    "tasks",
+    "task_claims",
+}  # 30 运行域（段 C llm_call_audit/budget + 段 H tasks/task_claims），由 test_runtime_schema / test_task_schema 单独断
 
 
 async def _content_tables(tables):

@@ -484,3 +484,29 @@
   discard。
 - **下一步**：H 段编码 Step 1（Runtime Schema：tasks/task_claims + migration 0004 + schema
   guard）。
+
+### 2026-09-06 23:39:54（H Step 1 实现 + 第一性原理对抗审查 + Remediation）
+
+- **H Step 1 实现（Runtime Schema）**：models/runtime.py +Task/TaskClaim（30 §17 + §5 lease，
+  14/8 列）、models 导出、`alembic/versions/20260906_0004_tasks.py`（Note-4 tables 限定）、
+  test_models_schema._RUNTIME 扩容、test_task_schema（schema guard）。alembic 往返 + 全量
+  207 passed ×2。
+- **对抗审查（用户要求第一性原理 + 真证据）**：空库逐步迁移实证（tests/_audit_h1_migration.py，
+  scratch 库）发现 F-1——0001/0003 全量 `Base.metadata.create_all`（以**当前** models 为快照）
+  使空库 replay 时 tasks/task_claims（及 budget/llm_call_audit）在 **0001** 即被建出，0004
+  no-op；「0004 建这两表」只在 A–G 时代增量库成立。F-2：schema guard 只锁列名，不锁
+  nullable/type/PK。F-3：无 from-empty / before-after 差分测试。
+- **用户裁决**：F-1 选 **B**（登记 BUG-V3-028，不修改 0001/0003/0004、不重开 A–G、8a57a92
+  基线不动；不引入 migration checksum/ownership registry）；F-2 采纳；F-3 采纳且按 B 语义
+  重定义（from-empty 不断言「0004 必须 +2」，incremental 保留「pre-0004 → 0004 +2」）。
+- **Remediation（Step 1 收口）**：test_task_schema 强化为结构契约（information_schema SQL
+  type/nullable + PK + FK + Lock-1 + ORM nullable/类型契约）；新增 `test_migration_replay.py`
+  两层回归（层 1 from-empty 空库 `upgrade head` 终态表集 == ORM metadata + alembic_version
+  且两表结构 == TASKS_SPEC/TASK_CLAIMS_SPEC；层 2 增量库 `downgrade 0003 → upgrade head`
+  delta == {tasks, task_claims}）。0004 docstring 与 plan Note-4 措辞改 B 语义；bugs.md 登记
+  BUG-V3-028（Open/deferred，Owner = A–G migration history）。
+- **验证**：全量 pytest **212 passed ×2**（无中间清理，可重入；增量库 head 无残留）。BUG-V3-001..028
+  均 Open 不变。
+- **下一步**：按 plan 严格 Step 顺序进入 **Step 2 Task State Machine**（Phase 2：TaskRepository /
+  TaskClaimRepository + TaskService——原子 claim 同事务写 claim 证据 + lease/zombie +
+  recover/retry）。
