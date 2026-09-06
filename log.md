@@ -315,3 +315,36 @@
 - **裁决**：用户确认 FAIL-1 修复有效、FAIL-2/3 撤销、段 D **COMPLETE / CLOSED**。
   BUG-V3-001..010 保持 Open / deferred。
 - **下一步**：进入 40 §2 段 E（Source Resolver）。待办不变：T/F↔A/B 映射段 G 前补。
+
+### 2026-09-06 09:09:16（段 E 实现 + 对抗 Correction Cycle + 关闭）
+
+- **背景**：按已批准计划实现段 E（Source Resolver，20 §5）。用户裁决全量 7 role + 合成
+  fixture；实现第一步执行 E0 Contract Audit。
+- **实现**：`app/domains/resolver/`（span frozen dataclass / reference 只提声明字段 /
+  match_normalization §5.2 / resolver 7 独立 policy + 级联 + fuzzy 终点不变量 +
+  ResolvedRun 四象限）；`source_repository` 新增 get_lines_by_version(seq)/
+  get_figures_by_version(figure_id)；tests test_resolver(33)+test_resolver_dbflow(3)。
+  E0 登记 BUG-V3-012（跨行 text_hash 拼接未冻结）。
+- **对抗审查检出 4 FAIL**（真实探针证据）：
+  - FAIL-1（P0）`startswith(qn)` 前缀错配 → qn=1 误吞 10/11/12 的 answer/explanation
+    行 = 真实 false-resolved（违反「宁可 unresolved 不能错误 resolved」）；
+  - FAIL-2 contextual 无 emit path（仅 docstring/常量，测试把 contextual 场景当
+    ambiguous = 测试配合实现弱化）；
+  - FAIL-3 material span 与子题 stem/option 重叠仍 resolve（E-owned overlap 缺失）；
+  - FAIL-4 inline 同行多选项/多题答案不支持（line_character 契约未完整实现）。
+- **Correction Cycle（用户授权修复 1-4；CONCERN-1 仅登记不扩 normalization）**：
+  - FAIL-1 改 bounded `_ENTRY_RE`（题号 token+分隔）+ `is_question_start==qn` token
+    等值，1-vs-10/11/12 消除；固化为 `test_prefix_collision_*` 回归；
+  - FAIL-2 补 `_resolve_marker_cascade`：ambiguous 时用确定性题目区边界排除 → contextual，
+    evidence 记排除步骤，验证 `initial>1→final==1`、exact 唯一≠contextual；
+  - FAIL-3 补 `_enforce_material_overlap`：material 与子题/其他 material 共享行 → demote
+    incomplete unresolved（E owns source-span overlap；IR composition 仍属 F）；
+  - FAIL-4 option/answer 支持 `line_character`（有界 label/entry，单行多选项、同行多题
+    答案各得 offsets，禁 first/nearest）。
+- **验证**：段 E 测试 33 passed；完整 pytest **114 passed ×2**（无中间清理，可重入）；
+  prefix-collision / contextual invariant / material overlap / inline 均有回归；未引入
+  F/G/H 能力、未改 Frozen Spec、未回改已关闭段。
+- **登记**：BUG-V3-011（B seal 未接 figures）/ 013（blank/image JSON 形态未冻结）补登记。
+- **裁决**：用户批准段 E **COMPLETE / CLOSED**；进入 40 §2 段 F（F0 Contract Audit）。
+- **下一步**：段 F——IR 装配 + ready 判定 + Deterministic Compiler + dedup/occurrence
+  （20 §6/§7），不得把 IR 逻辑塞回 E。待办不变：T/F↔A/B 映射段 G 前补。

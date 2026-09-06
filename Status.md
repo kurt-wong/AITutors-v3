@@ -213,3 +213,23 @@ Date: 2026-09-05
 - **延续 Bug**：BUG-V3-001..010 全部保持 Open / deferred（不改已关闭阶段）。
 - **下一步**：进入 40 §2 段 E（Source Resolver）。待办不变：T/F↔A/B 映射段 G 前补；
   BUG-V3-007/008 errata 终裁；quarantine 物理卷人工核。
+
+### 2026-09-06 09:09:16
+
+- **Status: 段 E 正式关闭（COMPLETE / CLOSED）**。A→E 五段齐。
+- **段 E 交付**：`app/domains/resolver/`（span/reference/match_normalization/resolver，
+  纯确定性 Resolver，7 role 独立 policy + 级联 + contextual + fuzzy 终点不变量）；
+  `source_repository` 只读扩展（get_lines_by_version / get_figures_by_version）；
+  tests（test_resolver 33 + dbflow 3）。
+- **对抗审查 Correction Cycle**：检出并修复 4 FAIL——FAIL-1 题号前缀错配
+  （`startswith(qn)` 误吞 10/11/12，改 bounded entry + token equality，P0 false-resolved
+  消除）；FAIL-2 contextual 无 emit path（补确定性题目区边界收窄 + `initial>1→final==1`
+  invariant）；FAIL-3 material 重叠未校验（补 E-owned overlap demote）；FAIL-4 inline
+  同行定位（option/answer 支持 line_character）。prefix-collision 已固化为回归。
+- **验证**：Gate 全 PASS；完整 pytest **114 passed ×2**（无中间清理）；不可猜测矩阵、
+  确定性、input immutable、raw text_hash 均不回归；未引入 F/G/H 能力、未改 Frozen Spec。
+- **登记**：BUG-V3-011（B seal 未接 figures）/ 012（跨行 text_hash 拼接未冻结）/
+  013（blank/image JSON 形态未冻结）Open，不改已关闭段。
+- **下一步**：进入 40 §2 **段 F（F0 Contract Audit）**——IR 装配 + ready 判定 +
+  Deterministic Compiler + dedup/occurrence（20 §6/§7），不得把 IR 逻辑塞回 E。
+  待办不变：T/F↔A/B 映射段 G 前补；BUG-V3-001..013 errata 终裁。

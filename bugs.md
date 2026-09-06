@@ -117,6 +117,51 @@
   检查）；登记 bugs.md 待 errata。
 - 验收：errata 终裁后按最终语义对齐。
 
+### BUG-V3-010 — `json.loads` 失败时 invalid annotation payload 形态未冻结（10 §5.1）
+- Status: Open
+- 登记：2026-09-06 00:08:31
+- 现象：10 §5.1 `payload JSONB NOT NULL`，但未定义 invalid annotation（LLM 输出非法 JSON）
+  的 payload 内容。
+- 根因：spec 未覆盖 parse 失败场景的 payload 形态。
+- 处置：段 D 落库 `payload={"parse_error": str(exc)}`（NOT NULL 占位，非正文，不触发禁字段
+  检查）；登记 bugs.md 待 errata。
+- 验收：errata 终裁后按最终语义对齐。
+
+### BUG-V3-011 — 段 B seal 未接 figures；OCRFigure 缺 IS-7 字段（20 §4.4/§5.3 image）
+- Status: Open
+- 登记：2026-09-06 09:09:16
+- 现象：段 B `seal.py` 只 `append_line`，`OCRResult.figures` 未落 `source_figures`；
+  `OCRFigure`（ai/ocr/result.py）缺 `placement/object_key/figure_id/figure_hash`，
+  不满足 IS-7（10 §4.4「缺 page/bbox/placement/source 任一字段不得写入」）。
+- 根因：段 B 骨架未接 figure seal；源料 figure 生产属 B 侧 backlog。
+- 处置：段 E image policy 逻辑完整实现（IS-7 过滤 + 唯一→resolve/多→ambiguous/缺→missing），
+  用合成 `SourceFigureView` fixture 测正向；生产 `source_figures` 恒空 → 真源路径恒
+  ambiguous。补图须走新 source_version（parent_version_id），已 sealed version
+  append-only 不回写。E 不反向修改已关闭 B。
+- 验收：errata/B 侧 backlog 终裁后，seal 补齐字段计算 + `append_figure` + 计入
+  `integrity_hash`。
+
+### BUG-V3-012 — 跨行 ResolvedSpan `text_hash` 拼接规则未冻结（20 §5.5）
+- Status: Open
+- 登记：2026-09-06 09:09:16
+- 现象：20 §5.5 只写「text_hash 由程序按 span 实际内容计算」，未定义跨行 span 的拼接规则
+  （`line1+"\n"+line2` vs 逐行分别 hash）。
+- 根因：spec 字段语义未冻结。
+- 处置：段 E 采用与段 B IS-4 一致的 `"\n".join(行文本)` 的 raw UTF-8 SHA256 作
+  **implementation choice**（代码注释 + 测试标注，不冒充 Frozen 授权）。
+- 验收：errata 终裁后按最终拼接规则对齐（升级即走 Rebuild）。
+
+### BUG-V3-013 — blank/image 的 annotation content JSON 形态未冻结（20 §4.5）
+- Status: Open
+- 登记：2026-09-06 09:09:16
+- 现象：20 §4.5 列 blank/option/answer/image 为 content role，但未给 blank/image 的
+  JSON 形态样例（image_ref / blank_label 结构），实现需自行拟定 minimal shape。
+- 根因：spec 未冻结这两类 reference 的入参结构。
+- 处置：段 E reference 提取按 minimal shape（`content.image.image_ref.figure_id` /
+  `content.blank[].blank_label+question_number`）识别，代码注释标注 BUG-V3-013，不冒充
+  Frozen 契约；policy 逻辑按 §5.3 规则实现。待 errata 冻结形态。
+- 验收：errata 冻结后按最终 shape 对齐。
+
 ## Resolved Bugs
 
 （暂无。）
