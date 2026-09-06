@@ -162,6 +162,61 @@
   Frozen 契约；policy 逻辑按 §5.3 规则实现。待 errata 冻结形态。
 - 验收：errata 冻结后按最终 shape 对齐。
 
+### BUG-V3-014 — original→canonical 题型别名映射表未冻结（20 §7.2 / DISPLAY_CONTRACT §0.2）
+- Status: Open
+- 登记：2026-09-06 09:09:16
+- 现象：DISPLAY_CONTRACT §0.2 冻结 12 种 canonical_question_type；但 V2 题型树 code 别名
+  → canonical 的映射表未冻结（"single-choice"/"单选题"/"choice_single" 等）。
+- 根因：别名表属 V2 资产，V3 未迁。
+- 处置：段 F 只做 canonical exact passthrough（原值 ∈ 12 种 → 直通；否则 None →
+  incomplete）。禁实现 alias resolver。别名映射待 errata/50 资产清点。
+- 验收：errata 冻结别名表后按最终映射实现。
+
+### BUG-V3-015 — LaTeX 符号等价清单未冻结（20 §7.3）
+- Status: Open
+- 登记：2026-09-06 09:09:16
+- 现象：20 §7.3「LaTeX 等价（数学环境内不换行语义）」未冻结符号等价清单
+  （\frac ↔ a/b、\sqrt ↔ root、x^2 ↔ x² 等）。
+- 根因：20 §7.3「具体清单随实现评审固化」。
+- 处置：段 F identity_normalization 只做数学环境（$...$/\[...\]）内空白/换行折叠；
+  不做符号语义等价（那会开始数学语义判断）。
+- 验收：errata/评审固化符号等价清单后实现。
+
+### BUG-V3-016 — content_roles 的 per-canonical-type role spec 未集中冻结
+- Status: Open
+- 登记：2026-09-06 09:09:16
+- 现象：20 §7.2.2「content_roles 按 canonical type 的 role spec 判定」；但 per-type role
+  spec 无集中冻结——值域分散在 20 §6.1 standalone 示例（stem required / options
+  required_for_choice / answer required / explanation optional）+ DISPLAY_CONTRACT §0.2
+  选项要求列（required / 固定2 / not_applicable / 按题型）+ 20 §8.4。
+- 根因：示例/要求列未升级为集中 role-spec 契约（F0 核实，不自行推导）。
+- 处置：段 F 用最保守可确定实现——stem required / answer required / explanation optional
+  通用；options 按 DISPLAY_CONTRACT §0.2「选项要求」映射 required_for_choice
+  （single/multiple/true_false）/ not_applicable（fill_in/short_answer/essay）/
+  按题型（composite 子结构由内容声明决定）。不扩展未冻结项。
+- 验收：errata 集中冻结 role spec 后按最终映射对齐。
+
+### BUG-V3-017 — 2d compiled text_hash 的字节序列未冻结（10 §8 2d）
+- Status: Open
+- 登记：2026-09-06 09:09:16
+- 现象：10 §8 2d「compiled text_hash == 该 role 确定性编译结果的 hash」，未冻结「确定性
+  编译结果」的序列化（compiled text 字符串？canonical JSON？）。
+- 根因：spec 字段语义未冻结（防 canonical JSON 冒充 raw，重演 BUG-V3-005）。
+- 处置：段 F 2d = 编译文本（compiled text 字符串）的 raw UTF-8 SHA256，非 canonical JSON；
+  2c = source raw slice SHA256；两 hash ≠ sha256_hex（identity 键）。
+- 验收：errata 冻结序列化后对齐（升级即走 Rebuild）。
+
+### BUG-V3-018 — IR.semantic_status 合法值域未冻结（20 §6.2）
+- Status: Open
+- 登记：2026-09-06 09:09:16
+- 现象：20 §6.2 不变量 8 只给「semantic_status=ready 才可进入 Compiler；ready 之前任何
+  状态都不得进自动准入」，未列 semantic_status 枚举（ready/incomplete/unresolved/…）。
+- 根因：spec 用自然语言未冻结值域。
+- 处置：段 F 用最小可确定集合 {ready, incomplete}（E 的 ResolvedStatus
+  exact/normalized/contextual/fuzzy… 不搬运进 F；三层状态严格区分）。unit_id 缺省或任一
+  内容 role 未 resolved → semantic_status=incomplete。待 errata 冻结枚举。
+- 验收：errata 冻结后按最终值域对齐。
+
 ## Resolved Bugs
 
 （暂无。）
