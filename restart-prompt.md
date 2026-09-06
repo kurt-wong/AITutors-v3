@@ -1,59 +1,56 @@
 # AI Tutor V3 — RESTART PROMPT
 
-Version: v1.3
-Status: 段 G 实现完成并经二轮对抗审查收尾（VERIFIED；A–G 已关闭；段 H 未授权）
+Version: v1.4
+Status: 段 H 实现计划已冻结（H Contract Audit PASS；未开始编码；Step 1–7 待执行）
 Date: 2026-09-06
 
-## 0.0 当前结论（2026-09-06 15:14:30）
+## 0.0 当前结论（2026-09-06 20:34:06）
 
-- V3 架构与开发契约已冻结（Baseline—Frozen）；**V3 Core Pipeline Baseline A–G 定格**
-  （用户裁决 15:14:30）：A–G 七段 Implementation Complete and Verified，commit `8a57a92`
-  为 A–G 稳定工程基线——从 Source 到 A 域物化的确定性数据主线已闭环。
-- 段 G 当前状态：**IMPLEMENTATION COMPLETE / VERIFIED**——G0 Contract Audit PASS 后用户
-  授权实现，grammar/policy/payload/admission/service + 状态机探针 + 对抗审查 Correction
-  Cycle（4 项修复）+ **二轮跨提交对抗审查 F1/F2 修复（8a57a92）**均完成；完整 pytest
-  **201 passed ×2**；监控项（approve 只消费冻结 snapshot、不重跑 E/F/G）全绿。
-  详见 Status.md / log.md。
-- **下一步（用户指定顺序）**：先 **H0 Runtime Readiness Audit**（audit only，零生产代码）
-  → H Contract Audit → H Implementation。H0/H 均未授权，不擅动工。
-- 重启后第一任务：读本文件 → Status.md 尾 → log.md 尾恢复上下文 → 等待用户对 H0/H 或后续
-  的授权/新指令。**H0/H + worker/LLM live/knowledge resolver 未授权，不要擅自动工。**
+- **H Contract Audit PASS → H Implementation Plan Final 冻结（未开始编码）**。A–G 七段已
+  关闭定格（commit `8a57a92`，确定性主链 Source→A 域物化闭环，201 passed ×2）；H0 Runtime
+  Readiness Audit 落盘 `Docs/reference/H0_RUNTIME_READINESS_AUDIT.md`（commit 8032af3，总判
+  A–G = Runtime-ready foundation）；H Contract Reconciliation 五条最终裁决 + H Implementation
+  Plan Final 均已完成。
+- **H 实施计划冻结于** `~/.claude/plans/giggly-enchanting-volcano.md`，含 **6 Locks + 4 Notes
+  + 3 Clarifications + 严格 Step 1–7 实施顺序**。核心边界：LLMExecutor 唯一入口（Domain 不
+  依赖 Gateway）、Attempt 不可恢复续跑、Runtime/Business Identity 隔离、Duplicate≠Discard、
+  Replay≠New Occurrence、New Occurrence≠New Question、Similarity 不进 H。详见 Status.md /
+  log.md 20:34:06 条目。
+- **下一步**：按 **Step 1–7** 开始 H 段编码，第一步 = **Runtime Schema**（tasks/task_claims
+  模型 + migration 0004 限定 tables + schema guard）。**尚未 commit H 计划**。
+- 重启后第一任务：读本文件 → Status.md 尾 → log.md 尾 → 打开 plan 文件
+  （`~/.claude/plans/giggly-enchanting-volcano.md`）恢复上下文 → 按 Step 1 开始 H 段
+  Runtime Schema 实现（或等待用户新指令）。
 
-## 0. 当前工作状态（2026-09-06 15:14:30）
+## 0. 当前工作状态（2026-09-06 20:34:06）
 
 - **已完成（A–G 七段关闭）**：`Docs/V3_SPEC/` 六册 + README 冻结；段 A（config/DB 19 表/
   Repository/hashing）、段 C（Gateway/audit/budget external 闸）、段 B（Source Seal + OCR）、
-  段 D（Annotation）、段 E（Source Resolver）、段 F（IR + Compiler）、段 G（Gate +
-  Admission + Grammar）全部关闭。完整 pytest 201 passed ×2。
-- **段 G 已关闭（实现要点）**：`app/domains/gate/` grammar/policy/payload/admission/service
-  ——Gate 四层 gate_decision + 冻结可重放 payload + AdmissionService 物化事务唯一入口 +
-  GateService LE 幂等编排；auto_approve 自动 approve、machine rejected 自动 reject
-  （10 §5.2）。对抗审查 Correction Cycle 4 项已修复（见 Status.md/log.md）。
-  - 三个 P0-G 边界（实现已落实）：
-    - P0-G-001：decision_status 唯一入口 = application-level enforcement（Repository
-      公共接口直改抛 AppendOnlyViolation），**不加** ORM event / DB trigger/RLS。
-    - P0-G-002：approve() 拒绝 gate_decision=terminal rejected 的 candidate（即使
-      decision_status 仍 pending_review）。
-    - P0-G-003：reject() 区分 machine_gate / human 两种来源；machine 只 transition，
-      人工理由只进 review_trail，不覆盖 gate_decision。
-- **G0 用户裁决（勿忘）**：
-  1. true_false 开放 strict-auto；DISPLAY_CONTRACT §0.2 已冻结 T/F 映射（禁 A/B）即满足，
-     **不需要**再补 A/B 映射（判断题答案区写 A/B → 不通过 grammar → pending_review）。
-  2. strict-auto 只开 single_choice / multiple_choice / true_false + composite 子题递归；
-     fill_in/short_answer/essay/共享选项池 → 转人工。
-- **BUG 登记状态**：BUG-V3-001..020 Open（A–F 遗留）；BUG-V3-021..027 **已写入 bugs.md**
-  （G 相关：021 subject/grade 来源、022 LE hash 序列化、023 composite grammar、024 Gate 细则、
-  025 review_trail JSON、026 gate_decision/review_trail 边界、027 Question dedup_key 无
-  DB UNIQUE；021/022/025 实现按 M1 处理并标注不冒充 Frozen）。G 对抗审查 4 项为已修复
-  实现 bug，不入 BUG 编号。
-- **当前不要执行**：段 H + worker/tasks、LLM live、knowledge resolver 未授权前不实现；
-  **H0 Runtime Readiness Audit 亦未授权，不擅动工**；不改冻结分册（除非 changelog/errata）；
-  不重开已关闭的 A–G 段（不回头修 BUG-V3-001..027）。
+  段 D（Annotation）、段 E（Source Resolver）、段 F（IR + Compiler）、段 G（Gate + Admission
+  + Grammar）全部关闭。完整 pytest 201 passed ×2。
+- **段 G 已关闭（实现要点）**：Gate 四层 gate_decision + 冻结可重放 payload + AdmissionService
+  物化事务唯一入口 + GateService LE 幂等编排 + auto approve/reject。二轮对抗审查 F1/F2 修复
+  （commit 8a57a92）：F1 unit_groups.unit_type 从 candidate（A 域值）；F2 instance LE provenance
+  从 candidate 原样继承。
+- **H0/H 进展（本轮）**：
+  - H0 Runtime Readiness Audit 落盘（commit 8032af3）；R1 五项（attempt_id 缺失 / 并发幂等写
+    / retry 熔断 / Execution Wrapper / tasks·task_claims）+ R2 两项（compile 指纹口径 /
+    invalid annotation 归属）。
+  - H Contract Reconciliation 五条裁决：① H0-2 维持 M1；② H0-15 方案 B；③ H0-3 attempt 由
+    Task Executor 分配；④ H0-6 ON CONFLICT 幂等写；⑤ H0-7 LE→Attempt→bounded retry。
+  - H Implementation Plan Final 冻结（6 Locks + 4 Notes + 3 Clarifications + Step 1–7）。
+- **BUG 登记状态**：BUG-V3-001..020 Open（A–F 遗留）；BUG-V3-021..027 已写入 bugs.md（G 相关）。
+  F1/F2 与 G 对抗 4 项为已修复实现 bug，不入 bugs.md 编号。
+- **当前要执行**：按 Step 1–7 开始 H 段编码（Step 1 = Runtime Schema）。每步独立测试；触碰
+  已关闭 D/G 段必须最小化 + 真实 DB 回归。
+- **当前不要执行**：不重开 A–G 已关闭段（不回头修 BUG-V3-001..027）；不改 Frozen Spec 正文
+  （除非 changelog/errata）；不改 compile hash（H0-2 维持 M1）；不加 Question global UNIQUE
+  （BUG-V3-027 保持 Open）；不实现 Similarity / occurrence analytics / answer-evidence schema。
 - **关键文件**：
-  - `Docs/V3_SPEC/README.md` — 唯一导航 + 术语裁决 + Baseline 状态
-  - `Docs/V3_SPEC/20_Document_Pipeline.md` — 段 G 核心（§8 Gate 四层/decision_status/
-    §8.4 Grammar/§9 验收）
-  - `Docs/V3_SPEC/10_Data_Model.md` — 段 G 数据（§5.2-5.4 candidate/event/物化、§6、§9）
+  - `~/.claude/plans/giggly-enchanting-volcano.md` — H 实施计划（唯一实施指令，含全部 Lock/Note/Clarification）
+  - `Docs/reference/H0_RUNTIME_READINESS_AUDIT.md` — H0 审计资产
+  - `Docs/V3_SPEC/30_Task_LLM_Safety.md` — H 运行时契约（Task 状态机/claim/retry/audit/budget）
+  - `Docs/V3_SPEC/10_Data_Model.md` — A/B/C 域数据（Question/Instance/dedup/occurrence）
   - `Docs/V3_SPEC/40_Development_Rules.md` — A-I 顺序与出口闸
 - 详细状态见 `Status.md` 与 `log.md`。
 
@@ -79,3 +76,5 @@ Replay 可重建。
 - LE key = `{task_type, stage, contract_domain, input_domain}`（不含 task_id）。
 - 预算五账户正交、禁父子树；Recovery ≠ Retry；Worker 崩溃不自动重跑。
 - 实现顺序、测试层级、DoD、评审红线：`40`；资产/Golden：`50`。
+- **H 段**：LLMExecutor 唯一入口、Domain 不依赖 Gateway、Attempt 不可恢复续跑、Runtime/Business
+  Identity 隔离（详见 plan 文件）。

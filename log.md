@@ -448,3 +448,39 @@
   stage/execution 身份贯穿 · Retry/Replay/New/Duplicate 语义与现有幂等对齐 · LLM Live 不
   绕过 Gateway/audit/budget · Task 状态机与业务状态机维度分离 + crash 窗口）→ H Contract
   Audit → H Implementation。H0/H 未授权不擅动工。
+
+### 2026-09-06 20:34:06（H0 Audit → H Contract Audit → H Implementation Plan Final）
+
+- **H0 Runtime Readiness Audit**（只读，零生产代码）落盘 `Docs/reference/H0_RUNTIME_READINESS_AUDIT.md`
+  （v0.1，baseline 8a57a92/8f10930；commit 8032af3）。Findings H0-1..15：R1 五项（H0-3
+  attempt_id 缺失 / H0-6 find→insert 非原子 / H0-7 retry 熔断未实现 / H0-9/10 Gateway 非执行
+  边界无 audit·budget / H0-12 tasks·task_claims 未建）+ R2 两项（H0-2 compile 指纹 8 项 vs
+  §16 四字段 / H0-15 invalid annotation 归属）+ Carry-Forward Constraints ×10。总判：A–G =
+  Runtime-ready foundation，非 Runtime 本身 ready。
+- **H Contract Audit 交付**：H0-16..20（Question Identity / Occurrence / Similarity）按用户
+  终版基线吸收——H0-16/17/18 为 Frozen 已覆盖（10 §6.1/6.2 去重=复用 canonical + 新建
+  Instance + `UNIQUE(question_id,source_version_id,occurrence_key)`），重申+回归而非新增 schema；
+  H0-19/20 为未来独立层（occurrence analytics / similarity），H 不实现。Contract
+  Reconciliation 表 H0-1..20 全列。
+- **H Contract Reconciliation 五条最终裁决（用户）**：① H0-2 维持 M1（不动 hash）；② H0-15
+  方案 B（只存 valid 产物）；③ H0-3 attempt 由 Task Executor 分配；④ H0-6 并发幂等写 ON
+  CONFLICT；⑤ H0-7 LE→Attempt→bounded retry，claim_round≠attempt_id。
+- **H Implementation Plan Final 冻结**：`~/.claude/plans/giggly-enchanting-volcano.md`，经
+  用户多轮裁决收敛，锁入：
+  - **6 Locks**：Lock-1 TaskClaim 字段一致性（worker_id/lease_token 仅进 lease_snapshot 不进
+    顶层列）/ Lock-2 Attempt 不可恢复续跑 / Lock-3 Domain 不依赖 Gateway / Lock-4
+    MAX_LLM_CALLS_PER_TASK 按真实 Provider Invocation 计数 / Lock-5 Runtime/Business Identity
+    隔离 / Lock-6 reserve+audit STARTED 同事务边界（失败补偿）。
+  - **4 Notes**：Note-1 熔断计数点在 Provider Invocation Port / Note-2 Attempt:Audit=1:N /
+    Note-3 Resolve 非独立 Runtime Recovery Unit（禁新增持久化模型）/ Note-4 migration 0004
+    限定 tables=[Task,TaskClaim]。
+  - **3 Clarifications**：Clar-1 四层执行单位 LE→Attempt→Logical LLM Request→Provider
+    Invocation（idempotency_key 归 Logical Request）/ Clar-2 熔断 consume() 原子化前置 /
+    Clar-3 UNKNOWN 不自动→Failed/Retry，Artifact Readiness 先行。
+  - **严格 Step 1–7**：Schema→Task 状态机→Audit→LLMExecutor→Domain 依赖倒置→attempt+幂等→
+    TaskExecutor。
+- **红线固化**：不改 compile hash / 不改 Question Identity / 不加 global Question dedup UNIQUE
+  （BUG-V3-027 保持 Open）/ Worker 不直写 decision_status / Similarity 不进 H / Duplicate 不
+  discard。
+- **下一步**：H 段编码 Step 1（Runtime Schema：tasks/task_claims + migration 0004 + schema
+  guard）。

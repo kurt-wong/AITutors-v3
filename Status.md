@@ -304,3 +304,26 @@ Date: 2026-09-05
   范围 = stage/execution 身份贯穿 · Retry/Replay/New/Duplicate 语义 · LLM Live 不绕
   Gateway/audit/budget · Task vs 业务状态机维度分离 + crash 窗口）→ H Contract Audit →
   H Implementation。H/H0 均未授权，不擅动工。
+
+### 2026-09-06 20:34:06
+
+- **Status: H Contract Audit PASS → H Implementation Plan Final 冻结（未开始编码）**。
+- **H0 Runtime Readiness Audit**（audit only，零生产代码）已落盘
+  `Docs/reference/H0_RUNTIME_READINESS_AUDIT.md`（commit 8032af3）：总判 A–G = **Runtime-ready
+  foundation**（非 Runtime 本身 ready）；R1 五项（attempt_id 缺失 / 并发幂等写非原子 / retry
+  熔断未实现 / Gateway 非执行边界无 audit·budget / tasks·task_claims 未建）+ R2 两项
+  （compile 指纹口径 / invalid annotation 归属）+ Carry-Forward Constraints ×10。
+- **H Contract Reconciliation 五条最终裁决（用户下达）**：
+  ① H0-2 compile 指纹维持 M1（不动 hash，BUG-V3-022 保持 Open）；
+  ② H0-15 方案 B（Artifact 表只存 `valid` 成功产物，失败进 audit+task，不落 invalid 行）；
+  ③ H0-3 attempt_id 由 Task Executor 分配、domain/repository 只透传；
+  ④ H0-6 并发幂等写升级 `INSERT…ON CONFLICT DO NOTHING`（锚 `UNIQUE(stage,hash)`）；
+  ⑤ H0-7 两层模型 `LE→Attempt→bounded internal retry`，`claim_round≠attempt_id`。
+- **H Implementation Plan Final 冻结**：`~/.claude/plans/giggly-enchanting-volcano.md`，
+  含 **6 Locks + 4 Notes + 3 Clarifications + 严格 Step 1–7 实施顺序**。核心边界已锁：
+  LLMExecutor 唯一入口（Domain 不依赖 Gateway）、Attempt 不可恢复续跑、Runtime/Business
+  Identity 隔离、Duplicate≠Discard、Replay≠New Occurrence、New Occurrence≠New Question、
+  Similarity 不进 H。
+- **下一步**：按 **Step 1–7** 开始 H 段编码，第一步 = **Runtime Schema**（tasks/task_claims
+  + migration 0004 限定 tables + schema guard）。尚未 commit H 计划。
+- **待办不变**：BUG-V3-001..027 errata 终裁。
