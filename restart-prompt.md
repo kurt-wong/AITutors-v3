@@ -1,33 +1,54 @@
 # AI Tutor V3 — RESTART PROMPT
 
-Version: v1.0
-Status: V3 Spec Baseline — Frozen（实现未开始）
-Date: 2026-09-05
+Version: v1.2
+Status: 段 G 实现完成并关闭（A–G 已关闭；段 H 未授权）
+Date: 2026-09-06
 
-## 0.0 当前结论（2026-09-05）
+## 0.0 当前结论（2026-09-06 13:55:25）
 
-- V3 架构与开发契约已冻结（Baseline—Frozen）；**实现未开始**。
-- 重启后第一任务：按 `Status.md` 下一步执行——先资产清点（`Docs/V3_SPEC/50 §3`），
-  再 `40 §2` 段 A 骨架。
+- V3 架构与开发契约已冻结（Baseline—Frozen）；实现推进到 **40 §2 段 G**，A–G 七段已关闭。
+- 段 G 当前状态：**COMPLETE / CLOSED**——G0 Contract Audit PASS 后用户授权实现，grammar/
+  policy/payload/admission/service + 状态机探针 + 对抗审查 Correction Cycle（4 项已修复）
+  完成；完整 pytest **199 passed ×2**；监控项（approve 只消费冻结 snapshot、不重跑 E/F/G）
+  全绿。详见 Status.md / log.md。
+- 重启后第一任务：读本文件 → Status.md 尾 → log.md 尾恢复上下文 → 等待用户对段 H 或后续
+  的授权/新指令。**H + worker/LLM live/knowledge resolver 未授权，不要擅自动工。**
 
-## 0. 当前工作状态（2026-09-05）
+## 0. 当前工作状态（2026-09-06 13:55:25）
 
-- **已完成**：`Docs/V3_SPEC/` 六册 + README 冻结（00 v1.2 / 10 v1.2.1 / 20 v1.2 /
-  30 v1.1 / 40 v1.1 / 50 v1.1 / README v1.1）；7 份起草归档
-  `docs_archive/2026-09-05_v3_draft/`；全体系跨册审查无冲突。
-- **入口**：先读 `Docs/V3_SPEC/README.md`（§1 地图 / §1.1 状态 / §1.2 00 服从性证据 /
-  §2 术语裁决）。
-- **当前不要执行**：不搬 V2 代码/库（V2 只作失败样本库）；不改冻结分册（除非 changelog
-  或显式 errata）；实现中不越过 Gateway / approve() 唯一入口 / live 组合放行；不为
-  单题号/学校/OCR 变体加特判。
-- **实现期已知前置（勿丢）**：进段 G（40 §2）前补 `Docs/reference/DISPLAY_CONTRACT.md`
-  的 **T/F↔A/B canonical 映射**（20 §8.4 strict-auto 前置；未完成则该题型只走
-  pending_review）。2026-09-05 17:12 登记。
+- **已完成（A–G 七段关闭）**：`Docs/V3_SPEC/` 六册 + README 冻结；段 A（config/DB 19 表/
+  Repository/hashing）、段 C（Gateway/audit/budget external 闸）、段 B（Source Seal + OCR）、
+  段 D（Annotation）、段 E（Source Resolver）、段 F（IR + Compiler）、段 G（Gate +
+  Admission + Grammar）全部关闭。完整 pytest 199 passed ×2。
+- **段 G 已关闭（实现要点）**：`app/domains/gate/` grammar/policy/payload/admission/service
+  ——Gate 四层 gate_decision + 冻结可重放 payload + AdmissionService 物化事务唯一入口 +
+  GateService LE 幂等编排；auto_approve 自动 approve、machine rejected 自动 reject
+  （10 §5.2）。对抗审查 Correction Cycle 4 项已修复（见 Status.md/log.md）。
+  - 三个 P0-G 边界（实现已落实）：
+    - P0-G-001：decision_status 唯一入口 = application-level enforcement（Repository
+      公共接口直改抛 AppendOnlyViolation），**不加** ORM event / DB trigger/RLS。
+    - P0-G-002：approve() 拒绝 gate_decision=terminal rejected 的 candidate（即使
+      decision_status 仍 pending_review）。
+    - P0-G-003：reject() 区分 machine_gate / human 两种来源；machine 只 transition，
+      人工理由只进 review_trail，不覆盖 gate_decision。
+- **G0 用户裁决（勿忘）**：
+  1. true_false 开放 strict-auto；DISPLAY_CONTRACT §0.2 已冻结 T/F 映射（禁 A/B）即满足，
+     **不需要**再补 A/B 映射（判断题答案区写 A/B → 不通过 grammar → pending_review）。
+  2. strict-auto 只开 single_choice / multiple_choice / true_false + composite 子题递归；
+     fill_in/short_answer/essay/共享选项池 → 转人工。
+- **BUG 登记状态**：BUG-V3-001..020 Open（A–F 遗留）；BUG-V3-021..027 **已写入 bugs.md**
+  （G 相关：021 subject/grade 来源、022 LE hash 序列化、023 composite grammar、024 Gate 细则、
+  025 review_trail JSON、026 gate_decision/review_trail 边界、027 Question dedup_key 无
+  DB UNIQUE；021/022/025 实现按 M1 处理并标注不冒充 Frozen）。G 对抗审查 4 项为已修复
+  实现 bug，不入 BUG 编号。
+- **当前不要执行**：段 H + worker/tasks、LLM live、knowledge resolver 未授权前不实现；
+  不改冻结分册（除非 changelog/errata）；不重开已关闭的 A–G 段（不回头修 BUG-V3-001..027）。
 - **关键文件**：
   - `Docs/V3_SPEC/README.md` — 唯一导航 + 术语裁决 + Baseline 状态
-  - `Docs/V3_SPEC/00_Master_Spec.md` — 宪法（P1-P7 / 非目标 / 红线）
-  - `10_Data_Model.md`、`20_Document_Pipeline.md`、`30_Task_LLM_Safety.md`、
-    `40_Development_Rules.md`（A-I 顺序与出口闸）、`50_Migration_Assets.md`（资产/Golden/归档）
+  - `Docs/V3_SPEC/20_Document_Pipeline.md` — 段 G 核心（§8 Gate 四层/decision_status/
+    §8.4 Grammar/§9 验收）
+  - `Docs/V3_SPEC/10_Data_Model.md` — 段 G 数据（§5.2-5.4 candidate/event/物化、§6、§9）
+  - `Docs/V3_SPEC/40_Development_Rules.md` — A-I 顺序与出口闸
 - 详细状态见 `Status.md` 与 `log.md`。
 
 ## 1. 用途

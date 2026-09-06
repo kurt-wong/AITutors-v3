@@ -379,3 +379,36 @@
   Allowed-Answer Grammar（20 §8）。G0 必核：F incomplete 不得被 G 强行转 Candidate；
   DISPLAY_CONTRACT T/F↔A/B canonical 映射须先补（否则 true_false 只走 pending_review）。
   G 完成自身 Contract Audit 前不得正式实现。
+
+### 2026-09-06 13:55:25（段 G 实现 + 对抗审查 Correction Cycle）
+
+- **背景/裁决**：段 G G0 Contract Audit **PASS → 用户授权实现**（scope 固定：grammar /
+  policy / payload / ContentRepository 查重 / admission / service / G tests / 状态机探针 /
+  对抗审查 / pytest ×2）；明确排除 worker/LLM live/H/后续 knowledge resolver 等（不实现）。
+- **实现**：`app/domains/gate/`（grammar strict-auto 必要不充分、policy 四层 gate_decision、
+  payload 冻结可重放快照、AdmissionService approve/reject + 物化事务、GateService 编排 +
+  LE 幂等落 candidate）；`snapshot_repository`（_transition_decision 受控唯一迁移 +
+  find_candidate_by_le_hash/lock/append_review_trail/admission_event）；
+  `content_repository`（dedup 查重/复用面）；三段证据链分离（gate_decision 机器冻结 |
+  decision_status 生命周期唯一入口 | review_trail 人工 append）。
+- **对抗审查 Correction Cycle（检出 4 项均修复 + 回归）**：
+  - HIGH：materialize 复用 occurrence 时无条件重插 role_contents/answer/link/member →
+    UNIQUE 冲突（同 sv 二次标注整事务回滚）。重构：plan→Question dedup REUSE→occurrence
+    复用判定→全复用短回路（不建空 group）→material 按 (sv, dedup) 复用→仅新 instance 建
+    行 + member_index 计数器。
+  - MED：非 stem role 的 source_span.line_refs 误记 stem 行（provenance 错位）→ 逐 role
+    用自身 compiled line_refs。
+  - MED：gate_decision=rejected 无自动迁移 → pending_review 僵尸（人工又被 P0-G-002 堵死）。
+    service.run 对 machine rejected 调 reject(source=machine_gate) 立即终态（10 §5.2
+    确定性 Gate Policy 写 decision_status）。
+  - MED：admission._dedup_key 选项缺外层 normalize_identity，与 Compiler._question_dedup_key
+    分叉（选项正文以数字开头时同题两 Question）→ 对齐并加数学一致性测试。
+- **验证**：段 G 测试 66 passed（含 4 项新回归：同 sv 二次标注幂等复用、option source_span
+  自身行、machine-rejected 自动终态、dedup 键与 Compiler 一致）；完整 pytest
+  **199 passed ×2**（无中间清理，可重入）；P0-G-001/002/003 + 监控项（approve 只消费冻结
+  snapshot、绝不重跑 E/F/G）探针全绿；未改 Frozen Spec、未回改已关闭段。
+- **登记**：BUG-V3-021..027 已登记 bugs.md（021/022/025 等按 M1 处理，标注不冒充 Frozen）；
+  G 对抗 4 项为**已修复的实现 bug**，非 spec 域 Open BUG，不入 bugs.md 新编号。
+- **裁决**：段 G **COMPLETE / CLOSED**（用户流程 ⑩⑪ 完成）。
+- **下一步**：段 H 及 worker/tasks、LLM live、knowledge resolver 等均属用户排除范围，
+  **待用户新指令**；待办不变：BUG-V3-001..027 errata 终裁。

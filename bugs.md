@@ -232,6 +232,87 @@
   figure_refs、不转成其他语义 role）。完整 figure_refs/ownership 待跨层契约冻结后支持。
 - 验收：errata/跨层契约冻结后实现 figure_refs；M1 保持 fail-loud。
 
+### BUG-V3-021 — Question/Material subject·grade 确定性来源未冻结（10 §6.1/§6.4 vs 20 §4.2）
+- Status: Open
+- 登记：2026-09-06 11:50:50
+- 现象：10 §6.1/§6.4 subject/grade = 「源自 annotation claim 的确定性映射」；20 §4.2
+  `document_metadata_claims` 只是 claim + 上传/文件名优先级（02 §15 未在 10/20 落地）。
+- 根因：spec 未冻结 subject/grade 的确定性来源与优先级。
+- 处置：段 G M1 保守从 annotation payload 的 `document_metadata_claims.subject/grade` 取；
+  null/缺省 → NOT NULL 占位（空串）。不自行实现上传/文件名优先级。待 errata。
+- 验收：errata 终裁后按最终来源/优先级对齐（升级即走 Rebuild）。
+
+### BUG-V3-022 — `input_identity` 各 hash 的精确输入域未冻结（10 §9）
+- Status: Open
+- 登记：2026-09-06 11:50:50
+- 现象：10 §9 只列 input_identity 字段名（source_version_id/annotation_id/
+  annotation_payload_hash/resolver_input_hash/compiler_input_hash），未冻结
+  resolver_input_hash / compiler_input_hash 的精确输入。
+- 根因：spec 字段语义缺精确输入定义。
+- 处置：段 G M1 用最小确定性输入——resolver_input_hash = sha256(canonical_json
+  (annotation_payload + source_version_id))；compiler_input_hash = sha256(canonical_json
+  (per-unit resolved_spans 摘要 + compiled 摘要))；代码标注 BUG-V3-022，不冒充 Frozen。待 errata。
+- 验收：errata 终裁后按最终输入域对齐（升级即走 Rebuild）。
+
+### BUG-V3-023 — 复合/共享选项题型 per-type grammar 未冻结（20 §8.4）
+- Status: Open
+- 登记：2026-09-06 11:50:50
+- 现象：20 §8.4 grammar「由题型子结构决定」，但 cloze/reading/grammar_fill/
+  vocabulary_fill/seven_to_five/reading_expression 的 per-type grammar 未冻结（共享选项池
+  如 seven_to_five/vocabulary_fill 属「非固定选项关系」，需语义理解）。
+- 根因：spec 只冻结首批三种（single/multiple/true_false）grammar 语义。
+- 处置：段 G strict-auto 只开放 single_choice/multiple_choice/true_false +
+  composite 子题递归（子题 ∈ 三种才判）；共享选项池/未覆盖题型 → pending_review 人工
+  （verified_by=human|golden）。待 errata。
+- 验收：errata 冻结 per-type grammar 后按最终开放范围对齐。
+
+### BUG-V3-024 — Gate 四层逐条检查项未完全冻结（20 §8.1）
+- Status: Open
+- 登记：2026-09-06 11:50:50
+- 现象：20 §8.1 四层给检查类别与关键不变量，但逐条检查项未全冻结——structural
+  「granularity/offset 与 role 一致」细则、provenance「contextual 须附 evidence」的 evidence
+  形态、semantic「子题 image 归属」= BUG-V3-020 延后。
+- 根因：spec 逐条检查未冻结。
+- 处置：段 G 用最小可确定检查实现四层（structural：leaf 非空/span 可溯源/题型可解释；
+  provenance：text_hash=source slice hash + role resolution_status ∈ {exact,normalized} 才自动、
+  contextual 附 evidence、fuzzy/ambiguous/missing 不自动；semantic：composite 依赖完整 +
+  闭合 + 材料不重复 + 状态与 IR 一致）；image 归属 M1 走 fail-loud（BUG-V3-020）。待 errata。
+- 验收：errata 冻结逐条后按最终检查对齐。
+
+### BUG-V3-025 — `review_trail` JSON 结构未完全冻结（20 §8.2）
+- Status: Open
+- 登记：2026-09-06 11:50:50
+- 现象：20 §8.2 给 review_trail 字段 `{decision, verified_by: human|golden, reviewer_id,
+  confirmed_fields, time}`，但 time 格式 / confirmed_fields 内容未冻结。
+- 根因：spec 字段细节未冻结。
+- 处置：段 G M1 用最小结构（append 不覆盖；time = ISO-8601 UTC 字符串；confirmed_fields =
+  该次确认的 role/answer 标识列表）。待 errata。
+- 验收：errata 终裁后按最终结构对齐。
+
+### BUG-V3-026 — 人工 reject 理由归属 + gate_decision immutability 未冻结（10 §5.2 vs 20 §8.1/§8.2）
+- Status: Open
+- 登记：2026-09-06 11:50:50
+- 现象：(a) 20 §8.2 只明确 Gate 判定的 rejected 写 `gate_decision.reasons`；人工 reject
+  理由写 review_trail 还是 gate_decision.reasons 未逐字冻结；(b) gate_decision 语义上 Gate
+  写一次、人工只 append review_trail，但未用「immutable」一词要求 DB enforce。
+- 根因：spec 证据链归属两处未逐字冻结。
+- 处置：段 G M1 人工 reject 理由只进 review_trail（actor=human, action=reject），
+  gate_decision 保留原机器判断不覆盖；gate_decision 由 Gate 写入后不 UPDATE（应用层纪律，
+  不自行加 DB trigger/RLS，P0-G-001）。待 errata。
+- 验收：errata 终裁后按最终归属对齐。
+
+### BUG-V3-027 — Question `dedup_key` 无 DB UNIQUE 约束（10 §6.1）
+- Status: Open
+- 登记：2026-09-06 11:50:50
+- 现象：10 §6.1 仅应用层 exact lookup（dedup 命中 REUSE / 未命中 INSERT）；Question
+  `dedup_key` 未声明 DB UNIQUE。并发 approve 两 candidate 同 dedup_key 时，双事务
+  「find→none→INSERT」可能产生重复 Question。
+- 根因：spec 只冻结应用层去重语义，未给 Question.dedup_key DB 级唯一约束（Instance 的
+  `UNIQUE(question_id, source_version_id, occurrence_key)` 已冻结、Question 未声明）。
+- 处置：段 G 不自行加 UNIQUE（遵循 A–E 纪律，不擅自改 DB schema）；Instance 唯一由 DB
+  constraint 兜底；重复 Question 风险登记待 errata 裁决是否补 UNIQUE。
+- 验收：errata 终裁后按最终约束对齐。
+
 ## Resolved Bugs
 
 （暂无。）

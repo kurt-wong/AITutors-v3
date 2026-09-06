@@ -255,3 +255,24 @@ Date: 2026-09-05
   incomplete 不得被 G 强行转 Candidate（应 not gate-eligible，否则 F3 fail-loud 被绕过）；
   DISPLAY_CONTRACT T/F↔A/B canonical 映射须先补。待办不变：T/F↔A/B 映射段 G 前补；
   BUG-V3-001..020 errata 终裁。
+
+### 2026-09-06 13:55:25
+
+- **Status: 段 G 正式关闭（COMPLETE / CLOSED）**。A→G 七段齐（H 及后续未授权）。
+- **段 G 交付**：`app/domains/gate/`（grammar/policy/payload/admission/service——Gate 四层
+  gate_decision + 冻结可重放 payload + AdmissionService 物化事务唯一入口 + GateService
+  LE 幂等编排 + auto approve/reject 双自动）；snapshot/content Repository 扩展
+  （_transition_decision 受控迁移 / candidate 幂等 lock / review_trail append /
+  admission_event / dedup 查重复用）；G tests（grammar/policy/payload/admission/service）。
+- **对抗审查 Correction Cycle（一 TRUE-HIGH + 三 TRUE-MED，全修复 + 回归）**：
+  HIGH 复用 occurrence 无条件重插子行 → UNIQUE 冲突（同 sv 二次标注崩溃）——物化改
+  plan/Question REUSE/occurrence 复用/全复用短回路/material dedup/仅新 instance 建行；
+  MED role source_span 误记 stem 行——逐 role 自身 line_refs；MED machine-rejected 无
+  自动迁移 → pending 僵尸——service.run 自动 reject(machine_gate)；MED _dedup_key 与
+  Compiler 键分叉——对齐 normalize_identity。4 项均以真实 DB 回归锁死。
+- **验证**：段 G 测试 66 passed；完整 pytest **199 passed ×2**（无中间清理，可重入）；
+  P0-G-001/002/003 状态机探针 + 监控项（approve 只消费冻结 snapshot、不重跑 E/F/G）全绿。
+- **登记**：BUG-V3-021..027 已登记 bugs.md（021/022/025 等 M1 处理）；G 对抗 4 项为已修复
+  实现 bug，非 spec 域 Open BUG，不入 bugs.md 编号。
+- **下一步**：段 H + worker/tasks、LLM live、knowledge resolver 均属用户排除范围，待新指令；
+  待办不变：BUG-V3-001..027 errata 终裁。
