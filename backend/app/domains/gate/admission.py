@@ -269,7 +269,10 @@ class AdmissionService:
             await self._content.flush()  # material.id 回填后供 material_link FK
 
         group = await self._content.create_unit_group(
-            unit_type=root["unit_type"],
+            # F1（二轮对抗审查修复）：unit_type 是 A 域持久化字段，须用 candidate.unit_type
+            # （service 已把 IR 值映射到 standalone_unit/composite_unit，10 §6.5 值域）；
+            # 直接用 payload IR root 会把 IR 域 standalone_question 误写进展示/持久化域。
+            unit_type=candidate.unit_type,
             document_id=version.document_id,
             source_version_id=candidate.source_version_id,
             question_number_range=root.get("question_number_range"),
@@ -297,6 +300,12 @@ class AdmissionService:
                 page_no=page_no,
                 instance_order=_instance_order(page_no, line_no),
                 unit_group_id=group.id,
+                # F2（二轮对抗审查修复）：provenance「由产生它的 admission 带出」——从
+                # candidate 原样继承（copy，非本层新建）。attempt_id 段 H worker 接入前
+                # candidate 恒 NULL，如实继承。
+                logical_execution_stage=candidate.logical_execution_stage,
+                logical_execution_hash=candidate.logical_execution_hash,
+                attempt_id=candidate.attempt_id,
             )
             created_instances.append(instance.id)
             await self._content.flush()  # instance.id 回填后供 role_contents/member FK

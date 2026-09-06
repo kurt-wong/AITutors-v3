@@ -86,6 +86,9 @@ class ContentRepository(BaseRepository):
         question_number: str | None = None,
         question_number_range: str | None = None,
         unit_group_id: uuid.UUID | None = None,
+        logical_execution_stage: str | None = None,
+        logical_execution_hash: str | None = None,
+        attempt_id: uuid.UUID | None = None,
     ) -> QuestionInstance:
         instance = QuestionInstance(
             question_id=question_id,
@@ -97,6 +100,11 @@ class ContentRepository(BaseRepository):
             question_number_range=question_number_range,
             page_no=page_no,
             instance_order=instance_order,
+            # F2（二轮对抗审查修复）：provenance 列由产生它的 admission 显式带出（10 §6.2 /
+            # §3），不在此层自行推断。
+            logical_execution_stage=logical_execution_stage,
+            logical_execution_hash=logical_execution_hash,
+            attempt_id=attempt_id,
         )
         await self.add(instance)
         return instance

@@ -8,11 +8,12 @@ P0-G-003（machine/human reject 证据链）；防双物化 no-op；terminal 拒
 import uuid
 
 import pytest
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text
 
 from app.core.hashing import sha256_hex
+from app.db.session import async_session_maker
 from app.domains.gate.admission import AdmissionService
-from app.models.content import InstanceRoleContent, Question, QuestionInstance
+from app.models.content import InstanceRoleContent, Question, QuestionInstance, UnitGroup
 from app.models.snapshot import (
     AdmissionCandidate,
     AdmissionEvent,
@@ -275,3 +276,116 @@ async def test_terminal_rejected_approve_denied(session):
     with pytest.raises(RepositoryError, match="only from pending_review"):
         await admission.approve(candidate_id=cand.id,
                                 provenance={"source": "human", "reviewer_id": "u"})
+
+
+# ------------------------------------------------------------------ F1/F2 转正
+# 二轮对抗审查（_audit_g2 GA4/GA5）经显式 commit 真实 DB 暴露两实现缺陷，已修复：
+#   F1 物化把 payload IR root 的 standalone_question 误写 unit_groups.unit_type（10 §6.5
+#      值域 = standalone_unit/composite_unit）；改用 candidate.unit_type（service 已映射 A 域）。
+#   F2 create_instance 未带 candidate 的 LE provenance → 落 NULL（10 §6.2/§3「由产生它的
+#      admission 带出」）；改为从 candidate 原样继承（copy，非新建）。
+# 两测试走显式 commit + 新 session reload，断言持久值而非 ORM 内存对象。
+
+async def _purge_materialized(session, *, sv_id: str, doc_id: str) -> None:
+    """按 FK 序删净一次 approve 物化链（显式 commit 回归用，保 suite 隔离）。
+
+    新建 Question 经本 sv 的 question_instances 反查删除：常规 suite 其它文档不 commit，
+    无跨 sv FK 残留，本 sv instance 引用的即本候选新建。
+    """
+    cands = (await session.execute(text(
+        "SELECT id FROM admission_candidates WHERE source_version_id=:s"),
+        {"s": sv_id})).scalars().all()
+    qids = (await session.execute(text(
+        "SELECT DISTINCT question_id FROM question_instances "
+        "WHERE source_version_id=:s"), {"s": sv_id})).scalars().all()
+    if cands:
+        ph = ",".join(f"'{c}'" for c in cands)
+        await session.execute(text(
+            f"DELETE FROM admission_events WHERE candidate_id IN ({ph})"))
+        await session.execute(text(
+            f"DELETE FROM admission_candidates WHERE id IN ({ph})"))
+    await session.execute(text(
+        "DELETE FROM instance_role_contents WHERE instance_id IN "
+        "(SELECT id FROM question_instances WHERE source_version_id=:s)"), {"s": sv_id})
+    await session.execute(text(
+        "DELETE FROM unit_group_members WHERE instance_id IN "
+        "(SELECT id FROM question_instances WHERE source_version_id=:s)"), {"s": sv_id})
+    await session.execute(text(
+        "DELETE FROM question_instances WHERE source_version_id=:s"), {"s": sv_id})
+    await session.execute(text(
+        "DELETE FROM unit_groups WHERE source_version_id=:s"), {"s": sv_id})
+    await session.execute(text(
+        "DELETE FROM semantic_annotations WHERE source_version_id=:s"), {"s": sv_id})
+    await session.execute(text(
+        "DELETE FROM document_source_lines WHERE source_version_id=:s"), {"s": sv_id})
+    await session.execute(text(
+        "DELETE FROM document_source_versions WHERE id=:s"), {"s": sv_id})
+    if qids:
+        phq = ",".join(f"'{q}'" for q in qids)
+        await session.execute(text(f"DELETE FROM questions WHERE id IN ({phq})"))
+    await session.execute(text("DELETE FROM documents WHERE id=:d"), {"d": doc_id})
+
+
+async def test_materialized_unit_group_unit_type_is_candidate_a_domain():
+    """F1 回归（10 §6.5）：物化后 unit_groups.unit_type = candidate 的 A 域值，不得把
+    payload IR 的 standalone_question 漏入展示/持久化域。commit + 新 session reload。"""
+    sv_id = doc_id = None
+    try:
+        async with async_session_maker() as s1:
+            sv, ann = await _seed(s1)
+            sv_id, doc_id = str(sv.id), str(sv.document_id)
+            cand = await _make_candidate(s1, sv, ann, _auto_gd())
+            await s1.flush()
+            # 复现原 bug 前提：candidate=A 域 standalone_unit，payload IR root=standalone_question
+            assert cand.unit_type == "standalone_unit"
+            assert cand.payload["ir_snapshot"]["units"][0]["unit_type"] == "standalone_question"
+            await AdmissionService(s1).approve(
+                candidate_id=cand.id, provenance={"source": "auto_gate"})
+            await s1.commit()
+
+        async with async_session_maker() as s2:  # 全新 session：读已提交持久值
+            groups = (await s2.execute(select(UnitGroup))).scalars().all()
+            assert len(groups) == 1
+            assert groups[0].unit_type == "standalone_unit", (
+                f"unit_groups.unit_type={groups[0].unit_type!r}，违反 10 §6.5 值域 "
+                f"(standalone_unit/composite_unit)——IR standalone_question 不得写入")
+            await s2.rollback()
+    finally:
+        if sv_id:
+            async with async_session_maker() as sc:
+                await _purge_materialized(sc, sv_id=sv_id, doc_id=doc_id)
+                await sc.commit()
+
+
+async def test_materialized_instance_inherits_candidate_le_provenance():
+    """F2 回归（10 §6.2/§3）：instance 的 LE provenance 由产生它的 admission 带出——
+    从 candidate 原样继承（copy，非新建/非 NULL）。commit + 新 session reload。"""
+    sv_id = doc_id = None
+    qids: list[str] = []
+    expected = None
+    try:
+        async with async_session_maker() as s1:
+            sv, ann = await _seed(s1)
+            sv_id, doc_id = str(sv.id), str(sv.document_id)
+            cand = await _make_candidate(s1, sv, ann, _auto_gd())
+            await s1.flush()
+            expected = (cand.logical_execution_stage,
+                        cand.logical_execution_hash, cand.attempt_id)
+            await AdmissionService(s1).approve(
+                candidate_id=cand.id, provenance={"source": "auto_gate"})
+            await s1.commit()
+
+        async with async_session_maker() as s2:
+            inst = (await s2.execute(select(QuestionInstance))).scalars().first()
+            assert inst is not None
+            assert (inst.logical_execution_stage,
+                    inst.logical_execution_hash,
+                    inst.attempt_id) == expected, (
+                "instance LE provenance 应原样继承其物化 admission 的 candidate "
+                "(10 §6.2/§3)，而非 NULL/新生成")
+            await s2.rollback()
+    finally:
+        if sv_id:
+            async with async_session_maker() as sc:
+                await _purge_materialized(sc, sv_id=sv_id, doc_id=doc_id)
+                await sc.commit()
