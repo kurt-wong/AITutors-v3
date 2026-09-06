@@ -1,18 +1,62 @@
-"""数据域 A Repository：live 行只经 Repository 创建（10 §6）。段 A 无物化，仅提供创建面。"""
+"""数据域 A Repository：live 行只经 Repository 创建（10 §6）。段 G 增查重/复用面。"""
 
 import uuid
+
+from sqlalchemy import select
 
 from app.models.content import (
     InstanceRoleContent,
     Material,
+    MaterialLink,
     Question,
     QuestionInstance,
     UnitGroup,
+    UnitGroupMember,
 )
 from app.repositories.base import BaseRepository
 
 
 class ContentRepository(BaseRepository):
+    async def find_question_by_dedup_key(self, *, dedup_key: str) -> Question | None:
+        """Question 精确查重（10 §6.1 应用层 dedup：命中复用 / 未命中新建）。"""
+        res = await self._session.execute(
+            select(Question).where(Question.dedup_key == dedup_key)
+        )
+        return res.scalars().first()
+
+    async def find_instance_by_occurrence(
+        self,
+        *,
+        question_id: uuid.UUID,
+        source_version_id: uuid.UUID,
+        occurrence_key: str,
+    ) -> QuestionInstance | None:
+        """Instance 防重复（10 §6.2 UNIQUE(question_id, source_version_id, occurrence_key)）。"""
+        res = await self._session.execute(
+            select(QuestionInstance).where(
+                QuestionInstance.question_id == question_id,
+                QuestionInstance.source_version_id == source_version_id,
+                QuestionInstance.occurrence_key == occurrence_key,
+            )
+        )
+        return res.scalars().first()
+
+    async def find_material_by_dedup(
+        self,
+        *,
+        source_version_id: uuid.UUID,
+        dedup_key: str,
+    ) -> Material | None:
+        """Material 复用（10 §6.4 M1：source-scoped，不跨 Source Version 自动共享）——
+        同 source_version 重标注按 dedup 命中既有行，不再重复建。"""
+        res = await self._session.execute(
+            select(Material).where(
+                Material.source_version_id == source_version_id,
+                Material.dedup_key == dedup_key,
+            )
+        )
+        return res.scalars().first()
+
     async def create_question(
         self,
         *,
@@ -123,3 +167,39 @@ class ContentRepository(BaseRepository):
         )
         await self.add(unit_group)
         return unit_group
+
+    async def create_material_link(
+        self,
+        *,
+        instance_id: uuid.UUID,
+        material_id: uuid.UUID,
+        role: str,
+        order: int,
+    ) -> MaterialLink:
+        """material_links（10 §6.4 复合 PK(instance_id, material_id, role, order)）。"""
+        link = MaterialLink(
+            instance_id=instance_id,
+            material_id=material_id,
+            role=role,
+            order=order,
+        )
+        await self.add(link)
+        return link
+
+    async def create_unit_group_member(
+        self,
+        *,
+        unit_group_id: uuid.UUID,
+        instance_id: uuid.UUID,
+        member_order: int,
+        role_in_group: str | None = None,
+    ) -> UnitGroupMember:
+        """unit_group_members（10 §6.5 复合 PK(unit_group_id, instance_id, member_order)）。"""
+        member = UnitGroupMember(
+            unit_group_id=unit_group_id,
+            instance_id=instance_id,
+            member_order=member_order,
+            role_in_group=role_in_group,
+        )
+        await self.add(member)
+        return member

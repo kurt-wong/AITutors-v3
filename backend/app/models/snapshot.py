@@ -59,7 +59,9 @@ class AdmissionCandidate(UUIDPrimaryKeyMixin, Base):
     build_versions: Mapped[dict] = mapped_column(JSONB, nullable=False)
     input_identity: Mapped[dict] = mapped_column(JSONB, nullable=False)
     payload: Mapped[dict] = mapped_column(JSONB, nullable=False)
-    review_trail: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    # review_trail：人工 review 的 decision/意见/时间，append 不覆盖（20 §8.2）。M1 用
+    # list[entry]（BUG-V3-025 结构未冻结）；JSONB，无 DDL 差异。
+    review_trail: Mapped[list | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=_utcnow
     )
