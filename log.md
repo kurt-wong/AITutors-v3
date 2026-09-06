@@ -348,3 +348,34 @@
 - **裁决**：用户批准段 E **COMPLETE / CLOSED**；进入 40 §2 段 F（F0 Contract Audit）。
 - **下一步**：段 F——IR 装配 + ready 判定 + Deterministic Compiler + dedup/occurrence
   （20 §6/§7），不得把 IR 逻辑塞回 E。待办不变：T/F↔A/B 映射段 G 前补。
+
+### 2026-09-06 10:59:39
+
+- **段 F 三轮对抗审查 → 用户裁决 COMPLETE / CLOSED**。
+- **实现**：compile 包（IR dataclass + IRBuilder + validate_ir 不变量 1-8 /
+  identity_normalization 与 match_normalization 物理分离 / Compiler 三 key + raw 2c/2d /
+  snapshot）；canonical 12 种直通 + 未知→incomplete（BUG-V3-014 不猜别名）；LaTeX 只环境
+  内折叠（BUG-V3-015 符号等价延后）；unit_id 禁 UUID/random 生成；material 单次输出不复制
+  进子题 stem；input immutable。
+- **Correction Cycle（F1/F2/F3，用户授权）**：
+  - F1 缺 answer 曾 ready + leaf；改 validator 强制 content_roles answer=required →
+    incomplete + leaves=0（回归 test_answer_required_missing_incomplete）；
+  - F2 material dependency 曾「声明即可 ready」；改 target 须在 shared_components 且
+    span resolved 才 ready（回归 test_material_dependency_unresolved_composite_incomplete）；
+  - F3 image/blank 曾静默丢弃产 ready 无图引用；改 unsupported content role →
+    IRContent.unsupported → validator 判 incomplete fail-loud（回归
+    test_declared_image_fail_loud_incomplete）；figure_refs 延后 BUG-V3-020，blank 闭合
+    延后 invariant 4——含 blank 的 fill_in 诚实走 incomplete，非误 ready。
+- **审查（第三轮对抗确认）**：真探针证明 F1/F2/F3 消除、blank fail-loud 正确、
+  material.text 纯正文（marker 间排他切片）、composite 三 key 确定性、F/G boundary
+  import 扫描 clean（compile 无 gate/repositories/admission/runtime/decision 实际 import）；
+  未发现新 FAIL。
+- **验证**：段 F 测试 19 passed；完整 pytest **133 passed ×2**（无中间清理，可重入）；
+  负向矩阵 / 确定性 / input immutable / canonical 直通 / raw 2c-2d 均不回归。
+- **登记**：BUG-V3-014..018（F0 audit）前 commit；019（options serialization order）/
+  020（image/unsupported fail-loud）本轮补登记；010 误插完全重复条目移除（保留一份历史）。
+- **裁决**：用户批准段 F **COMPLETE / CLOSED**；进入 40 §2 段 G（F0 Contract Audit）。
+- **下一步**：段 G——Gate Policy + Candidate + decision_status + approve()/Admission tx +
+  Allowed-Answer Grammar（20 §8）。G0 必核：F incomplete 不得被 G 强行转 Candidate；
+  DISPLAY_CONTRACT T/F↔A/B canonical 映射须先补（否则 true_false 只走 pending_review）。
+  G 完成自身 Contract Audit 前不得正式实现。

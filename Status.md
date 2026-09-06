@@ -233,3 +233,25 @@ Date: 2026-09-05
 - **下一步**：进入 40 §2 **段 F（F0 Contract Audit）**——IR 装配 + ready 判定 +
   Deterministic Compiler + dedup/occurrence（20 §6/§7），不得把 IR 逻辑塞回 E。
   待办不变：T/F↔A/B 映射段 G 前补；BUG-V3-001..013 errata 终裁。
+
+### 2026-09-06 10:59:39
+
+- **Status: 段 F 正式关闭（COMPLETE / CLOSED）**。A→F 六段齐。
+- **段 F 交付**：`app/domains/compile/`（ir/identity_normalization/compiler/snapshot——
+  IR 装配 + 不变量 1-8 + Deterministic Compiler + 三 key + text_hash raw 2c/2d）；
+  tests（test_ir + test_compiler 共 19）。
+- **对抗审查三轮闭环**：F1 required answer（缺答案曾 ready → 现 incomplete + leaves=0）、
+  F2 material dependency（target unresolved → 现 incomplete）、F3 image/blank 静默丢弃
+  （现 fail-loud unsupported → incomplete，宁可拒绝 ready 不静默丢语义）均以真探针证明
+  消除；F/G boundary 扫描 clean（compile 无 gate/repositories/decision_status 实际
+  import）；含 blank 的 fill_in 走 incomplete 是 invariant 4 未实现 + BUG-V3-020 延后的
+  诚实状态，非误 ready。
+- **验证**：段 F 测试 19 passed；完整 pytest **133 passed ×2**（无中间清理，可重入）；
+  负向矩阵、确定性、input immutable、canonical 直通、raw hash 均不回归。
+- **登记**：BUG-V3-014..020 Open / deferred（Open BUG ≠ 当前阶段 Failure；不改 Frozen
+  Spec，M1 已采用经审计的最小确定性行为）。
+- **下一步**：进入 40 §2 **段 G（F0 Contract Audit）**——Gate Policy + Candidate +
+  decision_status + approve()/Admission tx + Allowed-Answer Grammar。**G0 必核**：F 的
+  incomplete 不得被 G 强行转 Candidate（应 not gate-eligible，否则 F3 fail-loud 被绕过）；
+  DISPLAY_CONTRACT T/F↔A/B canonical 映射须先补。待办不变：T/F↔A/B 映射段 G 前补；
+  BUG-V3-001..020 errata 终裁。
