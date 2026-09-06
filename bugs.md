@@ -117,16 +117,6 @@
   检查）；登记 bugs.md 待 errata。
 - 验收：errata 终裁后按最终语义对齐。
 
-### BUG-V3-010 — `json.loads` 失败时 invalid annotation payload 形态未冻结（10 §5.1）
-- Status: Open
-- 登记：2026-09-06 00:08:31
-- 现象：10 §5.1 `payload JSONB NOT NULL`，但未定义 invalid annotation（LLM 输出非法 JSON）
-  的 payload 内容。
-- 根因：spec 未覆盖 parse 失败场景的 payload 形态。
-- 处置：段 D 落库 `payload={"parse_error": str(exc)}`（NOT NULL 占位，非正文，不触发禁字段
-  检查）；登记 bugs.md 待 errata。
-- 验收：errata 终裁后按最终语义对齐。
-
 ### BUG-V3-011 — 段 B seal 未接 figures；OCRFigure 缺 IS-7 字段（20 §4.4/§5.3 image）
 - Status: Open
 - 登记：2026-09-06 09:09:16
@@ -216,6 +206,31 @@
   exact/normalized/contextual/fuzzy… 不搬运进 F；三层状态严格区分）。unit_id 缺省或任一
   内容 role 未 resolved → semantic_status=incomplete。待 errata 冻结枚举。
 - 验收：errata 冻结后按最终值域对齐。
+
+### BUG-V3-019 — options identity serialization order 未冻结（20 §7.3）
+- Status: Open
+- 登记：2026-09-06 09:09:16
+- 现象：20 §7.3「按 DISPLAY_CONTRACT 固定 role/order/label 序列化」，但 label 固定序未
+  明确冻结（选项 A→B→C→D 排序未成文）。
+- 根因：identity 规范化策略未冻结（与 BUG-V3-016 同族）。
+- 处置：段 F Question dedup_key 的 options 按 **annotation 声明序**序列化（不 sort by
+  label——「看起来合理」不授权 Compiler 改 identity）。探针证实同 stem options (A,B) vs
+  (B,A) → 不同 dedup（false-split 风险登记，非 false-resolved）。
+- 验收：errata 冻结 label 固定序后对齐（升级即走 Rebuild）。
+
+### BUG-V3-020 — image/unsupported content role 在 F IR/Compiler 被静默丢弃
+- Status: Open
+- 登记：2026-09-06 09:09:16
+- 现象：annotation 声明 image 且 E 成功 resolve，但 F IR/Compiler 不表示 image 亦不产
+  figure_refs → 产出 ready 快照却无图引用（silent data loss）。真实探针：E image
+  resolved=True，IR content roles 缺 image，snapshot 无 figures 通道。
+- 根因：实现链缺口 + 跨层契约缺口——E image resolved span 不携带 figure_id（仅 evidence）；
+  F 无 figure_refs 建模；20 §7.2.5 figure_refs / 20 §9 验收 #5 依赖跨层
+  ResolvedSpan↔SourceFigure/IS-7 契约。
+- 处置：M1 fail-loud——annotation 声明 F 未建模 content role（image/blank）→
+  IR semantic_status=incomplete（绝不静默丢弃、不 guess figure_id、不扫正文、不造
+  figure_refs、不转成其他语义 role）。完整 figure_refs/ownership 待跨层契约冻结后支持。
+- 验收：errata/跨层契约冻结后实现 figure_refs；M1 保持 fail-loud。
 
 ## Resolved Bugs
 
