@@ -1,25 +1,30 @@
 # AI Tutor V3 — RESTART PROMPT
 
-Version: v1.2
-Status: 段 G 实现完成并关闭（A–G 已关闭；段 H 未授权）
+Version: v1.3
+Status: 段 G 实现完成并经二轮对抗审查收尾（VERIFIED；A–G 已关闭；段 H 未授权）
 Date: 2026-09-06
 
-## 0.0 当前结论（2026-09-06 13:55:25）
+## 0.0 当前结论（2026-09-06 15:14:30）
 
-- V3 架构与开发契约已冻结（Baseline—Frozen）；实现推进到 **40 §2 段 G**，A–G 七段已关闭。
-- 段 G 当前状态：**COMPLETE / CLOSED**——G0 Contract Audit PASS 后用户授权实现，grammar/
-  policy/payload/admission/service + 状态机探针 + 对抗审查 Correction Cycle（4 项已修复）
-  完成；完整 pytest **199 passed ×2**；监控项（approve 只消费冻结 snapshot、不重跑 E/F/G）
-  全绿。详见 Status.md / log.md。
-- 重启后第一任务：读本文件 → Status.md 尾 → log.md 尾恢复上下文 → 等待用户对段 H 或后续
-  的授权/新指令。**H + worker/LLM live/knowledge resolver 未授权，不要擅自动工。**
+- V3 架构与开发契约已冻结（Baseline—Frozen）；**V3 Core Pipeline Baseline A–G 定格**
+  （用户裁决 15:14:30）：A–G 七段 Implementation Complete and Verified，commit `8a57a92`
+  为 A–G 稳定工程基线——从 Source 到 A 域物化的确定性数据主线已闭环。
+- 段 G 当前状态：**IMPLEMENTATION COMPLETE / VERIFIED**——G0 Contract Audit PASS 后用户
+  授权实现，grammar/policy/payload/admission/service + 状态机探针 + 对抗审查 Correction
+  Cycle（4 项修复）+ **二轮跨提交对抗审查 F1/F2 修复（8a57a92）**均完成；完整 pytest
+  **201 passed ×2**；监控项（approve 只消费冻结 snapshot、不重跑 E/F/G）全绿。
+  详见 Status.md / log.md。
+- **下一步（用户指定顺序）**：先 **H0 Runtime Readiness Audit**（audit only，零生产代码）
+  → H Contract Audit → H Implementation。H0/H 均未授权，不擅动工。
+- 重启后第一任务：读本文件 → Status.md 尾 → log.md 尾恢复上下文 → 等待用户对 H0/H 或后续
+  的授权/新指令。**H0/H + worker/LLM live/knowledge resolver 未授权，不要擅自动工。**
 
-## 0. 当前工作状态（2026-09-06 13:55:25）
+## 0. 当前工作状态（2026-09-06 15:14:30）
 
 - **已完成（A–G 七段关闭）**：`Docs/V3_SPEC/` 六册 + README 冻结；段 A（config/DB 19 表/
   Repository/hashing）、段 C（Gateway/audit/budget external 闸）、段 B（Source Seal + OCR）、
   段 D（Annotation）、段 E（Source Resolver）、段 F（IR + Compiler）、段 G（Gate +
-  Admission + Grammar）全部关闭。完整 pytest 199 passed ×2。
+  Admission + Grammar）全部关闭。完整 pytest 201 passed ×2。
 - **段 G 已关闭（实现要点）**：`app/domains/gate/` grammar/policy/payload/admission/service
   ——Gate 四层 gate_decision + 冻结可重放 payload + AdmissionService 物化事务唯一入口 +
   GateService LE 幂等编排；auto_approve 自动 approve、machine rejected 自动 reject
@@ -42,7 +47,8 @@ Date: 2026-09-06
   DB UNIQUE；021/022/025 实现按 M1 处理并标注不冒充 Frozen）。G 对抗审查 4 项为已修复
   实现 bug，不入 BUG 编号。
 - **当前不要执行**：段 H + worker/tasks、LLM live、knowledge resolver 未授权前不实现；
-  不改冻结分册（除非 changelog/errata）；不重开已关闭的 A–G 段（不回头修 BUG-V3-001..027）。
+  **H0 Runtime Readiness Audit 亦未授权，不擅动工**；不改冻结分册（除非 changelog/errata）；
+  不重开已关闭的 A–G 段（不回头修 BUG-V3-001..027）。
 - **关键文件**：
   - `Docs/V3_SPEC/README.md` — 唯一导航 + 术语裁决 + Baseline 状态
   - `Docs/V3_SPEC/20_Document_Pipeline.md` — 段 G 核心（§8 Gate 四层/decision_status/

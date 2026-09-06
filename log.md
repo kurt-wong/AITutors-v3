@@ -412,3 +412,39 @@
 - **裁决**：段 G **COMPLETE / CLOSED**（用户流程 ⑩⑪ 完成）。
 - **下一步**：段 H 及 worker/tasks、LLM live、knowledge resolver 等均属用户排除范围，
   **待用户新指令**；待办不变：BUG-V3-001..027 errata 终裁。
+
+### 2026-09-06 15:10:52（段 G 二轮对抗审查 → F1/F2 修复收尾）
+
+- **背景/裁决**：用户对二轮对抗审查 findings（F1/F2）批准**最小修复 + 各转正一条跨提交
+  回归**；范围限定：不改 Frozen Spec、不新增 BUG 编号、不动状态机/dedup/UNIQUE、
+  不重构 _materialize、_audit 探针不入常规收集。
+- **F1（10 §6.5 A 域值域）**：admission 物化 create_unit_group 原取 payload IR root 的
+  `unit_type`（standalone_question），把 IR 域漏入展示/持久化域；改从 `candidate.unit_type`
+  （service 已把 IR 值经 _candidate_unit_type 映射到 standalone_unit/composite_unit）——
+  Admission 消费 G→A 冻结边界的 candidate，不回头解释 IR 值。
+- **F2（10 §6.2/§3 provenance 写路径）**：create_instance 原不带 LE provenance → DB 落
+  NULL；ContentRepository.create_instance 增 logical_execution_stage/hash/attempt_id 形参
+  （默认 None，兼容既有调用），物化从 candidate 原样 copy（attempt_id 段 H worker 接入前
+  candidate 恒 NULL → 如实继承，不伪造执行身份）。
+- **转正回归**：test_admission.py 新增两条**显式 commit + 新 session reload** 测试
+  （test_materialized_unit_group_unit_type_is_candidate_a_domain /
+  test_materialized_instance_inherits_candidate_le_provenance），断言持久值而非 ORM 内存
+  对象；新增 _purge_materialized（FK 序删净，含 sv instance 反查新建 Question），连续两遍
+  全量无中间清理证实无泄漏。
+- **验证**：test_admission.py 11 passed；_audit_g2 GA1–GA6 全 PASS（GA4/GA5 由 FAIL 转
+  PASS）；完整 pytest **201 passed ×2**（无中间清理，可重入）。
+- **登记**：F1/F2 为已修复实现 bug（同段 G 对抗 4 项惯例，不入 bugs.md 新编号）；BUG-V3-
+  021..027 保持 Open 不变。
+- **裁决**：用户批准 F1/F2 关闭 + 段 G 记录为 **IMPLEMENTATION COMPLETE / VERIFIED**；
+  commit 8a57a92 已 push（origin/main 同步，工作树仅剩 2 个 untracked 审计探针）。
+- **下一步**：段 H 及后续未授权，待用户新指令；待办不变：BUG-V3-001..027 errata 终裁。
+
+### 2026-09-06 15:14:30（A–G Baseline Freeze 裁决）
+
+- **裁决**：用户将 commit `8a57a92` 定为 **V3 Core Pipeline Baseline A–G 稳定基线**
+  （Implementation Complete and Verified）；F1/F2 Correction Cycle 关闭；BUG-V3-001..027
+  维持 Open（留 SPEC PATCH / NEXT BASELINE，不集中清）。
+- **下一步顺序（用户指定）**：H0 Runtime Readiness Audit（audit only，零生产代码；检查
+  stage/execution 身份贯穿 · Retry/Replay/New/Duplicate 语义与现有幂等对齐 · LLM Live 不
+  绕过 Gateway/audit/budget · Task 状态机与业务状态机维度分离 + crash 窗口）→ H Contract
+  Audit → H Implementation。H0/H 未授权不擅动工。

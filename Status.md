@@ -276,3 +276,31 @@ Date: 2026-09-05
   实现 bug，非 spec 域 Open BUG，不入 bugs.md 编号。
 - **下一步**：段 H + worker/tasks、LLM live、knowledge resolver 均属用户排除范围，待新指令；
   待办不变：BUG-V3-001..027 errata 终裁。
+
+### 2026-09-06 15:10:52
+
+- **Status: 段 G 收尾——IMPLEMENTATION COMPLETE / VERIFIED**（二轮对抗审查 F1/F2 修复后）。
+- **二轮对抗审查（跨提交，_audit_g2 GA1–GA6）证实并修复两缺陷（commit 8a57a92，已 push）**：
+  - F1 `unit_groups.unit_type` 误用 payload IR `standalone_question` → 改从
+    `candidate.unit_type`（service 已映射 A 域 standalone_unit/composite_unit，10 §6.5）；
+  - F2 `create_instance` 增加 LE provenance（stage/hash/attempt_id）透传，物化从
+    candidate 原样继承（copy，10 §6.2/§3），不再落 NULL；
+  - 各转正一条显式 commit + 新 session reload 回归（test_admission.py，11 passed）。
+- **验证**：GA4/GA5 由 FAIL 转 PASS（GA1–GA6 全绿）；完整 pytest **201 passed ×2**（无中间
+  清理，可重入）；工作树已同步 origin（8a57a92），仅剩 2 个 untracked 审计探针。
+- **登记**：F1/F2 为已修复实现 bug（同段 G 对抗 4 项惯例，不入 bugs.md 编号）；BUG-V3-001..027
+  保持 Open 不变。
+- **下一步**：段 H + worker/tasks、LLM live、knowledge resolver 未授权，待用户新指令；待办
+  不变：BUG-V3-001..027 errata 终裁。
+
+### 2026-09-06 15:14:30
+
+- **Status: V3 Core Pipeline Baseline A–G 定格（用户裁决）——Implementation Complete and
+  Verified**；commit `8a57a92` 定为 **A–G 稳定工程基线**。
+- **A–G Baseline Freeze**：不再视 A–G 为"开发中"——从 Source Seal 到 A 域物化的确定性
+  数据主线已闭环；F1/F2 Correction Cycle 关闭；BUG-V3-001..027 维持 Open（留 SPEC PATCH /
+  NEXT BASELINE，不集中清）。
+- **下一步（用户指定顺序）**：**H0 Runtime Readiness Audit**（audit only，零生产代码；
+  范围 = stage/execution 身份贯穿 · Retry/Replay/New/Duplicate 语义 · LLM Live 不绕
+  Gateway/audit/budget · Task vs 业务状态机维度分离 + crash 窗口）→ H Contract Audit →
+  H Implementation。H/H0 均未授权，不擅动工。
