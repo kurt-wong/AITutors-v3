@@ -11,6 +11,8 @@ audit / budget（计数点在 gateway provider seam，先于本层）。HTTP sta
 为 BaseException，不被 except httpx.TransportError 捕获，自然传播。
 """
 
+import json
+
 import httpx
 
 from app.core.config import settings
@@ -68,5 +70,21 @@ class HTTPLLMProvider:
                 f"LLM provider returned HTTP {status}",
                 retryable=status in _RETRYABLE_STATUS,
             ) from exc
-        data = resp.json()
-        return data["choices"][0]["message"]["content"]
+        try:
+            data = resp.json()
+            content = data["choices"][0]["message"]["content"]
+        except (KeyError, IndexError, TypeError, json.JSONDecodeError) as exc:
+            # B-2（对抗审查）：HTTP 200 但 body 违反 adapter contract（非 JSON / choices 缺失/
+            # 空 / message/content 缺失）→ 翻译为 LLMProviderError(retryable=False)。不得泄漏裸
+            # JSONDecodeError/IndexError/KeyError/TypeError——会被 LLMExecutor._error_type 误分类
+            # 为 'unknown'，且不在 retry/fallback 白名单内。retryable=False：请求已达 provider 且
+            # 返回 200，属 contract violation 而非 transport/transient 失败，重试无意义（用户裁决）。
+            raise LLMProviderError(
+                f"LLM provider returned malformed body: {exc}", retryable=False
+            ) from exc
+        if content is None:
+            # content 键存在但为 null → 同样 contract violation（明确按 adapter contract 处理）
+            raise LLMProviderError(
+                "LLM provider returned malformed body: content is null", retryable=False
+            )
+        return content

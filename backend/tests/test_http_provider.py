@@ -22,11 +22,17 @@ from app.core.errors import LLMNetworkError, LLMProviderError
 
 
 class _FakeResponse:
-    """最小 response：仅支持 raise_for_status() 与 json()。"""
+    """最小 response：仅支持 raise_for_status() 与 json()。
 
-    def __init__(self, status: int = 200, content: str = "ok-text") -> None:
+    json_body：直接返回给定 dict（注入 malformed contract body）；raw：非 JSON 文本，
+    json() 内部 json.loads 抛 JSONDecodeError。二者均 None 时返回默认合法 body。
+    """
+
+    def __init__(self, status: int = 200, content: str = "ok-text", json_body=None, raw=None) -> None:
         self.status_code = status
         self._content = content
+        self._json_body = json_body
+        self._raw = raw
         self._request = httpx.Request("POST", "http://localhost")
 
     def raise_for_status(self) -> None:
@@ -37,6 +43,12 @@ class _FakeResponse:
             )
 
     def json(self):
+        if self._raw is not None:
+            import json as _json
+
+            return _json.loads(self._raw)
+        if self._json_body is not None:
+            return self._json_body
         return {"choices": [{"message": {"content": self._content}}]}
 
 
@@ -183,4 +195,50 @@ async def test_success_single_attempt(monkeypatch) -> None:
     calls = _patch_client(monkeypatch, [("response", _FakeResponse(200, "ok"))])
     out = await _provider(http_retry_count=2).complete("q")
     assert out == "ok"
+    assert len(calls) == 1
+
+
+# ---- B-2（对抗审查）：HTTP 200 + malformed body → 翻译为 LLMProviderError(retryable=False) ----
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        {"foo": "bar"},  # choices 缺失 → KeyError
+        {"choices": None},  # choices 为 null → TypeError
+        {"choices": []},  # choices 空 → IndexError
+        {"choices": [{}]},  # 缺 message → KeyError
+        {"choices": [{"message": {}}]},  # 缺 content → KeyError
+        {"choices": [{"message": {"content": None}}]},  # content 为 null → 显式 contract 处理
+    ],
+    ids=[
+        "missing-choices",
+        "choices-null",
+        "empty-choices",
+        "missing-message",
+        "missing-content",
+        "content-null",
+    ],
+)
+async def test_malformed_json_body_raises_provider_error(monkeypatch, body) -> None:
+    """HTTP 200 + body 违反 adapter contract → LLMProviderError(retryable=False)，不泄漏裸异常。
+
+    修复前缺陷：泄漏 IndexError/KeyError/TypeError，经 LLMExecutor._error_type 误分类为
+    'unknown'（而非 provider_error），且不在 retry/fallback 白名单内 → 既不重试也不降级。
+    """
+    calls = _patch_client(monkeypatch, [("response", _FakeResponse(json_body=body))])
+    with pytest.raises(LLMProviderError) as ei:
+        await _provider(http_retry_count=0).complete("q")
+    assert ei.value.retryable is False
+    assert ei.value.error_type == "provider_error"
+    assert len(calls) == 1  # 非 transport error，不走 transport retry
+
+
+async def test_nonjson_body_raises_provider_error(monkeypatch) -> None:
+    """HTTP 200 + 非 JSON body → LLMProviderError(retryable=False)，不泄漏 JSONDecodeError。"""
+    calls = _patch_client(monkeypatch, [("response", _FakeResponse(raw="<html>not json</html>"))])
+    with pytest.raises(LLMProviderError) as ei:
+        await _provider(http_retry_count=0).complete("q")
+    assert ei.value.retryable is False
+    assert ei.value.error_type == "provider_error"
     assert len(calls) == 1

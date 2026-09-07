@@ -385,9 +385,10 @@ async def test_settle_failure_does_not_rollback_audit(monkeypatch) -> None:
 class _HTTPRetryResponse:
     """最小 httpx response：支持 raise_for_status()/json()。"""
 
-    def __init__(self, status: int = 200, content: str = "ok-text") -> None:
+    def __init__(self, status: int = 200, content: str = "ok-text", json_body=None) -> None:
         self.status_code = status
         self._content = content
+        self._json_body = json_body
         self._request = httpx.Request("POST", "http://localhost")
 
     def raise_for_status(self) -> None:
@@ -398,6 +399,8 @@ class _HTTPRetryResponse:
             )
 
     def json(self):
+        if self._json_body is not None:
+            return self._json_body
         return {"choices": [{"message": {"content": self._content}}]}
 
 
@@ -499,5 +502,47 @@ async def test_transport_retry_exhausted_still_single_invocation(monkeypatch) ->
             {"i": task_id},
         )).mappings().first()
         assert audit["attempt_id"] == attempt_id
+        row = await _budget_row(s, "task", str(task_id))
+        assert row == {"used": Decimal("0"), "reserved": Decimal("0")}  # 失败释放保留
+
+
+# ---- B-2（对抗审查）：malformed body → audit error_type='provider_error'（非 'unknown'） ----
+
+
+async def test_malformed_body_audit_error_type_provider_error(monkeypatch) -> None:
+    """B-2 端到端：HTTP 200 + choices=[] → http.py 翻译 LLMProviderError(retryable=False) →
+    executor 不重试 → audit failed + error_type='provider_error'。
+
+    修复前缺陷：裸 IndexError 泄漏，经 _error_type 落 audit error_type='unknown'（provider
+    语义失败被误分类为系统未知错误）。修复后链路为 provider_error。
+    """
+    async with async_session_maker() as s:
+        task_id = await _mk_task(s)
+    doc_id = uuid.uuid4()
+    calls = _patch_http_client(
+        monkeypatch,
+        [("response", _HTTPRetryResponse(json_body={"choices": []}))],
+    )
+    provider = HTTPLLMProvider(
+        name="deepseek",
+        api_key="k",
+        base_url="http://localhost",
+        model="deepseek-chat",
+        timeout=1.0,
+        http_retry_count=0,
+    )
+    async with async_session_maker() as s:
+        ex = LLMExecutor(s, _live_gateway(provider), retry_count=2)
+        with pytest.raises(LLMProviderError):
+            await ex.complete("q", **_exec_params(task_id, doc_id, attempt_id=uuid.uuid4()))
+    assert len(calls) == 1  # retryable=False：executor retry_count=2 也不重试
+    async with async_session_maker() as s:
+        assert await _invocations(s, task_id) == 1
+        assert await _audit_statuses(s, task_id) == ["failed"]
+        audit = (await s.execute(
+            text("SELECT error_type FROM llm_call_audit WHERE task_id=:i"),
+            {"i": task_id},
+        )).mappings().first()
+        assert audit["error_type"] == "provider_error"  # 修复前为 'unknown'
         row = await _budget_row(s, "task", str(task_id))
         assert row == {"used": Decimal("0"), "reserved": Decimal("0")}  # 失败释放保留
