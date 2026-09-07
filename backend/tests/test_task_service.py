@@ -402,3 +402,29 @@ async def test_statuses_vocabulary() -> None:
     assert TASK_STATUSES == {
         "created", "queued", "running", "succeeded", "failed", "interrupted"
     }
+
+
+async def test_expired_lease_complete_fail_rejected() -> None:
+    """Batch 3-2：lease 过期后 complete/fail 被拒（与 heartbeat 一致）——旧 worker 不得改终态。
+
+    _terminal 补 lease_expires_at > now() 条件，防「recover 未跑但 lease 已过期」窗口内
+    过期 worker 把自己的 task 误标 failed（应保持 running 交 recover 置 interrupted）。
+    """
+    async with async_session_maker() as session:
+        svc = TaskService(session, lease_seconds=1)
+        t = await _enqueue(session)
+        await session.commit()
+        await svc.claim(t.id, worker_id=W1, lease_token=TOK1)
+        await session.commit()
+        await asyncio.sleep(1.5)  # 停止心跳，超过 1s lease
+        with pytest.raises(LeaseConflict):
+            await svc.complete(t.id, worker_id=W1, lease_token=TOK1)
+        with pytest.raises(LeaseConflict):
+            await svc.fail(t.id, worker_id=W1, lease_token=TOK1)
+        await session.commit()
+        # 旧 worker 的 complete/fail 被拒 → task 仍 running（交 recover 置 interrupted）
+        assert await _status(session, t.id) == "running"
+        recovered = await svc.recover()
+        await session.commit()
+        assert t.id in recovered
+        assert await _status(session, t.id) == "interrupted"

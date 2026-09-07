@@ -318,7 +318,8 @@ class TaskRepository(BaseRepository):
                 "worker_id = NULL, lease_token = NULL, lease_expires_at = NULL, "
                 "started_at = NULL "
                 "WHERE id = :id AND worker_id = :w AND lease_token = :t "
-                "AND status = 'running' RETURNING id, claim_round"
+                "AND status = 'running' AND lease_expires_at > now() "
+                "RETURNING id, claim_round"
             ),
             {"st": status, "id": task_id, "w": worker_id, "t": lease_token},
         )
