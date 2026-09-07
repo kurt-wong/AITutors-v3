@@ -23,6 +23,7 @@ from app.ai.gateway import LLMGateway
 from app.ai.providers.mock import MockLLMProvider
 from app.core.errors import (
     BudgetExceededError,
+    BudgetSettlementError,
     CircuitOpen,
     GatewayDeniedError,
     GatewayDisabledError,
@@ -314,5 +315,33 @@ async def test_live_cancellation_propagates_audit_stays_started() -> None:
         # CancelledError 不被 finalize 为 failed/unknown —— audit 保持 STARTED（等 recovery）
         assert await _audit_statuses(s, task_id) == ["started"]
         # reserve 未被 settle（Phase C 未执行），由 recovery 对账回收
+        row = await _budget_row(s, "task", str(task_id))
+        assert row == {"used": Decimal("0"), "reserved": Decimal("1")}
+
+
+async def test_settle_failure_does_not_rollback_audit(monkeypatch) -> None:
+    """Batch 3-3：settle 失败（BudgetSettlementError）不回滚 audit 终态（30 §10/§11 + F-6）。
+
+    audit terminalization（C1）独立于 settle（C2）先行 commit——provider 已成功、audit 已
+    completed，settle 失败只显式暴露（F-6），不把 audit 回滚成假的 STARTED。
+    """
+    async with async_session_maker() as s:
+        task_id = await _mk_task(s)
+    doc_id = uuid.uuid4()
+    provider = _FlakyProvider(fail_first=0)  # 成功返回文本
+
+    async def _boom_settle(self, refs, *, reserved, actual):
+        raise BudgetSettlementError("settle boom")
+
+    monkeypatch.setattr(BudgetService, "settle", _boom_settle)
+
+    async with async_session_maker() as s:
+        ex = LLMExecutor(s, _live_gateway(provider), retry_count=2)
+        with pytest.raises(BudgetSettlementError):
+            await ex.complete("q", **_exec_params(task_id, doc_id, attempt_id=uuid.uuid4()))
+    async with async_session_maker() as s:
+        # audit 保持 completed（provider 成功的 Runtime Truth 不被 settle 失败回滚）
+        assert await _audit_statuses(s, task_id) == ["completed"]
+        # reserve 未 settle 释放（残留由 reclaim 对账回收）
         row = await _budget_row(s, "task", str(task_id))
         assert row == {"used": Decimal("0"), "reserved": Decimal("1")}

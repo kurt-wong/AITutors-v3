@@ -199,32 +199,38 @@ class LLMExecutor:
             # 直接传播，audit 保持 STARTED 由 recovery 判 unknown（不误 finalize 为 failed）。
             last_exc = exc
 
-        # Phase C：terminal + settle（成功 actual=reserve 转 used；失败 actual=0 释放）
-        terminal_error: Exception | None = None
+        # Phase C1：audit terminalization（Provider Invocation Runtime Truth，30 §10）
+        # 独立于 settle 先行 commit——audit 终态一旦确定，不因后续 settle 失败回滚为 STARTED。
+        # Lock-6 只要求 reserve + audit STARTED 同事务（Phase A），未要求 finalize + settle 同事务。
         try:
             if outcome is not None:
                 await repo.finalize_audit(request_id, status="completed")
-                await budget.settle(
-                    refs, reserved=self._reserve_amount, actual=self._reserve_amount
-                )
             else:
                 await repo.finalize_audit(
                     request_id, status="failed",
                     error_type=self._error_type(last_exc),
                 )
+            await s.commit()
+        except Exception as exc:
+            await s.rollback()
+            raise
+
+        # Phase C2：budget settle（accounting，30 §11）后行——失败显式暴露（F-6），不掩盖
+        # provider 结果（audit 已在 C1 terminalized）；reserve 残留由 reclaim 对账回收。
+        try:
+            if outcome is not None:
+                await budget.settle(
+                    refs, reserved=self._reserve_amount, actual=self._reserve_amount
+                )
+            else:
                 await budget.settle(
                     refs, reserved=self._reserve_amount, actual=Decimal("0")
                 )
             await s.commit()
         except Exception as exc:
-            # 记账异常（BudgetSettlementError 等）优先级高于原 provider 错误，不静默吞（F-6）。
-            # CancelledError 等 BaseException 非 Exception 不在此捕获 → 直接传播，session 退出
-            # 自动 rollback 未提交的 finalize/settle（audit 保持 STARTED 由 recovery 判 unknown）。
             await s.rollback()
-            terminal_error = exc
+            raise
 
-        if terminal_error is not None:
-            raise terminal_error
         if last_exc is not None:
             raise last_exc
         return outcome  # type: ignore[return-value]  # outcome 非 None 已由上面保证
