@@ -289,3 +289,30 @@ async def test_disabled_raises_no_runtime_side_effect() -> None:
         assert await _invocations(s, task_id) == 0
         assert await _audit_statuses(s, task_id) == []
         assert await _budget_row(s, "task", str(task_id)) is None
+
+
+class _CancelProvider:
+    """complete 恒抛 asyncio.CancelledError（进程取消信号，非 provider 失败）。"""
+
+    name = "cancel"
+
+    async def complete(self, prompt: str) -> str:
+        raise asyncio.CancelledError()
+
+
+async def test_live_cancellation_propagates_audit_stays_started() -> None:
+    """Batch 3-1：CancelledError 是取消信号非 provider 失败——必须传播（不被吞、不被
+    finalize 为 failed）；audit 保持 STARTED，由 recovery 判 unknown（30 §10）。"""
+    async with async_session_maker() as s:
+        task_id = await _mk_task(s)
+    doc_id = uuid.uuid4()
+    async with async_session_maker() as s:
+        ex = LLMExecutor(s, _live_gateway(_CancelProvider()), retry_count=2)
+        with pytest.raises(asyncio.CancelledError):
+            await ex.complete("q", **_exec_params(task_id, doc_id, attempt_id=uuid.uuid4()))
+    async with async_session_maker() as s:
+        # CancelledError 不被 finalize 为 failed/unknown —— audit 保持 STARTED（等 recovery）
+        assert await _audit_statuses(s, task_id) == ["started"]
+        # reserve 未被 settle（Phase C 未执行），由 recovery 对账回收
+        row = await _budget_row(s, "task", str(task_id))
+        assert row == {"used": Decimal("0"), "reserved": Decimal("1")}

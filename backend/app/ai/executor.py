@@ -181,7 +181,7 @@ class LLMExecutor:
 
         # Phase B：bounded internal retry（重试沿用同 audit / 同 logical request）
         outcome: str | None = None
-        last_exc: BaseException | None = None
+        last_exc: Exception | None = None
         try:
             for i in range(self._retry_count + 1):
                 try:
@@ -193,12 +193,14 @@ class LLMExecutor:
                     if i < self._retry_count:
                         continue
                     raise
-        except BaseException as exc:
-            # 含 CircuitOpen（熔断不重试）与非重试性错误 → 一律进入失败终态化
+        except Exception as exc:
+            # 含 CircuitOpen（熔断不重试）与非重试性错误 → 一律进入失败终态化。
+            # CancelledError/KeyboardInterrupt/SystemExit（BaseException 非 Exception）不在此捕获 →
+            # 直接传播，audit 保持 STARTED 由 recovery 判 unknown（不误 finalize 为 failed）。
             last_exc = exc
 
         # Phase C：terminal + settle（成功 actual=reserve 转 used；失败 actual=0 释放）
-        terminal_error: BaseException | None = None
+        terminal_error: Exception | None = None
         try:
             if outcome is not None:
                 await repo.finalize_audit(request_id, status="completed")
@@ -214,8 +216,10 @@ class LLMExecutor:
                     refs, reserved=self._reserve_amount, actual=Decimal("0")
                 )
             await s.commit()
-        except BaseException as exc:
-            # 记账异常（BudgetSettlementError 等）优先级高于原 provider 错误，不静默吞（F-6）
+        except Exception as exc:
+            # 记账异常（BudgetSettlementError 等）优先级高于原 provider 错误，不静默吞（F-6）。
+            # CancelledError 等 BaseException 非 Exception 不在此捕获 → 直接传播，session 退出
+            # 自动 rollback 未提交的 finalize/settle（audit 保持 STARTED 由 recovery 判 unknown）。
             await s.rollback()
             terminal_error = exc
 
