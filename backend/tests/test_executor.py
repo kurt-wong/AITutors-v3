@@ -28,6 +28,7 @@ from app.core.errors import (
     GatewayDeniedError,
     GatewayDisabledError,
     LLMNetworkError,
+    LLMProviderError,
 )
 from app.db.session import async_session_maker
 from app.repositories.runtime_repository import TaskRepository
@@ -299,6 +300,35 @@ class _CancelProvider:
 
     async def complete(self, prompt: str) -> str:
         raise asyncio.CancelledError()
+
+
+class _NonRetryableProvider:
+    """complete 恒抛 LLMProviderError(retryable=False)（4xx 非 transient，provider 明确拒绝）。"""
+
+    name = "non-retryable"
+
+    def __init__(self) -> None:
+        self.calls = 0
+
+    async def complete(self, prompt: str) -> str:
+        self.calls += 1
+        raise LLMProviderError("provider rejected HTTP 400", retryable=False)
+
+
+async def test_non_retryable_provider_error_not_retried() -> None:
+    """BUG-V3-034：LLMProviderError(retryable=False) 不重试——Invocation=1，直接 re-raise。"""
+    async with async_session_maker() as s:
+        task_id = await _mk_task(s)
+    doc_id = uuid.uuid4()
+    provider = _NonRetryableProvider()
+    async with async_session_maker() as s:
+        ex = LLMExecutor(s, _live_gateway(provider), retry_count=2)
+        with pytest.raises(LLMProviderError):
+            await ex.complete("q", **_exec_params(task_id, doc_id, attempt_id=uuid.uuid4()))
+    assert provider.calls == 1  # 不重试
+    async with async_session_maker() as s:
+        assert await _invocations(s, task_id) == 1
+        assert await _audit_statuses(s, task_id) == ["failed"]
 
 
 async def test_live_cancellation_propagates_audit_stays_started() -> None:

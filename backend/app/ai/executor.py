@@ -189,7 +189,10 @@ class LLMExecutor:
                         prompt, task_id=task_id, invocation_counter=counter
                     )
                     break
-                except _RETRYABLE_LLM_ERRORS:
+                except _RETRYABLE_LLM_ERRORS as exc:
+                    # BUG-V3-034：LLMProviderError(retryable=False)（4xx 非 transient）不重试。
+                    if isinstance(exc, LLMProviderError) and not exc.retryable:
+                        raise
                     if i < self._retry_count:
                         continue
                     raise

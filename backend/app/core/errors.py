@@ -66,9 +66,17 @@ class CircuitOpen(V3Error):
 
 
 class LLMProviderError(V3Error):
-    """LLM provider 层服务失败（5xx / provider error；transient，可 bounded retry）。"""
+    """LLM provider 层服务失败（5xx / provider error）。
+
+    retryable（BUG-V3-034 冻结）：5xx/429/408 transient → True（可 bounded retry）；4xx 其他
+    （400-407/409/410-428/430-499）provider 明确拒绝 → False（重试无意义）。
+    """
 
     error_type = "provider_error"
+
+    def __init__(self, message: str, *, retryable: bool = True) -> None:
+        super().__init__(message)
+        self.retryable = retryable
 
 
 class LLMNetworkError(V3Error):
