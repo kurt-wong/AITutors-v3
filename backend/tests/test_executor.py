@@ -14,12 +14,14 @@ import asyncio
 import uuid
 from decimal import Decimal
 
+import httpx
 import pytest
 from sqlalchemy import text
 
 from app.ai.budget import AccountRef, BudgetService
 from app.ai.executor import LLMExecutor, ProviderInvocationCounter
 from app.ai.gateway import LLMGateway
+from app.ai.providers.http import HTTPLLMProvider
 from app.ai.providers.mock import MockLLMProvider
 from app.core.errors import (
     BudgetExceededError,
@@ -375,3 +377,127 @@ async def test_settle_failure_does_not_rollback_audit(monkeypatch) -> None:
         # reserve 未 settle 释放（残留由 reclaim 对账回收）
         row = await _budget_row(s, "task", str(task_id))
         assert row == {"used": Decimal("0"), "reserved": Decimal("1")}
+
+
+# ---- Phase 9-2：HTTP transport retry 不增 invocation/audit/budget ----
+
+
+class _HTTPRetryResponse:
+    """最小 httpx response：支持 raise_for_status()/json()。"""
+
+    def __init__(self, status: int = 200, content: str = "ok-text") -> None:
+        self.status_code = status
+        self._content = content
+        self._request = httpx.Request("POST", "http://localhost")
+
+    def raise_for_status(self) -> None:
+        if self.status_code >= 400:
+            response = httpx.Response(self.status_code, request=self._request)
+            raise httpx.HTTPStatusError(
+                f"server error {self.status_code}", request=self._request, response=response
+            )
+
+    def json(self):
+        return {"choices": [{"message": {"content": self._content}}]}
+
+
+def _patch_http_client(monkeypatch, script: list) -> list:
+    """monkeypatch httpx.AsyncClient 为脚本化 client，返回 post 调用记录（HTTP attempts 数）。"""
+    calls: list = []
+
+    class _FakeClient:
+        def __init__(self, *args, **kwargs) -> None:
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args) -> bool:
+            return False
+
+        async def post(self, url, **kwargs):
+            calls.append(url)
+            step = script.pop(0)
+            if step[0] == "raise":
+                raise step[1]
+            return step[1]
+
+    monkeypatch.setattr(httpx, "AsyncClient", _FakeClient)
+    return calls
+
+
+async def test_transport_retry_does_not_increase_accounting(monkeypatch) -> None:
+    """Phase 9-2 核心反证：1 Provider Invocation → 3 HTTP attempts（transport retry=2）→
+    仍 Invocation=1、Audit=1 completed、Budget used=1/reserved=0、Task Attempt=1。
+
+    计数点在 gateway provider seam（counter.consume），先于 HTTPLLMProvider 内部 transport
+    retry——retry 发生在 consume 之后，故不得重新进入 invocation accounting。
+    """
+    async with async_session_maker() as s:
+        task_id = await _mk_task(s)
+    doc_id = uuid.uuid4()
+    # 前两次 transport 失败（同 invocation 内重试），第三次成功
+    calls = _patch_http_client(
+        monkeypatch,
+        [
+            ("raise", httpx.ConnectError("boom #1")),
+            ("raise", httpx.ConnectTimeout("boom #2")),
+            ("response", _HTTPRetryResponse(200, "recovered")),
+        ],
+    )
+    provider = HTTPLLMProvider(
+        name="deepseek",
+        api_key="k",
+        base_url="http://localhost",
+        model="deepseek-chat",
+        timeout=1.0,
+        http_retry_count=2,
+    )
+    async with async_session_maker() as s:
+        ex = LLMExecutor(s, _live_gateway(provider), retry_count=0)
+        out = await ex.complete("q", **_exec_params(task_id, doc_id, attempt_id=uuid.uuid4()))
+        assert out == "recovered"
+    assert len(calls) == 3  # 3 HTTP attempts（1 + http_retry_count(2)）
+    async with async_session_maker() as s:
+        assert await _invocations(s, task_id) == 1  # Invocation=1，非 3
+        assert await _audit_statuses(s, task_id) == ["completed"]  # Audit=1
+        row = await _budget_row(s, "task", str(task_id))
+        assert row == {"used": Decimal("1"), "reserved": Decimal("0")}  # budget 恰一次 settle
+
+
+async def test_transport_retry_exhausted_still_single_invocation(monkeypatch) -> None:
+    """Phase 9-2 耗尽反证：transport retry 全部失败（3 attempts）+ executor retry_count=0 →
+    Invocation 仍=1（非 3）、Audit=1 failed、reserve 释放。transport retry 不得被误计为多次
+    Provider Invocation（BUG-V3-033）。"""
+    async with async_session_maker() as s:
+        task_id = await _mk_task(s)
+    doc_id = uuid.uuid4()
+    attempt_id = uuid.uuid4()
+    calls = _patch_http_client(
+        monkeypatch,
+        [("raise", httpx.ConnectError("boom"))] * 3,
+    )
+    provider = HTTPLLMProvider(
+        name="deepseek",
+        api_key="k",
+        base_url="http://localhost",
+        model="deepseek-chat",
+        timeout=1.0,
+        http_retry_count=2,
+    )
+    async with async_session_maker() as s:
+        ex = LLMExecutor(s, _live_gateway(provider), retry_count=0)
+        with pytest.raises(LLMNetworkError):
+            await ex.complete("q", **_exec_params(task_id, doc_id, attempt_id=attempt_id))
+    assert len(calls) == 3  # 3 HTTP attempts 耗尽
+    async with async_session_maker() as s:
+        assert await _invocations(s, task_id) == 1  # transport retry 不增 invocation
+        assert await _audit_statuses(s, task_id) == ["failed"]
+        # attempt_id / le_hash 不被 transport retry 改变：audit 行身份 = 传入值（单行）
+        audit = (await s.execute(
+            text("SELECT attempt_id, logical_execution_hash FROM llm_call_audit WHERE task_id=:i"),
+            {"i": task_id},
+        )).mappings().first()
+        assert audit["attempt_id"] == attempt_id
+        row = await _budget_row(s, "task", str(task_id))
+        assert row == {"used": Decimal("0"), "reserved": Decimal("0")}  # 失败释放保留
