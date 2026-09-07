@@ -1,30 +1,27 @@
 # AI Tutor V3 — RESTART PROMPT
 
-Version: v1.14
-Status: 段 H 编码进行中 — Phase 8 已提交（4c3e35f）；V3 全量对抗审查 4 HIGH 全关闭（H Batch 1/2 完成，
-310 passed）；剩余 Runtime blockers（Batch 3）；下一实施步 = commit Batch 2 → Batch 3（H Runtime）
+Version: v1.15
+Status: 段 H 编码进行中 — V3 全量对抗审查 4 HIGH + 4 Runtime blocker 全部关闭（Batch 1/2/3 完成，314
+passed）；下一步 = Batch 4（H Final Adversarial Re-Probe → H Final Closure → Phase 9）
 Date: 2026-09-07
 
 ## 0.0 当前结论（2026-09-07 22:xx）
 
 - **H 段推进定格**：A–G 七段 + Step 1–5 + Phase 7 + **Phase 8（4c3e35f）** 全 CLOSED。**V3 全量
-  第一性原理对抗审查**确认核心不变量成立 + 4 HIGH 实现缺陷。**4 HIGH 全关闭**（Batch 1 = H-2/H-3/
-  H-4，Batch 2 = H-1）。用户裁决：A–G 继续 CLOSED，H Phase 1-8 substantially complete 但 FINAL
-  CLOSURE BLOCKED（剩 Runtime blockers），Phase 9 PAUSED。
-- **H-1（BUG-V3-029 Resolved，Batch 2）**：documents.UNIQUE(original_sha256) +
-  document_source_versions.UNIQUE(logical_execution_stage, logical_execution_hash)（migration 0006）；
-  create_document/create_source_version 改 ON CONFLICT DO NOTHING + re-read；SealService 并发收敛。
-  测试 test_h_seal_concurrency（并发恰 1 doc + 1 version + 跨 role 多 version 合法）。
-- **BUG-V3-007 终裁 + Clarification**：documents.UNIQUE(original_sha256) 放行（Source/Document
-  Identity）；document_source_versions.UNIQUE(stage,hash) 放行（Seal LE Identity）；禁
-  document_source_versions.UNIQUE(original_sha256)（Seal 层全局唯一）。
-- **当前状态**：H-1/H-2/H-3/H-4 全 Resolved（4 HIGH 关闭）；Runtime blockers（ai/executor.py
-  `except BaseException` / complete-fail lease ownership / audit-settle rollback / model_config_hash
-  漂移）属 Batch 3；Phase 9 NOT STARTED。
-- **下一步**：commit Batch 2（`fix(runtime): H-1 seal concurrent idempotency`）→ Batch 3 = H
-  Runtime correctness（BaseException / lease ownership / audit-settle / model_config_hash）。
+  第一性原理对抗审查**确认核心不变量成立 + 4 HIGH 实现缺陷 + 4 Runtime blocker。**全部关闭**
+  （Batch 1 = H-2/H-3/H-4，Batch 2 = H-1，Batch 3 = 4 runtime blocker）。用户裁决：A–G 继续
+  CLOSED，H Phase 1-8 substantially complete，Phase 9 PAUSED（待 Batch 4 H Final Closure）。
+- **4 HIGH 关闭**：H-1 seal 并发幂等（BUG-V3-029，migration 0006 + ON CONFLICT）；H-2 非 dict JSON
+  （BUG-V3-030）；H-3 Header Grammar（BUG-V3-031）；H-4 contextual material（BUG-V3-032）。
+- **4 Runtime blocker 关闭**：cancellation semantics（except Exception，94f74c8）；lease ownership
+  （_terminal lease 条件，1e58710）；audit/settle boundary（拆两事务，2f40514）；model_config_hash
+  identity（编码 provider/model，617da01）。
+- **当前状态**：4 HIGH + 4 Runtime blocker 全部 Resolved；全量 **314 passed**。下一步 Batch 4 =
+  H Final Adversarial Re-Probe（4 HIGH + 4 runtime + core invariants 全 PASS → H Final Closure →
+  Phase 9）。
+- **下一步**：Batch 4（H Final Re-Probe）→ H Final Closure → Phase 9（范围再冻结）。
 - 重启后第一任务：读本文件 → Status.md 尾 → log.md 尾 → bugs.md（BUG-V3-007 终裁 + 029..032）→
-  按当前 Batch 继续（Batch 2 待 commit / Batch 3 待开始）。
+  按当前 Batch 继续（Batch 4 待开始）。
 
 ## 0. 当前工作状态（2026-09-06 20:34:06）
 

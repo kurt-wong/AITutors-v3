@@ -757,3 +757,20 @@ Date: 2026-09-05
   （ai/executor.py except BaseException / complete-fail lease ownership / audit-settle rollback /
   model_config_hash 漂移）属 Batch 3；Phase 9 NOT STARTED。
 - **下一步**：commit Batch 2（独立提交点）→ Batch 3（H Runtime correctness）。
+
+### 2026-09-07 22:xx（Batch 3 = H Runtime correctness 完成）
+
+- **Batch 3 = 4 个 Runtime blocker 逐个修复（4 个独立 commit）**，全量 pytest **314 passed**（净 +4）。
+  - **3-1 cancellation semantics（94f74c8）**：`ai/executor.py` Phase B/C `except BaseException` →
+    `except Exception`（CancelledError 传播，audit 保持 STARTED 由 recovery 判 unknown）。
+  - **3-2 lease ownership（1e58710）**：`TaskRepository._terminal` 补 `lease_expires_at > now()`
+    （与 heartbeat 一致，过期 worker 不得改终态）。
+  - **3-3 audit/settle boundary（2f40514）**：`_complete_live` Phase C 拆两事务（audit
+    terminalization C1 先行 commit，settle C2 后行失败不回滚 audit，30 §10/§11 + F-6）。
+  - **3-4 model_config_hash identity（617da01）**：`TaskExecutor._annotation_stage` 的
+    model_config_hash 编码实际 provider/model（30 §7：不同 provider/model → 新 LE），杜绝 identity 漂移。
+- **4 个 HIGH + 4 个 Runtime blocker 全部关闭**。每个 blocker 带 adversarial regression：
+  cancellation（CancelledError 传播 + audit STARTED）、lease（过期 complete/fail 拒 + recover）、
+  audit-settle（settle 失败不回滚 audit）、model_config（不同 provider → 2 annotation）。
+- **下一步**：Batch 4 = H Final Adversarial Re-Probe（4 HIGH + 4 runtime blocker + core invariants
+  全 PASS → H Final Closure → Phase 9）。

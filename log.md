@@ -820,3 +820,20 @@ Step 5 已于 commit `0917404` 落盘（含 Status/log/restart v1.10 收口）�
 - **验证**：全量 pytest **310 passed**（净 +2：`test_h_seal_concurrency` 并发 seal 恰 1 doc + 1
   version + 无重复 line + 跨 role 多 version 合法）；真并发 seal winner/loser 收敛同 canonical identity。
 - **影响**：H-1 Resolved（BUG-V3-029 关闭）；4 个 HIGH 全部关闭。剩余 Runtime blockers（Batch 3）。
+
+### 2026-09-07 22:xx（Batch 3 = H Runtime correctness 4 blocker 修复）
+
+- **背景**：V3 全量对抗审查确认 4 个 Runtime blocker。逐个最小修复 + adversarial test + 全量
+  regression + 独立提交。
+- **3-1 cancellation semantics**：`ai/executor.py` `_complete_live` Phase B/C `except BaseException`
+  → `except Exception`——CancelledError/KeyboardInterrupt/SystemExit 不被吞/不误 finalize 为 failed，
+  直接传播（audit 保持 STARTED 由 recovery 判 unknown，30 §10）。
+- **3-2 lease ownership**：`TaskRepository._terminal` 补 `lease_expires_at > now()`（与 heartbeat
+  一致）——已失去 lease 的 worker 不得再改 task 终态。
+- **3-3 audit/settle boundary**：`_complete_live` Phase C 拆两事务——audit terminalization 独立于
+  budget settle 先行 commit（settle 失败不回滚 audit，30 §10/§11 + F-6）。
+- **3-4 model_config_hash identity**：`TaskExecutor._annotation_stage` 的 model_config_hash 编码
+  实际 provider/model（30 §7），杜绝 LE identity 与实际 invocation 漂移。
+- **验证**：全量 pytest **314 passed**（净 +4）。每个 blocker 带 adversarial regression。
+- **影响**：4 HIGH + 4 Runtime blocker 全部关闭；H Runtime 主链边界收紧。下一步 Batch 4（H Final
+  Re-Probe）。
