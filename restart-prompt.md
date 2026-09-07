@@ -1,24 +1,28 @@
 # AI Tutor V3 — RESTART PROMPT
 
-Version: v1.18
-Status: H Phase 1–8 FINAL CLOSED；Phase 9 实现完成（9-1B/9-2/9-3）+ 对抗审查 B-1/B-2 已修复；
-下一实施步 = Phase 9 Final Closure 待用户裁决
+Version: v1.19
+Status: H Phase 1–8 FINAL CLOSED；Phase 9 FINAL CLOSED（transport / exception translation /
+retry layering / explicit fallback / adversarial boundary 全部 verified）；
+下一实施步 = BUG-V3-001..028 系统性 errata 分类审计
 Date: 2026-09-08
 
-## 0.0 当前结论（2026-09-08 06:17）
+## 0.0 当前结论（2026-09-08 06:30）
 
-- **H Phase 1–8 FINAL CLOSED**（用户宣布）；A–G 继续 CLOSED；V3 主链 A–H 冻结。
-- **Phase 9 实现完成**（9-0 Scope Freeze → 9-1B provider exception translation → 9-2 HTTP
-  transport retry → 9-3 explicit provider fallback）。3 spec gap 冻结为 BUG-V3-033/034/035。
-- **Phase 9 对抗审查 + B-1/B-2 修复收口**（commit `1e435a9` / `312d1f7`）：B-1（HIGH）fallback
-  未注册 provider 名静默回退 primary → fail-closed；B-2（MEDIUM）malformed body 泄漏裸异常 →
-  翻译 LLMProviderError(retryable=False)。全量 pytest **344 passed**；re-probe 6/6 PASS。
+- **H Phase 1–8 FINAL CLOSED**；**Phase 9 FINAL CLOSED**（用户宣布）；A–G 继续 CLOSED；
+  V3 主链 A–H + Phase 9 冻结。
+- **Phase 9 关闭范围**：9-1A（BUG-V3-033/034/035 登记）+ 9-1B（provider exception translation）+
+  9-2（HTTP transport retry）+ 9-3（explicit provider fallback）+ Adversarial Fixes（B-1/B-2）。
+- **Closure 证据**：344 passed；re-probe 6/6 PASS；B-1 HIGH / B-2 MEDIUM resolved；all commits
+  synchronized to origin/main（`1e435a9`/`312d1f7`/`67737b5`）。
+- **Closure 边界（严格）**：Phase 9 范围关闭 ≠ V3 全部关闭。D1/D3/D4/D5/F-4 保持 Deferred/Open；
+  BUG-V3-001..028 待系统性 errata 终裁；Phase 10+ Not Started。
 - **红线（不变）**：HTTP retry（transport）≠ LLM retry（同 LE）≠ fallback（新 config/新 LE）；
-  三者不混；MAX_LLM_CALLS_PER_TASK 按真实 Provider Invocation 计数。
-- **下一步**：Phase 9 Final Closure 待用户裁决（B-1/B-2 已修复 + re-probe 6/6 + 344 passed）；
-  若关闭 → H 段（含 Phase 9）最终收口完成。
-- 重启后第一任务：读本文件 → Status.md 尾 → log.md 尾 → bugs.md（BUG-V3-033/034/035 冻结 +
-  B-1/B-2 补充）→ 按当前 Phase 继续（Phase 9 Final Closure 裁决）。
+  MAX_LLM_CALLS_PER_TASK 按真实 Provider Invocation 计数。
+- **下一步（用户建议）**：不立即新增 Runtime 功能；下一优先级 = BUG-V3-001..028 系统性分类
+  审计（已被后续设计覆盖 / 纯文档 errata / 真实 implementation gap / 必须改 Frozen Spec /
+  可正式关闭）→ A–F Errata Final Ruling → 再决定下一开发 Phase 范围。
+- 重启后第一任务：读本文件 → Status.md 尾 → log.md 尾 → bugs.md（BUG-V3-001..035 现状）→
+  按当前 Phase 继续（BUG-V3-001..028 errata 分类审计）。
 
 ## 0. 当前工作状态（2026-09-06 20:34:06）
 

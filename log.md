@@ -893,3 +893,15 @@ Step 5 已于 commit `0917404` 落盘（含 Status/log/restart v1.10 收口）�
 - **影响**：Phase 9 三层 retry 语义（transport / LLM / fallback）+ provider boundary 全量
   fail-closed 收口；provider boundary 不泄漏裸异常、identity resolution 不漂移。下一步 Phase 9
   Final Closure 待用户裁决。
+
+### 2026-09-08 06:30（Phase 9 FINAL CLOSURE）
+
+- **裁决**：用户正式宣布 **Phase 9 FINAL CLOSED**。push 3 个 commit（`1e435a9` B-1 /
+  `312d1f7` B-2 / `67737b5` docs）到 origin/main，验证远端 HEAD = `67737b5` 且工作树同步后，
+  状态落为 FINAL CLOSED。
+- **Closure 证据**：344 passed；re-probe 6/6 PASS；B-1 HIGH resolved；B-2 MEDIUM resolved；
+  documentation closure committed；all Phase 9 commits synchronized to origin/main。
+- **Closure 边界（严格）**：Phase 9 范围关闭 ≠ V3 全部关闭。A–G / H Runtime 保持 FINAL CLOSED；
+  D1/D3/D4/D5/F-4 保持 Deferred/Open；BUG-V3-001..028 待 errata 终裁；Phase 10+ Not Started。
+- **影响/下一步**：Runtime Layer 相对完整；不再立即新增 Runtime 功能。下一优先级 = BUG-V3-001..028
+  系统性分类审计 → A–F Errata Final Ruling → 再决定下一开发 Phase 范围。

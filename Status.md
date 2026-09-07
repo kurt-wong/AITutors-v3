@@ -845,3 +845,19 @@ Date: 2026-09-05
   已在本轮细化修复，不入新编号）。Phase 8 的 D1/D3/D4/D5 + F-4 延续登记不变。
 - **下一步**：Phase 9 Final Closure 待用户裁决（B-1/B-2 已修复 + re-probe 6/6 + 344 passed）。
   若关闭 → H 段（含 Phase 9）最终收口完成。
+
+### 2026-09-08 06:30（Phase 9 FINAL CLOSURE）
+
+- **用户正式宣布 Phase 9 FINAL CLOSED**。Runtime transport / exception translation / retry
+  layering / explicit fallback / adversarial failure boundaries 全部 verified。
+- **Closure 范围**：9-1A（BUG-V3-033/034/035 登记）+ 9-1B（provider exception translation）+
+  9-2（HTTP transport retry）+ 9-3（explicit provider fallback）+ Adversarial Fixes（B-1/B-2）。
+- **Closure 证据**：全量 pytest **344 passed**；Phase 9 adversarial re-probe **6/6 PASS**；
+  B-1 HIGH resolved；B-2 MEDIUM resolved；documentation closure committed；all Phase 9 commits
+  synchronized to origin/main（`1e435a9` / `312d1f7` / `67737b5`）。
+- **Closure 边界（严格，不顺带关闭）**：Phase 9 范围关闭 ≠ V3 全部关闭。A–G 保持 CLOSED（按
+  既有裁决）；H Runtime FINAL CLOSED；**D1/D3/D4/D5/F-4 保持 Deferred/Open**；**BUG-V3-001..028
+  仍待系统性 errata 终裁**；Phase 10+ Not Started。
+- **下一步（用户建议）**：不立即新增 Runtime 功能；下一优先级 = **BUG-V3-001..028 系统性分类
+  审计**（已被后续设计覆盖 / 纯文档 errata / 真实 implementation gap / 必须改 Frozen Spec /
+  可正式关闭）→ **A–F Errata Final Ruling** → 再决定下一开发 Phase 范围。
