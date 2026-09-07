@@ -783,3 +783,27 @@ Step 5 已于 commit `0917404` 落盘（含 Status/log/restart v1.10 收口）�
   仅在 executor.py:14 docstring、非实际触碰。非自我合理化。
 - **结论**：无 P0/P1；Phase 8 核心不变量经真实 DB 实证；此前 sonnet 审查修复均被探针覆盖。
 - **验证**：全量 pytest **267 passed** 不变；探针 cleanup 无污染；不入 Git。
+
+### 2026-09-07 22:xx（V3 全量对抗审查 + H Batch 1 修复闭环 + BUG-V3-007 终裁）
+
+- **背景**：用户要求对 V3 全部代码做第一性原理对抗审查（每结论真实测试证据）。4 路并行只读
+  审查（段 A/B/C、D/E、F/G、H）+ 13 真 DB probe + 纯函数复现 + 全量测试，确认 4 HIGH + 12
+  MEDIUM + 9 LOW 实现层缺陷 + 28 Spec 域缺口（BUG-V3-001..028 已登记）。
+- **4 HIGH 裁决**：H-1 seal 并发幂等无 DB UNIQUE 兜底（真 DB 并发 probe FAIL：2 doc）；H-2 非
+  dict JSON 落 valid（真 DB probe FAIL：`[]`→valid）；H-3 表头非锚定子串误判区界（纯函数复现）；
+  H-4 contextual material 绕过 Gate（纯函数复现）。用户下达综合裁决：A–G 继续 CLOSED，H Phase
+  1-8 substantially complete 但 FINAL CLOSURE BLOCKED，Phase 9 PAUSED。
+- **Batch 1 修复（H-2/H-3/H-4，用户批准 CLOSED）**：
+  - H-2（BUG-V3-030）：`validate_annotation_payload` 顶层 `isinstance(payload, dict)`，非 dict
+    走方案 B 失败路径。
+  - H-3（BUG-V3-031）：冻结 Header Grammar（`is_answer_header`/`is_explanation_header`），替换
+    Resolver 6 处 substring 判定；完整 token 匹配非 prefix substring。
+  - H-4（BUG-V3-032）：`policy.evaluate` provenance 层把 shared material 纳入 resolution 白名单。
+  - 测试：`test_s7_non_dict_json_rejected` + `test_composite_material_contextual_not_auto` +
+    `test_resolver_header_grammar.py`（39 项正反例 + 端到端「题干含答案不误判」）。
+- **BUG-V3-007 终裁（用户 Final Ruling）**：`original_sha256` 定义 Source/Document Identity，不
+  定义全局唯一 Sealed Version；同 `original_sha256 + seal role/provider scope` 内至多一个
+  canonical sealed version；跨 role/provider 允许多 version；禁 `UNIQUE(original_sha256)`。
+- **验证**：全量 pytest **308 passed**（净 +41）；git diff --check 干净。
+- **下一步**：Batch 2 = H-1（BUG-V3-007 终裁 → identity scope verification → scoped DB
+  uniqueness → 并发 seal probe → regression）。

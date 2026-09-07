@@ -81,6 +81,14 @@
   version」；跨 role 版本基数留给 errata 终裁，不自行创造唯一性规则。
 - 验收：errata 终裁后按最终语义对齐（若裁决一文件一 version，则需补 UNIQUE；若允许多
   role 多 version，则保持现状并确认幂等键）。
+- **终裁（2026-09-07，用户 Final Ruling）**：`original_sha256` 定义 Source/Document Identity，
+  **不定义全局唯一 Sealed Version**；同一 `original_sha256` 允许存在多个 sealed version；
+  跨不同 frozen seal role/provider 的 version 合法共存、不视为 duplicate；同一
+  `original_sha256 + frozen seal role/provider scope` 内 canonical sealed version 至多一个；
+  **禁止 `UNIQUE(original_sha256)`**；不得为实现 H-1 擅自引入 Frozen Spec 未定义的
+  identity 字段；改 DB constraint 前先核对 Document/Version schema 与 Frozen Spec，现有字段
+  若不足以表达该作用域 → 登记新 Spec gap，不自行扩展 schema。→ BUG-V3-029（H-1）按此
+  终裁设计 scoped uniqueness。
 
 ### BUG-V3-008 — cloud OCR（PaddleOCR-VL）role/provider 值域未冻结（10 §4.2 vs OCR_PROVIDER_POLICY）
 - Status: Open
@@ -331,6 +339,65 @@
   0003→0004 delta == {tasks, task_claims}。Owner = A–G migration history；Resolution:
   deferred（若未来真处理 A 再按 A–G Reconciliation 重审迁移）。
 - 验收：from-empty / incremental 双路径测试全绿；0004 专责语义不因空库 no-op 而误导。
+
+### BUG-V3-029 — seal/document 并发幂等无 DB UNIQUE 兜底（H-1，HIGH）
+- Status: Open（H Final Closure Blocker）
+- 登记：2026-09-07 22:02
+- 现象：`SealService.seal_document` 幂等为 read-then-create（`find_document_by_sha256`/
+  `find_sealed_version_by_le` 查 None → create），无 DB UNIQUE 兜底。真 DB 并发 probe 实证：两并发
+  seal 同文件同 role/provider → 2 document（应 1）；后续 `scalar_one_or_none` 抛 MultipleResultsFound。
+- 根因：与 BUG-V3-007（`original_sha256` 与 version 基数未冻结）直接相关——document/version 唯一
+  作用域未冻结，故段 B 未加 DB UNIQUE。
+- 处置：先终裁 BUG-V3-007（document identity / version identity / 唯一作用域），再决定 DB
+  uniqueness key + ON CONFLICT + re-read + 并发 probe。禁随意加 global UNIQUE、禁改 Question/LE/
+  occurrence identity。
+- **BUG-V3-007 已终裁（2026-09-07）**：唯一作用域 = `original_sha256 + seal role/provider`
+  内至多一个 canonical sealed version；跨 role/provider 允许多 version；禁 `UNIQUE(original_sha256)`。
+  H-1 修复方向 = 核对 Document/Version schema 现有字段能否表达该作用域（不足则登记 spec gap
+  不自行扩展），再加 scoped DB uniqueness + ON CONFLICT + 并发 probe。
+- 验收：同 source 并发恰一合法 identity；replay 不产生重复 document/version。
+
+### BUG-V3-030 — 非 dict 合法 JSON 落 valid artifact（H-2，HIGH）
+- Status: Open（H Final Closure Blocker）
+- 登记：2026-09-07 22:02
+- 现象：`validate_annotation_payload` 只做递归禁字段检查，不校验顶层类型；`json.loads("[]")`→`[]`
+  → validate 返回 `(True, [])` → `create_semantic_annotation(status="valid")`。真 DB probe 实证：
+  `[]` → `status=valid payload=[]`。下游 `payload.get()` 抛 AttributeError，违反 H0-15 方案 B。
+- 根因：annotation 校验只查「禁字段」不查「顶层结构」，隐式假设 LLM 输出必为 dict。
+- 处置：validator 第一层加 `isinstance(payload, dict)`，非 dict 走方案 B 失败路径（0 artifact）。
+  禁自动 JSON repair / LLM 自我纠错 / 大型 schema framework。
+- 验收：`[]`/`null`/`"string"`/`123` 全部不进 valid annotation（真 DB probe）。
+- **Resolved（2026-09-07 Batch 1）**：`validate_annotation_payload` 顶层加
+  `isinstance(payload, dict)`，非 dict 走方案 B 失败路径。测试
+  `test_s7_non_dict_json_rejected` 锁死。
+
+### BUG-V3-031 — Resolver 表头判定用非锚定子串误判区界（H-3，HIGH）
+- Status: Open（H Final Closure Blocker）
+- 登记：2026-09-07 22:02
+- 现象：`_qzone_end`/`_answer_span`/`_region_end`/`_explanation_span` 以 `"答案" in norm` 等非锚定
+  子串判定 section 区界。题干含「答案」误判——纯函数复现：`"1. 请写出正确答案"` 被当答案表头，
+  answer 错指题干行（`exact`），违反「E 可以失败但不能猜」。
+- 根因：区界判定用 V2「文本特判」子串匹配，未用冻结的 section-header grammar。
+- 处置：先冻结最小 Header Grammar（明确哪些 token 形态是 header：`【答案】`/`答案：` 等），满足
+  grammar 才成 boundary，仅含词继续作正文。加 adversarial cases（「请写出正确答案」等）。
+- 验收：题干含「答案/解析/详解」不被误判 header；真实 header 仍正确切分。
+- **Resolved（2026-09-07 Batch 1）**：冻结 Header Grammar（`is_answer_header`/
+  `is_explanation_header`，行首锚定 + 完整 token + 显式白名单），替换 Resolver 6 处
+  substring 判定。测试 `test_resolver_header_grammar.py` 39 项锁死。
+
+### BUG-V3-032 — composite shared material contextual 绕过 Gate（H-4，HIGH）
+- Status: Open（H Final Closure Blocker）
+- 登记：2026-09-07 22:02
+- 现象：`GateService` provenance 层只遍历 leaf 的 `_role_spans`，不检查 shared material 的
+  `resolution_status`。纯函数复现：材料 `contextual` + 子题 `exact` → `auto_approve`，违反
+  「任一 role 为 contextual 不得自动准入」。
+- 根因：provenance 白名单漏了 material（leaf 严格、material 缺失）。
+- 处置：provenance 统一评估所有物化 role（stem/option/answer/explanation/material），任一
+  resolution ∉ {exact,normalized} → auto_allowed=False。加真 DB probe：child=exact + material=
+  contextual → NOT auto_approve；material=exact → 保持原行为。
+- 验收：contextual 材料不得 auto approve；exact 材料不受影响。
+- **Resolved（2026-09-07 Batch 1）**：`policy.evaluate` provenance 层把 shared material
+  纳入 resolution 白名单。测试 `test_composite_material_contextual_not_auto` 锁死。
 
 ## Resolved Bugs
 

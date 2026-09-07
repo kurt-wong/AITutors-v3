@@ -674,3 +674,68 @@ Date: 2026-09-05
   Runtime Authority）经真实 DB 实证；此前 sonnet 审查 1 HIGH + 2 MEDIUM 修复均被探针覆盖验证。
 - **验证**：全量 pytest **267 passed** 不变；探针 cleanup 后无污染；`_audit_phase8_adversarial.py`
   不入 Git（留磁盘）。变更仍未 commit（待用户放行）。
+
+### 2026-09-07 22:02（V3 全量第一性原理对抗审查 + 综合裁决）
+
+- **Status：H Final Closure BLOCKED**。用户对全量对抗审查（4 路并行只读 + 13 真 DB probe + 纯函数
+  复现 + 267 passed）下达综合裁决：**V3 不存在架构性推翻问题**；核心不变量（Source 唯一事实源 /
+  stage 幂等 / 单主链 / 三 key 铁律 / LE 不含 task_id·attempt / 运行时双层语义 / decision_status
+  唯一入口 / raw text_hash）经真实 DB 实证成立。**A–G 继续 CLOSED**（不因 post-closure 发现缺陷而
+  reopen）；H Phase 1–8 = substantially complete，但 **H Final Closure BLOCKED**，Phase 9 PAUSED。
+- **4 个确认 HIGH（真 DB probe FAIL / 纯函数复现实证）**：
+  - **H-1** seal/document 并发幂等无 DB UNIQUE 兜底（read-then-create → 并发 seal 重复，真 DB
+    并发 probe FAIL：2 doc）——须先终裁 BUG-V3-007 再决定 UNIQUE 作用域，禁随意加 global UNIQUE。
+  - **H-2** 非 dict 合法 JSON 落 valid artifact（validate 只查禁字段不查顶层 dict，真 DB probe
+    FAIL：`[]`→`status=valid`）——最小修复：顶层 `isinstance(dict)` 校验，非 dict 走方案 B 失败路径。
+  - **H-3** Resolver 表头判定用非锚定子串「答案/解析/详解」，题干含词误判区界 → 错误 ResolvedSpan
+    （违反「E 可以失败但不能猜」）——须先冻结最小 Header Grammar 再改锚定。
+  - **H-4** composite shared material 未纳入 provenance 白名单，contextual 材料可 auto approve
+    （违反「任一 role 为 contextual 不得自动准入」）——最小修复：provenance 统一评估所有物化 role。
+- **3 个新增 closure blocker（用户额外裁决）**：
+  - **B-1** `ai/executor.py` 仍 `except BaseException`（吞 CancelledError，audit 误 terminalize 为
+    failed 与 task runtime truth 不一致）——逐处判断 catch/cleanup/terminalize/re-raise 边界。
+  - **B-2** TaskExecutor `seal_provider` 与 extractor 可能不一致（task_params 声明 cloud 但实际
+    NativeTextProvider）——M1 禁「声明 cloud 实际跑 native」，须 fail-closed 或正确构造 provider。
+  - **B-3** `model_config_hash` 可能与实际 invocation 配置漂移（default hash vs task_params 覆盖
+    provider/model）——model_config_hash 必须代表实际 invocation 配置，非默认配置。
+- **2 个 MEDIUM 升级为 closure blocker**：complete/fail 不严格验证 lease ownership（旧 worker 误
+  改新 worker 状态）；audit terminalization 与 budget settle 同事务 rollback 风险（settle 失败把
+  audit 回滚成 STARTED 孤儿）。
+- **修复顺序（用户裁决）**：Batch 1 = H-2（dict 校验）+ H-4（material provenance）+ H-3（先冻结
+  Header Grammar）；Batch 2 = BUG-V3-007 终裁 → H-1（DB UNIQUE + ON CONFLICT + 并发 probe）；
+  Batch 3 = H Runtime（BaseException/lease ownership/audit-settle 边界/model_config_hash identity）；
+  Batch 4 = H Final Adversarial Re-Probe（N passed + 0 known HIGH + 0 unreviewed P1）。
+- **MEDIUM/LOW 分层（用户裁决）**：Phase 9 前处理 = budget settle 校验 / task_context·budget_ok
+  wiring / live 长 stage heartbeat / gate_decision nullable 对齐 / migration BUG-V3-028 / optional
+  role / original_question_type / option label 丢失。Deferred 保持 = D1 claim 竞争 / D3 file_path /
+  D4 recover claim finalization / D5 持续 heartbeat / nested composite / material text_hash /
+  annotate 并发重复 / recover 时钟双源 / created 未使用。
+- **严禁（10 条）**：不重设计架构 / 不 reopen A-G / 不迁移历史 LE hash / 不随意加 global UNIQUE /
+  不把 task_id·attempt 加入业务 identity / Resolver 不用 LLM 猜 boundary / 不因 LLM 异常自动造事实 /
+  不提前实现 live transport / 不引入大型 framework / 不把 D1/D3/D4/D5 升级为 blocker。
+- **下一步**：登记裁决（本文件 + bugs.md 登记 4 HIGH）→ Batch 1 最小修复（H-2/H-4 直接修；H-3 先
+  提 Header Grammar 冻结方案供裁决）→ Batch 2-4。BUG-V3-001..028 Open 不变（含 BUG-V3-028 延续）。
+
+### 2026-09-07 22:xx（Batch 1 CLOSED + BUG-V3-007 终裁）
+
+- **H Batch 1 = H-2 + H-3 + H-4 修复闭环**。用户批准 CLOSED；全量 pytest **308 passed**（净 +41），
+  git diff --check 干净。H-2/H-3/H-4 三个 HIGH 修复落定（BUG-V3-030/031/032 标 Resolved）。
+- **H-2 修复**：`validate_annotation_payload` 顶层加 `isinstance(payload, dict)`，非 dict 走方案 B
+  失败路径（BUG-V3-030 Resolved；`test_s7_non_dict_json_rejected`）。
+- **H-3 修复**：冻结 Header Grammar——`is_answer_header`/`is_explanation_header`（行首锚定 + 完整
+  token + 显式白名单），替换 Resolver 6 处 substring 判定（`_qzone_end`/`_region_end`/`_answer_span`/
+  `_explanation_span` 统一 grammar）。正例（裸 token/冒号/bracket）、负例（「参考答案如下」「试题
+  答案」「请写出正确答案」等 20+ 项）+ 端到端「题干含答案不误判」全锁（BUG-V3-031 Resolved；
+  `test_resolver_header_grammar.py` 39 项）。
+- **H-4 修复**：`policy.evaluate` provenance 层把 shared material 纳入 resolution 白名单（BUG-V3-032
+  Resolved；`test_composite_material_contextual_not_auto`）。
+- **BUG-V3-007 终裁（用户 Final Ruling）**：`original_sha256` 定义 Source/Document Identity，**不
+  定义全局唯一 Sealed Version**；同一 sha256 允许多 sealed version；跨 frozen seal role/provider
+  合法共存不视为 duplicate；同 `original_sha256 + seal role/provider scope` 内 canonical sealed
+  version 至多一个；**禁 `UNIQUE(original_sha256)`**；不得擅自引入 Frozen Spec 未定义的 identity
+  字段。
+- **当前状态**：H-2/H-3/H-4 CLOSED；**H-1 BLOCKED**（BUG-V3-007 已终裁，待 Batch 2 按终裁设计
+  scoped uniqueness）；Runtime blockers（BaseException/lease ownership/audit-settle/model_config_hash）
+  属 Batch 3；Phase 9 NOT STARTED。
+- **下一步**：commit Batch 1（独立提交点）→ Batch 2（H-1：BUG-V3-007 终裁 → identity scope
+  verification → scoped DB uniqueness → 并发 seal probe → regression）。

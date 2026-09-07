@@ -1,42 +1,37 @@
 # AI Tutor V3 — RESTART PROMPT
 
-Version: v1.12
-Status: 段 H 编码进行中 — Phase 8（TaskExecutor + Worker CLI）实现 + 独立对抗审查（0 CRITICAL / 1 HIGH
-/ 2 MEDIUM / 3 LOW 全修复或登记）收口，全量 267 passed；变更未 commit（Phase 8 独立提交点待用户放行）；
-下一实施步 = commit Phase 8 → Phase 9 配置常量随步补
+Version: v1.13
+Status: 段 H 编码进行中 — Phase 8 已提交（4c3e35f）；V3 全量对抗审查确认 4 HIGH + Runtime blockers；
+H Batch 1（H-2/H-3/H-4 修复）CLOSED，全量 308 passed；H-1 BLOCKED（BUG-V3-007 已终裁）；下一实施步 =
+commit Batch 1 → Batch 2（H-1 scoped uniqueness）
 Date: 2026-09-07
 
-## 0.0 当前结论（2026-09-07 20:49）
+## 0.0 当前结论（2026-09-07 22:xx）
 
-- **H 段推进定格**：A–G 七段 + Step 1–5 + Phase 7 全 CLOSED。**Phase 8（TaskExecutor + Worker CLI）
-  实现完成 + 独立对抗审查（sonnet 只读，0 CRITICAL）+ 修复收口**；变更未 commit（待用户放行）。
-- **Phase 8 交付**：`domains/task/executor.py` `TaskExecutor`（Worker 循环编排，只拥 Runtime
-  Authority：run_once → claim_next 原子 claim → 逐 stage Seal/Annotation/Compile 各独立 session 事务 →
-  complete/fail，stage 边界 `_heartbeat` 续租）；`worker/__init__.py` + `__main__.py`（run / run
-  --allow-live / recover [--dry-run|--confirm] 默认 dry-run / retry <task_id>）；`TaskClaimRepository.
-  finalize_claim`（受控 claim 终态：outcome/error_type/end + lease_snapshot 并入 error_detail）+
-  `TaskRepository.next_queued_id`；`TaskService.claim_next` + complete/fail 写 claim 终态 + lease 从
-  settings 读；`config.py` Phase 9 常量（worker_concurrency=1 / task_claim_lease_seconds=60 /
-  http_retry_count=2 / provider_fallback_enabled=False）；`test_task_executor.py` 6 测试。
-- **H8-1/H8-2 落地**：下游失败经 `_classify_error`（V3Error→error_type / ValueError→validation_error
-  / 其它→system_error）+ `fail(error_type, error_detail)` 持久化到 task_claims（outcome=failed +
-  error_type + lease_snapshot.error_detail）。audit（executor 终态化）与 task（本层判 failed）双层分离。
-- **独立对抗审查（0 CRITICAL / 1 HIGH / 2 MEDIUM / 3 LOW）全修复或登记**：HIGH（Worker 从不续租 →
-  stage 边界 `_heartbeat`）✅修复；MEDIUM（`except BaseException` 吞取消信号 → `except Exception`）✅
-  修复；测试隔离（残留 queued 污染 next_queued_id → cleanup 前移）✅修复。
-- **deferred 登记（不重开）**：**D1** claim_next「无 queued」与「claim 竞争失败」混为 None（M1 单
-  worker 不触发，worker_concurrency>1 时区分）；**D2** config 三字段 M1 预留未接线（http_retry_count
-  与 llm_request_retry_count 分层）；**D3** file_path 信任边界（未来 enqueue 校验）；**D4** finalize_claim
-  缺行 no-op vs finalize_audit 缺行 raise 不对称 + recover 不写 claim 终态（观察项）；**D5** live 长
-  LLM stage 内持续 heartbeat 未接（live smoke 后）。延续 D1/D2/D3/F-4（Step 4 登记，Phase 8/9 定夺）。
-  BUG-V3-001..028 Open 不变（errata 终裁待）。
-- **验证**：全量 pytest **267 passed ×2**（净 +6，可重入）；git diff --check 干净；Worker CLI
-  `--help` smoke 通过；真 DB 探针（claim→running + heartbeat 续租 + run_once→succeeded）实证。
-- **下一步**：commit Phase 8（独立基线）→ **Phase 9 配置常量随步补**（config 常量已补，剩余 HTTP
-  retry/fallback 接线 + D 项定夺）→ H 段最终收口。
-- 重启后第一任务：读本文件 → Status.md 尾 → log.md 尾 → 打开 plan 文件
-  （`~/.claude/plans/giggly-enchanting-volcano.md`）恢复上下文 → 按当前 Step 继续 H 段实现
-  （或等待用户新指令）。
+- **H 段推进定格**：A–G 七段 + Step 1–5 + Phase 7 + **Phase 8（已 commit 4c3e35f）** 全 CLOSED。
+  **V3 全量第一性原理对抗审查**（4 路并行只读 + 13 真 DB probe + 纯函数复现 + 全量测试）确认核心
+  不变量成立 + **4 HIGH 实现缺陷** + 3 runtime blockers。用户下达综合裁决：A–G 继续 CLOSED，H
+  Phase 1-8 substantially complete 但 FINAL CLOSURE BLOCKED，Phase 9 PAUSED。
+- **H Batch 1 = H-2/H-3/H-4 修复闭环（CLOSED，待 commit）**：
+  - H-2（BUG-V3-030 Resolved）：`validate_annotation_payload` 顶层 `isinstance(payload, dict)`，
+    非 dict 走方案 B 失败路径。
+  - H-3（BUG-V3-031 Resolved）：冻结 Header Grammar（`is_answer_header`/`is_explanation_header`，
+    行首锚定 + 完整 token + 显式白名单），替换 Resolver 6 处 substring。
+  - H-4（BUG-V3-032 Resolved）：`policy.evaluate` provenance 层把 shared material 纳入白名单。
+  - 测试：`test_s7_non_dict_json_rejected` + `test_composite_material_contextual_not_auto` +
+    `test_resolver_header_grammar.py`（39 项）。全量 **308 passed**（净 +41）。
+- **BUG-V3-007 终裁（用户 Final Ruling）**：`original_sha256` 定义 Source/Document Identity，不
+  定义全局唯一 Sealed Version；同 `original_sha256 + seal role/provider scope` 内至多一个 canonical
+  sealed version；跨 role/provider 允许多 version；禁 `UNIQUE(original_sha256)`；不得擅自引入
+  Frozen Spec 未定义的 identity 字段。
+- **当前状态**：H-2/H-3/H-4 CLOSED；**H-1 BLOCKED**（BUG-V3-007 已终裁，待 Batch 2）；Runtime
+  blockers（ai/executor.py `except BaseException` / complete-fail lease ownership / audit-settle
+  rollback / model_config_hash 漂移）属 Batch 3；Phase 9 NOT STARTED。
+- **下一步**：commit Batch 1（`fix(runtime): close H-2 H-3 H-4 adversarial findings`）→ Batch 2
+  = H-1（BUG-V3-007 终裁 → identity scope verification → scoped DB uniqueness → 并发 seal probe
+  → regression）。
+- 重启后第一任务：读本文件 → Status.md 尾 → log.md 尾 → bugs.md（BUG-V3-007 终裁 + 029..032）→
+  按当前 Batch 继续（Batch 1 待 commit / Batch 2 待开始）。
 
 ## 0. 当前工作状态（2026-09-06 20:34:06）
 

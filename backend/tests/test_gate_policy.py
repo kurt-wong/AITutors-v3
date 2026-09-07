@@ -184,6 +184,29 @@ def test_composite_all_sub_ready_auto():
     assert d["layers"]["semantic"]["status"] == "pass"
 
 
+def test_composite_material_contextual_not_auto():
+    """H-4（BUG-V3-032）：子题 exact 但 shared material contextual → 不 auto approve。
+
+    20 §8.2「所有 content role 的 span resolution ∈ {exact,normalized}」含 material；
+    material 也必须纳入 provenance 白名单。
+    """
+    root, ir, snap, run = _pipeline(_composite_lines(), _composite_payload(), "U1-1")
+    new_spans = tuple(
+        dataclasses.replace(s, resolution_status="contextual")
+        if s.role == "material" else s
+        for s in run.resolved_spans
+    )
+    run2 = ResolvedRun(source_version_id=run.source_version_id,
+                       resolved_spans=new_spans,
+                       unresolved_references=run.unresolved_references,
+                       resolved_relations=run.resolved_relations,
+                       unresolved_relations=run.unresolved_relations)
+    d = _decision(root, ir, snap, run2)
+    assert d["decision"] == "pending_review"  # contextual material 可人工，不 auto
+    assert any("material" in r for r in d["layers"]["provenance"]["reasons"])
+    assert d["layers"]["provenance"]["status"] == "pass"  # 非矛盾，仅不 auto
+
+
 def test_composite_one_sub_not_strict_auto_pending():
     # composite 原子性（20 §8.5）：一子题 grammar None → 整个 composite 不自动。
     lines = _mk("材料开始", "材料中间内容段落", "材料结束",

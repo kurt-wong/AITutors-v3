@@ -73,3 +73,44 @@ def _line_has_option_token(normalized_line: str, label: str) -> bool:
     if re.match(rf"^[（(]{re.escape(label)}[)）]", normalized_line):
         return True
     return False
+
+
+# ------------------------------------------------------------------ H-3 Header Grammar
+# 冻结裁决（2026-09-07）：行首锚定 + 完整 token + 显式白名单；未命中一律正文。
+# 完整 token 匹配，非 prefix substring——「参考答案如下」不以「参考答案」开头即被截断。
+# normalize 只消除冻结允许的格式差异（全角冒号 → 半角），不改变语义。
+
+_HEADER_STRUCTURED_SUFFIX_RE = re.compile(r"^[\d\s\-—–~～,，、.．]*$")
+_ANSWER_HEADER_TOKENS = ("参考答案", "答案")
+_EXPLANATION_HEADER_TOKENS = ("详解", "解析", "解答")
+_EXPLANATION_HEADER_BRACKETS = frozenset({"【详解】", "【解析】", "【解答】", "【答案及解析】"})
+
+
+def is_answer_header(normalized_line: str) -> bool:
+    """答案表头判定（H-3 冻结 Grammar）。
+
+    允许：裸 token 独立成行（答案/参考答案）、token + 紧邻冒号（答案：/答案:）、
+    【答案】或【答案】+ 结构化后缀（题号/范围）。禁止：参考答案如下、试题答案、
+    答案与解析 等（未命中即正文）。
+    """
+    norm = normalized_line.strip()
+    if norm.startswith("【答案】"):
+        suffix = norm[len("【答案】"):]
+        return suffix == "" or bool(_HEADER_STRUCTURED_SUFFIX_RE.match(suffix))
+    for token in _ANSWER_HEADER_TOKENS:
+        if norm == token:
+            return True
+        if norm.startswith(token + ":"):
+            return True
+    return False
+
+
+def is_explanation_header(normalized_line: str) -> bool:
+    """详解/解析/解答表头判定（H-3 冻结 Grammar）。bracket 形态精确匹配，无后缀扩展。"""
+    norm = normalized_line.strip()
+    if norm in _EXPLANATION_HEADER_BRACKETS:
+        return True
+    for token in _EXPLANATION_HEADER_TOKENS:
+        if norm == token or norm.startswith(token + ":"):
+            return True
+    return False

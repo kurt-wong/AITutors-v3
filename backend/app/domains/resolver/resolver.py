@@ -18,6 +18,8 @@ import re
 import uuid
 
 from app.domains.resolver.match_normalization import (
+    is_answer_header,
+    is_explanation_header,
     is_question_start,
     normalize_text,
     option_tokens,
@@ -249,7 +251,8 @@ class SourceResolver:
         # 题目区终点 = 首个 答案/详解/解析 表头 seq（其后为答案/详解区，不得当题号行）。
         self._qzone_end = next(
             (l.seq for l in self._idx.lines
-             if any(h in normalize_text(l.text) for h in ("答案", "详解", "解析"))),
+             if is_answer_header(normalize_text(l.text))
+             or is_explanation_header(normalize_text(l.text))),
             10**9,
         )
 
@@ -321,7 +324,7 @@ class SourceResolver:
             norm = normalize_text(l.text)
             if is_question_start(norm) is not None:
                 return l.seq
-            if "答案" in norm or "详解" in norm or "解析" in norm:
+            if is_answer_header(norm) or is_explanation_header(norm):
                 return l.seq
         return None
 
@@ -488,10 +491,10 @@ class SourceResolver:
         for l in self._idx.lines:
             norm = normalize_text(l.text)
             if not in_zone:
-                if "答案" in norm:
+                if is_answer_header(norm):
                     in_zone = True
                 continue
-            if "详解" in norm or "解析" in norm:
+            if is_explanation_header(norm):
                 break
             offs = _entry_offsets(l.text, qn)
             if offs:
@@ -517,12 +520,12 @@ class SourceResolver:
         region: list[str] = []
         for l in self._idx.lines:
             norm = normalize_text(l.text)
-            if "详解" in norm or "解析" in norm:
+            if is_explanation_header(norm):
                 header_seen = True
                 continue
             if not header_seen:
                 continue
-            if "详解" in norm or "解析" in norm or "答案" in norm:
+            if is_explanation_header(norm) or is_answer_header(norm):
                 break
             region.append(l.line_ref)
         if not header_seen:

@@ -171,3 +171,19 @@ async def test_s7_history_invalid_residue_still_blocks_via_service(session, pdf_
             source_version_id=sv.id, prompt="p", model_config_hash=mc
         )
     assert "invalid" in str(re_.value) or "new LE" in str(re_.value)
+
+
+async def test_s7_non_dict_json_rejected(session, pdf_bytes):
+    """H-2（BUG-V3-030）：非 dict 合法 JSON（[]/null/"str"/123）→ 0 artifact + ValueError。
+
+    validator 第一层必须明确 payload 为 JSON object；非 dict 是结构违规（非禁字段），
+    同属 validation failure → 方案 B 失败路径（不落 valid artifact）。
+    """
+    sv = await _seal_source(session, pdf_bytes)
+    for raw in ("[]", "null", '"str"', "123"):
+        with pytest.raises(ValueError, match="JSON object"):
+            await _svc(session, _FixedJSONProvider(raw)).annotate(
+                source_version_id=sv.id, prompt="p", model_config_hash=sha256_hex(raw)
+            )
+        await session.flush()
+    assert await _n(session, source_version_id=sv.id) == 0

@@ -162,6 +162,17 @@ def evaluate(
                 provenance_reasons.append(
                     f"leaf {leaf.unit_id!r} {role} text_hash mismatch (evidence broken)"
                 )
+    # H-4（BUG-V3-032）：composite shared material 也纳入 provenance 白名单——任一 material
+    # resolution ∉ {exact,normalized} → auto_allowed=False（contextual 材料不得自动准入，
+    # 20 §8.2「所有 content role 的 span resolution ∈ {exact,normalized}」含 material）。
+    for m in materials:
+        span = resolved.get(m.span_id)
+        res = span.resolution_status if span else "missing"
+        if res in _AUTO_RESOLUTIONS:
+            byte_proven_spans.append(m.span_id)
+        else:
+            auto_allowed = False
+            unproven_spans.append(("material", m.span_id, res))
     if unproven_spans:
         for role, sid, res in unproven_spans:
             provenance_reasons.append(
