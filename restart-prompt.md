@@ -1,25 +1,25 @@
 # AI Tutor V3 — RESTART PROMPT
 
-Version: v1.16
-Status: H Phase 1–8 FINAL CLOSED（用户宣布）；A–G 继续 CLOSED；V3 主链 A–H 冻结；下一实施步 =
-Phase 9-0 Scope Freeze（纯审查，先冻结四项范围，不改代码）
+Version: v1.17
+Status: H Phase 1–8 FINAL CLOSED；Phase 9-0 Scope Freeze CLOSED（3 spec gap 冻结为 BUG-V3-033/034/035）；
+下一实施步 = Phase 9-1B（9.1 config 收口 + 9.3 provider exception translation）
 Date: 2026-09-07
 
 ## 0.0 当前结论（2026-09-07 22:xx）
 
-- **H Phase 1–8 FINAL CLOSED**（用户正式宣布）。H Runtime Execution Layer 完成 Frozen Contract
-  运行时闭环；A–G 继续 CLOSED。H 不因后续普通缺陷自动 reopen（走 post-closure defect/errata）。
-- **Closure 证据**：4 HIGH + 4 Runtime blocker 全关闭（Batch 1/2/3）；Batch 4 Re-Probe 全 PASS；
-  全量 **314 passed**；Known HIGH = 0 / Unreviewed P1 = 0。提交链 5a44245..55de2ef 已 push origin。
-- **当前状态**：A–H FINAL CLOSED；Phase 9 NOT STARTED（批准进入范围冻结阶段 Phase 9-0 Scope
-  Freeze，先不改代码）。
-- **Phase 9 范围（用户批准）**：9.1 config constants / 9.2 HTTP retry + LLM retry 分层 /
-  9.3 provider exception translation / 9.4 fallback boundary。不自动纳入 D1/D3/D4/D5/F-4。
-  红线：retry 层级不得合并；`MAX_LLM_CALLS_PER_TASK` 按实际 provider invocation 计数不变。
-- **下一步**：Phase 9-0 Scope Freeze（纯审查——逐项回答 Frozen Spec 契约 / 缺什么 / impl gap vs
-  spec gap / 是否改 identity·retry·audit·budget·Gate / 是否触碰 deferred）→ Phase 9-1 逐项实施。
-- 重启后第一任务：读本文件 → Status.md 尾 → log.md 尾 → bugs.md → 按当前 Phase 继续
-  （Phase 9-0 Scope Freeze 待执行）。
+- **H Phase 1–8 FINAL CLOSED**（用户宣布）；A–G 继续 CLOSED；V3 主链 A–H 冻结。**Phase 9-0
+  Scope Freeze CLOSED**（用户选 B：先冻结语义再实施）。
+- **3 spec gap 冻结**（BUG-V3-033/034/035，Frozen for implementation）：HTTP retry 不计新
+  Provider Invocation；transport exception→LLMNetworkError / HTTP response error→LLMProviderError
+  （408/429/5xx retryable）；fallback 默认关闭、仅 transient failure+retry exhausted+显式有序
+  provider、= 新 LE + 新 invocation。
+- **红线**：HTTP retry（transport）≠ LLM retry（同 LE）≠ fallback（新 config/新 LE）；三者不混；
+  MAX_LLM_CALLS_PER_TASK 按真实 Provider Invocation 计数不变。
+- **Phase 9 顺序**：9-1A 登记 ✅ → 9-1B（config 收口 + provider exception translation）→ 9-2
+  （HTTP retry transport-only）→ 9-3（fallback）。
+- **下一步**：commit 登记 → Phase 9-1B。
+- 重启后第一任务：读本文件 → Status.md 尾 → log.md 尾 → bugs.md（BUG-V3-033/034/035 冻结）→
+  按当前 Phase 继续（Phase 9-1B 待执行）。
 
 ## 0. 当前工作状态（2026-09-06 20:34:06）
 

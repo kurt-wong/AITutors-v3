@@ -409,6 +409,38 @@
 - **Resolved（2026-09-07 Batch 1）**：`policy.evaluate` provenance 层把 shared material
   纳入 resolution 白名单。测试 `test_composite_material_contextual_not_auto` 锁死。
 
+### BUG-V3-033 — HTTP retry 是否计 Provider Invocation（Phase 9 spec gap）
+- Status: Frozen for implementation（用户 Phase 9-0 终裁，2026-09-07）
+- 现象：`MAX_LLM_CALLS_PER_TASK` 按「真实 Provider Invocation」计数（Lock-4），而 30 §7 说
+  HTTP retry「不影响业务语义」——HTTP retry（同一次 provider 调用的传输层重发）是否计新
+  invocation，Frozen Spec 未冻结。
+- 终裁：**不计新的 Provider Invocation**。一次逻辑 Provider Invocation 可含 N 次 HTTP transport
+  attempt；HTTP retry 属同一次 invocation 的传输层重试。HTTP retry 不得产生新 audit invocation、
+  不得独立 reserve budget。计数：invocation=1、HTTP attempts=N、MAX_LLM_CALLS=1。
+- 验收：Phase 9-2 HTTP retry 实现时，HTTP retry 不增 invocation / audit / budget。
+
+### BUG-V3-034 — HTTP status → error_type 映射（Phase 9 spec gap）
+- Status: Frozen for implementation（用户 Phase 9-0 终裁，2026-09-07）
+- 现象：40 §6 给 error_type 8 分类，30 §6/§7 未给 HTTP→error_type 映射表。
+- 终裁：**transport exception**（httpx ConnectError/ConnectTimeout/ReadTimeout/WriteTimeout/
+  NetworkError）→ `LLMNetworkError`（可重试）；**HTTP response error** → `LLMProviderError`。
+  状态码：408/429/5xx → ProviderError + retryable；4xx 其他 → ProviderError + non-retryable。
+  边界：不得把「provider returned HTTP 500」与「client cannot connect」混为同一 failure
+  provenance（前者 ProviderError、后者 NetworkError）。
+- 验收：Phase 9-3 异常翻译按此映射；adversarial test 锁定 transport vs HTTP response 分层。
+
+### BUG-V3-035 — fallback 触发条件 + provider 列表（Phase 9 spec gap）
+- Status: Frozen for implementation（用户 Phase 9-0 终裁，2026-09-07）
+- 现象：30 §7 说 fallback explicit（默认关闭）+ 必须审计/预算 + model_config_hash 变 → 新 LE，
+  但触发条件 + provider 列表未冻结。
+- 终裁：fallback 默认关闭；触发 = primary retryable provider/network failure 且 primary retry
+  exhausted 且 fallback enabled 且存在显式 fallback provider；**禁止**触发 = CancelledError /
+  parse / validation / forbidden / system / lease / budget / task failure。fallback provider 列表
+  必须显式、有限、有序，禁自动发现/随机/动态推断。fallback identity = 新 provider/config →
+  新 model_config_hash → 新 LE（X≠Y）。fallback budget：每 fallback invocation 单独计 invocation/
+  budget（HTTP retry 不增、fallback 增）。
+- 验收：Phase 9-3 fallback 按此语义；X≠Y LE + invocation 计数正确。
+
 ## Resolved Bugs
 
 （暂无。）

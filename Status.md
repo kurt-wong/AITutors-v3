@@ -792,3 +792,22 @@ Date: 2026-09-05
   红线：retry 层级不得合并；`MAX_LLM_CALLS_PER_TASK` 按实际 provider invocation 计数不变。
 - **下一步**：Phase 9-0 Scope Freeze（纯审查，不改代码——逐项回答 Frozen Spec 契约/缺什么/
   impl gap vs spec gap/是否改 identity/retry/audit/budget/Gate/是否触碰 deferred）→ Phase 9-1 逐项实施。
+
+### 2026-09-07 22:xx（Phase 9-0 Scope Freeze 终裁 + 3 spec gap 冻结）
+
+- **Phase 9-0 Scope Freeze CLOSED**（用户选择 B：先冻结语义再实施）。3 个 spec gap 冻结为
+  implementation 语义（BUG-V3-033/034/035 标 Frozen for implementation）。
+- **BUG-V3-033**：HTTP retry **不计**新 Provider Invocation（同一 invocation 内 transport retry；
+  HTTP retry 不增 invocation/audit/budget）。
+- **BUG-V3-034**：transport exception → `LLMNetworkError`（可重试）；HTTP response error →
+  `LLMProviderError`；408/429/5xx → retryable，4xx 其他 → non-retryable。不得混 transport failure
+  与 HTTP response failure。
+- **BUG-V3-035**：fallback 默认关闭；触发 = primary retryable failure + retry exhausted + enabled +
+  显式 provider；禁触发 = cancellation/parse/validation/budget/lease/system；fallback = 新 LE +
+  新 invocation + 独立 budget；provider 列表显式有限有序。
+- **核心红线（用户重申）**：HTTP retry（transport）≠ LLM retry（同 LE invocation）≠ fallback
+  （新 config/新 LE/新 invocation），三者绝不混为一种 retry。
+- **Phase 9 执行顺序（用户指令）**：9-1A 登记（✅ 本步）→ 9-1B（9.1 config 收口 + 9.3 provider
+  exception translation）→ 9-2（HTTP retry transport-only）→ 9-3（fallback）。
+- **下一步**：commit 登记 → Phase 9-1B（9.1 已接线 config 收口 + 9.3 provider exception
+  translation：transport exception mapping + HTTP status mapping + adversarial tests）。

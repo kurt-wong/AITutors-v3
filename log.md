@@ -848,3 +848,15 @@ Step 5 已于 commit `0917404` 落盘（含 Status/log/restart v1.10 收口）�
 - **裁决边界**：H Phase 1–8 不因后续普通缺陷自动 reopen（走 post-closure defect/errata）；Phase 9
   批准进入范围冻结（Scope Freeze 先于实施）；不自动纳入 D1/D3/D4/D5/F-4 deferred。
 - **影响**：V3 的 A–H 主链从「设计+实现」进入「冻结后下一阶段开发」；下一步 Phase 9-0 Scope Freeze。
+
+### 2026-09-07 22:xx（Phase 9-0 Scope Freeze 终裁）
+
+- **Phase 9-0 Scope Freeze CLOSED**（用户选 B：先冻结语义再实施）。3 个 spec gap 冻结为
+  implementation 语义并登记 BUG-V3-033/034/035（Frozen for implementation）。
+- **冻结语义**：HTTP retry ≠ 新 Provider Invocation（transport retry，不增 invocation/audit/budget）；
+  transport exception → LLMNetworkError、HTTP response error → LLMProviderError（408/429/5xx
+  retryable、4xx 其他 non-retryable）；fallback 默认关闭、仅 transient provider/network failure +
+  retry exhausted + 显式有序 provider 才触发、= 新 LE + 新 invocation。
+- **红线**：HTTP retry（transport）≠ LLM retry（同 LE）≠ fallback（新 config/新 LE/新
+  invocation），三者不混。MAX_LLM_CALLS_PER_TASK 仍按真实 Provider Invocation 计数。
+- **影响**：Phase 9 范围与语义冻结；下一步 9-1B（config 收口 + provider exception translation）。
