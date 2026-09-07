@@ -46,6 +46,10 @@ class Settings(BaseSettings):
     mimo_vl_model: str = ""
     llm_request_timeout_seconds: float = 30.0
 
+    # ---- 段 H Phase 4：runtime 重试/熔断常量（30 §7 数值未冻结；M1 安全默认）----
+    max_llm_calls_per_task: int = 20
+    llm_request_retry_count: int = 2
+
     # ---- cloud OCR（30 §6/§16 external：段 B OCRGateway 接线；disabled/mock 不要求 token）----
     ocr_gateway_mode: str = "disabled"
     paddleocr_model: str = "PaddleOCR-VL-1.6"

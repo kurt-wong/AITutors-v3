@@ -84,6 +84,21 @@ async def _drop_scratch(name: str) -> None:
         await conn.close()
 
 
+async def _column_default(dsn: str, table: str, column: str) -> str | None:
+    import asyncpg
+
+    conn = await asyncpg.connect(_plain(dsn))
+    try:
+        return await conn.fetchval(
+            "SELECT column_default FROM information_schema.columns "
+            "WHERE table_schema='public' AND table_name=$1 AND column_name=$2",
+            table,
+            column,
+        )
+    finally:
+        await conn.close()
+
+
 def test_from_empty_replay_reaches_head() -> None:
     """层 1：空库完整 replay → HEAD 表集 == ORM metadata + alembic_version。"""
     import asyncpg
@@ -114,6 +129,9 @@ def test_from_empty_replay_reaches_head() -> None:
         # 空库上 tasks/task_claims 结构仍须与 HEAD 契约一致（与增量库同 shape）
         assert asyncio.run(_db_struct(scratch_plain, "tasks")) == TASKS_SPEC
         assert asyncio.run(_db_struct(scratch_plain, "task_claims")) == TASK_CLAIMS_SPEC
+        # C-1：from-empty 路径（create_all 带 server_default）llm_invocations column_default 亦为
+        # '0'，与增量 0005 ADD COLUMN DEFAULT 0 双路径一致（增量侧由 test_task_schema 锁）。
+        assert asyncio.run(_column_default(scratch_plain, "tasks", "llm_invocations")) == "0"
     finally:
         settings.database_url = original
         asyncio.run(_drop_scratch(scratch))

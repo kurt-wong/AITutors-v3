@@ -24,6 +24,7 @@ TASKS_SPEC = {
     "status": ("character varying", "NO"),
     "task_params": ("jsonb", "NO"),
     "claim_round": ("integer", "NO"),
+    "llm_invocations": ("integer", "NO"),
     "current_stage": ("character varying", "YES"),
     "created_by": ("character varying", "YES"),
     "created_at": ("timestamp with time zone", "NO"),
@@ -102,6 +103,23 @@ async def test_db_tasks_sql_type_and_nullable() -> None:
 async def test_db_task_claims_sql_type_and_nullable() -> None:
     db = await _db_struct("task_claims")
     assert db == TASK_CLAIMS_SPEC
+
+
+async def test_db_tasks_llm_invocations_server_default() -> None:
+    """C-1：tasks.llm_invocations server default == '0'（ORM server_default 与 0005 DEFAULT 0 对齐）。
+
+    锁 column_default 维度（TASKS_SPEC 二元组不含），防止 from-empty（create_all）与增量
+    （0005 ADD COLUMN）的 default 双路径漂移；from-empty 侧由 test_migration_replay 同锁。
+    """
+    async with engine.connect() as conn:
+        res = await conn.execute(
+            text(
+                "SELECT column_default FROM information_schema.columns "
+                "WHERE table_schema='public' AND table_name='tasks' "
+                "AND column_name='llm_invocations'"
+            )
+        )
+    assert res.scalar_one() == "0"
 
 
 # ---- ORM 模型契约（nullable / 类型；迁移前即拦模型 drift）----

@@ -437,3 +437,45 @@ Date: 2026-09-05
   liveness，Task 是 liveness authority，Audit 是 execution record）。F-3/F-4 carry-forward。
 - **Step 3 is closed for implementation**；A–G 七段 + Step 1–3 不 reopen。下一实施步 = plan
   **Step 4（LLMExecutor）**，先 Baseline/对抗审查再编码。
+
+### 2026-09-07 13:21
+
+- **Status: H Step 4（Phase 4 LLMExecutor）实现完成 + 三路独立对抗审查（A/B/C，R1–R12）+ P1/P2
+  修复收口**。变更未 commit（Step 4 独立提交点待用户放行）。
+- **Step 4 交付**：`app/ai/executor.py` LLMExecutor 唯一执行入口 + ProviderInvocationCounter
+  （ensure→reserve+audit STARTED 同事务 Lock-6 → bounded retry → finalize+settle）；
+  `gateway.py` live provider seam（counter.consume 在 provider 前，Lock-4/Note-1）；`errors.py`
+  +BudgetSettlementError/CircuitOpen/LLMProviderError/LLMNetworkError；`models/runtime.py`
+  tasks.llm_invocations + migration 0005（双路径安全）；test_executor 10 + test_budget G1–G3。
+- **三路独立对抗审查（sonnet ×3 只读，冻结 diff）**：A（Runtime Authority R1/R2/R8）唯一入口无
+  旁路、Gateway 职责无回归、Audit 身份一致；B（Counter/Transaction/Retry R3–R7/R9）consume seam
+  唯一、Lock-6 全异常路径覆盖、Phase A/B/C commit 边界无半状态、retry taxonomy 仅 transient；
+  C（Budget/Migration R10–R12）settle 失败不掩盖 provider 成功、reclaim 仅 fallback、0005
+  双路径判定。**三审均无 P0**。
+- **修复（1×P1 强制 + 1×P2 同批封口）**：C-1（P1）——ORM `llm_invocations` 加
+  `server_default=text("0")` 对齐 0005 `DEFAULT 0`，消除 from-empty/增量 `column_default` 漂移；
+  双路径 default 锁定（test_task_schema 主库 + test_migration_replay from-empty 均断言 '0'）；
+  0005 docstring 改准确双路径语义。B-1（P2 fail-open）——`gateway._live` 缺 counter/task_id 改
+  **fail-closed**（Lock-4 熔断不可绕过），test_gateway allowed 用例带 counter + 2 新增 denied。
+- **登记（不重开）**：deferred 边界确认无破坏——D1 crash-orphan reconciliation = F-5B（延后，
+  Phase 8 recover）；D2 provider exception translation = Phase 9 接线；D3 reclaim 不绑 task lease
+  仅 crash/orphan fallback（F-5A）。A-2 finalize 不落 token/cost + idempotency_key 无 DB UNIQUE
+  = F-4/D2 carry-forward（登记不动）。
+- **验证**：定向 runtime ×2（53 passed）；全量 pytest **250 passed ×2**（净 +3：2 gateway
+  fail-closed + 1 schema default 断言）；migration 双路径 from-empty→head 与 incremental rebuild
+  后 llm_invocations column_default 均 '0'；git diff --check 干净。
+- **下一步**：commit Step 4 → plan **Step 5**（attempt_id 贯通 + AnnotationService 依赖倒置
+  Lock-3，删除 annotation Domain→Gateway 旁路）。
+
+### H Step 4 — CLOSED（基线封存，2026-09-07 13:21）
+
+- **Implementation PASS + 三路独立对抗审查无 P0 + P1/P2 修复落定**：LLMExecutor = 唯一 LLM 执行
+  入口（Lock-3）；Provider Invocation 计数在 provider seam（Lock-4/Note-1 原子 consume）；
+  reserve+audit STARTED 同事务（Lock-6）；retry taxonomy 仅 transient（LLMNetworkError/
+  LLMProviderError）；settle 失败显式暴露（F-6）不掩盖 provider 成功、不重调 provider。全量
+  **250 passed ×2** 可重入。
+- **deferred 登记**：D1 orphan reconciliation → F-5B（Phase 8 recover）；D2 provider exception
+  translation → Phase 9 接线；D3 reclaim 仅 crash/orphan fallback（F-5A）；F-4/usage·token 事实源
+  与 idempotency_key DB 唯一性 → Phase 5+。
+- **Step 4 is closed for implementation**；A–G 七段 + Step 1–4 不 reopen。下一实施步 = plan
+  **Step 5**（attempt_id 贯通 + Domain 依赖倒置，删除 annotation Domain→Gateway 旁路）。

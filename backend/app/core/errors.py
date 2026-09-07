@@ -45,6 +45,38 @@ class BudgetExceededError(V3Error):
     error_type = "conflict"
 
 
+class BudgetSettlementError(V3Error):
+    """settle 记账不一致（reserved < 释放量）：双 settle / 被 reclaim 误扫 / 状态损坏。
+
+    F-6 裁决：与 BudgetExceededError（预算不足拒绝执行）语义不同，不得伪装成超限——
+    settle 失败是 runtime accounting 不一致信号，调用方不得静默吞掉。
+    """
+
+    error_type = "conflict"
+
+
+class CircuitOpen(V3Error):
+    """MAX_LLM_CALLS_PER_TASK 熔断（Lock-4/Note-1/Clarification-2）。
+
+    真实 Provider Invocation 越界 → 拒绝（provider 不发出）。计数点位于 Provider
+    Invocation Port（gateway provider seam），非 gateway.complete 层。
+    """
+
+    error_type = "conflict"
+
+
+class LLMProviderError(V3Error):
+    """LLM provider 层服务失败（5xx / provider error；transient，可 bounded retry）。"""
+
+    error_type = "provider_error"
+
+
+class LLMNetworkError(V3Error):
+    """LLM 网络/传输失败（连接、超时；transient，可 bounded retry）。"""
+
+    error_type = "network_error"
+
+
 class OCRProviderError(V3Error):
     """OCR provider 语义失败（如解析结果异常，30 §6 external provider 层）。"""
 

@@ -9,7 +9,7 @@ from decimal import Decimal
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.errors import BudgetExceededError
+from app.core.errors import BudgetExceededError, BudgetSettlementError
 from app.repositories.runtime_repository import BudgetRepository
 
 DEFAULT_LIMITS: dict[str, Decimal] = {
@@ -52,11 +52,16 @@ class BudgetService:
             raise BudgetExceededError(str(exc)) from exc
 
     async def settle(self, refs: list[AccountRef], *, reserved: Decimal, actual: Decimal) -> None:
-        for ref in refs:
-            await self._repo.settle(
-                account_dim=ref.account_dim, scope_id=ref.scope_id,
-                stage=ref.stage, reserved=reserved, actual=actual,
-            )
+        """reserve 释放：reserved→used 恰一次。记账不一致（reserved<释放量/双 settle）→
+        BudgetSettlementError（F-6：与超限语义分离，不得伪装 BudgetExceeded）。"""
+        try:
+            for ref in refs:
+                await self._repo.settle(
+                    account_dim=ref.account_dim, scope_id=ref.scope_id,
+                    stage=ref.stage, reserved=reserved, actual=actual,
+                )
+        except LookupError as exc:
+            raise BudgetSettlementError(str(exc)) from exc
 
 
 def five_account_refs(*, request_id: str, task_id: str, le_hash: str, le_stage: str, document_id: str, day: str) -> list[AccountRef]:

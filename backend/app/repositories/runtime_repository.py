@@ -48,9 +48,14 @@ class LlmCallAuditRepository(BaseRepository):
         attempt_id: uuid.UUID | None = None,
         task_id: uuid.UUID | None = None,
         document_id: uuid.UUID | None = None,
+        request_id: uuid.UUID | None = None,
         status: str = "started",
+        prompt_chars: int | None = None,
     ) -> LlmCallAudit:
+        """create STARTED（30 §10 append-only）。request_id 缺省 ORM 生成；显式提供时用于把
+        request 预算账户 scope 与 audit 行身份绑定（executor Phase 4 同 request_id）。"""
         row = LlmCallAudit(
+            **({"request_id": request_id} if request_id is not None else {}),
             idempotency_key=idempotency_key,
             logical_execution_stage=logical_execution_stage,
             logical_execution_hash=logical_execution_hash,
@@ -61,6 +66,7 @@ class LlmCallAuditRepository(BaseRepository):
             provider=provider,
             model=model,
             status=status,
+            prompt_chars=prompt_chars,
         )
         await self.add(row)
         return row
@@ -214,6 +220,25 @@ class TaskRepository(BaseRepository):
     async def find(self, task_id: uuid.UUID) -> Task | None:
         res = await self._session.execute(select(Task).where(Task.id == task_id))
         return res.scalar_one_or_none()
+
+    async def consume_llm_invocation(
+        self, *, task_id: uuid.UUID, max_invocations: int
+    ) -> bool:
+        """真实 Provider Invocation 原子计数（Lock-4/Clarification-2）。
+
+        条件 UPDATE：count < max → count+1 并返回 True（放行）；count >= max → 0 行
+        返回 False（越界，provider 不发出）。任务生命周期累计，attempt/retry/recover 不重置。
+        提交/回滚由调用方（ProviderInvocationCounter）负责——计数须在 provider 调用前持久。
+        """
+        res = await self._session.execute(
+            text(
+                "UPDATE tasks SET llm_invocations = llm_invocations + 1 "
+                "WHERE id = :id AND llm_invocations < :max RETURNING id"
+            ),
+            {"id": task_id, "max": max_invocations},
+        )
+        return res.first() is not None
+
 
     async def claim(
         self, *, task_id: uuid.UUID, worker_id: str, lease_token: str, lease_seconds: int

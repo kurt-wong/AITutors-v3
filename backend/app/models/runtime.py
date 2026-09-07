@@ -8,7 +8,7 @@ import uuid
 from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Numeric, String, UniqueConstraint, Uuid
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Numeric, String, UniqueConstraint, Uuid, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -85,6 +85,12 @@ class Task(Base):
     status: Mapped[str] = mapped_column(String, nullable=False)
     task_params: Mapped[dict] = mapped_column(JSONB, nullable=False)
     claim_round: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    # Lock-4：真实 Provider Invocation 熔断计数（任务生命周期累计，retry/recover 不重置）。
+    # server_default 对齐 0005 的 SQL DEFAULT 0（审查 C-1：from-empty create_all 与增量 0005
+    # ADD COLUMN 的 column_default 双路径须一致，否则 raw INSERT 省略列行为分叉）。
+    llm_invocations: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default=text("0")
+    )
     current_stage: Mapped[str | None] = mapped_column(String, nullable=True)
     created_by: Mapped[str | None] = mapped_column(String, nullable=True)
     created_at: Mapped[datetime] = mapped_column(

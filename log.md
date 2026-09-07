@@ -570,3 +570,37 @@
   径；③ retry 计数点 = Provider Invocation Port（Lock-4/Note-1）；④ reserve→audit STARTED→
   invocation→terminal→settle 接线（Lock-6）+ ⑤ Attempt·LE 分离；F-3 request identity 由真实请求
   模型定夺（不预加 request_seq）。
+
+### 2026-09-07 13:21（H Step 4 LLMExecutor 实现 + 三路独立对抗审查无 P0 + P1/P2 修复）
+
+- **交付**：`app/ai/executor.py` LLMExecutor 唯一执行入口（mock/disabled/live 同 complete() 入口）
+  + ProviderInvocationCounter。live 生命周期 = Phase A ensure 五账户+reserve+audit STARTED 同事务
+  （Lock-6）→ Phase B bounded retry（每轮 gateway.complete(task_id, invocation_counter)，provider
+  seam 前 `counter.consume(task_id)` 原子计数，Lock-4/Note-1）→ Phase C finalize(completed)+settle
+  (actual=reserve) 或 finalize(failed)+settle(actual=0)→re-raise。`errors.py` +BudgetSettlementError
+  /CircuitOpen/LLMProviderError/LLMNetworkError。`gateway.py` provider seam。`models/runtime.py`
+  tasks.llm_invocations + migration 0005（双路径安全）。test_executor 10 + test_budget G1–G3 转正。
+- **用户裁决落实**：F-5 部分采纳（reclaim 不绑 Task Lease，仅 crash/orphan fallback；孤儿
+  reconciliation F-5B 延后登记）；F-6 BudgetSettlementError 语义化；F-7 G1–G5 随 Phase 4 交付；
+  F-3 不加 request_seq（M1 每 attempt=1 Logical Request）；四数量级分锁（Attempt=1/Request=1/
+  Audit=1/Invocations=N，MAX_LLM_CALLS 按真实 N 累计）；counter 在 provider seam（consume →
+  provider.complete，非 executor.complete +=1）；Lock-6 reserve+audit 同事务。
+- **三路独立对抗审查（sonnet ×3 只读，冻结 diff，R1–R12）**：A（R1/R2/R8）唯一入口无旁路
+  （annotation Domain→Gateway 直连 = 已知 Phase 5 carry-forward，Lock-3 收口）、Gateway 职责无
+  回归、request_id/attempt_id/idempotency_key 身份一致；B（R3–R7/R9）consume seam 唯一、Lock-6
+  全异常路径覆盖、Phase A/B/C commit 边界无半状态、retry taxonomy 仅 transient、计数无过计误导；
+  C（R10–R12）settle 失败显式暴露不掩盖 provider 成功不重调 provider、reclaim 仅 fallback 路径。
+  **三审均无 P0**。
+- **修复**：C-1（P1）ORM `llm_invocations` `server_default=text("0")` 对齐 0005 `DEFAULT 0`
+  （消除 from-empty/增量 `column_default` 漂移）+ 双路径 default 锁定（test_task_schema 主库 +
+  test_migration_replay from-empty 断言 '0'）+ 0005 docstring 改准双路径语义。B-1（P2）gateway
+  `_live` 缺 counter/task_id 改 fail-closed（Lock-4 熔断不可绕过），test_gateway allowed 用例带
+  fake counter + 2 新增 denied。
+- **deferred 登记**：D1 crash-orphan reconciliation = F-5B（Phase 8 recover）；D2 provider exception
+  translation = Phase 9 接线；D3 reclaim 不绑 lease 仅 fallback（F-5A）；A-2 finalize 不落 token/cost
+  + idempotency_key 无 DB UNIQUE = F-4/D2 carry-forward。
+- **验证**：定向 runtime ×2（53 passed）；全量 pytest **250 passed ×2**（净 +3：2 gateway
+  fail-closed + 1 schema default 断言，可重入）；migration 双路径（from-empty→head + incremental
+  rebuild）llm_invocations column_default 均 '0'；git diff --check 干净。
+- **下一步**：commit Step 4（独立基线）→ plan **Step 5**（attempt_id 贯通 + AnnotationService 依赖
+  倒置 Lock-3，删除 annotation Domain→Gateway 旁路）+ Phase 6 并发幂等写。Phase 8 起接 TaskExecutor。

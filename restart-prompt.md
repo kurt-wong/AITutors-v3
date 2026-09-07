@@ -1,33 +1,35 @@
 # AI Tutor V3 — RESTART PROMPT
 
-Version: v1.7
-Status: 段 H 编码进行中 — Step 3 Audit Lifecycle 完成 + F-1/F-2 分层收口（234 passed ×2）；Step 3 待 commit
+Version: v1.8
+Status: 段 H 编码进行中 — Step 4 LLMExecutor 完成 + 三路独立对抗审查无 P0（250 passed ×2）；Step 4 待 commit
 Date: 2026-09-07
 
-## 0.0 当前结论（2026-09-07 00:36）
+## 0.0 当前结论（2026-09-07 13:21）
 
-- **H Step 3（Audit Lifecycle / Phase 3）实现完成 + Baseline 对抗审查 + 收口（234 passed ×2，
-  可重入）**。A–G 七段仍定格（`8a57a92`）。Step 2（Task 状态机）已 CLOSED（commit be9df51）。
-  Step 3 交付：`LlmCallAuditRepository.finalize_audit` = STARTED→terminal（completed/failed/
-  unknown）exactly-once 原子 primitive（runtime_repository.py）。
-- **对抗审查核心分离**：两不变量不同——A「不重复写 terminal audit」（finalize 条件 UPDATE，Phase
-  3）≠ B「不重复执行/不重复建账」（request_id 复用 Phase 4 + attempt 贯通 Phase 5 + (stage,hash)
-  ON CONFLICT Phase 6）。**finalize no-op ≠ 整体 exactly-once**。
-- **裁决**：F-1 采纳——finalize 缺行 **raise AuditNotFoundError**（缺行≠已终态 no-op，不得被 0 行
-  掩盖）；存在且 started→恰一迁移；存在且已终态→no-op 不改写；并发败者 reread 确认 terminal。
-  F-2 分层采纳——Phase 3 只供 STARTED→UNKNOWN **primitive**；「何时判 orphan」归 Phase 4 且**绑
-  task lease / worker liveness（Task=liveness authority，Audit=execution record），禁按 audit
-  年龄判死**（防重蹈 Step 2 F-2）。F-3（idempotency_key 缺请求序）/F-4（usage/settle 事实源）
-  carry-forward → Phase 4/5 定夺。
-- **验证**：test_audit.py 3→8（三向终态化 / 二次 no-op 不改写 / 缺行 raise / 非法 status raise /
-  双 session 并发恰一迁移）；全量 **234 passed ×2**。零越界（无 reconciliation/task lease/executor/
-  budget/attempt/schema 扩展）。
-- **下一步**：commit Step 3（独立基线，含本文件 + Status.md + log.md 收口）→ plan **Step 4
-  LLMExecutor 唯一执行入口**（Phase 4）——先 Baseline/对抗审查再编码：① 真单入口（禁 Domain→
-  Gateway/Provider 旁路）；② mock/disabled/live 同径；③ retry 计数点 = Provider Invocation Port
-  （Lock-4/Note-1，actual invocations 非 attempt 数）；④ reserve→audit STARTED 同事务(Lock-6)→
-  invocation→terminal→settle 接线；⑤ Attempt·LE 分离（Attempt 是运行历史非业务身份）；F-3 request
-  identity 由 M1 真实请求模型定夺，不预加 request_seq。
+- **H Step 4（Phase 4 LLMExecutor）实现完成 + 三路独立对抗审查（A/B/C，sonnet ×3 只读，R1–R12
+  攻击面）无 P0 + P1/P2 修复收口**。A–G 七段仍定格（`8a57a92`）。Step 1–3 已 CLOSED（Step 3 =
+  基线封存）。Step 4 交付：`LLMExecutor` 唯一执行入口 + ProviderInvocationCounter（ensure→
+  reserve+audit STARTED 同事务 Lock-6 → bounded retry → finalize+settle）；`gateway.py` provider
+  seam（`counter.consume` 在 provider 前，Lock-4/Note-1 原子）；migration 0005
+  （`tasks.llm_invocations`，server_default 对齐）；test_executor 10 + test_budget G1–G3。
+- **独立对抗审查结论（分级）**：三审均无 P0。A（Runtime Authority R1/R2/R8）唯一入口无旁路、
+  Gateway 职责无回归、Audit 身份一致；B（Counter/Transaction/Retry R3–R7/R9）consume seam 唯一、
+  Lock-6 全异常路径覆盖、Phase A/B/C commit 边界无半状态、retry 仅 transient；C（Budget/Migration
+  R10–R12）settle 失败不掩盖 provider 成功、reclaim 仅 fallback。
+- **修复**：C-1（P1）——ORM `llm_invocations` 加 `server_default=text("0")` 对齐 0005 `DEFAULT 0`
+  （消除 `column_default` 双路径漂移）+ 双路径 default 锁定（test_task_schema/test_migration_replay
+  均断言 '0'）+ 0005 docstring 改准；B-1（P2）——`gateway._live` 缺 counter/task_id 改
+  **fail-closed**（Lock-4 熔断不可绕过），test_gateway allowed 用例带 counter + 2 新增 denied。
+- **deferred 登记（不重开）**：D1 crash-orphan reconciliation = F-5B（延后，Phase 8 recover）；
+  D2 provider exception translation = Phase 9 接线；D3 reclaim 不绑 task lease 仅 crash/orphan
+  fallback（F-5A）。A-2 finalize 不落 token/cost + idempotency_key 无 DB UNIQUE = F-4/D2
+  carry-forward。
+- **验证**：定向 runtime ×2（53 passed）；全量 **250 passed ×2**（净 +3，可重入）；migration
+  双路径（from-empty→head + incremental rebuild）llm_invocations `column_default` 均 '0'；
+  git diff --check 干净。变更未 commit（Step 4 独立提交点待用户放行）。
+- **下一步**：commit Step 4（独立基线，含本文件 + Status.md + log.md 收口 + deferred 登记）→
+  plan **Step 5** attempt_id 贯通 + AnnotationService 依赖倒置（Lock-3，删除 annotation
+  Domain→Gateway 旁路）+ Phase 6 并发幂等写 ON CONFLICT。Phase 8 起才接 TaskExecutor。
 - 重启后第一任务：读本文件 → Status.md 尾 → log.md 尾 → 打开 plan 文件
   （`~/.claude/plans/giggly-enchanting-volcano.md`）恢复上下文 → 按当前 Step 继续 H 段
   实现（或等待用户新指令）。
