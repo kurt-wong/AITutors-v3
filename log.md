@@ -736,3 +736,50 @@ Step 5 已于 commit `0917404` 落盘（含 Status/log/restart v1.10 收口）�
 - **commit**：Phase 7 独立基线已提交（代码 + Status/log/restart v1.11 收口；全部 `_audit_*.py` 探针排除
   Git 历史）。**下一步**：plan **Phase 8 TaskExecutor**（承接 H8-1/H8-2）→ Phase 9 配置常量随步补 →
   H 段最终收口。
+
+### 2026-09-07 20:49（H Phase 8 TaskExecutor 实现 + 独立对抗审查 + 修复收口）
+
+- **背景**：按 plan 末步实现 Phase 8 TaskExecutor（最后接编排），承接 H8-1（下游失败详情持久化）/
+  H8-2（audit/task 双层失败语义）。
+- **决策/实现**：
+  - `TaskExecutor`（`app/domains/task/executor.py`）只拥 Runtime Authority：`run_once` →
+    `claim_next`（原子 claim）→ 逐 stage（Seal→Annotation→Compile，各独立 session 事务）→
+    `complete`/`fail`；stage 边界 `_heartbeat` 续租（审查 HIGH 修复）；`_classify_error` 分类
+    （V3Error→error_type / ValueError→validation_error / 其它→system_error）→ `fail(error_type,
+    error_detail)` 持久化（H8-1/H8-2）。
+  - Worker CLI（`app/worker/__main__.py`）：run（safe 默认）/ run --allow-live / recover
+    （默认 dry-run）--confirm / retry。复用 live_guard + settings 常量。
+  - `TaskClaimRepository.finalize_claim`（受控 claim 终态迁移，类比 audit finalize_audit）：
+    写 outcome/error_type/end + lease_snapshot `||` 并入 error_detail；`TaskRepository.next_queued_id`。
+  - `TaskService.claim_next` + complete/fail 扩展写 claim 终态 + lease_seconds 从 settings 读。
+  - `config.py` Phase 9 常量：worker_concurrency=1 / task_claim_lease_seconds=60 /
+    http_retry_count=2 / provider_fallback_enabled=False。
+- **独立对抗审查（sonnet 只读，0 CRITICAL / 1 HIGH / 2 MEDIUM / 3 LOW）**：确认无越权、Lock-2
+  attempt 复用正确、finalize_claim SQL 正确。检出并修复——HIGH（Worker 从不续租 → stage 边界
+  `_heartbeat`）；MEDIUM（`except BaseException` 吞取消信号 → 改 `except Exception`）；测试隔离
+  （残留 queued task 污染 next_queued_id → cleanup 前移）。
+- **deferred 登记**：D1 claim_next 并发语义缺口（worker_concurrency=1 不触发）；D2 config 三字段
+  M1 预留未接线；D3 file_path 信任边界（未来 enqueue 校验）；D4 finalize_claim 缺行语义不对称 +
+  recover 不写 claim 终态（观察项）；D5 live 长 stage 持续 heartbeat 未接（live smoke 后）。
+- **验证**：全量 pytest **267 passed ×2**（净 +6）；git diff --check 干净；Worker CLI `--help`
+  smoke；真 DB 探针（claim→running + heartbeat 续租 + run_once→succeeded）实证。
+- **影响**：LLM Runtime Execution Layer 收敛为「唯一入口（Step 4）→ attempt 贯通（Step 5）→
+  success-only artifact（Phase 7）→ TaskExecutor 编排（Phase 8）」，Worker 可驱动 document_ingest
+  全链路（M1 mock/native；live transport 接线待 live smoke）。变更未 commit（待用户放行）。
+
+### 2026-09-07 21:02（Phase 8 第一性原理对抗审查：真 DB 探针 7/7 PASS）
+
+- **背景**：用户要求 commit 前以第一性原理 × V3SPEC 对抗审查，每结论真实测试证据。
+- **探针**：新资产 `backend/tests/_audit_phase8_adversarial.py`（untracked 一次性，不入 Git）
+  7 探针全 PASS——P1 Lock-2 attempt 复用（replay 保留首次 attempt_id + 零新增）；P2 live provider
+  失败双层语义（audit failed/network_error + task failed + claim error_type=network_error +
+  error_detail）；P3 live parse 失败双层语义（audit completed + task failed + validation_error，
+  `LLM completed ≠ Logical task completed`）；P4 stage 单事务边界（seal 保留 + annotation 0 +
+  task failed）；P5 finalize_claim 并发 exactly-once（恰一迁移）；P6 静态 Runtime Authority（零
+  业务决策 import + 零 decision_status 访问 + LLMExecutor 唯一入口）；P7 crash 恢复链路（recover
+  仅置 interrupted 不产生内容 → retry → re-run 复用）。
+- **如实记录**：P6 初版字符串匹配误报（executor.py docstring「不判 decision_status/Question」
+  被当作触碰）→ 修正为精确检查（import + `.decision_status` 属性访问）后 PASS；Grep 核验二者
+  仅在 executor.py:14 docstring、非实际触碰。非自我合理化。
+- **结论**：无 P0/P1；Phase 8 核心不变量经真实 DB 实证；此前 sonnet 审查修复均被探针覆盖。
+- **验证**：全量 pytest **267 passed** 不变；探针 cleanup 无污染；不入 Git。

@@ -15,13 +15,13 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 
+from app.core.config import settings
 from app.models.runtime import Task
 from app.repositories.runtime_repository import (
     TaskClaimRepository,
     TaskRepository,
+    TaskStateError,
 )
-
-TASK_CLAIM_LEASE_SECONDS = 60  # Phase 9 前安全默认（settings 常量化随配置步补）
 
 # 30 §17 状态值域（无 DB CHECK；供测试/文档引用）
 TASK_STATUSES = frozenset(
@@ -31,10 +31,12 @@ TASK_STATUSES = frozenset(
 
 class TaskService:
     def __init__(
-        self, session, *, lease_seconds: int = TASK_CLAIM_LEASE_SECONDS
+        self, session, *, lease_seconds: int | None = None
     ) -> None:
         self._session = session
-        self._lease_seconds = lease_seconds
+        self._lease_seconds = (
+            settings.task_claim_lease_seconds if lease_seconds is None else lease_seconds
+        )
         self._tasks = TaskRepository(session)
         self._claims = TaskClaimRepository(session)
 
@@ -81,15 +83,51 @@ class TaskService:
             lease_seconds=self._lease_seconds,
         )
 
-    async def complete(self, task_id: uuid.UUID, *, worker_id: str, lease_token: str) -> dict:
-        return await self._tasks.complete(
-            task_id=task_id, worker_id=worker_id, lease_token=lease_token
-        )
+    async def claim_next(self, *, worker_id: str, lease_token: str) -> dict | None:
+        """claim 下一个 queued task（Worker 循环）：取最早 queued → 原子 claim。
 
-    async def fail(self, task_id: uuid.UUID, *, worker_id: str, lease_token: str) -> dict:
-        return await self._tasks.fail(
+        claim 的 WHERE status='queued' 保证原子性；若候选已被并发 claim 抢占（M1
+        worker_concurrency=1 下极少），claim 抛 TaskStateError → 返回 None 由调用方重试。
+        """
+        task_id = await self._tasks.next_queued_id()
+        if task_id is None:
+            return None
+        try:
+            return await self.claim(task_id, worker_id=worker_id, lease_token=lease_token)
+        except TaskStateError:
+            return None
+
+    async def complete(self, task_id: uuid.UUID, *, worker_id: str, lease_token: str) -> dict:
+        result = await self._tasks.complete(
             task_id=task_id, worker_id=worker_id, lease_token=lease_token
         )
+        await self._claims.finalize_claim(
+            task_id=task_id, claim_round=result["claim_round"], outcome="succeeded"
+        )
+        return result
+
+    async def fail(
+        self,
+        task_id: uuid.UUID,
+        *,
+        worker_id: str,
+        lease_token: str,
+        error_type: str | None = None,
+        error_detail: str | None = None,
+    ) -> dict:
+        """running → failed 终态 + task_claims 失败证据（H8-1 下游失败详情持久化）。
+
+        error_type 为失败分类（provider_error/network_error/validation_error/…）；
+        error_detail 为具体 message（并入 claim 的 lease_snapshot，不丢诊断信息）。
+        """
+        result = await self._tasks.fail(
+            task_id=task_id, worker_id=worker_id, lease_token=lease_token
+        )
+        await self._claims.finalize_claim(
+            task_id=task_id, claim_round=result["claim_round"],
+            outcome="failed", error_type=error_type, error_detail=error_detail,
+        )
+        return result
 
     async def retry(self, task_id: uuid.UUID) -> None:
         """人工显式 retry（failed/interrupted → queued，开新 claim_round 于下次 claim）。"""

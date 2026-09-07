@@ -1,41 +1,39 @@
 # AI Tutor V3 — RESTART PROMPT
 
-Version: v1.11
-Status: 段 H 编码进行中 — Phase 7（H0-15 方案 B）实现 + commit 前第一性原理对抗审查（真 DB live 探针
-L1–L5 5/5 PASS）+ 用户放行，已提交独立基线（P2-1 Closed）；下一实施步 = Phase 8 TaskExecutor
+Version: v1.12
+Status: 段 H 编码进行中 — Phase 8（TaskExecutor + Worker CLI）实现 + 独立对抗审查（0 CRITICAL / 1 HIGH
+/ 2 MEDIUM / 3 LOW 全修复或登记）收口，全量 267 passed；变更未 commit（Phase 8 独立提交点待用户放行）；
+下一实施步 = commit Phase 8 → Phase 9 配置常量随步补
 Date: 2026-09-07
 
-## 0.0 当前结论（2026-09-07 20:02）
+## 0.0 当前结论（2026-09-07 20:49）
 
-- **H 段推进定格**：A–G 七段 + Step 1–5 全 CLOSED（Step 5 基线 = commit `0917404`，含 Step 5 收口 +
-  P-4②③ 转正）。**Phase 7（H0-15 方案 B — Annotation Artifact success-only failure policy）实现完成 +
-  commit 前第一性原理对抗审查无 P0/P1 + 用户放行，已提交为独立基线并 push 至 origin**。P2-1（失败路径
-  RepositoryError 遮蔽原始错误）**正式 Closed**——方案 B 使 annotate 失败不再落 invalid 行，遮蔽自然消解。
-- **Phase 7 方案 B 交付**：`annotation/service.py` 删 3 条 failure-path `create_semantic_annotation(
-  status="invalid")`（provider error / JSON parse error / forbidden-field）→ annotate 失败一律 0 artifact、
-  不占 (stage,hash)，成功只写 `status="valid"`；三失败原样传播（provider 原异常 / parse `ValueError` /
-  validation `ValueError`），service 不吞不遮蔽。repo/executor/gate 零改动——历史 invalid 残留防御
-  （同 LE 残留阻挡 valid，须新 LE）原样保留。新增 `test_h_step7_failure_policy.py` 6 回归锁死 S7-1..S7-6。
-  全量 pytest **261 passed ×2**（净 +6，可重入，无中间清理）。
-- **commit 前对抗审查（mock 覆盖空洞实证填补）**：既有 Phase 7 测试全走 gateway mock 分支（无
-  audit/budget 副作用 G4）→ plan 语义区分从未在 live 链路证据化。一次性探针
-  `backend/tests/_audit_phase7_live.py`（不入 Git）live executor × service × 真 DB **L1–L5 全 PASS**：
-  parse→audit completed + 0 artifact；provider→audit failed/network_error + 0 artifact + budget 释放；
-  forbidden→audit completed + 0 artifact；同 session fail→success 同 LE 收敛恰 1 valid（audit=
-  [failed,completed]，无悬挂）；success 后同 LE retry → find_existing 幂等命中、不重调 provider、audit/
-  invocation 不增。
-- **Phase 8 Required Handoff（两 Note，不阻塞 Phase 7，不改 Phase 7 代码）**：**H8-1** parse/validation
-  失败详情现只经 service ValueError 传 caller，audit completed 行 error_type=None（append-only 不可补记）
-  → Phase 8 TaskExecutor 须把下游失败写入 task failure 否则丢失；**H8-2** 冻结双层失败语义——
-  `llm_call_audit` = Provider Invocation Runtime Truth，`task` = Logical Execution Outcome，即
-  `LLM completed ≠ Logical task completed`，parse/forbidden 在 Runtime 层判 failed、audit 维持 completed。
-- **deferred 登记（不重开）**：P2-1/P2-3 Closed；P2-2 陈旧探针不入历史；D1 crash-orphan reconciliation /
-  D2 provider exception translation / D3 reclaim 仅 crash/orphan fallback / F-4 usage·token 事实源 +
-  idempotency_key DB 唯一 = 延续 Step 4 登记（Phase 8/9 定夺）。BUG-V3-001..028 Open 不变（errata 终裁待）。
-- **验证**：全量 **261 passed ×2**；真 DB 探针 cleanup 后无污染；git diff --check 干净；8 个 `_audit_*.py`
-  探针全排除 Git 历史（留磁盘）。
-- **下一步**：**Phase 8 TaskExecutor**（plan 末步，最后接编排）——承接 H8-1/H8-2（downstream failure →
-  task failure persistence + audit/task 双层失败语义冻结）→ **Phase 9 配置常量随步补** → H 段最终收口。
+- **H 段推进定格**：A–G 七段 + Step 1–5 + Phase 7 全 CLOSED。**Phase 8（TaskExecutor + Worker CLI）
+  实现完成 + 独立对抗审查（sonnet 只读，0 CRITICAL）+ 修复收口**；变更未 commit（待用户放行）。
+- **Phase 8 交付**：`domains/task/executor.py` `TaskExecutor`（Worker 循环编排，只拥 Runtime
+  Authority：run_once → claim_next 原子 claim → 逐 stage Seal/Annotation/Compile 各独立 session 事务 →
+  complete/fail，stage 边界 `_heartbeat` 续租）；`worker/__init__.py` + `__main__.py`（run / run
+  --allow-live / recover [--dry-run|--confirm] 默认 dry-run / retry <task_id>）；`TaskClaimRepository.
+  finalize_claim`（受控 claim 终态：outcome/error_type/end + lease_snapshot 并入 error_detail）+
+  `TaskRepository.next_queued_id`；`TaskService.claim_next` + complete/fail 写 claim 终态 + lease 从
+  settings 读；`config.py` Phase 9 常量（worker_concurrency=1 / task_claim_lease_seconds=60 /
+  http_retry_count=2 / provider_fallback_enabled=False）；`test_task_executor.py` 6 测试。
+- **H8-1/H8-2 落地**：下游失败经 `_classify_error`（V3Error→error_type / ValueError→validation_error
+  / 其它→system_error）+ `fail(error_type, error_detail)` 持久化到 task_claims（outcome=failed +
+  error_type + lease_snapshot.error_detail）。audit（executor 终态化）与 task（本层判 failed）双层分离。
+- **独立对抗审查（0 CRITICAL / 1 HIGH / 2 MEDIUM / 3 LOW）全修复或登记**：HIGH（Worker 从不续租 →
+  stage 边界 `_heartbeat`）✅修复；MEDIUM（`except BaseException` 吞取消信号 → `except Exception`）✅
+  修复；测试隔离（残留 queued 污染 next_queued_id → cleanup 前移）✅修复。
+- **deferred 登记（不重开）**：**D1** claim_next「无 queued」与「claim 竞争失败」混为 None（M1 单
+  worker 不触发，worker_concurrency>1 时区分）；**D2** config 三字段 M1 预留未接线（http_retry_count
+  与 llm_request_retry_count 分层）；**D3** file_path 信任边界（未来 enqueue 校验）；**D4** finalize_claim
+  缺行 no-op vs finalize_audit 缺行 raise 不对称 + recover 不写 claim 终态（观察项）；**D5** live 长
+  LLM stage 内持续 heartbeat 未接（live smoke 后）。延续 D1/D2/D3/F-4（Step 4 登记，Phase 8/9 定夺）。
+  BUG-V3-001..028 Open 不变（errata 终裁待）。
+- **验证**：全量 pytest **267 passed ×2**（净 +6，可重入）；git diff --check 干净；Worker CLI
+  `--help` smoke 通过；真 DB 探针（claim→running + heartbeat 续租 + run_once→succeeded）实证。
+- **下一步**：commit Phase 8（独立基线）→ **Phase 9 配置常量随步补**（config 常量已补，剩余 HTTP
+  retry/fallback 接线 + D 项定夺）→ H 段最终收口。
 - 重启后第一任务：读本文件 → Status.md 尾 → log.md 尾 → 打开 plan 文件
   （`~/.claude/plans/giggly-enchanting-volcano.md`）恢复上下文 → 按当前 Step 继续 H 段实现
   （或等待用户新指令）。

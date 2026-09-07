@@ -8,6 +8,7 @@ task_claims 证据同事务）、heartbeat/complete/fail 四元组 token 条件�
 recover/retry。
 """
 
+import json
 import uuid
 from datetime import datetime
 from decimal import Decimal
@@ -221,6 +222,17 @@ class TaskRepository(BaseRepository):
         res = await self._session.execute(select(Task).where(Task.id == task_id))
         return res.scalar_one_or_none()
 
+    async def next_queued_id(self) -> uuid.UUID | None:
+        """取最早入队的 queued task（Worker claim 前导查询；claim 原子性由 claim 的
+        WHERE status='queued' 保证，此处仅取候选 id）。"""
+        res = await self._session.execute(
+            select(Task.id)
+            .where(Task.status == "queued")
+            .order_by(Task.created_at)
+            .limit(1)
+        )
+        return res.scalar_one_or_none()
+
     async def consume_llm_invocation(
         self, *, task_id: uuid.UUID, max_invocations: int
     ) -> bool:
@@ -364,3 +376,36 @@ class TaskClaimRepository(BaseRepository):
     async def update_claim(self, *_args: object, **_kwargs: object) -> None:
         """task_claims append-only：任意 UPDATE → 抛错（30 §17）。"""
         raise AppendOnlyViolation("task_claims is append-only immutable")
+
+    async def finalize_claim(
+        self,
+        *,
+        task_id: uuid.UUID,
+        claim_round: int,
+        outcome: str,
+        error_type: str | None = None,
+        error_detail: str | None = None,
+        end: datetime | None = None,
+    ) -> None:
+        """受控 claim 终态迁移（H Phase 8）：定位 (task_id, claim_round) 且 outcome IS NULL
+        的记录，写 outcome/error_type/end，并把 error_detail 并入 lease_snapshot（H8-1
+        下游失败详情持久化）。append-only 的受控终态（类比 audit finalize_audit）；已终态 /
+        缺行 → no-op 幂等（_terminal 的 running→terminal 条件写已保证唯一迁移，此处仅补
+        claim 证据，不重复迁移）。DB now() 单一来源（end 缺省取 now()）。
+        """
+        detail_json = (
+            json.dumps({"error_detail": error_detail}) if error_detail else "{}"
+        )
+        await self._session.execute(
+            text(
+                "UPDATE task_claims SET outcome=:o, error_type=:e, "
+                "\"end\"=COALESCE(:en, now()), "
+                "lease_snapshot = COALESCE(lease_snapshot, '{}'::jsonb) "
+                "|| CAST(:d AS jsonb) "
+                "WHERE task_id=:id AND claim_round=:cr AND outcome IS NULL"
+            ),
+            {
+                "o": outcome, "e": error_type, "en": end, "d": detail_json,
+                "id": task_id, "cr": claim_round,
+            },
+        )

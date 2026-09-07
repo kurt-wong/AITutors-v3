@@ -592,3 +592,85 @@ Date: 2026-09-05
   失败语义冻结，`LLM completed ≠ Logical task completed`（H8-2）。两者均不阻塞 Phase 7、不改 Phase 7 代码。
 - **Phase 7 is closed for implementation**；A–G 七段 + Step 1–5 + Phase 7 不 reopen。下一实施步 = plan
   **Phase 8 TaskExecutor** → **Phase 9 配置常量随步补** → H 段最终收口。
+
+### 2026-09-07 20:49（H Phase 8 TaskExecutor 实现 + 独立对抗审查 + 修复收口）
+
+- **Status: H Phase 8（TaskExecutor + Worker CLI）实现完成 + 独立对抗审查（0 CRITICAL）+ 修复收口**。
+  变更未 commit（Phase 8 独立提交点待用户放行）。
+- **交付（plan Phase 8）**：
+  - `app/domains/task/executor.py` `TaskExecutor`（Worker 循环编排，只拥 Runtime Authority）：
+    `run_once` → `claim_next`（原子 claim）→ 逐 stage（Seal → Annotation → Compile，每个独立
+    session 事务，30 §12 崩溃窗口只在 stage 边界）→ `complete`/`fail`。Seal 不分配 attempt
+    （plan Phase 5：SealService 本轮不碰）；Annotation/Compile 分配 `attempt_id`（Lock-2：复用
+    由 domain service LE 幂等保证，不落新 attempt）。
+  - `app/worker/__init__.py` + `__main__.py` Worker CLI：`run`（safe 默认 mock/disabled）/
+    `run --allow-live` / `recover [--dry-run|--confirm]`（默认 dry-run 安全）/ `retry <task_id>`。
+  - `runtime_repository.py` `TaskClaimRepository.finalize_claim`（受控 claim 终态迁移：写
+    outcome/error_type/end + lease_snapshot 并入 error_detail，H8-1）+ `TaskRepository.next_queued_id`。
+  - `task/service.py` `TaskService.claim_next` + `complete`/`fail` 扩展写 claim 终态 + lease_seconds
+    从 `settings.task_claim_lease_seconds` 读（Phase 9 常量落地）。
+  - `config.py` Phase 9 常量（worker_concurrency=1 / task_claim_lease_seconds=60 /
+    http_retry_count=2 / provider_fallback_enabled=False）。
+  - `test_task_executor.py` 6 测试（端到端 / replay 复用 / provider·parse 失败 / claim 终态）。
+- **H8-1/H8-2 落地**：下游失败（parse/forbidden/provider）经 `TaskExecutor._classify_error`
+  分类（V3Error→error_type / ValueError→validation_error / 其它→system_error）+ `TaskService.fail
+  (error_type, error_detail)` 持久化到 task_claims（outcome=failed + error_type +
+  lease_snapshot.error_detail）。双层失败语义：audit 由 executor 终态化（completed/failed），
+  task 由本层判 failed（`LLM completed ≠ Logical task completed`）。
+- **独立对抗审查（sonnet 只读，0 CRITICAL / 1 HIGH / 2 MEDIUM / 3 LOW）**：
+  - 边界确认：TaskExecutor 未越权（不碰 decision_status / 不判 Question Identity / 不形成第二
+    主链）；Lock-2 attempt 复用由 domain service LE 命中提前返回保证；finalize_claim SQL（JSONB
+    `||` 合并 + `outcome IS NULL` 条件 + 参数化）正确、并发恰一迁移。
+  - **HIGH（已修复）**：Worker 从不续租——`_process` 逐 stage 前接入 `_heartbeat`（滑动续租），
+    防长 stage 越过 60s lease 被 recover 误判 interrupted。
+  - **MEDIUM（已修复）**：`run_once` 原 `except BaseException` 吞 CancelledError/KeyboardInterrupt/
+    SystemExit → 改 `except Exception`（取消信号正常传播）。
+  - **测试隔离（已修复）**：test_task_executor 依赖「tasks 表无残留 queued」，但 test_task_service
+    用独立 session commit 不 cleanup → 残留 queued task 被 next_queued_id 误 claim；`_cleanup` 改为
+    测试前+后清理。
+- **deferred 登记（不重开；审查边界项）**：
+  - **D1** claim_next 把「无 queued」与「claim 竞争失败」混为 None → run_once 提前停止循环
+    （M1 worker_concurrency=1 无并发不触发；worker_concurrency>1 时须区分）。
+  - **D2** config 三字段（worker_concurrency/http_retry_count/provider_fallback_enabled）M1 预留
+    未接线（plan Phase 9「常量进 settings」预留语义；http_retry_count 与 llm_request_retry_count
+    分层，HTTP 传输层 retry 未接）。
+  - **D3** file_path 信任边界（arbitrary file read）——未来 enqueue 入口暴露给外部输入时须校验路径。
+  - **D4** finalize_claim 缺行 no-op vs finalize_audit 缺行 raise 不对称（正常流程不可触发，
+    一致性观察）；recover 置 interrupted 不写 claim 终态（Recovery ≠ Retry，保留开放 claim 证据）。
+  - **D5** live 长 LLM stage（bounded retry 可越 60s lease）内持续 heartbeat 未接——stage 边界
+    heartbeat 只覆盖 M1（mock/native 快）；live smoke（transport 接线后）须接后台 heartbeat 或提升 lease。
+- **验证**：全量 pytest **267 passed ×2**（净 +6，可重入）；git diff --check 干净；Worker CLI
+  `--help` smoke 通过；真 DB 探针（claim→running + heartbeat 续租 + run_once→succeeded）实证。
+- **下一步**：commit Phase 8（独立基线）→ **Phase 9 配置常量随步补**（已补 config 常量，剩余
+  HTTP retry/fallback 接线与 D 项定夺）→ H 段最终收口。待办不变：BUG-V3-001..028 errata 终裁。
+
+### H Phase 8 增补 — 第一性原理对抗审查（真 DB 探针 7/7 PASS，2026-09-07 21:02）
+
+- 用户要求 commit 前以第一性原理 × V3SPEC 对抗审查（每结论真实测试证据；不降标准 / 不自合理
+  化 / 不强行解释 / 不靠推测）。新资产 `backend/tests/_audit_phase8_adversarial.py`（untracked
+  一次性，不入 Git）7 探针全 PASS，实证 Phase 8 核心不变量：
+  - **P1 Lock-2 Attempt 只在真执行**：同 file_path 二次 ingest（等价 replay）→ annotation/
+    candidate `attempt_id` 保留首次值、零新增 artifact（复用不落新 attempt）。
+  - **P2 live provider 失败双层语义（H8-2/H8-1）**：live gateway + 抛 `LLMNetworkError` 的
+    provider → audit 恰 1 条 `failed`/`network_error` + task `failed` + claim 证据
+    `outcome=failed`/`error_type=network_error` + `lease_snapshot.error_detail` 持久化 + 0 artifact。
+  - **P3 live parse 失败双层语义（H8-2/H8-1）**：live 返回坏 JSON → audit `completed`（provider
+    成功返回文本）+ task `failed` + claim `error_type=validation_error` + error_detail 持久化
+    （`LLM completed ≠ Logical task completed` 实证）。
+  - **P4 30 §12 每 stage 单事务**：seal 成功 + annotation 失败 → document/source_version 保留
+    （seal 已 commit）+ annotation 0 行 + task failed（崩溃窗口只在 stage 边界）。
+  - **P5 finalize_claim 并发 exactly-once**：两并发 `finalize_claim`（同 claim_round）→ 恰一行
+    `outcome=failed`（`outcome IS NULL` 条件写恰一迁移）。
+  - **P6 静态 Runtime Authority 边界**：executor/worker 零业务决策模块 import（content_repository/
+    gate.admission/compile.ir/compiler/gate.policy/resolver）+ 零 `.decision_status` 属性访问 +
+    `LLMExecutor` 唯一入口。
+  - **P7 crash 恢复链路（30 §8/§3/§13）**：claim 后崩溃（lease 置过期）→ recover 仅置
+    interrupted 且不产生内容（doc=0）→ retry → re-run → seal 复用 + annotation/compile 继续 +
+    task succeeded + Question/Instance 各 1（Recovery ≠ Retry，replay 复用）。
+  - **如实记录**：P6 初版字符串匹配误报（executor.py docstring「不判 decision_status/Question」
+    被当作触碰）→ 修正为精确检查（import 语句 + `.decision_status` 属性访问）后 PASS；Grep 核验
+    `decision_status`/`Question` 仅在 executor.py:14 docstring、非实际触碰。此修正非自我合理化。
+- **结论：无 P0/P1**。7 探针全 PASS；Phase 8 核心不变量（Lock-2 / H8-1 / H8-2 / 30 §3/§8/§12/§13 /
+  Runtime Authority）经真实 DB 实证；此前 sonnet 审查 1 HIGH + 2 MEDIUM 修复均被探针覆盖验证。
+- **验证**：全量 pytest **267 passed** 不变；探针 cleanup 后无污染；`_audit_phase8_adversarial.py`
+  不入 Git（留磁盘）。变更仍未 commit（待用户放行）。

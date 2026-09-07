@@ -50,6 +50,12 @@ class Settings(BaseSettings):
     max_llm_calls_per_task: int = 20
     llm_request_retry_count: int = 2
 
+    # ---- 段 H Phase 9：Worker/lease/fallback 常量（30 §7 数值未冻结；M1 安全默认）----
+    worker_concurrency: int = 1
+    task_claim_lease_seconds: int = 60
+    http_retry_count: int = 2
+    provider_fallback_enabled: bool = False
+
     # ---- cloud OCR（30 §6/§16 external：段 B OCRGateway 接线；disabled/mock 不要求 token）----
     ocr_gateway_mode: str = "disabled"
     paddleocr_model: str = "PaddleOCR-VL-1.6"
