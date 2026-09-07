@@ -479,3 +479,63 @@ Date: 2026-09-05
   与 idempotency_key DB 唯一性 → Phase 5+。
 - **Step 4 is closed for implementation**；A–G 七段 + Step 1–4 不 reopen。下一实施步 = plan
   **Step 5**（attempt_id 贯通 + Domain 依赖倒置，删除 annotation Domain→Gateway 旁路）。
+
+### 2026-09-07 14:05
+
+- **Status: H Step 5（attempt_id 贯通 + AnnotationService 依赖倒置 Lock-3 + Phase 6 并发幂等写）
+  实现完成 + 独立对抗审查无 P0/P1**。变更未 commit（Step 5 独立提交点待用户放行）。
+- **交付**（plan 第 5/6 项合并为一次 Step；Phase 7 方案 B / Phase 8 TaskExecutor 明确不包含）：
+  Lock-3 倒置——`AnnotationService` 只持 `LLMExecutor`，删 annotation Domain→Gateway 直连旁路
+  （domains/repositories 零 gateway 导入扫描确认）；attempt_id 贯通 annotate 3 处 create +
+  GateService.run → candidate（Lock-5 仅 Artifact Runtime Provenance，不进 LE hash；executor.complete
+  身份参数放宽默认 None + `_complete_live` fail-closed 补 task_id/document_id/provider/model）；
+  Phase 6——snapshot_repository 两 create 改 `pg_insert ON CONFLICT DO NOTHING` 锚
+  `UNIQUE(stage,hash)`（valid/superseded 冲突 → 幂等返回既有；invalid 残留阻挡 valid 写 →
+  RepositoryError；candidate 冲突 → re-read 返回既有）。新增 `test_h_step5_attempt_provenance` 5
+  回归；既有 D/G 语义经 executor 注入保持（test_annotation_dbflow `_svc` helper；
+  test_repositories 候选测试补真实 FK 父行）。
+- **独立对抗审查（sonnet 只读，R-A~R-G，冻结 diff）无 P0/P1**：R-A Lock-3 无旁路；R-B attempt 不进
+  business identity/LE hash/dedup/occurrence；R-C Phase 6 仅锚单 UNIQUE、FK/NOT NULL 仍抛、并发败者
+  无死锁；R-D executor 参数放宽无 live 绕过；R-G D/G 既有语义 preserve。
+- **deferred 登记（不重开；3 P2）**：P2-1 annotate 失败路径 invalid-over-invalid 时 RepositoryError
+  遮蔽原始错误 → owner = Phase 7 方案 B（触碰同路径、失败改不落 invalid 行，自然消解）；P2-2 未跟踪
+  `_audit_d.py` 旧签名（不入历史，一次性探针）；P2-3 服务层二次失败错误类型测试缺口（随 P2-1 由
+  Phase 7 定夺）。
+- **验证**：定向 34 ×2；全量 pytest **255 passed ×3**（净 +5，可重入）；git diff --check 干净。
+- **下一步**：commit Step 5（独立基线，含本文件 + log.md + restart-prompt v1.9 收口 + P2 deferred 登记）
+  → **Phase 7（H0-15 方案 B）** → **Phase 8 TaskExecutor** → Phase 9 配置常量随步补。待办不变：
+  BUG-V3-001..028 errata 终裁。
+
+### H Step 5 — CLOSED（基线封存，2026-09-07 14:05）
+
+- **Implementation PASS + 独立对抗审查无 P0/P1 + P2 deferred 落定**：LLM Runtime Execution 收敛为
+  唯一入口（Lock-3，Domain 不再直连 Gateway/Provider）；attempt_id 作为 Artifact Runtime Provenance
+  贯通 annotation→gate→candidate 全链且不进 LE hash（Lock-5）；Phase 6 并发幂等写锚 UNIQUE(stage,hash)
+  ON CONFLICT DO NOTHING（invalid 残留阻挡 valid，显式化原 IntegrityError 语义）。全量
+  **255 passed ×3** 可重入。
+- **deferred 登记**：P2-1 annotate 失败路径错误遮蔽 → Phase 7 方案 B（触碰同 D 失败路径）；P2-2
+  陈旧未跟踪审计探针不入历史；P2-3 服务层二次失败测试缺口随 P2-1。D1/D2/D3/F-4 延续 Step 4 登记
+  （Phase 8/9 定夺）。
+- **Step 5 is closed for implementation**；A–G 七段 + Step 1–5 不 reopen。下一实施步 = plan
+  **Phase 7（H0-15 方案 B）** → **Phase 8 TaskExecutor**。
+
+### H Step 5 增补 — 第一性原理对抗审查（真 DB 探针 6/6 PASS，2026-09-07 15:40）
+
+- 用户要求 commit 前以更强第一性原理对抗审查收口（V3 重建目标 + V3SPEC；每结论真实测试证据；不降低
+  标准 / 不自合理化 / 不强行解释失败 / 不靠推测）。注：上记 14:05「CLOSED」指实现 + 首轮（sonnet
+  只读 R-A~R-G）审查封冻；**commit 尚未执行、待用户放行**——本增补即放行前最后一道门。
+- 新资产 `backend/tests/_audit_step5_adversarial.py`（untracked 一次性，不入 Git）6 探针：
+  - **P-1/P-2** Phase 6 真并发败者（annotation/candidate）：B 阻塞于 A 未提交唯一行
+    （`assert not b_task.done()` 防假绿），A commit 后 B ON CONFLICT no-op + re-read 返回胜者行 →
+    恰单行、胜者 attempt 保留。×3。
+  - **P-3** FK 不被 DO NOTHING 吞：非法 source_version_id → IntegrityError 照常传播。
+  - **P-4** 服务层端到端：坏 provider 失败落 invalid(attempt=A) 抛原始错误；同 LE 好 provider 重试 →
+    RepositoryError（服务层非仅 repo）；同 LE 坏 provider 再失败 → RepositoryError 遮蔽原始
+    （P2-1 签名 DB 实证）。**P-4②③ 已转正**为永久回归
+    `test_service_invalid_residue_blocks_valid_and_masks_second_failure`（P2-3 随转正关闭）。
+  - **P-5** Lock-3 import-line-only 静态扫描：domains/repositories 零 gateway/provider import；domains
+    唯一 app.ai = `annotation/service from app.ai.executor import LLMExecutor`。
+  - **P-6** parse/forbidden 失败分支 attempt 落 invalid 行（不只 provider-error 分支）。
+- **结论：无 P0/P1**。P2-1 保持 deferred（owner = Phase 7 方案 B）；P2-3 随转正关闭；IntegrityError
+  契约无生产调用方（grep：仅 docstring）；approve/reject 终态幂等由 test_gate_service 覆盖。全量
+  pytest **256 passed ×2**（净 +1）；probe cleanup 后无污染；变更仍未 commit。

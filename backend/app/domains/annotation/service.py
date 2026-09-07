@@ -1,8 +1,10 @@
-"""AnnotationService（段 D，20 §4）：幂等写 + LLMGateway mock 调用 + forbidden-field 校验。
+"""AnnotationService（段 D，20 §4）：幂等写 + LLMExecutor mock 调用 + forbidden-field 校验。
 
 边界：只负责 annotation payload 的 LLM 获取 → JSON 解析 → 校验 → 落库。不负责 prompt
 构造（caller 提供）、不负责 Resolver/Compiler/Gate（段 E/F/G）、不直接修改已有 annotation
 状态（supersede 由 caller 显式调 repository）。
+
+Lock-3（H Phase 5）：Domain 不持有 LLMGateway/Provider 依赖，只经 LLMExecutor 发起模型执行。
 """
 
 from __future__ import annotations
@@ -10,6 +12,7 @@ from __future__ import annotations
 import json
 import uuid
 
+from app.ai.executor import LLMExecutor
 from app.core.hashing import logical_execution_hash, sha256_hex
 from app.domains.annotation import (
     ANNO_SCHEMA_VERSION,
@@ -23,9 +26,9 @@ _STAGE = "ann"
 
 
 class AnnotationService:
-    def __init__(self, session, gateway) -> None:
+    def __init__(self, session, llm_executor: LLMExecutor) -> None:
         self._repo = SnapshotRepository(session)
-        self._gateway = gateway
+        self._executor = llm_executor
 
     async def annotate(
         self,
@@ -36,11 +39,19 @@ class AnnotationService:
         task_type: str = "document_ingest",
         annotation_schema_version: str = ANNO_SCHEMA_VERSION,
         prompt_version: str = ANN_PROMPT_VERSION,
+        attempt_id: uuid.UUID | None = None,
+        task_id: uuid.UUID | None = None,
+        document_id: uuid.UUID | None = None,
+        provider: str | None = None,
+        model: str | None = None,
     ) -> SemanticAnnotation:
         """幂等 annotation 写入（20 §4.7）。同 LE hash 已有 valid/superseded → 返回既有行。
 
         BUG-V3-009：这里不涉及 get_default_annotation（caller 业务）。
         BUG-V3-010：json.loads 失败 → status="invalid" + payload={"parse_error":...} + raise。
+        attempt_id/task_id/document_id/provider/model 为 Runtime context 透传（mock/disabled 由
+        executor 忽略；live 由 executor 校验必需）。attempt_id 仅作 Artifact Runtime Provenance
+        （Lock-5），不进 LE hash。
         """
         le_hash = logical_execution_hash(
             task_type=task_type,
@@ -60,7 +71,16 @@ class AnnotationService:
             return existing
 
         try:
-            response = await self._gateway.complete(prompt)
+            response = await self._executor.complete(
+                prompt,
+                le_stage=_STAGE,
+                le_hash=le_hash,
+                attempt_id=attempt_id,
+                task_id=task_id,
+                document_id=document_id,
+                provider=provider,
+                model=model,
+            )
         except Exception as exc:
             ann = await self._repo.create_semantic_annotation(
                 source_version_id=source_version_id,
@@ -71,6 +91,7 @@ class AnnotationService:
                 status="invalid",
                 logical_execution_stage=_STAGE,
                 logical_execution_hash=le_hash,
+                attempt_id=attempt_id,
             )
             await self._repo.flush()
             raise
@@ -88,6 +109,7 @@ class AnnotationService:
                 status="invalid",
                 logical_execution_stage=_STAGE,
                 logical_execution_hash=le_hash,
+                attempt_id=attempt_id,
             )
             await self._repo.flush()
             raise ValueError(f"LLM response not valid JSON: {exc}") from exc
@@ -104,6 +126,7 @@ class AnnotationService:
             status=status,
             logical_execution_stage=_STAGE,
             logical_execution_hash=le_hash,
+            attempt_id=attempt_id,
         )
         await self._repo.flush()
 

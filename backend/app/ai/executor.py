@@ -89,16 +89,18 @@ class LLMExecutor:
         *,
         le_stage: str,
         le_hash: str,
-        attempt_id: uuid.UUID | None,
-        task_id: uuid.UUID | None,
-        document_id: uuid.UUID | None,
-        provider: str,
-        model: str,
+        attempt_id: uuid.UUID | None = None,
+        task_id: uuid.UUID | None = None,
+        document_id: uuid.UUID | None = None,
+        provider: str | None = None,
+        model: str | None = None,
     ) -> str:
         """执行一个 Logical LLM Request，返回 provider 文本。
 
         mock/disabled → 不产生 audit/budget/计数副作用（G4），语义由 gateway 决定（disabled
-        抛 GatewayDisabledError）。live → 完整 reserve/audit/retry/settle 生命周期。
+        抛 GatewayDisabledError）；task_id/document_id/provider/model 此时为可选项，供 live
+        使用、不参与 mock 路径。live → 完整 reserve/audit/retry/settle 生命周期，四个身份
+        参数全部必需（缺任一 fail-closed raise，Lock-4 计数与 audit 行不可缺字段）。
         """
         if self._gateway.mode != "live":
             return await self._gateway.complete(prompt)
@@ -122,11 +124,13 @@ class LLMExecutor:
         attempt_id: uuid.UUID | None,
         task_id: uuid.UUID | None,
         document_id: uuid.UUID | None,
-        provider: str,
-        model: str,
+        provider: str | None,
+        model: str | None,
     ) -> str:
         if task_id is None or document_id is None:
             raise ValueError("live execution requires task_id and document_id")
+        if provider is None or model is None:
+            raise ValueError("live execution requires provider and model")
 
         s = self._session
         repo = LlmCallAuditRepository(s)

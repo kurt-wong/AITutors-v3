@@ -10,6 +10,7 @@ import uuid
 import pytest
 from sqlalchemy import func, select
 
+from app.ai.executor import LLMExecutor
 from app.ai.gateway import LLMGateway
 from app.ai.ocr.providers import NativeTextProvider
 from app.domains.annotation import (
@@ -93,11 +94,16 @@ def _mchash(name: str) -> str:
     return sha256_hex(name)
 
 
+def _svc(session, gw: LLMGateway) -> AnnotationService:
+    """Lock-3：Domain 只持 LLMExecutor；mock gateway 包进 executor 注入。"""
+    return AnnotationService(session, LLMExecutor(session, gw))
+
+
 async def test_d2_idempotent_same_le_returns_existing(session, pdf_bytes):
     """D2：同 LE hash 写两次 → 恰 1 行（第二次返回既有 valid 行）。"""
     sv = await _seal_source(session, pdf_bytes)
     gw = LLMGateway("mock", mock_provider=_FixedJSONProvider(_valid_json()))
-    svc = AnnotationService(session, gw)
+    svc = _svc(session, gw)
     mc = _mchash("mock-v1")
 
     ann1 = await svc.annotate(
@@ -117,7 +123,7 @@ async def test_d2_supersede_explicit(session, pdf_bytes):
     sv = await _seal_source(session, pdf_bytes)
     gw = LLMGateway("mock", mock_provider=_FixedJSONProvider(_valid_json()))
     snap = SnapshotRepository(session)
-    svc = AnnotationService(session, gw)
+    svc = _svc(session, gw)
     mc1, mc2 = _mchash("v1"), _mchash("v2")
 
     ann1 = await svc.annotate(
@@ -145,7 +151,7 @@ async def test_d2_set_status_rejects_invalid_transition(session, pdf_bytes):
     sv = await _seal_source(session, pdf_bytes)
     gw = LLMGateway("mock", mock_provider=_FixedJSONProvider(_invalid_schema_json()))
     snap = SnapshotRepository(session)
-    svc = AnnotationService(session, gw)
+    svc = _svc(session, gw)
 
     with pytest.raises(ValueError):
         await svc.annotate(
@@ -162,7 +168,7 @@ async def test_d3_valid_persisted_payload_no_forbidden(session, pdf_bytes):
     """D3：valid payload 落库 payload 不含禁字段。"""
     sv = await _seal_source(session, pdf_bytes)
     gw = LLMGateway("mock", mock_provider=_FixedJSONProvider(_valid_json()))
-    svc = AnnotationService(session, gw)
+    svc = _svc(session, gw)
 
     ann = await svc.annotate(
         source_version_id=sv.id, prompt="p", model_config_hash=_mchash("ok")
@@ -177,7 +183,7 @@ async def test_d3_invalid_schema_persisted_then_raises(session, pdf_bytes):
     """D3：含禁字段 payload → 落库 status=invalid + 抛 ValueError（两者同时发生）。"""
     sv = await _seal_source(session, pdf_bytes)
     gw = LLMGateway("mock", mock_provider=_FixedJSONProvider(_invalid_schema_json()))
-    svc = AnnotationService(session, gw)
+    svc = _svc(session, gw)
 
     with pytest.raises(ValueError, match="forbidden fields"):
         await svc.annotate(
@@ -194,7 +200,7 @@ async def test_d3_invalid_json_persisted_then_raises(session, pdf_bytes):
     """D3：json.loads 失败 → 落库 status=invalid + payload parse_error + raise（BUG-V3-010）。"""
     sv = await _seal_source(session, pdf_bytes)
     gw = LLMGateway("mock", mock_provider=_FixedJSONProvider(_invalid_json()))
-    svc = AnnotationService(session, gw)
+    svc = _svc(session, gw)
 
     with pytest.raises(ValueError, match="not valid JSON"):
         await svc.annotate(
@@ -214,14 +220,14 @@ async def test_d2_cross_transaction_idempotency(session, pdf_bytes):
     sv = await _seal_source(session, pdf_bytes)
     gw = LLMGateway("mock", mock_provider=_FixedJSONProvider(_valid_json()))
     mc = _mchash("cross-tx")
-    ann1 = await AnnotationService(session, gw).annotate(
+    ann1 = await _svc(session, gw).annotate(
         source_version_id=sv.id, prompt="p", model_config_hash=mc)
     await session.flush(); await session.commit()
     a1id = ann1.id
     try:
         async with async_session_maker() as s2:
             gw2 = LLMGateway("mock", mock_provider=_FixedJSONProvider(_valid_json()))
-            ann2 = await AnnotationService(s2, gw2).annotate(
+            ann2 = await _svc(s2, gw2).annotate(
                 source_version_id=sv.id, prompt="p", model_config_hash=mc)
             assert ann2.id == a1id
             n = (await s2.execute(select(func.count()).select_from(SemanticAnnotation))).scalar()
@@ -261,7 +267,7 @@ async def test_d2_invalid_not_reused_requires_new_le(session, pdf_bytes):
     gw_bad = LLMGateway("mock", mock_provider=_FixedJSONProvider(_invalid_schema_json()))
     mc = _mchash("inv-not-reuse")
     with pytest.raises(ValueError):
-        await AnnotationService(session, gw_bad).annotate(
+        await _svc(session, gw_bad).annotate(
             source_version_id=sv.id, prompt="p", model_config_hash=mc)
     await session.flush()
     inv = (await session.execute(select(SemanticAnnotation))).scalars().first()
@@ -269,7 +275,7 @@ async def test_d2_invalid_not_reused_requires_new_le(session, pdf_bytes):
     # 同 LE hash 重试 → UNIQUE 阻止；retry 需新 LE
     gw_ok = LLMGateway("mock", mock_provider=_FixedJSONProvider(_valid_json()))
     mc2 = _mchash("inv-not-reuse-new")
-    ann2 = await AnnotationService(session, gw_ok).annotate(
+    ann2 = await _svc(session, gw_ok).annotate(
         source_version_id=sv.id, prompt="p", model_config_hash=mc2)
     await session.flush()
     n = (await session.execute(select(func.count()).select_from(SemanticAnnotation))).scalar()

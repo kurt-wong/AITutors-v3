@@ -1,35 +1,43 @@
 # AI Tutor V3 — RESTART PROMPT
 
-Version: v1.8
-Status: 段 H 编码进行中 — Step 4 LLMExecutor 完成 + 三路独立对抗审查无 P0（250 passed ×2）；Step 4 待 commit
+Version: v1.10
+Status: 段 H 编码进行中 — Step 5 attempt_id 贯通 + Lock-3 依赖倒置 + Phase 6 幂等写 完成 + 两轮对抗审查无 P0/P1（commit 前真 DB 探针 6/6 PASS，256 passed ×2）；Step 5 待 commit
 Date: 2026-09-07
 
-## 0.0 当前结论（2026-09-07 13:21）
+## 0.0 当前结论（2026-09-07 15:40）
 
-- **H Step 4（Phase 4 LLMExecutor）实现完成 + 三路独立对抗审查（A/B/C，sonnet ×3 只读，R1–R12
-  攻击面）无 P0 + P1/P2 修复收口**。A–G 七段仍定格（`8a57a92`）。Step 1–3 已 CLOSED（Step 3 =
-  基线封存）。Step 4 交付：`LLMExecutor` 唯一执行入口 + ProviderInvocationCounter（ensure→
-  reserve+audit STARTED 同事务 Lock-6 → bounded retry → finalize+settle）；`gateway.py` provider
-  seam（`counter.consume` 在 provider 前，Lock-4/Note-1 原子）；migration 0005
-  （`tasks.llm_invocations`，server_default 对齐）；test_executor 10 + test_budget G1–G3。
-- **独立对抗审查结论（分级）**：三审均无 P0。A（Runtime Authority R1/R2/R8）唯一入口无旁路、
-  Gateway 职责无回归、Audit 身份一致；B（Counter/Transaction/Retry R3–R7/R9）consume seam 唯一、
-  Lock-6 全异常路径覆盖、Phase A/B/C commit 边界无半状态、retry 仅 transient；C（Budget/Migration
-  R10–R12）settle 失败不掩盖 provider 成功、reclaim 仅 fallback。
-- **修复**：C-1（P1）——ORM `llm_invocations` 加 `server_default=text("0")` 对齐 0005 `DEFAULT 0`
-  （消除 `column_default` 双路径漂移）+ 双路径 default 锁定（test_task_schema/test_migration_replay
-  均断言 '0'）+ 0005 docstring 改准；B-1（P2）——`gateway._live` 缺 counter/task_id 改
-  **fail-closed**（Lock-4 熔断不可绕过），test_gateway allowed 用例带 counter + 2 新增 denied。
-- **deferred 登记（不重开）**：D1 crash-orphan reconciliation = F-5B（延后，Phase 8 recover）；
-  D2 provider exception translation = Phase 9 接线；D3 reclaim 不绑 task lease 仅 crash/orphan
-  fallback（F-5A）。A-2 finalize 不落 token/cost + idempotency_key 无 DB UNIQUE = F-4/D2
-  carry-forward。
-- **验证**：定向 runtime ×2（53 passed）；全量 **250 passed ×2**（净 +3，可重入）；migration
-  双路径（from-empty→head + incremental rebuild）llm_invocations `column_default` 均 '0'；
-  git diff --check 干净。变更未 commit（Step 4 独立提交点待用户放行）。
-- **下一步**：commit Step 4（独立基线，含本文件 + Status.md + log.md 收口 + deferred 登记）→
-  plan **Step 5** attempt_id 贯通 + AnnotationService 依赖倒置（Lock-3，删除 annotation
-  Domain→Gateway 旁路）+ Phase 6 并发幂等写 ON CONFLICT。Phase 8 起才接 TaskExecutor。
+- **H Step 5（attempt_id 贯通 + AnnotationService 依赖倒置 Lock-3 + Phase 6 并发幂等写）实现完成 +
+  两轮对抗审查均无 P0/P1（14:05 sonnet 只读 R-A~R-G；15:40 commit 前第一性原理真 DB 探针审查）**。
+  A–G 七段 + Step 1–4 仍定格（bf888a8 为当前基线，Step 4 已 CLOSED）。Step 5 交付：Lock-3 倒置
+  （`AnnotationService` 只持 `LLMExecutor`，删 annotation Domain→Gateway 直连旁路，domains/repositories
+  零 gateway 导入扫描确认）；attempt_id 贯通 annotate→gate→candidate 全链（Lock-5 仅 Artifact Runtime
+  Provenance 不进 LE hash；`executor.complete` 身份参数放宽默认 None + `_complete_live` fail-closed 补
+  task_id/document_id/provider/model 校验）；Phase 6 并发幂等写 `pg_insert ON CONFLICT DO NOTHING` 锚
+  `UNIQUE(stage,hash)`（valid/superseded 冲突 → 幂等返回既有；invalid 残留阻挡 valid 写 →
+  RepositoryError 显式化；candidate 冲突 → re-read 既有）。新增 test_h_step5_attempt_provenance 5
+  回归；既有 D/G 语义经 executor 注入保持（test_annotation_dbflow `_svc` helper / test_repositories
+  候选测试补真实 FK 父行）。
+- **commit 前第一性原理对抗审查（2026-09-07 15:40，真 PostgreSQL 探针）**：
+  `backend/tests/_audit_step5_adversarial.py`（untracked 一次性，不入 Git）6 探针全 PASS ×3，
+  **无 P0/P1**。P-1/P-2 Phase 6 真并发败者（annotation/candidate）B 阻塞于 A 未提交行
+  （`not b_task.done()` 防假绿）→ A commit 后 ON CONFLICT no-op + re-read 恰单行、胜者 attempt 保留；
+  P-3 FK 不被 DO NOTHING 吞仍抛 IntegrityError；P-4 服务层端到端 invalid 残留阻挡 + 失败 attempt 落库
+  + P2-1 遮蔽签名 DB 实证（P-4②③ 转正为永久回归
+  test_service_invalid_residue_blocks_valid_and_masks_second_failure）；P-5 Lock-3 import-only 零
+  gateway/provider；P-6 parse/forbidden 失败分支 attempt 落库。R-A~R-G 结论保持（14:05）。
+- **deferred 登记（不重开；2 P2）**：P2-1 annotate 失败路径 invalid-over-invalid 时 RepositoryError
+  遮蔽原始错误 → **owner = Phase 7 方案 B**（触碰同一 D 失败路径、届时 annotate 失败改不落 invalid 行，
+  遮蔽自然消解）；P2-2 未跟踪 `_audit_d.py` 旧签名直连 Gateway（不入 Git 历史，一次性探针惯例）；
+  P2-3 服务层二次失败错误类型缺口**已随 P-4②③ 转正关闭**。D1 crash-orphan reconciliation / D2 provider
+  exception translation / D3 reclaim 仅 crash/orphan fallback / F-4 usage·token 事实源 + idempotency_key
+  DB 唯一 = 延续 Step 4 登记（Phase 8/9 定夺）。
+- **验证**：定向 D/G/runtime 34 ×2；全量 **256 passed ×2**（净 +1：P-4②③ 转正，可重入）；git diff
+  --check 干净。变更未 commit（Step 5 独立提交点待用户放行；放行范围含 6 生产文件 +
+  test_h_step5_attempt_provenance + Status.md/log.md/restart-prompt 收口；全部 `_audit_*.py` 探针排除
+  Git 历史外）。
+- **下一步**：commit Step 5（独立基线，含本文件 v1.10 + Status.md + log.md 收口 + P2 登记）→
+  **Phase 7（H0-15 方案 B）** annotate 失败路径不落 invalid 行（失败留 audit+task 证据）→
+  **Phase 8 TaskExecutor**（plan 末步，最后接编排）→ Phase 9 配置常量随步补。
 - 重启后第一任务：读本文件 → Status.md 尾 → log.md 尾 → 打开 plan 文件
   （`~/.claude/plans/giggly-enchanting-volcano.md`）恢复上下文 → 按当前 Step 继续 H 段
   实现（或等待用户新指令）。

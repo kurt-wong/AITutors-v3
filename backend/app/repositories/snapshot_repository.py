@@ -3,6 +3,7 @@
 import uuid
 
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from app.models.snapshot import (
     AdmissionCandidate,
@@ -26,19 +27,62 @@ class SnapshotRepository(BaseRepository):
         model_config_hash: str,
         attempt_id: uuid.UUID | None = None,
     ) -> SemanticAnnotation:
-        annotation = SemanticAnnotation(
-            source_version_id=source_version_id,
-            annotation_schema_version=annotation_schema_version,
-            prompt_version=prompt_version,
-            model_config_hash=model_config_hash,
-            payload=payload,
-            status=status,
+        """幂等写（H Phase 6，H0-6）：锚 UNIQUE(stage,hash) ON CONFLICT DO NOTHING。
+
+        插入成功 → returning 返回新行；同 (stage,hash) 冲突（并发或既有）→ re-read existing：
+          valid/superseded → 返回既有（idempotent success）；
+          invalid（残留失败行，find_annotation_by_le_hash 不复用）→ RepositoryError —— 同 LE
+          valid 写入被 invalid 残留阻挡，须新 LE（原 IntegrityError 语义的显式化）。
+        """
+        stmt = (
+            pg_insert(SemanticAnnotation)
+            .values(
+                source_version_id=source_version_id,
+                annotation_schema_version=annotation_schema_version,
+                prompt_version=prompt_version,
+                model_config_hash=model_config_hash,
+                payload=payload,
+                status=status,
+                logical_execution_stage=logical_execution_stage,
+                logical_execution_hash=logical_execution_hash,
+                attempt_id=attempt_id,
+            )
+            .on_conflict_do_nothing(
+                index_elements=["logical_execution_stage", "logical_execution_hash"]
+            )
+            .returning(SemanticAnnotation)
+        )
+        res = await self._session.execute(stmt)
+        row = res.scalars().first()
+        if row is not None:
+            return row
+        existing = await self._annotation_by_le(
             logical_execution_stage=logical_execution_stage,
             logical_execution_hash=logical_execution_hash,
-            attempt_id=attempt_id,
         )
-        await self.add(annotation)
-        return annotation
+        if existing is None:
+            raise RepositoryError(
+                "annotation (stage,hash) conflict but no existing row readable"
+            )
+        if existing.status not in ("valid", "superseded"):
+            raise RepositoryError(
+                "same LE annotation already ended %r; valid write requires new LE"
+                % (existing.status,)
+            )
+        return existing
+
+    async def _annotation_by_le(
+        self, *, logical_execution_stage: str, logical_execution_hash: str
+    ) -> SemanticAnnotation | None:
+        """任意 status 的 (stage,hash) 读（冲突 re-read；区别于 find_annotation_by_le_hash
+        只读 valid/superseded）。"""
+        res = await self._session.execute(
+            select(SemanticAnnotation).where(
+                SemanticAnnotation.logical_execution_stage == logical_execution_stage,
+                SemanticAnnotation.logical_execution_hash == logical_execution_hash,
+            )
+        )
+        return res.scalars().first()
 
     async def create_admission_candidate(
         self,
@@ -55,23 +99,45 @@ class SnapshotRepository(BaseRepository):
         review_trail: list | None = None,
         attempt_id: uuid.UUID | None = None,
     ) -> AdmissionCandidate:
-        """创建候选：decision_status 固定 pending_review（30 §12/20 §8.2 唯一入口，不得以其它值创建）。"""
-        candidate = AdmissionCandidate(
-            unit_type=unit_type,
-            source_version_id=source_version_id,
-            annotation_id=annotation_id,
-            decision_status="pending_review",
-            gate_decision=gate_decision,
-            build_versions=build_versions,
-            input_identity=input_identity,
-            payload=payload,
-            review_trail=review_trail,
+        """创建候选：decision_status 固定 pending_review（30 §12/20 §8.2 唯一入口，不得以其它值创建）。
+
+        H Phase 6（H0-6）：ON CONFLICT DO NOTHING 锚 UNIQUE(stage,hash)；冲突 → re-read
+        existing（恒 pending_review，idempotent success）。
+        """
+        stmt = (
+            pg_insert(AdmissionCandidate)
+            .values(
+                unit_type=unit_type,
+                source_version_id=source_version_id,
+                annotation_id=annotation_id,
+                decision_status="pending_review",
+                gate_decision=gate_decision,
+                build_versions=build_versions,
+                input_identity=input_identity,
+                payload=payload,
+                review_trail=review_trail,
+                logical_execution_stage=logical_execution_stage,
+                logical_execution_hash=logical_execution_hash,
+                attempt_id=attempt_id,
+            )
+            .on_conflict_do_nothing(
+                index_elements=["logical_execution_stage", "logical_execution_hash"]
+            )
+            .returning(AdmissionCandidate)
+        )
+        res = await self._session.execute(stmt)
+        row = res.scalars().first()
+        if row is not None:
+            return row
+        existing = await self.find_candidate_by_le_hash(
             logical_execution_stage=logical_execution_stage,
             logical_execution_hash=logical_execution_hash,
-            attempt_id=attempt_id,
         )
-        await self.add(candidate)
-        return candidate
+        if existing is None:
+            raise RepositoryError(
+                "admission_candidate (stage,hash) conflict but no existing row readable"
+            )
+        return existing
 
     async def update_snapshot(self, *_args: object, **_kwargs: object) -> None:
         """快照表 append-only：UPDATE → 抛错。"""

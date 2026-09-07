@@ -98,12 +98,27 @@ async def test_content_create_success(session) -> None:
 
 
 async def test_candidate_created_pending_review(session) -> None:
-    """decision_status 唯一入口：Repository 创建候选固定 pending_review，不接受任意值（R1）。"""
+    """decision_status 唯一入口：Repository 创建候选固定 pending_review，不接受任意值（R1）。
+
+    Phase 6：create 立即落库（pg_insert + returning，非惰性 ORM add）——候选必须满足 FK，
+    故先建真实 source_version 父行 + annotation 父行。
+    """
     snap = SnapshotRepository(session)
+    _sr, _doc, version = await _mk_draft(session)
+    ann = await snap.create_semantic_annotation(
+        source_version_id=version.id,
+        annotation_schema_version="semantic-metadata-annotation/v0.3",
+        prompt_version="p/v1",
+        model_config_hash=_SHA,
+        payload={},
+        status="valid",
+        logical_execution_stage="ann",
+        logical_execution_hash="c" * 64,
+    )
     candidate = await snap.create_admission_candidate(
         unit_type="standalone_unit",
-        source_version_id=uuid.uuid4(),
-        annotation_id=uuid.uuid4(),
+        source_version_id=version.id,
+        annotation_id=ann.id,
         build_versions={},
         input_identity={},
         payload={},

@@ -57,8 +57,12 @@ class GateService:
         source_version_id: uuid.UUID,
         annotation_id: uuid.UUID,
         task_type: str = "document_ingest",
+        attempt_id: uuid.UUID | None = None,
     ) -> tuple[list[AdmissionCandidate], list[str]]:
-        """编排一次 admission candidate 生成。返回 (candidates, skipped_incomplete_unit_ids)。"""
+        """编排一次 admission candidate 生成。返回 (candidates, skipped_incomplete_unit_ids)。
+
+        attempt_id：compile-stage Runtime Provenance 透传（Lock-5，仅落 Artifact，不进 LE hash）。
+        """
         version = await self._source.get_version(source_version_id)
         if version is None:
             raise RepositoryError(f"source_version {source_version_id} not found")
@@ -122,6 +126,7 @@ class GateService:
                     gate_decision=gate,
                     logical_execution_stage=_STAGE,
                     logical_execution_hash=le_hash,
+                    attempt_id=attempt_id,
                 )
                 await self._snap.flush()  # candidate.id 回填后供 approve lock
             candidates.append(candidate)
