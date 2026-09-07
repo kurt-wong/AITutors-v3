@@ -23,7 +23,8 @@ from pathlib import Path
 
 from app.ai.executor import LLMExecutor
 from app.ai.gateway import LLMGateway
-from app.core.errors import V3Error
+from app.core.config import settings
+from app.core.errors import LLMNetworkError, LLMProviderError, V3Error
 from app.core.hashing import sha256_hex
 from app.domains.annotation.service import AnnotationService
 from app.domains.gate.service import GateService
@@ -38,6 +39,11 @@ from app.repositories.runtime_repository import LeaseConflict
 logger = logging.getLogger(__name__)
 
 _TASK_TYPE = "document_ingest"
+
+# BUG-V3-035（Phase 9-3）：仅 retryable failure 可触发 fallback。CancelledError 为
+# BaseException 不在此（直接传播）；LLMProviderError(retryable=False) 为 provider 明确
+# 拒绝，不 fallback（在循环内显式判断）。
+_FALLBACK_RETRYABLE = (LLMNetworkError, LLMProviderError)
 
 
 def build_annotation_prompt(body_text: str) -> str:
@@ -160,30 +166,70 @@ class TaskExecutor:
         version: DocumentSourceVersion,
         params: dict,
     ) -> SemanticAnnotation:
+        prompt = build_annotation_prompt(version.body_text)
+        # 同一 Task Attempt 贯穿 primary + fallback（BUG-V3-035：fallback 不得改变 Task Attempt）。
+        attempt_id = uuid.uuid4()
+
+        # primary 的 model_config_hash：显式优先（向后兼容）；否则按实际 invocation 配置算。
+        # fallback 必须按实际 provider/model 算（新 config → 新 LE，X≠Y），不得复用 primary
+        # 显式 hash——否则 fallback 换 provider 却得到同一 LE，违反 BUG-V3-035 身份边界。
         provider = params.get("llm_provider", self._default_provider)
         model = params.get("llm_model", self._default_model)
-        # 30 §7：model_config_hash 须编码实际 provider/model（不同 provider/model → 新 LE）。
-        # 显式 model_config_hash 优先（caller 提供时尊重）；否则由实际 invocation 配置计算，
-        # 杜绝「LE identity 说默认 model、实际用自定义 provider/model」的 identity 漂移。
-        model_config_hash = params.get("model_config_hash") or sha256_hex(
-            {"provider": provider, "model": model}
-        )
-        prompt = build_annotation_prompt(version.body_text)
-        async with self._session_factory() as s:
-            executor = LLMExecutor(s, self._gateway)
-            ann = await AnnotationService(s, executor).annotate(
-                source_version_id=version.id,
-                prompt=prompt,
-                model_config_hash=model_config_hash,
-                task_type=_TASK_TYPE,
-                attempt_id=uuid.uuid4(),
-                task_id=task_id,
-                document_id=version.document_id,
-                provider=provider,
-                model=model,
+        chain = [
+            (
+                provider,
+                model,
+                params.get("model_config_hash")
+                or sha256_hex({"provider": provider, "model": model}),
             )
-            await s.commit()
-            return ann
+        ]
+        # fallback：默认关闭；显式、有限、有序列表（禁自动发现/随机/动态推断，BUG-V3-035）。
+        # 去重：禁 fallback 到 primary 自己 / 循环 fallback（同一 provider+model 只尝试一次）。
+        seen = {(provider, model)}
+        if settings.provider_fallback_enabled:
+            for fb in params.get("llm_fallback", []):
+                fb_provider = fb["provider"]
+                fb_model = fb["model"]
+                key = (fb_provider, fb_model)
+                if key in seen:
+                    continue
+                seen.add(key)
+                chain.append(
+                    (
+                        fb_provider,
+                        fb_model,
+                        sha256_hex({"provider": fb_provider, "model": fb_model}),
+                    )
+                )
+
+        last_exc: Exception | None = None
+        for prov, mdl, mch in chain:
+            try:
+                async with self._session_factory() as s:
+                    executor = LLMExecutor(s, self._gateway)
+                    ann = await AnnotationService(s, executor).annotate(
+                        source_version_id=version.id,
+                        prompt=prompt,
+                        model_config_hash=mch,
+                        task_type=_TASK_TYPE,
+                        attempt_id=attempt_id,
+                        task_id=task_id,
+                        document_id=version.document_id,
+                        provider=prov,
+                        model=mdl,
+                    )
+                    await s.commit()
+                    return ann
+            except _FALLBACK_RETRYABLE as exc:
+                # BUG-V3-035：provider 明确拒绝（retryable=False，4xx 非 transient）不 fallback，
+                # 立即传播。CancelledError 为 BaseException 不在此捕获，直接传播。
+                if isinstance(exc, LLMProviderError) and not exc.retryable:
+                    raise
+                last_exc = exc
+                continue
+        # primary + 全部 fallback 耗尽 → re-raise 最后一个 retryable 异常（task fail）
+        assert last_exc is not None
+        raise last_exc
 
     # -- stage 3: Compile（Resolve + Compile + Gate + Admission） -----------------
 

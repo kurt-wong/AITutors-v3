@@ -25,6 +25,7 @@ class LLMGateway:
         budget_ok: bool = False,
         mock_provider: MockLLMProvider | None = None,
         live_provider: object | None = None,
+        live_providers: dict[str, object] | None = None,
     ) -> None:
         self.mode = mode
         self._allow_live = allow_live
@@ -32,6 +33,9 @@ class LLMGateway:
         self._budget_ok = budget_ok
         self._mock = mock_provider or MockLLMProvider()
         self._live_provider = live_provider
+        # BUG-V3-035（Phase 9-3）：fallback 显式有序 provider 映射。live_provider 为单一
+        # 默认（向后兼容），live_providers 按 provider 名路由（fallback 换 provider 用）。
+        self._live_providers = live_providers or {}
 
     async def complete(
         self,
@@ -39,6 +43,7 @@ class LLMGateway:
         *,
         task_id: object | None = None,
         invocation_counter: object | None = None,
+        provider: str | None = None,
     ) -> str:
         if self.mode == "disabled":
             # 不初始化 HTTP client / live provider / 网络副作用（Gate C1）
@@ -46,10 +51,14 @@ class LLMGateway:
         if self.mode == "mock":
             return await self._mock.complete(prompt)
         if self.mode == "live":
-            return await self._live(prompt, task_id=task_id, invocation_counter=invocation_counter)
+            return await self._live(
+                prompt, task_id=task_id, invocation_counter=invocation_counter, provider=provider
+            )
         raise GatewayDisabledError(f"unknown gateway mode: {self.mode}")
 
-    async def _live(self, prompt: str, *, task_id, invocation_counter) -> str:
+    async def _live(
+        self, prompt: str, *, task_id, invocation_counter, provider: str | None = None
+    ) -> str:
         reasons: list[str] = []
         if not self._allow_live:
             reasons.append("--allow-live not granted")
@@ -57,7 +66,8 @@ class LLMGateway:
             reasons.append("task context missing")
         if not self._budget_ok:
             reasons.append("budget unavailable")
-        if self._live_provider is None:
+        live = self._resolve_live_provider(provider)
+        if live is None:
             reasons.append("no live provider configured")
         if reasons:
             raise GatewayDeniedError("live denied: " + "; ".join(reasons))
@@ -70,7 +80,13 @@ class LLMGateway:
             )
         # Provider Invocation Port seam：每次真实 provider 调用前原子计数（Lock-4/Note-1）
         await invocation_counter.consume(task_id)
-        return await self._live_provider.complete(prompt)
+        return await live.complete(prompt)
+
+    def _resolve_live_provider(self, provider: str | None) -> object | None:
+        """按 provider 名路由（BUG-V3-035 fallback）；名未命中回退到单一 live_provider。"""
+        if provider is not None and provider in self._live_providers:
+            return self._live_providers[provider]
+        return self._live_provider
 
 
 def build_gateway() -> LLMGateway:

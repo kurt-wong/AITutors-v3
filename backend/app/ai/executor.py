@@ -186,7 +186,7 @@ class LLMExecutor:
             for i in range(self._retry_count + 1):
                 try:
                     outcome = await self._gateway.complete(
-                        prompt, task_id=task_id, invocation_counter=counter
+                        prompt, task_id=task_id, invocation_counter=counter, provider=provider
                     )
                     break
                 except _RETRYABLE_LLM_ERRORS as exc:

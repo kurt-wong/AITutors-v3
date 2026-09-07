@@ -15,6 +15,7 @@
 """
 
 import json
+import asyncio
 import uuid
 
 import pytest
@@ -22,6 +23,8 @@ from sqlalchemy import func, select, text
 
 from app.ai.gateway import LLMGateway
 from app.ai.ocr.result import OCRLine, OCRResult
+from app.core.config import settings
+from app.core.errors import LLMNetworkError, LLMProviderError
 from app.core.hashing import sha256_hex
 from app.db.session import async_session_maker
 from app.domains.task.executor import TaskExecutor
@@ -307,3 +310,215 @@ async def test_model_config_hash_tracks_actual_provider(tmp_path):
     assert n_doc == 1, f"同 file 应复用 1 document，实为 {n_doc}"
     assert n_ann == 2, f"不同 provider 应 2 annotation（新 LE），实为 {n_ann}"
     assert len(set(hashes)) == 2, "不同 provider 应不同 LE hash"
+
+
+# ---- Phase 9-3：Explicit Provider Fallback（BUG-V3-035） ----
+
+
+class _FailProvider:
+    """恒抛指定异常；记录调用次数。"""
+
+    def __init__(self, name: str, exc: Exception) -> None:
+        self.name = name
+        self._exc = exc
+        self.calls = 0
+
+    async def complete(self, prompt: str) -> str:
+        self.calls += 1
+        raise self._exc
+
+
+def _live_gateway_with_fallback(providers: dict[str, object]) -> LLMGateway:
+    return LLMGateway(
+        "live",
+        allow_live=True,
+        task_context="t",
+        budget_ok=True,
+        live_providers=providers,
+    )
+
+
+async def _enqueue_fallback(
+    file_path, *, llm_provider: str, llm_model: str, llm_fallback: list[dict]
+) -> uuid.UUID:
+    async with async_session_maker() as s:
+        t = await TaskService(s).enqueue(
+            task_type="document_ingest",
+            task_params={
+                "file_path": str(file_path),
+                "file_name": "t.pdf",
+                "file_type": "pdf",
+                "role": "main",
+                "seal_provider": "native",
+                "llm_provider": llm_provider,
+                "llm_model": llm_model,
+                "llm_fallback": llm_fallback,
+            },
+        )
+        await s.commit()
+        return t.id
+
+
+async def _audit_providers(task_id) -> list[dict]:
+    async with async_session_maker() as s:
+        rows = (await s.execute(
+            text(
+                "SELECT status, provider, model, logical_execution_hash "
+                "FROM llm_call_audit WHERE task_id=:i ORDER BY start"
+            ),
+            {"i": task_id},
+        )).mappings().all()
+        return [dict(r) for r in rows]
+
+
+async def _invocations_row(task_id) -> int:
+    async with async_session_maker() as s:
+        return (await s.execute(
+            text("SELECT llm_invocations FROM tasks WHERE id=:i"), {"i": task_id}
+        )).scalar_one()
+
+
+async def test_fallback_disabled_no_fallback(monkeypatch, tmp_path) -> None:
+    """BUG-V3-035：provider_fallback_enabled=False（默认）→ 即使 task_params 有 llm_fallback
+    也不触发；primary 失败 → task failed；fallback provider 从未被调。"""
+    monkeypatch.setattr(settings, "provider_fallback_enabled", False)
+    monkeypatch.setattr(settings, "llm_request_retry_count", 0)
+    pdf = tmp_path / "doc.pdf"
+    pdf.write_bytes(b"test pdf bytes")
+    task_id = await _enqueue_fallback(
+        pdf, llm_provider="primary", llm_model="p-m",
+        llm_fallback=[{"provider": "fallback", "model": "f-m"}],
+    )
+    primary = _FailProvider("primary", LLMNetworkError("primary down"))
+    fb = _FailProvider("fallback", LLMNetworkError("should-not-run"))
+    gw = _live_gateway_with_fallback({"primary": primary, "fallback": fb})
+    assert await _executor(gw).run_once(worker_id="w") is True
+
+    assert await _task_status(task_id) == "failed"
+    assert primary.calls == 1
+    assert fb.calls == 0  # disabled：fallback 不触发
+
+
+async def test_fallback_enabled_new_le_new_invocation_new_audit(monkeypatch, tmp_path) -> None:
+    """BUG-V3-035 核心：primary retryable 失败 + retry 耗尽 + enabled + 显式 fallback →
+    fallback 成功；X≠Y LE（2 个不同 logical_execution_hash）+ Invocation=2 + Audit=2
+    （1 failed + 1 completed）+ budget used=1（fallback 独立 settle）。"""
+    monkeypatch.setattr(settings, "provider_fallback_enabled", True)
+    monkeypatch.setattr(settings, "llm_request_retry_count", 0)
+    pdf = tmp_path / "doc.pdf"
+    pdf.write_bytes(b"test pdf bytes")
+    task_id = await _enqueue_fallback(
+        pdf, llm_provider="primary", llm_model="p-m",
+        llm_fallback=[{"provider": "fallback", "model": "f-m"}],
+    )
+    primary = _FailProvider("primary", LLMNetworkError("primary down"))
+    fb = _FixedJSONProvider(_compile_payload_json())  # fallback 成功返回 valid JSON
+    fb.name = "fallback"
+    gw = _live_gateway_with_fallback({"primary": primary, "fallback": fb})
+    assert await _executor(gw).run_once(worker_id="w") is True
+
+    assert await _task_status(task_id) == "succeeded"
+    assert primary.calls == 1
+    assert (await _invocations_row(task_id)) == 2  # primary + fallback 各 1 invocation
+    audits = await _audit_providers(task_id)
+    assert [a["status"] for a in audits] == ["failed", "completed"]
+    assert {a["provider"] for a in audits} == {"primary", "fallback"}
+    # X≠Y：primary LE ≠ fallback LE（fallback 用实际 config 算新 model_config_hash → 新 LE）
+    assert len({a["logical_execution_hash"] for a in audits}) == 2
+    async with async_session_maker() as s:
+        row = (await s.execute(
+            text("SELECT used, reserved FROM budget WHERE account_dim='task' AND scope_id=:i"),
+            {"i": str(task_id)},
+        )).mappings().first()
+    assert row["used"] == 1  # fallback 成功 settle；primary 失败已 release
+    assert row["reserved"] == 0
+
+
+async def test_fallback_not_triggered_on_non_retryable(monkeypatch, tmp_path) -> None:
+    """BUG-V3-035：primary 抛 LLMProviderError(retryable=False)（4xx 明确拒绝）→ 不 fallback，
+    即使 enabled + 有显式 fallback；task failed；fallback 未被调。"""
+    monkeypatch.setattr(settings, "provider_fallback_enabled", True)
+    monkeypatch.setattr(settings, "llm_request_retry_count", 0)
+    pdf = tmp_path / "doc.pdf"
+    pdf.write_bytes(b"test pdf bytes")
+    task_id = await _enqueue_fallback(
+        pdf, llm_provider="primary", llm_model="p-m",
+        llm_fallback=[{"provider": "fallback", "model": "f-m"}],
+    )
+    primary = _FailProvider("primary", LLMProviderError("HTTP 400", retryable=False))
+    fb = _FailProvider("fallback", LLMNetworkError("should-not-run"))
+    gw = _live_gateway_with_fallback({"primary": primary, "fallback": fb})
+    assert await _executor(gw).run_once(worker_id="w") is True
+
+    assert await _task_status(task_id) == "failed"
+    assert primary.calls == 1
+    assert fb.calls == 0  # 非 transient 不 fallback
+
+
+async def test_fallback_all_exhausted_task_failed(monkeypatch, tmp_path) -> None:
+    """BUG-V3-035：primary + fallback 全部 retryable 失败 → 依次尝试，最终 task failed；
+    fallback provider 被调（但失败）。"""
+    monkeypatch.setattr(settings, "provider_fallback_enabled", True)
+    monkeypatch.setattr(settings, "llm_request_retry_count", 0)
+    pdf = tmp_path / "doc.pdf"
+    pdf.write_bytes(b"test pdf bytes")
+    task_id = await _enqueue_fallback(
+        pdf, llm_provider="primary", llm_model="p-m",
+        llm_fallback=[{"provider": "fallback", "model": "f-m"}],
+    )
+    primary = _FailProvider("primary", LLMNetworkError("primary down"))
+    fb = _FailProvider("fallback", LLMNetworkError("fallback down"))
+    gw = _live_gateway_with_fallback({"primary": primary, "fallback": fb})
+    assert await _executor(gw).run_once(worker_id="w") is True
+
+    assert await _task_status(task_id) == "failed"
+    assert primary.calls == 1
+    assert fb.calls == 1  # fallback 被尝试但失败
+
+
+async def test_fallback_skips_primary_self_and_cycles(monkeypatch, tmp_path) -> None:
+    """BUG-V3-035：llm_fallback 含 primary 自己 / 循环项 → 去重跳过，不无限 fallback 到
+    primary 自己。primary 失败 → 仅去重后的 fallback 被尝试一次。"""
+    monkeypatch.setattr(settings, "provider_fallback_enabled", True)
+    monkeypatch.setattr(settings, "llm_request_retry_count", 0)
+    pdf = tmp_path / "doc.pdf"
+    pdf.write_bytes(b"test pdf bytes")
+    task_id = await _enqueue_fallback(
+        pdf, llm_provider="primary", llm_model="p-m",
+        llm_fallback=[
+            {"provider": "primary", "model": "p-m"},  # 回 primary 自己 → 跳过
+            {"provider": "fallback", "model": "f-m"},
+            {"provider": "fallback", "model": "f-m"},  # 重复 → 跳过
+        ],
+    )
+    primary = _FailProvider("primary", LLMNetworkError("primary down"))
+    fb = _FailProvider("fallback", LLMNetworkError("fallback down"))
+    gw = _live_gateway_with_fallback({"primary": primary, "fallback": fb})
+    assert await _executor(gw).run_once(worker_id="w") is True
+
+    assert await _task_status(task_id) == "failed"
+    assert primary.calls == 1  # 只调一次（不因 fallback 回 primary 自己而二次调用）
+    assert fb.calls == 1  # 去重后 fallback 只尝试一次
+
+
+async def test_fallback_not_triggered_on_cancellation(monkeypatch, tmp_path) -> None:
+    """BUG-V3-035：primary 抛 CancelledError（BaseException 非 Exception）→ 不 fallback、
+    不被吞；直接传播出 run_once（进程取消信号）。fallback 未被调。"""
+    monkeypatch.setattr(settings, "provider_fallback_enabled", True)
+    monkeypatch.setattr(settings, "llm_request_retry_count", 0)
+    pdf = tmp_path / "doc.pdf"
+    pdf.write_bytes(b"test pdf bytes")
+    task_id = await _enqueue_fallback(
+        pdf, llm_provider="primary", llm_model="p-m",
+        llm_fallback=[{"provider": "fallback", "model": "f-m"}],
+    )
+    primary = _FailProvider("primary", asyncio.CancelledError())
+    fb = _FailProvider("fallback", LLMNetworkError("should-not-run"))
+    gw = _live_gateway_with_fallback({"primary": primary, "fallback": fb})
+
+    # run_once 的 except Exception 不捕获 BaseException → CancelledError 直接传播
+    with pytest.raises(asyncio.CancelledError):
+        await _executor(gw).run_once(worker_id="w")
+
+    assert primary.calls == 1
+    assert fb.calls == 0  # 取消不 fallback
