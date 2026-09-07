@@ -147,19 +147,25 @@ async def test_d2_supersede_explicit(session, pdf_bytes):
 
 
 async def test_d2_set_status_rejects_invalid_transition(session, pdf_bytes):
-    """set_annotation_status 只允许 valid→superseded，其余拒绝。"""
-    sv = await _seal_source(session, pdf_bytes)
-    gw = LLMGateway("mock", mock_provider=_FixedJSONProvider(_invalid_schema_json()))
-    snap = SnapshotRepository(session)
-    svc = _svc(session, gw)
+    """set_annotation_status 只允许 valid→superseded，其余拒绝。
 
-    with pytest.raises(ValueError):
-        await svc.annotate(
-            source_version_id=sv.id, prompt="p", model_config_hash=_mchash("inv")
-        )
+    方案 B：annotate 失败不再产 invalid 行；守卫改以 repo 直插模拟历史/遗留 invalid
+    残留——其仍不可被 supersede（守卫语义不变，保留防御）。
+    """
+    sv = await _seal_source(session, pdf_bytes)
+    snap = SnapshotRepository(session)
+    inv = await snap.create_semantic_annotation(
+        source_version_id=sv.id,
+        annotation_schema_version=ANNO_SCHEMA_VERSION,
+        prompt_version=ANN_PROMPT_VERSION,
+        model_config_hash=_mchash("inv"),
+        payload={},
+        status="invalid",
+        logical_execution_stage="ann",
+        logical_execution_hash=_mchash("le-inv-guard"),
+        attempt_id=None,
+    )
     await session.flush()
-    inv = (await session.execute(select(SemanticAnnotation))).scalars().first()
-    assert inv.status == "invalid"
     with pytest.raises(RepositoryError):
         await snap.set_annotation_status(inv.id, "superseded")
 
@@ -179,8 +185,9 @@ async def test_d3_valid_persisted_payload_no_forbidden(session, pdf_bytes):
     assert ok is True and violations == []
 
 
-async def test_d3_invalid_schema_persisted_then_raises(session, pdf_bytes):
-    """D3：含禁字段 payload → 落库 status=invalid + 抛 ValueError（两者同时发生）。"""
+async def test_d3_forbidden_payload_not_persisted_raises(session, pdf_bytes):
+    """D3 + H0-15 方案 B：含禁字段 payload → 不落 artifact + 抛 ValueError（判定仍发生，
+    仅不再物化 invalid 行；失败占位属 Runtime 层）。"""
     sv = await _seal_source(session, pdf_bytes)
     gw = LLMGateway("mock", mock_provider=_FixedJSONProvider(_invalid_schema_json()))
     svc = _svc(session, gw)
@@ -190,14 +197,16 @@ async def test_d3_invalid_schema_persisted_then_raises(session, pdf_bytes):
             source_version_id=sv.id, prompt="p", model_config_hash=_mchash("bad")
         )
     await session.flush()
-    ann = (await session.execute(select(SemanticAnnotation))).scalars().first()
-    assert ann is not None
-    assert ann.status == "invalid"
-    assert ann.payload.get("stem_text") == "问题正文"  # payload 保留用于诊断
+    n = (
+        await session.execute(
+            select(func.count()).select_from(SemanticAnnotation)
+        )
+    ).scalar()
+    assert n == 0
 
 
-async def test_d3_invalid_json_persisted_then_raises(session, pdf_bytes):
-    """D3：json.loads 失败 → 落库 status=invalid + payload parse_error + raise（BUG-V3-010）。"""
+async def test_d3_parse_error_not_persisted_raises(session, pdf_bytes):
+    """D3 + H0-15 方案 B：json.loads 失败 → 不落 artifact + raise ValueError（BUG-V3-010）。"""
     sv = await _seal_source(session, pdf_bytes)
     gw = LLMGateway("mock", mock_provider=_FixedJSONProvider(_invalid_json()))
     svc = _svc(session, gw)
@@ -207,9 +216,12 @@ async def test_d3_invalid_json_persisted_then_raises(session, pdf_bytes):
             source_version_id=sv.id, prompt="p", model_config_hash=_mchash("parse")
         )
     await session.flush()
-    ann = (await session.execute(select(SemanticAnnotation))).scalars().first()
-    assert ann.status == "invalid"
-    assert "parse_error" in ann.payload
+    n = (
+        await session.execute(
+            select(func.count()).select_from(SemanticAnnotation)
+        )
+    ).scalar()
+    assert n == 0
 
 
 async def test_d2_cross_transaction_idempotency(session, pdf_bytes):
@@ -261,22 +273,26 @@ async def test_d2_cross_transaction_idempotency(session, pdf_bytes):
             await sc.commit()
 
 
-async def test_d2_invalid_not_reused_requires_new_le(session, pdf_bytes):
-    """D2 invalid annotation 不复用（find 排除 invalid）；retry 必须新 LE（DB UNIQUE 同 hash 阻止）。"""
+async def test_d2_failure_no_artifact_retry_new_le_succeeds(session, pdf_bytes):
+    """D2 + H0-15 方案 B：annotate 失败不落 invalid 行；同 source 换新 model_config
+    （新 LE）重试 → valid 成功（恰 1 行）。历史 invalid 残留防御见 repo 级测试。"""
     sv = await _seal_source(session, pdf_bytes)
     gw_bad = LLMGateway("mock", mock_provider=_FixedJSONProvider(_invalid_schema_json()))
     mc = _mchash("inv-not-reuse")
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="forbidden fields"):
         await _svc(session, gw_bad).annotate(
             source_version_id=sv.id, prompt="p", model_config_hash=mc)
     await session.flush()
-    inv = (await session.execute(select(SemanticAnnotation))).scalars().first()
-    assert inv.status == "invalid"
-    # 同 LE hash 重试 → UNIQUE 阻止；retry 需新 LE
+    n0 = (
+        await session.execute(
+            select(func.count()).select_from(SemanticAnnotation)
+        )
+    ).scalar()
+    assert n0 == 0  # 方案 B：失败 0 artifact
     gw_ok = LLMGateway("mock", mock_provider=_FixedJSONProvider(_valid_json()))
-    mc2 = _mchash("inv-not-reuse-new")
     ann2 = await _svc(session, gw_ok).annotate(
-        source_version_id=sv.id, prompt="p", model_config_hash=mc2)
+        source_version_id=sv.id, prompt="p", model_config_hash=_mchash("inv-not-reuse-new"))
     await session.flush()
+    assert ann2.status == "valid"
     n = (await session.execute(select(func.count()).select_from(SemanticAnnotation))).scalar()
-    assert n == 2 and ann2.status == "valid"
+    assert n == 1  # 仅成功路径落 1 valid

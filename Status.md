@@ -539,3 +539,56 @@ Date: 2026-09-05
 - **结论：无 P0/P1**。P2-1 保持 deferred（owner = Phase 7 方案 B）；P2-3 随转正关闭；IntegrityError
   契约无生产调用方（grep：仅 docstring）；approve/reject 终态幂等由 test_gate_service 覆盖。全量
   pytest **256 passed ×2**（净 +1）；probe cleanup 后无污染；变更仍未 commit。
+
+### 2026-09-07 20:02（H Phase 7 方案 B 实现 + commit 前第一性原理对抗审查 + 收口）
+
+- **Status: H Phase 7（H0-15 方案 B — Annotation Artifact success-only failure policy）实现完成 +
+  commit 前第一性原理对抗审查（真 DB live 探针 L1–L5 5/5 PASS）+ 用户放行收口**。变更与文档已提交
+  为 Phase 7 独立基线（P2-1 正式 Closed）。
+- **方案 B 交付**：annotate 失败（provider error / JSON parse error / forbidden-field validation）一律
+  **不创建 invalid artifact**、失败不再占 (stage,hash)；成功路径只写 `status="valid"`；失败经
+  `llm_call_audit`（provider 失败 → audit failed；返回文本后 parse/forbidden 失败 → audit completed，
+  因 executor 无法预知内容校验）+ task 状态承接。service 对三失败原样传播（provider 原异常 /
+  parse `ValueError` / validation `ValueError`），不吞不遮蔽（P2-1 消解）。
+- **repo/executor/gate 零改动**（git diff 仅 service.py + 2 test + 新增
+  test_h_step7_failure_policy.py）：历史 invalid 残留防御保留（snapshot_repository 原样；
+  S7-history / Q-3 实证 repo 直插 invalid 仍阻挡同 LE valid → 须新 LE）。
+- **回归**：`test_h_step7_failure_policy.py` 6 测试锁死 S7-1..S7-6（provider 0 artifact 原异常 /
+  parse 0 artifact ValueError / forbidden 0 artifact ValueError / fail→fail→success 同 LE 收敛恰 1 valid
+  / 二次 provider 失败仍原异常 = P2-1 Closed 证据 / success 后同 LE retry 幂等复用）；
+  test_annotation_dbflow / test_h_step5 既有 D/G 语义经 executor 注入保持。
+- **commit 前对抗审查（mock 覆盖空洞实证填补）**：既有 Phase 7 测试全走 gateway mock 分支（无
+  audit/budget 副作用，G4）——plan 语义区分从未在真实 live 链路证据化。新资产
+  `backend/tests/_audit_phase7_live.py`（untracked 一次性，不入 Git）live executor × service × 真
+  task/document/source 探针 L1–L5 **5/5 PASS**：L1 parse→audit completed + 0 artifact（error_type=None）；
+  L2 provider→audit failed/network_error + 0 artifact + budget release；L3 forbidden→audit completed +
+  0 artifact；L4 同 session fail→success 同 LE → 恰 1 valid + audit=[failed,completed]（无悬挂）；
+  L5 成功后同 LE retry → find_existing 命中、不重调 provider、audit/invocation 不增（幂等不重复计费）。
+- **两个 Note 登记（非 Phase 7 blocker → Phase 8 Required Handoff）**：
+  **H8-1**——plan L238「parse 详情经 error_type 承载」未落地（L1 实证 completed 行 error_type=None；
+  executor 返回后即 finalize，audit append-only 不可补记）→ **Phase 8 TaskExecutor 须把 parse/
+  validation 失败详情写入 task failure，否则丢失**；**H8-2**——forbidden 分支 audit 态 plan 未显式
+  冻结（L3 实证自然归 completed）→ Phase 8 冻结双层失败语义（llm_call_audit = Provider Invocation
+  Runtime Truth；task = Logical Execution Outcome；`LLM completed ≠ Logical task completed`），
+  parse/forbidden 在 Runtime 层判 failed、audit 维持 completed。
+- **验证**：全量 pytest **261 passed ×2**（净 +6：S7 六测试，可重入，无中间清理）；真 DB 探针
+  cleanup 后无污染；git diff --check 干净。
+- **deferred 状态**：**P2-1 Closed**（遮蔽随方案 B 消解）；**P2-3 Closed**（随转正测试）；
+  P2-2（未跟踪陈旧探针）不入历史；D1 crash-orphan reconciliation / D2 provider exception translation /
+  D3 reclaim fallback / F-4 usage·token 事实源 + idempotency_key DB 唯一 = 延续 Step 4 登记
+  （Phase 8/9 定夺）。BUG-V3-001..028 Open 不变。
+- **下一步**：进入 plan **Phase 8 TaskExecutor**（plan 末步，最后接编排）——承接 H8-1/H8-2
+  （downstream failure → task failure persistence + audit/task 双层失败语义冻结）；Phase 9 配置常量
+  随步补。
+
+### H Phase 7 — CLOSED（基线封存，2026-09-07 20:02）
+
+- **Implementation PASS + commit 前第一性原理对抗审查（live 真 DB 探针 L1–L5 5/5）+ 用户放行**：
+  Annotation Artifact persistence policy 已切换为 **success-only**——失败 attempt 不再创建 invalid
+  artifact；失败由 Runtime Execution Layer（audit + task）承担而非 Artifact 状态承担。**P2-1 正式
+  Closed**（遮蔽消解）；repo 级历史 invalid 残留防御未误伤。全量 **261 passed ×2** 可重入。
+- **Phase 8 Required Handoff 登记（H8-1 / H8-2）**：下游失败（parse/validation/forbidden）须写入 task
+  failure（H8-1）；audit（Provider Invocation Runtime Truth）与 task（Logical Execution Outcome）双层
+  失败语义冻结，`LLM completed ≠ Logical task completed`（H8-2）。两者均不阻塞 Phase 7、不改 Phase 7 代码。
+- **Phase 7 is closed for implementation**；A–G 七段 + Step 1–5 + Phase 7 不 reopen。下一实施步 = plan
+  **Phase 8 TaskExecutor** → **Phase 9 配置常量随步补** → H 段最终收口。

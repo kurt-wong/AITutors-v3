@@ -145,61 +145,7 @@ async def test_phase6_candidate_same_le_idempotent_single_row(session):
         logical_execution_hash=le)) == 1
 
 
-class _RaisingProvider:
-    """mock provider：complete 恒抛（provider/网络失败路径）。"""
-
-    name = "mock-raising"
-
-    async def complete(self, prompt: str) -> str:
-        raise RuntimeError("provider boom")
-
-
-def _raising_service(session) -> AnnotationService:
-    return AnnotationService(
-        session, LLMExecutor(session, LLMGateway("mock", mock_provider=_RaisingProvider()))
-    )
-
-
-async def test_service_invalid_residue_blocks_valid_and_masks_second_failure(session):
-    """对抗审查 P-4 转正：服务层端到端 invalid 残留语义（不只 repo 层）。
-
-    ① 坏 provider 失败 → 落 invalid(attempt=A) 且抛原始 RuntimeError；
-    ② 同 LE 好 provider 重试 → find 排除 invalid → 成功 payload → create(valid) 被 invalid
-       残留阻挡 → RepositoryError（服务层端到端）；
-    ③ 同 LE 坏 provider 再失败 → create(invalid) 撞残留 → RepositoryError 遮蔽原始 provider
-       错误（P2-1 已知降级签名：抛 RepositoryError 而非 RuntimeError；仅违反「retry 须新 LE」
-       契约才触发，登记 deferred → Phase 7 方案 B）。
-    """
-    sv, _ = await _seed(session)
-    mc = sha256_hex("mc-invalid-residue")
-    A = uuid.uuid4()
-
-    with pytest.raises(RuntimeError, match="provider boom"):
-        await _raising_service(session).annotate(
-            source_version_id=sv.id, prompt="p", model_config_hash=mc, attempt_id=A
-        )
-    await session.flush()
-    inv = (
-        await session.execute(
-            select(SemanticAnnotation).where(
-                SemanticAnnotation.source_version_id == sv.id,
-                SemanticAnnotation.model_config_hash == mc,
-            )
-        )
-    ).scalars().first()
-    assert inv is not None and inv.status == "invalid"
-    assert inv.attempt_id == A  # 失败路径 attempt 照常落库（Lock-5 透传无漏）
-
-    # ② 同 LE 好 provider 重试 → RepositoryError（非返回 valid）
-    with pytest.raises(RepositoryError) as re2:
-        await _ann_service(session, _valid_json()).annotate(
-            source_version_id=sv.id, prompt="p", model_config_hash=mc, attempt_id=uuid.uuid4()
-        )
-    assert "invalid" in str(re2.value) or "new LE" in str(re2.value)
-
-    # ③ 同 LE 坏 provider 再失败 → RepositoryError（P2-1：遮蔽原始 RuntimeError）
-    with pytest.raises(RepositoryError) as re3:
-        await _raising_service(session).annotate(
-            source_version_id=sv.id, prompt="p", model_config_hash=mc, attempt_id=uuid.uuid4()
-        )
-    assert "invalid" in str(re3.value) or "new LE" in str(re3.value)
+# test_service_invalid_residue_blocks_valid_and_masks_second_failure（Step 5 转正）已被
+# Phase 7 方案 B 取代：annotate 失败不再落 invalid artifact → 无残留累积、无遮蔽（P2-1 消解）。
+# 对应新失败政策回归见 test_h_step7_failure_policy.py；repo 级历史 invalid 残留防御由本文件
+# test_phase6_annotation_invalid_residue_blocks_valid 保留。

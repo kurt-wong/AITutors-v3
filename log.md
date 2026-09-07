@@ -674,3 +674,65 @@ PostgreSQL 测试为证据；不降低标准 / 不自合理化 / 不强行解释
   git diff --check 干净；变更仍未 commit（本次审查即 commit 放行前最后一道门）。
 - **下一步（不变）**：commit Step 5 独立基线（待用户放行）→ Phase 7（H0-15 方案 B）→ Phase 8
   TaskExecutor → Phase 9 配置常量随步补。
+
+### 2026-09-07 20:02（H Phase 7 方案 B 实现 + commit 前第一性原理对抗审查 + 用户放行收口）
+
+Step 5 已于 commit `0917404` 落盘（含 Status/log/restart v1.10 收口）。Phase 7（H0-15 方案 B）随后
+实现并在 commit 前按用户要求以第一性原理 × V3SPEC 对抗审查（每结论真实 DB 测试证据；不降标准 /
+不自合理化 / 不强行解释失败 / 不靠推测），结论无 P0/P1，用户放行收口：
+
+- **交付（方案 B，零越界）**：`app/domains/annotation/service.py` 删除 3 条 failure-path
+  `create_semantic_annotation(status="invalid")`（provider error / JSON parse error / forbidden-field），
+  失败**不再落 invalid artifact**、不再占 (stage,hash)；成功路径只写 `status="valid"`。三失败均以异常
+  原样传播（provider 原异常 / parse→`ValueError("LLM response not valid JSON: …")` / validation→
+  `ValueError("annotation payload contains forbidden fields: …")`），service 不吞。repository /
+  executor / gateway **零改动**——历史 invalid 残留防御（snapshot_repository `_annotation_by_le` +
+  ON CONFLICT + RepositoryError）原样保留。
+- **失败语义区分（与 llm_call_audit 的关系）**：provider/timeout/HTTP 失败 → executor finalize audit
+  `failed` + settle(actual=0) → re-raise；HTTP-OK 但 parse/forbidden 失败 → executor 已在 provider 返回
+  文本后 finalize audit `completed`（executor 无法预知内容校验），失败详情经 service 的 ValueError 传给
+  caller → 由 task 层承接。audit 与 annotation artifact 两轨解耦。
+- **回归**：新增 `test_h_step7_failure_policy.py` 6 测试锁死 S7-1..S7-6（见 Status）。既有
+  test_annotation_dbflow / test_h_step5_attempt_provenance / test_d2.. 经 executor 注入语义保持
+  （git diff 仅 service.py + 2 test 适配 + 1 新增）。`test_service_invalid_residue_blocks_valid_and_masks_second_failure`
+  （P-4②③ 转正）被方案 B 取代——失败不再落 invalid → 无残留累积、无遮蔽（P2-1 消解），repo 级防御由
+  test_h_step7_failure_policy S7-history + test_h_step5 test_phase6_annotation_invalid_residue_blocks_valid 保留。
+- **commit 前对抗审查（mock 覆盖空洞实证填补）**：既有 Phase 7 测试全走 gateway mock 分支（mock 无
+  audit/budget/计数副作用，G4）——plan Phase 7 语义区分（L229-238：HTTP 成功 + parse 失败 → audit
+  COMPLETED / provider 失败 → audit FAILED / 两者都 0 artifact）**从未在真实 live 链路证据化**。新资产
+  `backend/tests/_audit_phase7_live.py`（untracked 一次性，不入 Git）：live executor × service × 真
+  task/document/source（LLMGateway("live", allow_live, task_context, budget_ok, live_provider)），
+  **L1–L5 全 PASS**：
+  - **L1**（parse，live 返回坏 JSON）→ service 抛 ValueError("not valid JSON")；audit 恰 1 行
+    `completed` + **error_type=None**（L1 实证 plan「parse 详情经 error_type 承载」未落地——
+    executor 在 service parse 前已 finalize，audit append-only 不可补记 → 登记 H8-1）；annotation 0 行；
+    invocation 1；task budget used=1/reserved=0。
+  - **L2**（provider，live 抛 LLMNetworkError）→ 原异常原样传播；audit 恰 1 行 `failed`/
+    `network_error`；annotation 0 行；invocation 1；task budget used=0/reserved=0（失败释放 reserve，
+    settle actual=0，P2-1 遮蔽在 live 下亦根除）。
+  - **L3**（forbidden payload）→ ValueError("forbidden fields")；audit `completed`（provider 成功返回文本，
+    与 parse 同族）；annotation 0 行——实证 forbidden 分支自然归 audit completed，plan 语义区分表未显式
+    冻结该分支 → 登记 H8-2。
+  - **L4**（同 session fail→success 同 LE）→ provider 失败后 session 未被悬挂（executor 内
+    commit/rollback 干净），同 LE 换好 provider 成功 → 收敛恰 1 valid；audit=[failed, completed]
+    （attempt 各自独立终态）。
+  - **L5**（success 后同 LE retry）→ find_existing 命中 → 复用既有 valid；provider 不重调、audit 不增、
+    invocation 不增（幂等不重复计费；30 §7 attempt 语义）。
+- **对抗结论**：A1–A9 全部符合 plan/spec（plan 字面 diff 无越界；10 §5.1 status 三值仅取值域无
+  「失败必写 invalid」消费者契约；20 §4.3 「失败即 invalid」是 payload 校验语义非持久化命令；20 §4.7
+  consumers 只消费 valid、supersede 写者=确定性 Application 未受影响；30 §7 retry 二分正交）。无 P0/P1。
+- **两个 Note → Phase 8 Required Handoff（不阻塞 Phase 7，不改 Phase 7 代码）**：
+  - **H8-1**：parse/validation 失败详情现只经 service ValueError 传给 caller；audit completed 行
+    error_type=None（append-only 不可补记）——**Phase 8 TaskExecutor 须把下游失败详情写入 task
+    failure，否则丢失**。
+  - **H8-2**：冻结双层失败语义——`llm_call_audit` = Provider Invocation Runtime Truth（provider 返回即
+    completed）；`task` = Logical Execution Outcome（下游失败 → task failed + failure reason =
+    parse/validation/provider…）。`LLM completed ≠ Logical task completed`。
+- **验证**：全量 pytest **261 passed ×2**（净 +6：S7 六测试，无中间清理，可重入）；真 DB 探针 cleanup
+  后无污染（FK 序删净 doc/version/annotation）；git diff --check 干净。
+- **deferred 状态**：**P2-1 Closed**（遮蔽随方案 B 消解，S7-5/Q-1 实证）；**P2-3 Closed**（随转正）；
+  P2-2 不入历史；D1 crash-orphan reconciliation / D2 provider exception translation / D3 reclaim fallback /
+  F-4 usage·token 事实源 + idempotency_key DB 唯一 = 延续登记（Phase 8/9 定夺）。BUG-V3-001..028 Open 不变。
+- **commit**：Phase 7 独立基线已提交（代码 + Status/log/restart v1.11 收口；全部 `_audit_*.py` 探针排除
+  Git 历史）。**下一步**：plan **Phase 8 TaskExecutor**（承接 H8-1/H8-2）→ Phase 9 配置常量随步补 →
+  H 段最终收口。
