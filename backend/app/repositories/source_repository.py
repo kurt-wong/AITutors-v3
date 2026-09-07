@@ -3,6 +3,7 @@
 import uuid
 
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from app.models.source import (
     Document,
@@ -31,16 +32,33 @@ class SourceRepository(BaseRepository):
         upload_meta: dict,
         processing_status: str,
     ) -> Document:
-        doc = Document(
-            original_object_key=original_object_key,
-            original_sha256=original_sha256,
-            file_name=file_name,
-            file_type=file_type,
-            upload_meta=upload_meta,
-            processing_status=processing_status,
+        """幂等写（H-1/BUG-V3-007 终裁）：锚 UNIQUE(original_sha256) ON CONFLICT DO NOTHING。
+
+        插入成功 → returning 新行；同 original_sha256 冲突（并发）→ re-read existing（幂等收敛，
+        一个原始文件一个 Document 主档）。
+        """
+        stmt = (
+            pg_insert(Document)
+            .values(
+                original_object_key=original_object_key,
+                original_sha256=original_sha256,
+                file_name=file_name,
+                file_type=file_type,
+                upload_meta=upload_meta,
+                processing_status=processing_status,
+            )
+            .on_conflict_do_nothing(index_elements=["original_sha256"])
+            .returning(Document)
         )
-        await self.add(doc)
-        return doc
+        row = (await self._session.execute(stmt)).scalars().first()
+        if row is not None:
+            return row
+        existing = await self.find_document_by_sha256(original_sha256)
+        if existing is None:
+            raise RepositoryError(
+                "document (original_sha256) conflict but no existing row readable"
+            )
+        return existing
 
     async def create_source_version(
         self,
@@ -62,26 +80,61 @@ class SourceRepository(BaseRepository):
         logical_execution_hash: str | None = None,
         attempt_id: uuid.UUID | None = None,
     ) -> DocumentSourceVersion:
-        version = DocumentSourceVersion(
-            document_id=document_id,
-            artifact_kind=artifact_kind,
-            role=role,
-            provider=provider,
-            parent_version_id=parent_version_id,
-            body_text=body_text,
-            body_hash=body_hash,
-            integrity_hash=integrity_hash,
-            page_count=page_count,
-            line_count=line_count,
-            text_coverage=text_coverage,
-            source_meta=source_meta,
-            status=status,
+        """幂等写（H-1/BUG-V3-007 终裁）：锚 UNIQUE(stage,hash) ON CONFLICT DO NOTHING。
+
+        Seal Version canonical uniqueness 由 LE Identity 表达；同 Seal LE 冲突（并发）→
+        re-read existing（winner/loser 收敛到同一 version）。stage/hash 为 None（非 seal 路径）
+        在 NULLS DISTINCT 下不冲突，照常插入。
+        """
+        stmt = (
+            pg_insert(DocumentSourceVersion)
+            .values(
+                document_id=document_id,
+                artifact_kind=artifact_kind,
+                role=role,
+                provider=provider,
+                parent_version_id=parent_version_id,
+                body_text=body_text,
+                body_hash=body_hash,
+                integrity_hash=integrity_hash,
+                page_count=page_count,
+                line_count=line_count,
+                text_coverage=text_coverage,
+                source_meta=source_meta,
+                status=status,
+                logical_execution_stage=logical_execution_stage,
+                logical_execution_hash=logical_execution_hash,
+                attempt_id=attempt_id,
+            )
+            .on_conflict_do_nothing(
+                index_elements=["logical_execution_stage", "logical_execution_hash"]
+            )
+            .returning(DocumentSourceVersion)
+        )
+        row = (await self._session.execute(stmt)).scalars().first()
+        if row is not None:
+            return row
+        existing = await self._version_by_le(
             logical_execution_stage=logical_execution_stage,
             logical_execution_hash=logical_execution_hash,
-            attempt_id=attempt_id,
         )
-        await self.add(version)
-        return version
+        if existing is None:
+            raise RepositoryError(
+                "source_version (stage,hash) conflict but no existing row readable"
+            )
+        return existing
+
+    async def _version_by_le(
+        self, *, logical_execution_stage: str, logical_execution_hash: str
+    ) -> DocumentSourceVersion | None:
+        """任意 status 的 (stage,hash) 读（冲突 re-read）。"""
+        res = await self._session.execute(
+            select(DocumentSourceVersion).where(
+                DocumentSourceVersion.logical_execution_stage == logical_execution_stage,
+                DocumentSourceVersion.logical_execution_hash == logical_execution_hash,
+            )
+        )
+        return res.scalars().first()
 
     async def get_version(self, version_id: uuid.UUID) -> DocumentSourceVersion | None:
         return await self._session.get(DocumentSourceVersion, version_id)

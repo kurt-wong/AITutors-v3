@@ -89,6 +89,10 @@
   identity 字段；改 DB constraint 前先核对 Document/Version schema 与 Frozen Spec，现有字段
   若不足以表达该作用域 → 登记新 Spec gap，不自行扩展 schema。→ BUG-V3-029（H-1）按此
   终裁设计 scoped uniqueness。
+- **Clarification（2026-09-07）**：「禁止 `UNIQUE(original_sha256)`」作用域 = `document_source_versions`
+  的 Seal 层全局唯一（禁）；`documents` 层的 `UNIQUE(original_sha256)` 放行（Source/Document Identity，
+  一个原始文件一个主档）。Seal Version canonical uniqueness 由 Frozen LE Identity 表达
+  `UNIQUE(logical_execution_stage, logical_execution_hash)`。
 
 ### BUG-V3-008 — cloud OCR（PaddleOCR-VL）role/provider 值域未冻结（10 §4.2 vs OCR_PROVIDER_POLICY）
 - Status: Open
@@ -356,6 +360,12 @@
   H-1 修复方向 = 核对 Document/Version schema 现有字段能否表达该作用域（不足则登记 spec gap
   不自行扩展），再加 scoped DB uniqueness + ON CONFLICT + 并发 probe。
 - 验收：同 source 并发恰一合法 identity；replay 不产生重复 document/version。
+- **Resolved（2026-09-07 Batch 2）**：`documents.UNIQUE(original_sha256)` +
+  `document_source_versions.UNIQUE(logical_execution_stage, logical_execution_hash)`（migration
+  0006，DO 块 IF NOT EXISTS 双路径安全）；`create_document`/`create_source_version` 改
+  `pg_insert ON CONFLICT DO NOTHING` + re-read；`SealService` 并发收敛（re-read sealed → 复用，
+  跳过 append/seal）。测试 `test_h_seal_concurrency` 2 项（并发 seal 恰 1 doc + 1 version +
+  跨 role 多 version 合法）。
 
 ### BUG-V3-030 — 非 dict 合法 JSON 落 valid artifact（H-2，HIGH）
 - Status: Open（H Final Closure Blocker）

@@ -739,3 +739,21 @@ Date: 2026-09-05
   属 Batch 3；Phase 9 NOT STARTED。
 - **下一步**：commit Batch 1（独立提交点）→ Batch 2（H-1：BUG-V3-007 终裁 → identity scope
   verification → scoped DB uniqueness → 并发 seal probe → regression）。
+
+### 2026-09-07 22:xx（Batch 2 = H-1 CLOSED）
+
+- **H-1（BUG-V3-029）Resolved**。Batch 2 Step 1-5 完成：Identity Scope Verification（Case A：
+  当前字段足够，LE Identity 已编码 original_sha256 + role + provider）→ Constraint Design（用户
+  批准）→ Migration 0006 + ON CONFLICT → 并发 seal probe → 全量回归。
+- **约束冻结**：`documents.UNIQUE(original_sha256)`（Source/Document Identity，一个原始文件一个
+  主档，放行）+ `document_source_versions.UNIQUE(logical_execution_stage, logical_execution_hash)`
+  （Seal Version canonical uniqueness，跨 role/provider 多 version 合法）+ 禁
+  `document_source_versions.UNIQUE(original_sha256)`（Seal 层全局唯一）。
+- **实现**：migration 0006（DO 块 IF NOT EXISTS 双路径安全）；`create_document`/`create_source_version`
+  改 `pg_insert ON CONFLICT DO NOTHING` + re-read；`SealService` 并发收敛（re-read sealed → 复用）。
+- **验证**：全量 pytest **310 passed**（净 +2：`test_h_seal_concurrency` 并发收敛 + 跨 role 多
+  version）；真并发 seal 恰 1 doc + 1 version + 无重复 line。
+- **当前 H Closure 状态**：H-1/H-2/H-3/H-4 全 Resolved（4 HIGH 关闭）；剩余 Runtime blockers
+  （ai/executor.py except BaseException / complete-fail lease ownership / audit-settle rollback /
+  model_config_hash 漂移）属 Batch 3；Phase 9 NOT STARTED。
+- **下一步**：commit Batch 2（独立提交点）→ Batch 3（H Runtime correctness）。

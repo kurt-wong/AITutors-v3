@@ -1,37 +1,30 @@
 # AI Tutor V3 — RESTART PROMPT
 
-Version: v1.13
-Status: 段 H 编码进行中 — Phase 8 已提交（4c3e35f）；V3 全量对抗审查确认 4 HIGH + Runtime blockers；
-H Batch 1（H-2/H-3/H-4 修复）CLOSED，全量 308 passed；H-1 BLOCKED（BUG-V3-007 已终裁）；下一实施步 =
-commit Batch 1 → Batch 2（H-1 scoped uniqueness）
+Version: v1.14
+Status: 段 H 编码进行中 — Phase 8 已提交（4c3e35f）；V3 全量对抗审查 4 HIGH 全关闭（H Batch 1/2 完成，
+310 passed）；剩余 Runtime blockers（Batch 3）；下一实施步 = commit Batch 2 → Batch 3（H Runtime）
 Date: 2026-09-07
 
 ## 0.0 当前结论（2026-09-07 22:xx）
 
-- **H 段推进定格**：A–G 七段 + Step 1–5 + Phase 7 + **Phase 8（已 commit 4c3e35f）** 全 CLOSED。
-  **V3 全量第一性原理对抗审查**（4 路并行只读 + 13 真 DB probe + 纯函数复现 + 全量测试）确认核心
-  不变量成立 + **4 HIGH 实现缺陷** + 3 runtime blockers。用户下达综合裁决：A–G 继续 CLOSED，H
-  Phase 1-8 substantially complete 但 FINAL CLOSURE BLOCKED，Phase 9 PAUSED。
-- **H Batch 1 = H-2/H-3/H-4 修复闭环（CLOSED，待 commit）**：
-  - H-2（BUG-V3-030 Resolved）：`validate_annotation_payload` 顶层 `isinstance(payload, dict)`，
-    非 dict 走方案 B 失败路径。
-  - H-3（BUG-V3-031 Resolved）：冻结 Header Grammar（`is_answer_header`/`is_explanation_header`，
-    行首锚定 + 完整 token + 显式白名单），替换 Resolver 6 处 substring。
-  - H-4（BUG-V3-032 Resolved）：`policy.evaluate` provenance 层把 shared material 纳入白名单。
-  - 测试：`test_s7_non_dict_json_rejected` + `test_composite_material_contextual_not_auto` +
-    `test_resolver_header_grammar.py`（39 项）。全量 **308 passed**（净 +41）。
-- **BUG-V3-007 终裁（用户 Final Ruling）**：`original_sha256` 定义 Source/Document Identity，不
-  定义全局唯一 Sealed Version；同 `original_sha256 + seal role/provider scope` 内至多一个 canonical
-  sealed version；跨 role/provider 允许多 version；禁 `UNIQUE(original_sha256)`；不得擅自引入
-  Frozen Spec 未定义的 identity 字段。
-- **当前状态**：H-2/H-3/H-4 CLOSED；**H-1 BLOCKED**（BUG-V3-007 已终裁，待 Batch 2）；Runtime
-  blockers（ai/executor.py `except BaseException` / complete-fail lease ownership / audit-settle
-  rollback / model_config_hash 漂移）属 Batch 3；Phase 9 NOT STARTED。
-- **下一步**：commit Batch 1（`fix(runtime): close H-2 H-3 H-4 adversarial findings`）→ Batch 2
-  = H-1（BUG-V3-007 终裁 → identity scope verification → scoped DB uniqueness → 并发 seal probe
-  → regression）。
+- **H 段推进定格**：A–G 七段 + Step 1–5 + Phase 7 + **Phase 8（4c3e35f）** 全 CLOSED。**V3 全量
+  第一性原理对抗审查**确认核心不变量成立 + 4 HIGH 实现缺陷。**4 HIGH 全关闭**（Batch 1 = H-2/H-3/
+  H-4，Batch 2 = H-1）。用户裁决：A–G 继续 CLOSED，H Phase 1-8 substantially complete 但 FINAL
+  CLOSURE BLOCKED（剩 Runtime blockers），Phase 9 PAUSED。
+- **H-1（BUG-V3-029 Resolved，Batch 2）**：documents.UNIQUE(original_sha256) +
+  document_source_versions.UNIQUE(logical_execution_stage, logical_execution_hash)（migration 0006）；
+  create_document/create_source_version 改 ON CONFLICT DO NOTHING + re-read；SealService 并发收敛。
+  测试 test_h_seal_concurrency（并发恰 1 doc + 1 version + 跨 role 多 version 合法）。
+- **BUG-V3-007 终裁 + Clarification**：documents.UNIQUE(original_sha256) 放行（Source/Document
+  Identity）；document_source_versions.UNIQUE(stage,hash) 放行（Seal LE Identity）；禁
+  document_source_versions.UNIQUE(original_sha256)（Seal 层全局唯一）。
+- **当前状态**：H-1/H-2/H-3/H-4 全 Resolved（4 HIGH 关闭）；Runtime blockers（ai/executor.py
+  `except BaseException` / complete-fail lease ownership / audit-settle rollback / model_config_hash
+  漂移）属 Batch 3；Phase 9 NOT STARTED。
+- **下一步**：commit Batch 2（`fix(runtime): H-1 seal concurrent idempotency`）→ Batch 3 = H
+  Runtime correctness（BaseException / lease ownership / audit-settle / model_config_hash）。
 - 重启后第一任务：读本文件 → Status.md 尾 → log.md 尾 → bugs.md（BUG-V3-007 终裁 + 029..032）→
-  按当前 Batch 继续（Batch 1 待 commit / Batch 2 待开始）。
+  按当前 Batch 继续（Batch 2 待 commit / Batch 3 待开始）。
 
 ## 0. 当前工作状态（2026-09-06 20:34:06）
 

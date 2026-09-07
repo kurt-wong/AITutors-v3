@@ -130,6 +130,10 @@ class SealService:
             attempt_id=None,
         )
         await self._repo.flush()
+        # H-1 并发收敛：create_source_version ON CONFLICT re-read 返回 existing sealed →
+        # 复用（跳过 append/seal），避免对已 sealed 行重复写。
+        if version.status == "sealed":
+            return version
 
         for sl in lines:
             await self._repo.append_line(self._to_source_line(version.id, sl, provider))

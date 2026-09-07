@@ -807,3 +807,16 @@ Step 5 已于 commit `0917404` 落盘（含 Status/log/restart v1.10 收口）�
 - **验证**：全量 pytest **308 passed**（净 +41）；git diff --check 干净。
 - **下一步**：Batch 2 = H-1（BUG-V3-007 终裁 → identity scope verification → scoped DB
   uniqueness → 并发 seal probe → regression）。
+
+### 2026-09-07 22:xx（Batch 2 = H-1 seal 并发幂等修复）
+
+- **背景**：H-1（BUG-V3-029）seal/document 并发幂等无 DB UNIQUE 兜底。BUG-V3-007 终裁
+  （用户 Final Ruling + Clarification）：documents.UNIQUE(original_sha256) 放行（Source/Document
+  Identity），document_source_versions.UNIQUE(logical_execution_stage, logical_execution_hash)
+  放行（Seal LE Identity），禁 document_source_versions.UNIQUE(original_sha256)。
+- **实现**：migration 0006（两约束，DO 块 IF NOT EXISTS 双路径安全）；`create_document`/
+  `create_source_version` 改 `pg_insert ON CONFLICT DO NOTHING` + re-read；`SealService` 并发收敛
+  （re-read sealed → 复用，跳过 append/seal）；schema guard DECLARED_UNIQUES +2（总数 6→8）。
+- **验证**：全量 pytest **310 passed**（净 +2：`test_h_seal_concurrency` 并发 seal 恰 1 doc + 1
+  version + 无重复 line + 跨 role 多 version 合法）；真并发 seal winner/loser 收敛同 canonical identity。
+- **影响**：H-1 Resolved（BUG-V3-029 关闭）；4 个 HIGH 全部关闭。剩余 Runtime blockers（Batch 3）。

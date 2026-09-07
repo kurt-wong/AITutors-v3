@@ -25,6 +25,11 @@ class Document(UUIDPrimaryKeyMixin, Base):
     """documents（10 §4.1）。不保存最终题目文本；processing_status 是 Source 内容生命周期摘要。"""
 
     __tablename__ = "documents"
+    # BUG-V3-007 终裁（2026-09-07）：original_sha256 = Source/Document Identity，一个原始文件
+    # 对应一个 Document 主档（非 Seal 层全局唯一——那是 document_source_versions 的职责）。
+    __table_args__ = (
+        UniqueConstraint("original_sha256", name="uq_documents_original_sha256"),
+    )
 
     original_object_key: Mapped[str] = mapped_column(String, nullable=False)
     original_sha256: Mapped[str] = mapped_column(String(64), nullable=False)
@@ -38,6 +43,16 @@ class DocumentSourceVersion(UUIDPrimaryKeyMixin, ProvenanceMixin, Base):
     """document_source_versions（10 §4.2）。status=sealed 后禁 UPDATE（Repository 抛错）。"""
 
     __tablename__ = "document_source_versions"
+    # BUG-V3-007 终裁：Seal Version 的 canonical uniqueness 由 Frozen LE Identity 表达
+    # UNIQUE(logical_execution_stage, logical_execution_hash)——同 Seal 执行身份至多一个 version；
+    # 跨 role/provider 得不同 LE hash → 多 version 合法。禁 UNIQUE(original_sha256)（Seal 层）。
+    # NULLS DISTINCT（默认）：非 seal 路径（stage/hash NULL）的 version 不受约束。
+    __table_args__ = (
+        UniqueConstraint(
+            "logical_execution_stage", "logical_execution_hash",
+            name="uq_source_versions_le",
+        ),
+    )
 
     document_id: Mapped[uuid.UUID] = mapped_column(
         Uuid, ForeignKey("documents.id"), nullable=False
