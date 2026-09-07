@@ -268,3 +268,42 @@ async def test_fail_writes_claim_outcome_and_error_detail(session):
     assert row["outcome"] == "failed"
     assert row["error_type"] == "validation_error"
     assert row["lease_snapshot"]["error_detail"] == "forbidden fields: [x]"
+
+
+async def test_model_config_hash_tracks_actual_provider(tmp_path):
+    """Batch 3-4：model_config_hash 编码实际 provider/model（30 §7：不同 provider → 新 LE）。
+
+    未提供显式 model_config_hash 时，由实际 invocation 配置（provider+model）计算，杜绝
+    「LE identity 说默认 model、实际用自定义 provider」的漂移。同 file 不同 provider →
+    不同 LE → 2 annotation（seal 复用同 document）。
+    """
+    pdf = tmp_path / "doc.pdf"
+    pdf.write_bytes(b"test pdf bytes")
+
+    async def enqueue(provider):
+        async with async_session_maker() as s:
+            t = await TaskService(s).enqueue(
+                task_type="document_ingest",
+                task_params={"file_path": str(pdf), "file_name": "t.pdf", "file_type": "pdf",
+                             "role": "main", "seal_provider": "native",
+                             "llm_provider": provider},  # 不提供 model_config_hash
+            )
+            await s.commit()
+            return t.id
+
+    t1 = await enqueue("provider-a")
+    t2 = await enqueue("provider-b")
+    gw = LLMGateway("mock", mock_provider=_FixedJSONProvider(_compile_payload_json()))
+    ex = _executor(gw)
+    assert await ex.run_once(worker_id="w") is True  # 处理 provider-a task
+    assert await ex.run_once(worker_id="w") is True  # 处理 provider-b task
+
+    async with async_session_maker() as s:
+        n_doc = (await s.execute(text("SELECT count(*) FROM documents"))).scalar()
+        n_ann = (await s.execute(text("SELECT count(*) FROM semantic_annotations"))).scalar()
+        hashes = (await s.execute(
+            text("SELECT logical_execution_hash FROM semantic_annotations ORDER BY logical_execution_hash")
+        )).scalars().all()
+    assert n_doc == 1, f"同 file 应复用 1 document，实为 {n_doc}"
+    assert n_ann == 2, f"不同 provider 应 2 annotation（新 LE），实为 {n_ann}"
+    assert len(set(hashes)) == 2, "不同 provider 应不同 LE hash"

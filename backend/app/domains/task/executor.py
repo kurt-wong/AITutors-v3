@@ -160,8 +160,13 @@ class TaskExecutor:
         version: DocumentSourceVersion,
         params: dict,
     ) -> SemanticAnnotation:
+        provider = params.get("llm_provider", self._default_provider)
+        model = params.get("llm_model", self._default_model)
+        # 30 §7：model_config_hash 须编码实际 provider/model（不同 provider/model → 新 LE）。
+        # 显式 model_config_hash 优先（caller 提供时尊重）；否则由实际 invocation 配置计算，
+        # 杜绝「LE identity 说默认 model、实际用自定义 provider/model」的 identity 漂移。
         model_config_hash = params.get("model_config_hash") or sha256_hex(
-            {"model": self._default_model}
+            {"provider": provider, "model": model}
         )
         prompt = build_annotation_prompt(version.body_text)
         async with self._session_factory() as s:
@@ -174,8 +179,8 @@ class TaskExecutor:
                 attempt_id=uuid.uuid4(),
                 task_id=task_id,
                 document_id=version.document_id,
-                provider=params.get("llm_provider", self._default_provider),
-                model=params.get("llm_model", self._default_model),
+                provider=provider,
+                model=model,
             )
             await s.commit()
             return ann
