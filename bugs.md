@@ -428,6 +428,11 @@
   边界：不得把「provider returned HTTP 500」与「client cannot connect」混为同一 failure
   provenance（前者 ProviderError、后者 NetworkError）。
 - 验收：Phase 9-3 异常翻译按此映射；adversarial test 锁定 transport vs HTTP response 分层。
+- **对抗审查补充 B-2（2026-09-08）**：冻结的 translation 只覆盖 transport + HTTP status 两类；
+  遗漏第三类「HTTP 200 + malformed body」（非 JSON / choices 缺失·空 / message·content 缺失·
+  null）→ 已修复：翻译为 `LLMProviderError(retryable=False)`（用户裁决保守分类：HTTP 200 属
+  contract violation 非 transient），防裸 IndexError/KeyError/JSONDecodeError 泄漏 + audit
+  error_type 误分类 'unknown'。commit `312d1f7`。
 
 ### BUG-V3-035 — fallback 触发条件 + provider 列表（Phase 9 spec gap）
 - Status: Frozen for implementation（用户 Phase 9-0 终裁，2026-09-07）
@@ -440,6 +445,10 @@
   新 model_config_hash → 新 LE（X≠Y）。fallback budget：每 fallback invocation 单独计 invocation/
   budget（HTTP retry 不增、fallback 增）。
 - 验收：Phase 9-3 fallback 按此语义；X≠Y LE + invocation 计数正确。
+- **对抗审查补充 B-1（2026-09-08）**：fallback 未注册 provider 名在 multi-provider 模式下曾
+  静默回退 `_live_provider`（primary）→ identity 漂移（audit 记 fallback 名、实际调 primary）
+  → 已修复：multi-provider 模式名未命中 → None（fail-closed→GatewayDenied），single-provider
+  模式才回退默认（向后兼容）。commit `1e435a9`。
 
 ## Resolved Bugs
 

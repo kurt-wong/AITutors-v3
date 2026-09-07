@@ -811,3 +811,37 @@ Date: 2026-09-05
   exception translation）→ 9-2（HTTP retry transport-only）→ 9-3（fallback）。
 - **下一步**：commit 登记 → Phase 9-1B（9.1 已接线 config 收口 + 9.3 provider exception
   translation：transport exception mapping + HTTP status mapping + adversarial tests）。
+
+### 2026-09-08 06:17（Phase 9 全量实现完成 + 第一性原理对抗审查 + B-1/B-2 修复收口）
+
+- **Status: Phase 9 实现完成（9-1B/9-2/9-3）+ 对抗审查 2 缺陷（B-1 HIGH / B-2 MEDIUM）已修复**。
+  H Phase 1–8 维持 CLOSED；A–G 维持 CLOSED。
+- **Phase 9 实现（commit 链）**：
+  - `6543969` 9-0 Scope Freeze（3 spec gap 冻结 BUG-V3-033/034/035）
+  - `fabf560` 9-1B provider exception translation（BUG-V3-034：transport→LLMNetworkError /
+    HTTP status→LLMProviderError(retryable)；LLMExecutor 识别 non-retryable 不重试）
+  - `5f7b9b1` 9-2 HTTP transport retry（BUG-V3-033：transport-only retry，不增
+    invocation/audit/budget）
+  - `4f44ad4` 9-3 explicit provider fallback（BUG-V3-035：新 config→新 LE + 新 invocation +
+    独立 budget；primary retry 耗尽后才降级；dedup 禁回退 primary）
+- **Phase 9 全量对抗审查（第一性原理 × V3SPEC，6 探针真证据）**：`_audit_phase9_adversarial.py`
+  6 探针，发现 2 真实缺陷（修复前 P3 FAIL = 缺陷证据）：
+  - **B-1（HIGH）**：`_resolve_live_provider` 未注册 provider 名静默回退 `_live_provider`
+    （primary）→ audit 记 fallback 名、实际调 primary 对象，identity 漂移破坏 Runtime Truth。
+    违反 BUG-V3-035「显式有序 provider」+ fail-closed 原则。
+  - **B-2（MEDIUM）**：HTTP 200 + malformed body（非 JSON / choices 缺失·空 / message·content
+    缺失·null）泄漏裸 IndexError/KeyError/JSONDecodeError → audit error_type='unknown'（非
+    provider_error），且不在 retry/fallback 白名单内。BUG-V3-034 翻译遗漏第三类 provider
+    failure（payload contract violation）。
+- **修复（各独立 commit + 对抗回归）**：
+  - `1e435a9` B-1：multi-provider 模式 provider 名未命中 → None（fail-closed→GatewayDenied），
+    single-provider 模式（live_providers 空）才回退默认（向后兼容）。+4 test。
+  - `312d1f7` B-2：`HTTPLLMProvider.complete` 响应解析 try/except（KeyError/IndexError/TypeError/
+    JSONDecodeError）+ content null 显式检查 → LLMProviderError(retryable=False)（用户裁决保守
+    分类）。+8 test（7 单元 + 1 audit 层端到端 error_type='provider_error'）。
+- **验证**：全量 pytest **344 passed**（原 332 + 12 新增）；re-probe `_audit_phase9_adversarial.py`
+  6/6 PASS（P1/P2/P3/P6 断言由「缺陷存在」反转为「修复生效」）；git diff --check 干净。
+- **deferred 状态**：BUG-V3-001..028 Open 不变；BUG-V3-033/034/035 Frozen（其实现边界 B-1/B-2
+  已在本轮细化修复，不入新编号）。Phase 8 的 D1/D3/D4/D5 + F-4 延续登记不变。
+- **下一步**：Phase 9 Final Closure 待用户裁决（B-1/B-2 已修复 + re-probe 6/6 + 344 passed）。
+  若关闭 → H 段（含 Phase 9）最终收口完成。

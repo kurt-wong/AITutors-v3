@@ -1,25 +1,24 @@
 # AI Tutor V3 — RESTART PROMPT
 
-Version: v1.17
-Status: H Phase 1–8 FINAL CLOSED；Phase 9-0 Scope Freeze CLOSED（3 spec gap 冻结为 BUG-V3-033/034/035）；
-下一实施步 = Phase 9-1B（9.1 config 收口 + 9.3 provider exception translation）
-Date: 2026-09-07
+Version: v1.18
+Status: H Phase 1–8 FINAL CLOSED；Phase 9 实现完成（9-1B/9-2/9-3）+ 对抗审查 B-1/B-2 已修复；
+下一实施步 = Phase 9 Final Closure 待用户裁决
+Date: 2026-09-08
 
-## 0.0 当前结论（2026-09-07 22:xx）
+## 0.0 当前结论（2026-09-08 06:17）
 
-- **H Phase 1–8 FINAL CLOSED**（用户宣布）；A–G 继续 CLOSED；V3 主链 A–H 冻结。**Phase 9-0
-  Scope Freeze CLOSED**（用户选 B：先冻结语义再实施）。
-- **3 spec gap 冻结**（BUG-V3-033/034/035，Frozen for implementation）：HTTP retry 不计新
-  Provider Invocation；transport exception→LLMNetworkError / HTTP response error→LLMProviderError
-  （408/429/5xx retryable）；fallback 默认关闭、仅 transient failure+retry exhausted+显式有序
-  provider、= 新 LE + 新 invocation。
-- **红线**：HTTP retry（transport）≠ LLM retry（同 LE）≠ fallback（新 config/新 LE）；三者不混；
-  MAX_LLM_CALLS_PER_TASK 按真实 Provider Invocation 计数不变。
-- **Phase 9 顺序**：9-1A 登记 ✅ → 9-1B（config 收口 + provider exception translation）→ 9-2
-  （HTTP retry transport-only）→ 9-3（fallback）。
-- **下一步**：commit 登记 → Phase 9-1B。
-- 重启后第一任务：读本文件 → Status.md 尾 → log.md 尾 → bugs.md（BUG-V3-033/034/035 冻结）→
-  按当前 Phase 继续（Phase 9-1B 待执行）。
+- **H Phase 1–8 FINAL CLOSED**（用户宣布）；A–G 继续 CLOSED；V3 主链 A–H 冻结。
+- **Phase 9 实现完成**（9-0 Scope Freeze → 9-1B provider exception translation → 9-2 HTTP
+  transport retry → 9-3 explicit provider fallback）。3 spec gap 冻结为 BUG-V3-033/034/035。
+- **Phase 9 对抗审查 + B-1/B-2 修复收口**（commit `1e435a9` / `312d1f7`）：B-1（HIGH）fallback
+  未注册 provider 名静默回退 primary → fail-closed；B-2（MEDIUM）malformed body 泄漏裸异常 →
+  翻译 LLMProviderError(retryable=False)。全量 pytest **344 passed**；re-probe 6/6 PASS。
+- **红线（不变）**：HTTP retry（transport）≠ LLM retry（同 LE）≠ fallback（新 config/新 LE）；
+  三者不混；MAX_LLM_CALLS_PER_TASK 按真实 Provider Invocation 计数。
+- **下一步**：Phase 9 Final Closure 待用户裁决（B-1/B-2 已修复 + re-probe 6/6 + 344 passed）；
+  若关闭 → H 段（含 Phase 9）最终收口完成。
+- 重启后第一任务：读本文件 → Status.md 尾 → log.md 尾 → bugs.md（BUG-V3-033/034/035 冻结 +
+  B-1/B-2 补充）→ 按当前 Phase 继续（Phase 9 Final Closure 裁决）。
 
 ## 0. 当前工作状态（2026-09-06 20:34:06）
 

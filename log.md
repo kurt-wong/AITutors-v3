@@ -860,3 +860,36 @@ Step 5 已于 commit `0917404` 落盘（含 Status/log/restart v1.10 收口）�
 - **红线**：HTTP retry（transport）≠ LLM retry（同 LE）≠ fallback（新 config/新 LE/新
   invocation），三者不混。MAX_LLM_CALLS_PER_TASK 仍按真实 Provider Invocation 计数。
 - **影响**：Phase 9 范围与语义冻结；下一步 9-1B（config 收口 + provider exception translation）。
+
+### 2026-09-08 06:17（Phase 9 全量实现 + 第一性原理对抗审查 + B-1/B-2 修复收口）
+
+- **背景**：Phase 9-0 Scope Freeze 冻结 3 spec gap（BUG-V3-033/034/035）后，按 9-1B→9-2→9-3
+  顺序实现，随后用户要求以第一性原理 × V3SPEC 对抗审查（每结论真实测试证据；不降标准 /
+  不自合理化 / 不强行解释失败 / 不靠推测）。
+- **Phase 9 实现（决策/实现，commit 链）**：
+  - `fabf560` 9-1B：`LLMProviderError` 加 `retryable` 属性；`HTTPLLMProvider` 翻译
+    `httpx.TransportError`→`LLMNetworkError`、`httpx.HTTPStatusError`→`LLMProviderError`
+    （408/429/5xx retryable、4xx 其他 non-retryable）；`LLMExecutor` 识别 non-retryable 不重试。
+  - `5f7b9b1` 9-2：`HTTPLLMProvider.complete` transport retry 循环（`http_retry_count`，仅
+    `httpx.TransportError`），bounded，不增 invocation/audit/budget（计数点仍在 gateway provider
+    seam，先于本层）；CancelledError 为 BaseException 自然传播。
+  - `4f44ad4` 9-3：`LLMGateway.live_providers` 按 provider 名路由；`LLMExecutor`/`LLMGateway.complete`
+    透传 provider；`TaskExecutor._annotation_stage` fallback 链（显式有序有限 + dedup 禁回退
+    primary + `retryable=False` 立即抛 + attempt_id 贯穿 primary/fallback）。
+- **对抗审查发现（真实缺陷，6 探针）**：`_audit_phase9_adversarial.py` 6 探针，发现 2 缺陷：
+  - **B-1（HIGH）**：`_resolve_live_provider` 未注册 provider 名静默回退 `_live_provider`
+    （primary）→ audit 记 fallback 名、实际调 primary，identity 漂移（Runtime Truth 破坏）。
+  - **B-2（MEDIUM）**：HTTP 200 + malformed body 泄漏裸 IndexError/KeyError/JSONDecodeError →
+    audit error_type='unknown'（非 provider_error），BUG-V3-034 翻译遗漏第三类 provider
+    failure（payload contract violation）。
+- **修复（决策/实现，独立 commit）**：
+  - `1e435a9` B-1：multi-provider 模式名未命中 → None（fail-closed→GatewayDenied），
+    single-provider 模式才回退默认（向后兼容）。+4 test。
+  - `312d1f7` B-2：响应解析 try/except + content null 显式检查 → `LLMProviderError(retryable=False)`
+    （用户裁决保守分类：HTTP 200 属 contract violation 非 transient）。+8 test（7 单元 + 1 audit
+    层端到端 error_type='provider_error'）。
+- **验证**：全量 pytest **344 passed**（原 332 + 12 新增，可重入）；re-probe 6/6 PASS（P1/P2/P3/P6
+  断言由「缺陷存在」反转为「修复生效」）；git diff --check 干净。
+- **影响**：Phase 9 三层 retry 语义（transport / LLM / fallback）+ provider boundary 全量
+  fail-closed 收口；provider boundary 不泄漏裸异常、identity resolution 不漂移。下一步 Phase 9
+  Final Closure 待用户裁决。
