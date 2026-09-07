@@ -83,9 +83,17 @@ class LLMGateway:
         return await live.complete(prompt)
 
     def _resolve_live_provider(self, provider: str | None) -> object | None:
-        """按 provider 名路由（BUG-V3-035 fallback）；名未命中回退到单一 live_provider。"""
+        """按 provider 名路由（BUG-V3-035 fallback）；名未命中 fail-closed（返回 None→deny）。
+
+        B-1（对抗审查）：multi-provider mode（live_providers 非空）下 provider 名必须命中，
+        未命中 = 配置错误 → 返回 None（fail-closed，_live 拒绝），不得静默回退到 live_provider
+        ——否则 audit 记 fallback 名、实际调 primary 对象，identity 漂移破坏 Runtime Truth。
+        single-provider mode（live_providers 空）才回退唯一默认 live_provider（向后兼容）。
+        """
         if provider is not None and provider in self._live_providers:
             return self._live_providers[provider]
+        if self._live_providers:
+            return None
         return self._live_provider
 
 

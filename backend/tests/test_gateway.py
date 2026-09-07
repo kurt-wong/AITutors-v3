@@ -99,3 +99,59 @@ async def test_live_denied_when_missing_task_id() -> None:
         await g.complete("x", invocation_counter=_FakeCounter())
     assert "task_id" in str(ei.value)
     assert calls == []
+
+
+# ---- B-1（对抗审查）：provider resolution fail-closed（BUG-V3-035 fallback 身份边界） ----
+
+
+async def test_resolve_single_provider_backward_compat() -> None:
+    """single-provider mode（live_providers 空）→ 任意名回退唯一默认 live_provider（向后兼容）。"""
+    primary = _FakeLiveProvider()
+    g = LLMGateway("live", live_provider=primary)
+    assert g._resolve_live_provider("deepseek") is primary
+    assert g._resolve_live_provider(None) is primary
+
+
+async def test_resolve_multi_provider_hit() -> None:
+    """multi-provider mode → 已注册名返回对应 provider（fallback 换 provider 正常路由）。"""
+    a = _FakeLiveProvider("a")
+    b = _FakeLiveProvider("b")
+    g = LLMGateway("live", live_providers={"a": a, "b": b})
+    assert g._resolve_live_provider("b") is b
+
+
+async def test_resolve_multi_provider_miss_fails_closed() -> None:
+    """multi-provider mode → 未注册名返回 None（fail-closed），不回退 live_provider。
+
+    修复前缺陷：未注册名静默回退到 live_provider（primary），造成 audit provider 与实际
+    invocation provider 身份漂移（Runtime Truth 破坏）。"""
+    primary = _FakeLiveProvider("primary")
+    g = LLMGateway("live", live_provider=primary, live_providers={"a": _FakeLiveProvider("a")})
+    assert g._resolve_live_provider("missing") is None
+
+
+async def test_live_denied_unregistered_provider_not_silently_primary() -> None:
+    """完整路径：multi-provider 未注册名 → GatewayDeniedError，primary 不被静默调用。
+
+    修复前缺陷：fallback 配了未注册 provider 名，gateway 静默用 primary 再跑一次（identity
+    漂移），audit 记 fallback 名、实际调 primary 对象。修复后 fail-closed 拒绝。"""
+    calls: list = []
+
+    class _Primary(_FakeLiveProvider):
+        async def complete(self, prompt: str) -> str:
+            calls.append(("primary", prompt))
+            return "should-not-reach"
+
+    primary = _Primary()
+    g = LLMGateway(
+        "live",
+        allow_live=True,
+        task_context="t",
+        budget_ok=True,
+        live_provider=primary,
+        live_providers={"registered": _FakeLiveProvider("x")},
+    )
+    counter = _FakeCounter()
+    with pytest.raises(GatewayDeniedError):
+        await g.complete("x", task_id="t1", invocation_counter=counter, provider="missing")
+    assert calls == []  # primary 从未被静默调用（identity 漂移已封死）
