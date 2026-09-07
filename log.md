@@ -837,3 +837,14 @@ Step 5 已于 commit `0917404` 落盘（含 Status/log/restart v1.10 收口）�
 - **验证**：全量 pytest **314 passed**（净 +4）。每个 blocker 带 adversarial regression。
 - **影响**：4 HIGH + 4 Runtime blocker 全部关闭；H Runtime 主链边界收紧。下一步 Batch 4（H Final
   Re-Probe）。
+
+### 2026-09-07 22:xx（H Phase 1–8 FINAL CLOSURE）
+
+- **用户正式宣布 H Phase 1–8 FINAL CLOSED**。H Runtime Execution Layer 完成 Frozen Contract 运行时
+  闭环（Task State Machine → Claim/Lease → Attempt → LLMExecutor → Artifact → Task Outcome + audit/
+  budget 双层语义）。A–G 继续 CLOSED。
+- **Closure 证据**：4 HIGH + 4 Runtime blocker 全关闭；Batch 4 Re-Probe（4 HIGH + 4 runtime +
+  core invariants 全 PASS）；全量 **314 passed**；Known HIGH = 0 / Unreviewed P1 = 0。
+- **裁决边界**：H Phase 1–8 不因后续普通缺陷自动 reopen（走 post-closure defect/errata）；Phase 9
+  批准进入范围冻结（Scope Freeze 先于实施）；不自动纳入 D1/D3/D4/D5/F-4 deferred。
+- **影响**：V3 的 A–H 主链从「设计+实现」进入「冻结后下一阶段开发」；下一步 Phase 9-0 Scope Freeze。

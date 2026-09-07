@@ -774,3 +774,21 @@ Date: 2026-09-05
   audit-settle（settle 失败不回滚 audit）、model_config（不同 provider → 2 annotation）。
 - **下一步**：Batch 4 = H Final Adversarial Re-Probe（4 HIGH + 4 runtime blocker + core invariants
   全 PASS → H Final Closure → Phase 9）。
+
+### 2026-09-07 22:xx（H Phase 1–8 FINAL CLOSURE）
+
+- **用户正式宣布 H Phase 1–8 FINAL CLOSED**。H Runtime Execution Layer 已完成 Frozen Contract
+  运行时闭环；A–G 继续 CLOSED。H Phase 1–8 不因后续普通缺陷自动 reopen，未来问题走 post-closure
+  defect/errata 流程。
+- **Closure 证据链**：Contract（4 HIGH + 4 Runtime blocker 全关闭）→ Implementation →
+  Adversarial Probe（4 HIGH + 4 runtime 全 PASS）→ Real DB Probe（并发/幂等/exactly-once）→
+  Regression（**314 passed**）→ Closure。Known HIGH = 0，Unreviewed P1 = 0。
+- **提交链（H Runtime 收敛，已 push origin/main）**：`5a44245`（Batch 1）/ `d9bdeed`（Batch 2）/
+  `94f74c8`（3-1）/ `1e58710`（3-2）/ `2f40514`（3-3）/ `617da01`（3-4）/ `55de2ef`（docs）。
+- **当前 V3 状态**：A–G FINAL CLOSED；H Phase 1–8 FINAL CLOSED；Phase 9 NOT STARTED（批准进入
+  范围冻结阶段 Phase 9-0 Scope Freeze，先不改代码）。
+- **Phase 9 范围（用户批准，先冻结后实施）**：9.1 config constants / 9.2 HTTP retry + LLM retry
+  分层 / 9.3 provider exception translation / 9.4 fallback boundary。**不自动纳入** D1/D3/D4/D5/F-4。
+  红线：retry 层级不得合并；`MAX_LLM_CALLS_PER_TASK` 按实际 provider invocation 计数不变。
+- **下一步**：Phase 9-0 Scope Freeze（纯审查，不改代码——逐项回答 Frozen Spec 契约/缺什么/
+  impl gap vs spec gap/是否改 identity/retry/audit/budget/Gate/是否触碰 deferred）→ Phase 9-1 逐项实施。
