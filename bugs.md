@@ -205,6 +205,14 @@
   commit 命名：A=Identity / B=Extraction / C=Persistence+Integrity / E=DB Constraint。
 - Status: **Implementation**（Scope Freeze CLOSED → Plan Review CLOSED（4 点 amendment + migration
   情况 A 核验）→ Implementation 进行中，2026-09-09）
+- **Resolved / Closed（2026-09-09 05:55）**：BUG-V3-011 → Closed。5 个 atomic commits（docs
+  Scope Freeze `5c9ecc9` → A Figure Identity `a8cd129` → B Native Extraction `dd26a6b` → C
+  Persistence+Integrity `716875e` → E DB UNIQUE + migration 0009 `9da09db`）；全量 pytest
+  **413 passed**；migration replay 双路径 PASS（from-empty 0001 create_all 建约束 +
+  incremental 0008→0009 delta == {uq_source_figures_figure_id}）；origin/main == local main ==
+  `9da09db`。**BUG-011-E2 保持 Open 独立记录**（E `_image_span` IS-7 消费 4 字段 vs B 写 7
+  字段的跨层 drift；Spec 已区分写入门 10 §4.4 7 字段 / 消费资格 20 §5.3 4 字段子集，E 代码
+  对齐留待后续统一处理，不随 BUG-011 关闭）。
 
 ### BUG-V3-012 — 跨行 ResolvedSpan `text_hash` 拼接规则未冻结（20 §5.5）
 - Status: Open

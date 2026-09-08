@@ -919,3 +919,56 @@ Step 5 已于 commit `0917404` 落盘（含 Status/log/restart v1.10 收口）�
 - **验证**：全量 pytest **350 passed**（原 344 + 6 新增）；git diff --check 干净。
 - **影响**：非法 retry 配置不再进入有副作用的执行路径（0 invocation/audit/budget/provider +
   0 None-return 被永久钉死）；retry=0 合法语义（attempts = 1 + retry_count）保持。
+
+### 2026-09-08 14:01（BUG-V3-001..028 errata 分类审计 + E/B/A Closure + D-1 Schema 完成）
+
+- **背景**：Phase 9 Re-Closure 后，用户授权 BUG-V3-001..028 系统性 errata 终裁，方法论
+  「先证伪、后修复」（falsify-first），5 类分类：A=已被后续设计覆盖 / B=纯文档 errata /
+  C=真实 implementation gap / D=必须改 Frozen Spec / E=可正式关闭。
+- **分类结果（并行审计）**：A=010；B=003/004；C=011；D=22 项（001/002/005/006/008/009/012/013/
+  014/015/016/017/018/019/020/021/022/023/024/025/026/027）；E=007/028。
+- **执行顺序（用户裁决）**：先闭 E/B/A → D-1 Schema → D-2 Identity/Hash → D-3 Annotation →
+  D-4 IR/Compiler → D-5 Gate → D-6 Figure Contract → BUG-011 实现。每条 D 类 8 项裁决
+  （Canonical Rule / Rejected Alternatives / Backward Compat / Migration Impact / Identity
+  Impact / Rebuild / 代码改动 / 验证 Gate）；红线「先冻结 Spec，再改代码」，绝不倒序。
+- **E/B/A Closure（commit `b02c16c`）**：003/004（B 类文档 errata）、007/028（E 正式关闭）、
+  010（A 已覆盖）。
+- **D-1 Schema（5 项，`60bc497` Spec + `eb0e450` 008 + `5b0f767` 027）**：
+  - 001/002/006（Spec 文案 errata）：域归属裁决 / role-provider 枚举 / selection-event 9 列
+    冻结 / dedup_key UNIQUE 声明，写入 10_Data_Model.md 正文。
+  - 008（独立 provider/role）：新增 `paddleocr-vl`/`ocr_ppsvl` 封闭配对，`seal.py` 加
+    `validate_seal_role_provider` fail-fast；`task/executor.py` `_seal_stage` role 默认
+    `"main"`→`"native"`。TDD RED→GREEN（17 passed）。
+  - 027（全局 UNIQUE）：`questions.dedup_key` 加 `UNIQUE`；migration 0007 前置查重 fail-loud；
+    `create_question` 改 `ON CONFLICT DO NOTHING` + re-read 幂等收敛。并发/串行测试锁死
+    「恰 1 Question」。
+- **验证**：全量 pytest **355 passed**（350 + 3 配对 + 2 并发幂等）；git diff --check 干净。
+- **影响**：E/B/A + D-1 Schema 五条收口；questions canonical identity 全局唯一 + seal role/
+  provider 封闭配对成为 runtime 事实。下一步 D-2 Identity/Hash（高风险组，identity 一旦形成
+  生产数据难回滚，须逐条 8 项终裁）。
+- **待办**：4 commit（b02c16c/60bc497/eb0e450/5b0f767）本地未 push，待用户明示 push。
+
+### 2026-09-09 05:55（D-6 Figure Contract + BUG-011 实现 + Final Closure）
+
+- **D-6 Figure Contract（BUG-V3-020）closure**：commit `0b0a4d3`——冻结 figure_refs 跨层契约
+  （spec-only，A-Guarded；E ResolvedSpan ↔ SourceFigure/IS-7 跨层契约）。D-1 → D-6 六类 errata
+  全链完成。
+- **BUG-011 Scope Freeze（`5c9ecc9`，docs-only）**：Frozen Spec 同步（10 §4.4/§6.6 + 20 §5.3/
+  §7.2.5 + 两册 §12 变更记录）；canonical notation `FIG-{page_no}-{ordinal:02d}`；placement M1 =
+  standalone（source-level 未定，≠ figure_refs[].role unit-level）；4 项裁决 + 2 语义修订 +
+  IS-7 重定义为完整写入门（7 字段齐 + deterministic）。
+- **BUG-011 Implementation（A/B/C/E，依赖序推进，每个 commit 后跑最小测试子集）**：
+  - A Figure Identity（`a8cd129`）：`build_figure_index` 纯函数 + canonical sort + figure_id/
+    object_key/figure_hash 确定性；
+  - B Native Extraction（`dd26a6b`）：PyMuPDF `get_image_info` → `OCRResult.figures`；失败语义 =
+    「无 image placement」合法空集 / 「发现但无法形成完整 figure」→ seal failure（IS-7 fail-loud）；
+  - C Persistence+Integrity（`716875e`）：`seal.py` `append_figure` + `integrity_hash` 计入
+    `figure_hashes` + `SourceFigure` ORM（`UNIQUE(source_version_id, figure_id)` __table_args__）；
+  - E DB UNIQUE（`9da09db`）：migration 0009 DO block IF NOT EXISTS（复刻 0007 幂等模式），
+    前置查重 fail-loud。
+- **Gate / Migration 验证**：全量 pytest **413 passed**；migration replay 双路径 PASS（from-empty
+  0001 create_all 建约束 + incremental 0008→0009 delta == {uq_source_figures_figure_id}）。
+- **Final Closure**：BUG-V3-011 → Resolved / Closed；**BUG-011-E2 保持 Open 独立记录**（E
+  `_image_span` IS-7 消费 4 字段 vs B 写 7 字段跨层 drift；Spec 已区分写入门 10 §4.4 7 字段 /
+  消费资格 20 §5.3 4 字段子集，E 代码对齐留待后续统一处理，不随 BUG-011 关闭）。origin/main ==
+  local main == `9da09db`。

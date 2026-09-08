@@ -878,3 +878,50 @@ Date: 2026-09-05
 - **验证**：全量 pytest **350 passed**（原 344 + 6 新增）；git diff --check 干净；commit `7ace837`。
 - **Phase 9 Re-Closure**：C-1 MEDIUM resolved；B-1 HIGH / B-2 MEDIUM 保持 resolved；Phase 9
   adversarial probes + 全量 pytest 全 PASS；文档收口 + origin/main 同步后重新 FINAL CLOSED。
+
+### 2026-09-08 14:01（errata 分类审计 + E/B/A Closure + D-1 Schema 完成）
+
+- **Status: BUG-V3-001..028 errata 分类审计完成；E/B/A Closure + D-1 Schema 五条已关闭**。
+  H Phase 1–8 / Phase 9 维持 FINAL CLOSED；A–G 维持 CLOSED。
+- **分类（5 类，方法论「先证伪、后修复」）**：A=010；B=003/004；C=011；D=22 项；E=007/028。
+- **执行顺序（用户裁决）**：先闭 E/B/A → D-1 Schema → D-2 Identity/Hash → D-3 Annotation →
+  D-4 IR/Compiler → D-5 Gate → D-6 Figure Contract → BUG-011。每条 D 类 8 项裁决；红线
+  「先冻结 Spec 再改代码」。
+- **E/B/A Closure（`b02c16c`）**：003/004（B 文档 errata）、007/028（E 正式关闭）、010（A 已覆盖）。
+- **D-1 Schema 完成（`60bc497` + `eb0e450` + `5b0f767`）**：
+  - 001/002/006：Spec 文案 errata（域归属 / role-provider 枚举 / selection-event 冻结 /
+    dedup_key UNIQUE 声明）。
+  - 008：`paddleocr-vl`/`ocr_ppsvl` 封闭配对 + `validate_seal_role_provider` fail-fast +
+    `_seal_stage` role 默认 `native`。
+  - 027：`questions.dedup_key` UNIQUE + migration 0007 fail-loud + `create_question`
+    ON CONFLICT 幂等收敛。
+- **验证**：全量 pytest **355 passed**。
+- **下一步**：D-2 Identity/Hash（005/012/017/019/022 + H0-2 R2，高风险组；BUG-022 单独首优先
+  级，BUG-017 须明确 10 §6.3 vs 20 §7.3 唯一 canonical definition）。
+- **待办**：4 commit 本地未 push（待用户明示）。
+
+### 2026-09-09 05:55（D-1 → D-6 errata 全链完成 + BUG-011 Final Closure）
+
+- **Status: BUG-V3-001..028 errata 执行完成（D-1 → D-6 全链）+ BUG-011（C 类真实 gap）
+  Final Closed**。A–G / H Phase 1–8 / Phase 9 维持 FINAL CLOSED。
+- **errata 执行进度（自 E/B/A Closure `b02c16c` 起，已全部 push origin/main）**：
+  - **D-1 Schema**（001/002/006/008/027）——前快照已关闭；
+  - **D-2 Identity/Hash**（005/012/017/019/022）——`95c1700` Spec + `7cf21ba` 022 + `878fb10`
+    019/012 + `a731e0d` 005；
+  - **D-3 Annotation/Content Shape**（009/013/021）——`5ae9853` Spec + `3429671` 021 +
+    migration 0008 + `3bbcf53` 013；
+  - **D-4 IR/Compiler**（014/015/016/018）——`ff64352` 014 + `a105bf8` 015 + `c6014f7` 018 +
+    `3cca050` 016；
+  - **D-5 Gate**（023/024/025/026）——`9c1d43f` 023 + `b24b5a7` 024 + `19d236b` 025 + `5f0d3d0`
+    026；
+  - **D-6 Figure Contract**（020）——`0b0a4d3`（figure_refs 跨层契约冻结，spec-only，A-Guarded）。
+- **BUG-011（C 类真实 gap）Final Closure**：Scope Freeze → Implementation（A/B/C/E）→ Gate →
+  Migration 全链闭环。5 个 atomic commits：`5c9ecc9`（docs Scope Freeze）/ `a8cd129`（A Figure
+  Identity）/ `dd26a6b`（B Native Extraction）/ `716875e`（C Persistence+Integrity）/ `9da09db`
+  （E DB UNIQUE + migration 0009）。**BUG-011-E2 保持 Open 独立记录**（E/B 跨层 figure 字段
+  drift，后续统一处理，不随 BUG-011 关闭）。
+- **验证基线**：全量 pytest **413 passed**；migration replay 双路径 PASS；origin/main == local
+  main == `9da09db`。
+- **下一步**：**Errata Final Closure**——系统性收口剩余 BUG 状态（005/009/012..026 共 17 项的
+  bugs.md Status → Resolved 逐条 Closure evidence）+ `backend/tests/_audit_*.py`（12 份）处置
+  裁决（删除 / 归档 / 转正）。之后进入新的功能 / Bug 阶段。
