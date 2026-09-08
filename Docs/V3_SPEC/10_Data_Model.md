@@ -1,7 +1,7 @@
 # AI Tutor V3 — 数据模型：全新库 schema、实体关系与 Admission 事务
 
-Version: v1.2.1（Baseline—Frozen，2026-09-05；v1.2 锚点 errata，无 schema 语义变更）
-Status: V3 收敛基线（10 分册）— 已落实 10 二轮审查 4 项冻结前修订与 v1.2.1 锚点 errata，冻结（与 20/30/40/50 对齐完成）
+Version: v1.2.2（Baseline—Frozen，2026-09-05；v1.2.1 锚点 errata；v1.2.2 BUG-011 Scope Freeze errata，source_figures 语义/唯一约束/IS-7 写入门）
+Status: V3 收敛基线（10 分册）— 已落实 10 二轮审查 4 项冻结前修订 + v1.2.1 锚点 errata + v1.2.2 BUG-011 Scope Freeze errata，冻结（与 20/30/40/50 对齐）
 Date: 2026-09-05
 Supersedes: `Docs/V3_DATA_MODEL.md`（起草输入）;上位约束 `00_Master_Spec.md`（不可修改）;
 字段权威参考 `docs_archive/2026-09-03/01_ImmutableSource_*_v0.3.md`、
@@ -183,20 +183,49 @@ inline 单独建行。
 |---|---|---|
 | id | UUID | PK |
 | source_version_id | UUID | FK |
-| figure_id | VARCHAR | version 内唯一，如 `FIG-3` |
+| figure_id | VARCHAR | `FIG-{page_no}-{ordinal:02d}`（BUG-011 冻结，确定性生成；version 内唯一） |
 | page_no | INTEGER | 必填 |
 | bbox | JSONB | 必填 |
-| placement | VARCHAR | stem / options / explanation / answer_area / standalone（**版面描述**） |
+| placement | VARCHAR | source-level placement；M1 恒 `standalone`（值域 stem / options / explanation / answer_area / standalone） |
 | source | VARCHAR | native / ppsv3 / … |
-| object_key | VARCHAR | 对象存储 key |
-| figure_hash | CHAR(64) | 图片内容 SHA256（跨文档精确去重用） |
+| object_key | VARCHAR | `figure:{figure_hash}`（M1 logical deterministic key，非已持久化 blob 声明） |
+| figure_hash | CHAR(64) | `SHA256(raw_image_bytes)`（跨文档精确去重用） |
+
+唯一约束：**`UNIQUE(source_version_id, figure_id)`**（identity invariant，DB 级兜底，非仅
+应用层去重；BUG-011 冻结）。
+
+**figure_id 生成规则（BUG-011 冻结，canonical visual order）**：`page_no` 1-based；`ordinal`
+= 该 page 内 figure 的 canonical visual order（1-based），排序键 = `(page_no, bbox.top,
+bbox.left, bbox.bottom, bbox.right, figure_hash, extraction_ordinal)`。**禁止** DB ID /
+UUID / runtime ID / object storage key / figure_hash 作 figure_id。
+
+**figure_hash（BUG-011 冻结）**：`SHA256(raw_image_bytes)`——identity 为 raw bytes 精确去重，
+非 resized / normalized / decoded_pixels / canonicalized_image；视觉/语义相似属独立
+similarity layer，不污染 Source Identity。
+
+**object_key（BUG-011 冻结）**：`figure:{figure_hash}` 为 **logical deterministic key**，只
+证明 deterministic identity/address 已生成、不证明对象存储已完成；M1 不实现真实 blob
+storage，后续需读 image bytes 时 object store lookup 找不到必须 fail-loud（不得据 key 存在
+即断言图存在）。
+
+**placement 语义（BUG-011 冻结）**：`source_figures.placement` 是 **source-level
+placement**——Source Seal 阶段无法确定 figure 对具体 Question Unit 的语义归属，故 M1 恒
+`standalone`（= 源层未定语义归属，**非**"图片语义上独立于题干"）；semantic 归属由 A 域
+`instance_figure_links.role` 表达（§6.6），禁止 E 反向 UPDATE `source_figures`。
 
 领域边界（审查裁决）：**Source 不知道 Question**。本表**不设 `role_owner`/题号归属
 字段**；"哪道题的 stem 用 FIG-3" 是 Question 侧的语义，由 A 域 `instance_figure_links`
 （§6.6）表达。图片归属到 instance+role 后天然防整页广播。
 
-写入门：缺 page/bbox/placement/source 任一字段不得写入（IS-7）；`figure_id`
-version 内去重。
+**生产来源（BUG-011 冻结）**：Native Source Seal（PyMuPDF）**必须能产生 figures**——至少
+`page_no` / `bbox` / raw image bytes / `source=native`，并据此确定性产生 `figure_hash` /
+`figure_id` / `placement=standalone` / `object_key`；Native 阶段**不做 semantic placement**
+（不产 stem/options 归属）。figure 不因 native 文本层提取而只对 cloud OCR provider 成立。
+
+写入门（IS-7，BUG-011 冻结为完整写资格）：`figure_id`（deterministic）/ `page_no` / `bbox`
+/ `placement` / `source` / `object_key`（deterministic logical key）/ `figure_hash`
+（`SHA256(raw bytes)`）任一缺失或不满足确定性 → **不写 SourceFigure**、seal 不得假装 figure
+成功、fail-loud；`figure_id` version 内去重由 `UNIQUE(source_version_id, figure_id)` 兜底。
 
 ### 4.5 document_active_sources 与选择事件
 
@@ -530,6 +559,12 @@ SourceFigure identity 模型。**段 B 未接 seal figures（BUG-011）前 `sour
 → image reference 恒 ambiguous → F image `unsupported → incomplete`（fail-loud）、
 `figure_refs[]` 恒空——**本映射为契约定义，非当前已实现的 figure 通道**。
 
+**placement ≠ role 语义区分（BUG-011 冻结）**：`source_figures.placement`（source-level
+placement，M1 恒 `standalone`）与 `figure_refs[].role`（unit-level semantic role）**值域可
+相同但语义层级不同、不要求值相等**——`figure_refs[].role` 可为 `stem/options/...`，而
+`source_figures.placement` 在 M1 恒 `standalone`；semantic 归属只由本表 `role` 列承载，
+禁止 E 反向 UPDATE `source_figures`（sealed source 不可变）。
+
 ### 6.7 knowledge_nodes + question_knowledge_links（可选派生映射）
 
 | Field | Type | Note |
@@ -742,3 +777,17 @@ JSONB。**
   - §8 不变量 3 composite 原子性出处 "20 §12.1" → **"20 §8.5"**（20 §12 是变更记录）。
 - 触发：20 v1.1 审查 P1-3 发现 10 冻结文件含 v0.3 时代遗留节号；errata 限引用修正，
   20 §8.1/§8.5 为 Gate 分层与 Composite 原子性的实际所在节。
+
+### 2026-09-09（v1.2.2，BUG-011 Scope Freeze errata）
+
+- §4.4 `source_figures` 四字段语义 + 唯一约束冻结（BUG-011 终裁）：`figure_id` =
+  `FIG-{page_no}-{ordinal:02d}`（canonical visual order，排序键 page_no→bbox.top→bbox.left→
+  bbox.bottom→bbox.right→figure_hash→extraction_ordinal）；`placement` M1 恒 `standalone`
+  （source-level placement 未定，非"图片天然独立"）；`figure_hash` = `SHA256(raw_image_bytes)`；
+  `object_key` = `figure:{figure_hash}`（M1 logical deterministic key，非已持久化 blob）；
+  加 `UNIQUE(source_version_id, figure_id)`；IS-7 重定义为完整 7 字段写资格（任一缺失或不
+  满足确定性 → 不写 + fail-loud）。
+- §4.4 增 figure 生产来源：Native Source Seal（PyMuPDF）必须产 figures（不做 semantic
+  placement）。
+- §6.6 增 placement ≠ role 语义区分（source-level vs unit-level，值域可同、语义独立、
+  不要求相等；禁止 E 反向 UPDATE `source_figures`）。

@@ -1,6 +1,6 @@
 # AI Tutor V3 — 文档解析与题目编译管线（Annotation → Resolver → IR → Compiler → Gate）
 
-Version: v1.2（Baseline—Frozen，2026-09-05）
+Version: v1.2.1（Baseline—Frozen，2026-09-05；v1.2.1 BUG-011 Scope Freeze errata，2026-09-09）
 Status: V3 收敛基线（20 分册）— 已落实对抗性审查 3×P0 + 6×P1 与冻结前 2 条文字钉死，冻结
 Date: 2026-09-05
 Supersedes: `Docs/V3_DOCUMENT_PIPELINE.md`（起草输入）;上位约束 `00_Master_Spec.md`
@@ -282,9 +282,11 @@ Normalized 至少处理：全半角、空白、中英文标点、OCR 转义噪�
 - **explanation**：定位【详解/解析】区；找不到完整区域 → ambiguous，不截断。
 - **blank**：一个 blank 必须映射到一个 sub_question/answer；无闭合 → IR incomplete。
 - **image**：reference 必须解析到 source version 图片索引（`source_figures`）；图须带
-  page/bbox/placement/source（IS-7）；无唯一图 → ambiguous，禁止跨题广播。`figure_id`
-  是 E→F→A 的 **version-scoped join key**（annotation `image_ref.figure_id` →
-  ResolvedSpan 结构化 `figure_id` → `source_figures.figure_id`，D-6 Figure Contract）。
+  page/bbox/placement/source（E 侧消费资格；完整 IS-7 写入门见 10 §4.4——E 侧 4 字段
+  消费子集与 7 字段写资格的差异记为 BUG-011-E2，待统一）；无唯一图 → ambiguous，禁止
+  跨题广播。`figure_id` 是 E→F→A 的 **version-scoped join key**（annotation
+  `image_ref.figure_id` → ResolvedSpan 结构化 `figure_id` → `source_figures.figure_id`，
+  D-6 Figure Contract）。
 
 ### 5.4 Contextual 自动通过条件（03 §4.2 收敛）
 
@@ -458,12 +460,14 @@ Annotation/IR、在无 resolved span 时生成正文、生成 Source 中不存�
 4. answer：从答案 source span **确定性提取**答案正文 + 置 `answer_status` 的
    `source_located/complete`；`verified_correct` 的置 true 规则见 §8.3。
 5. figure_refs[]：由 image reference 的归属产出 `{unit_id, figure_id, role, order}`，
-   仅当 figure 通过 IS-7（page/bbox/placement/source）。**字段语义（D-6 Figure Contract
-   冻结）**：`unit_id` = figure 归属的 unit（business/content provenance，**非** runtime/
-   task/attempt/request ID）；`figure_id` = `source_figures.figure_id`（version-scoped，
-   非 UUID）；`role` = `source_figures.placement` 值域（stem/options/explanation/
-   answer_area/standalone，**不另造 figure-role enum**）；`order` = **role 内顺序**（非全局
-   顺序）。composite 子题级归属不设顶层 `sub_question_id` 字段——figure 首层 owner 恒为
+   仅当 figure 通过 IS-7（10 §4.4 写入门）。**字段语义（D-6 Figure Contract 冻结，
+   BUG-011 修订）**：`unit_id` = figure 归属的 unit（business/content provenance，**非**
+   runtime/task/attempt/request ID）；`figure_id` = `source_figures.figure_id`
+   （version-scoped，非 UUID，格式 `FIG-{page_no}-{ordinal:02d}`）；`role` = unit-level
+   semantic role，值域 stem/options/explanation/answer_area/standalone（**不另造
+   figure-role enum**）——**值域与 `source_figures.placement` 可相同但语义层级不同、不
+   要求值相等**（M1 下 `source_figures.placement` 恒 `standalone`，`figure_refs[].role`
+   可为 `stem` 等）；`order` = **role 内顺序**（非全局顺序）。composite 子题级归属不设顶层 `sub_question_id` 字段——figure 首层 owner 恒为
    `unit_id`，子题级语义在 unit 结构内进一步表达。
 6. 去重身份（**per 待物化实体**，非整个 candidate 一键）：规范化规则见 §7.3；
    **Admission 层不再二次 normalize**（10 §6.1 P1-2）。
@@ -775,3 +779,11 @@ candidate/reject 必须按整个 composite 返回，禁止部分子题 approved�
   `dedup_key`（type+own text；不含 question/instance/source location）、Instance
   `occurrence_key`（document-local unit/question + resolved stem span；**与 question_id
   无关**）（§7.3）。铁律：Question identity ≠ Answer identity；Question 不含共享材料。
+
+### 2026-09-09（v1.2.1，BUG-011 Scope Freeze errata）
+
+- §7.2.5 `figure_refs[].role` 语义修订：unit-level semantic role，值域与
+  `source_figures.placement` 可相同但语义层级不同、不要求相等（M1 下 placement 恒
+  `standalone`，role 可为 `stem` 等）；`figure_id` 注明格式 `FIG-{page_no}-{ordinal:02d}`。
+- §5.3 图消费资格与 IS-7 写入门区分：完整 7 字段写入门见 10 §4.4；E 侧 4 字段
+  （page/bbox/placement/source）消费子集与写资格的差异记为 BUG-011-E2（待统一）。

@@ -162,6 +162,49 @@
   append-only 不回写。E 不反向修改已关闭 B。
 - 验收：errata/B 侧 backlog 终裁后，seal 补齐字段计算 + `append_figure` + 计入
   `integrity_hash`。
+- **终裁（2026-09-09，BUG-011 Scope Freeze / Errata）**：Frozen Spec 已同步（10 §4.4 / §6.6 /
+  20 §5.3 / §7.2.5 / 两册 §12 变更记录）。4 项裁决 + 2 项语义修订：
+  ① **placement（D-5）= A**：M1 恒 `standalone` = source-level placement 未定（**非**"图片
+  天然独立"）；禁止 E 反向 UPDATE `source_figures`；`figure_refs[].role`（unit-level semantic
+  role）与 `source_figures.placement`（source-level）**值域可相同、语义独立、不要求相等**。
+  ② **figure_id（D-6）** = `FIG-{page_no}-{ordinal:02d}`；ordinal = canonical visual order
+  `(page_no, bbox.top, bbox.left, bbox.bottom, bbox.right, figure_hash, extraction_ordinal)`；
+  禁 DB ID/UUID/runtime ID/object_key/figure_hash。
+  ③ **figure_hash（D-8）** = `SHA256(raw_image_bytes)`（非 resized/normalized/decoded/
+  canonicalized）。
+  ④ **object_key（D-7）** = `figure:{figure_hash}`（M1 logical deterministic key，不实现真实
+  blob storage；object store lookup 找不到必须 fail-loud，不得据 key 存在断言图存在）。
+  ⑤ **Native figures（D-9）= 是**：Native Source Seal（PyMuPDF）必须产 figures（page_no/bbox/
+  raw bytes/source=native → figure_hash/figure_id/placement=standalone/object_key），不做
+  semantic placement。
+  ⑥ **UNIQUE(source_version_id, figure_id)** 立即补（DB 级 identity invariant，非仅应用层去重）。
+  ⑦ **IS-7 重定义为完整写入门**（7 字段齐 + deterministic，任一缺失 → 不写 + fail-loud）。
+- **执行拆分（顺序：Scope Freeze → Implementation → Contract Tests → Migration → Gate）**：
+  BUG-011-A Figure Identity / BUG-011-B Native Figure Extraction / BUG-011-C Seal Figure
+  Persistence（IS-7 校验 → append_figure）/ BUG-011-D Integrity Hash（figure_hashes 计入
+  canonical 序）/ BUG-011-E DB UNIQUE + migration。
+- **BUG-011-E2（记录，不本轮改代码）**：E `_image_span` IS-7 过滤只查 page/bbox/placement/
+  source（4 字段），未查 object_key/figure_hash → 跨层 invariant drift（B 写入 7 字段 vs E
+  消费 4 字段）。Spec 已区分写入门（10 §4.4 7 字段）与消费资格（20 §5.3 4 字段子集）；E 代码
+  对齐留待后续统一处理，不在本轮扩大 BUG-011 范围。
+- **Implementation Plan Review 裁决（2026-09-09）**：批准进入 Implementation，4 点 amendment +
+  migration 事实核验：
+  ① deterministic scope 收紧 —— `extraction_ordinal` 是 provider 在同一 source bytes 上的稳定
+  extraction order，仅作 canonical sort key 完全相同时的最后 tie-breaker，非 identity 语义组成；
+  invariant =「同一 sealed source version + 同一 provider extraction → deterministic figure_id」，
+  不要求跨 provider 相同（figure_id version-scoped）。
+  ② Native 提取失败语义 ——「无 image placement」= 合法空集 `figures=()`；「已发现 placement 但
+  无法形成完整 figure」= seal failure（产不完整 OCRFigure → IS-7 fail-loud → version 不 sealed）；
+  禁 `try/except: continue` 静默丢图。
+  ③ bbox 校验收紧 —— 必须验证 `x0/y0/x1/y1` 四键存在且为合法有限数值；不接受 `{}`/`{"x0":1}`/
+  `None`/`NaN`（不把「非空 dict」误当「有效 bbox」）。
+  ④ migration 0001 事实核验 —— 确证情况 A：0001 用 `Base.metadata.create_all`（动态依赖活 ORM
+  metadata），故 from-empty 由 0001 建出约束 → 0009 用 DO block IF NOT EXISTS 幂等模式（复刻 0007）。
+  新增 3 条测试 invariant：figure_index 纯函数 `len(ids)==len(set(ids))`；`figure_hash ≠ figure_id`
+  （同 hash 异 id 合法）；`object_key == f"figure:{figure_hash}"` 且不出现任何 fake blob infra。
+  commit 命名：A=Identity / B=Extraction / C=Persistence+Integrity / E=DB Constraint。
+- Status: **Implementation**（Scope Freeze CLOSED → Plan Review CLOSED（4 点 amendment + migration
+  情况 A 核验）→ Implementation 进行中，2026-09-09）
 
 ### BUG-V3-012 — 跨行 ResolvedSpan `text_hash` 拼接规则未冻结（20 §5.5）
 - Status: Open
