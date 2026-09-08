@@ -17,6 +17,7 @@ from typing import Awaitable, Callable
 
 from app.ai.ocr.result import OCRResult
 from app.core.hashing import logical_execution_hash
+from app.domains.source.figure_index import SealFigure, build_figure_index
 from app.domains.source.line_index import (
     SealLine,
     build_line_index,
@@ -26,7 +27,7 @@ from app.domains.source.line_index import (
     rebuild_body_text,
     verify_body_rebuild,
 )
-from app.models.source import DocumentSourceLine, DocumentSourceVersion
+from app.models.source import DocumentSourceLine, DocumentSourceVersion, SourceFigure
 from app.repositories.source_repository import SourceRepository
 
 SEAL_CONTRACT_VERSION = "seal/v1"
@@ -118,6 +119,7 @@ class SealService:
             raise
 
         lines = build_line_index(result.lines)
+        figures = build_figure_index(result.figures)  # IS-7 fail-loud（无部分写）
         body_text = rebuild_body_text(lines)
         if not verify_body_rebuild(body_text, lines):
             raise ValueError("body_text is not deterministic from line index (IS-4)")
@@ -130,7 +132,7 @@ class SealService:
         integrity_hash = compute_integrity_hash(
             body_hash=body_hash,
             line_hashes=line_hashes,
-            figure_hashes=[],
+            figure_hashes=[f.figure_hash for f in figures],
             provenance=provenance,
         )
 
@@ -158,6 +160,8 @@ class SealService:
 
         for sl in lines:
             await self._repo.append_line(self._to_source_line(version.id, sl, provider))
+        for sf in figures:
+            await self._repo.append_figure(self._to_source_figure(version.id, sf))
         await self._repo.flush()
 
         await self._repo.seal_version(version.id)
@@ -189,4 +193,19 @@ class SealService:
             selected_source=provider,
             evidence=f"{provider} text layer",
             line_hash=self._line_hash(sl, provider),
+        )
+
+    def _to_source_figure(
+        self, source_version_id: uuid.UUID, sf: SealFigure
+    ) -> SourceFigure:
+        """SealFigure → SourceFigure ORM：content 不落库（仅用于派生 figure_hash）。"""
+        return SourceFigure(
+            source_version_id=source_version_id,
+            figure_id=sf.figure_id,
+            page_no=sf.page_no,
+            bbox=sf.bbox,
+            placement=sf.placement,
+            source=sf.source,
+            object_key=sf.object_key,
+            figure_hash=sf.figure_hash,
         )

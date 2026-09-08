@@ -16,7 +16,7 @@ from app.ai.ocr.result import OCRLine, OCRResult
 from app.domains.source.line_index import compute_body_hash
 from app.domains.source.seal import SealService
 from app.models.runtime import Budget, LlmCallAudit
-from app.models.source import Document, DocumentSourceLine, DocumentSourceVersion
+from app.models.source import Document, DocumentSourceLine, DocumentSourceVersion, SourceFigure
 from app.repositories.base import AppendOnlyViolation, SealedVersionError
 from app.repositories.source_repository import SourceRepository
 
@@ -185,6 +185,10 @@ async def test_b1_cross_transaction_idempotency(session, pdf_bytes):
             ).scalars().all()
             for rid in vids:
                 await sc.execute(
+                    text("DELETE FROM source_figures WHERE source_version_id=:x"),
+                    {"x": rid},
+                )
+                await sc.execute(
                     text("DELETE FROM document_source_lines WHERE source_version_id=:x"),
                     {"x": rid},
                 )
@@ -250,10 +254,17 @@ async def test_seal_integrity_recomputable_from_db(session, pdf_bytes):
         )
         for r in rows
     ]
+    db_figures = (
+        await session.execute(
+            select(SourceFigure)
+            .where(SourceFigure.source_version_id == v.id)
+            .order_by(SourceFigure.figure_id)
+        )
+    ).scalars().all()
     ih = compute_integrity_hash(
         body_hash=compute_body_hash(body),
         line_hashes=line_hashes,
-        figure_hashes=[],
+        figure_hashes=[f.figure_hash for f in db_figures],
         provenance={"role": v.role, "provider": v.provider, "artifact_kind": v.artifact_kind},
     )
     assert ih == v.integrity_hash
@@ -264,3 +275,120 @@ async def test_seal_integrity_recomputable_from_db(session, pdf_bytes):
             selected_source=r.selected_source,
             evidence=r.evidence,
         )
+
+
+async def test_seal_persists_figures_from_native_pdf(session, pdf_bytes_with_figure):
+    """BUG-011-C：native seal 落库 source_figures（figure_id/placement/object_key/hash 全确定）。"""
+    import fitz
+
+    v = await _seal(session, pdf_bytes_with_figure)
+    await session.flush()
+    figures = (
+        await session.execute(
+            select(SourceFigure)
+            .where(SourceFigure.source_version_id == v.id)
+            .order_by(SourceFigure.figure_id)
+        )
+    ).scalars().all()
+    assert len(figures) == 1
+    f = figures[0]
+    assert f.figure_id == "FIG-1-01"
+    assert f.page_no == 1
+    assert f.placement == "standalone"
+    assert f.source == "native"
+    assert f.object_key == f"figure:{f.figure_hash}"
+    assert set(f.bbox) == {"x0", "y0", "x1", "y1"}
+    # figure_hash = raw SHA256(extract_image bytes)（非 resized/normalized）
+    doc = fitz.open(stream=pdf_bytes_with_figure, filetype="pdf")
+    try:
+        info = doc[0].get_image_info(xrefs=True)[0]
+        raw = doc.extract_image(info["xref"])["image"]
+    finally:
+        doc.close()
+    assert f.figure_hash == hashlib.sha256(raw).hexdigest()
+
+
+async def test_seal_integrity_includes_figure_hashes(session, pdf_bytes_with_figure):
+    """BUG-011-D：integrity_hash 计入 figure_hashes（缺图 → hash 变，防图被静默忽略）。"""
+    from app.domains.source.line_index import (
+        compute_body_hash,
+        compute_integrity_hash,
+        compute_line_hash,
+    )
+
+    v = await _seal(session, pdf_bytes_with_figure)
+    await session.flush()
+    rows = (
+        await session.execute(
+            select(DocumentSourceLine)
+            .where(DocumentSourceLine.source_version_id == v.id)
+            .order_by(DocumentSourceLine.seq)
+        )
+    ).scalars().all()
+    figs = (
+        await session.execute(
+            select(SourceFigure)
+            .where(SourceFigure.source_version_id == v.id)
+            .order_by(SourceFigure.figure_id)
+        )
+    ).scalars().all()
+    body = "\n".join(r.text for r in rows)
+    line_hashes = [
+        compute_line_hash(
+            text=r.text,
+            raw_sources=r.raw_sources,
+            selected_source=r.selected_source,
+            evidence=r.evidence,
+        )
+        for r in rows
+    ]
+    provenance = {"role": v.role, "provider": v.provider, "artifact_kind": v.artifact_kind}
+    with_figures = compute_integrity_hash(
+        body_hash=compute_body_hash(body),
+        line_hashes=line_hashes,
+        figure_hashes=[f.figure_hash for f in figs],
+        provenance=provenance,
+    )
+    without_figures = compute_integrity_hash(
+        body_hash=compute_body_hash(body),
+        line_hashes=line_hashes,
+        figure_hashes=[],
+        provenance=provenance,
+    )
+    assert with_figures == v.integrity_hash
+    assert without_figures != v.integrity_hash  # 图确实计入 integrity
+
+
+async def test_seal_repeat_same_figures_idempotent(session, pdf_bytes_with_figure):
+    v1 = await _seal(session, pdf_bytes_with_figure)
+    await session.flush()
+    v2 = await _seal(session, pdf_bytes_with_figure)
+    await session.flush()
+    assert v2.id == v1.id
+    n = (
+        await session.execute(
+            select(func.count())
+            .select_from(SourceFigure)
+            .where(SourceFigure.source_version_id == v1.id)
+        )
+    ).scalar()
+    assert n == 1  # 幂等：同 version 不重复写 figure
+
+
+async def test_figure_id_db_unique_constraint(session, pdf_bytes_with_figure):
+    """BUG-011-E：DB 级 UNIQUE(source_version_id, figure_id) 兜底（persistence boundary）。"""
+    v = await _seal(session, pdf_bytes_with_figure)
+    await session.flush()
+    dup = SourceFigure(
+        source_version_id=v.id,
+        figure_id="FIG-1-01",  # 与既有图重复
+        page_no=1,
+        bbox={"x0": 0, "y0": 0, "x1": 1, "y1": 1},
+        placement="standalone",
+        source="native",
+        object_key="figure:dup",
+        figure_hash="f" * 64,
+    )
+    await SourceRepository(session).append_figure(dup)
+    with pytest.raises(IntegrityError):
+        await session.flush()

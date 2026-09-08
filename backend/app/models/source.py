@@ -98,6 +98,13 @@ class SourceFigure(UUIDPrimaryKeyMixin, Base):
     """source_figures（10 §4.4）。无 role_owner/题号归属字段。"""
 
     __tablename__ = "source_figures"
+    # BUG-011-E（10 §4.4 v1.2.2 ⑥）：UNIQUE(source_version_id, figure_id) = figure identity
+    # invariant（version-scoped）；跨 version 同 figure_id 合法。
+    __table_args__ = (
+        UniqueConstraint(
+            "source_version_id", "figure_id", name="uq_source_figures_figure_id"
+        ),
+    )
 
     source_version_id: Mapped[uuid.UUID] = mapped_column(
         Uuid, ForeignKey("document_source_versions.id"), nullable=False
