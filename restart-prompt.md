@@ -1,9 +1,9 @@
 # AI Tutor V3 — RESTART PROMPT
 
-Version: v1.22
-Status: BUG-011 Final Closed；BUG-V3-001..028 errata D-1 → D-6 全链完成；当前 baseline =
-9da09db；全量 pytest 413 passed；下一阶段 = Errata Final Closure（剩余 BUG 状态收口 + _audit
-探针处置）
+Version: v1.23
+Status: Errata Final Closure 完成；BUG-V3-001..036 全量收口（033/034/035 = Frozen）；代码
+baseline = 9da09db；全量 pytest 413 passed；下一阶段 = 新的功能 / Bug 阶段（待用户裁决 Phase
+范围）
 Date: 2026-09-09
 
 ## 0.0 当前结论（2026-09-09 05:55）
@@ -21,18 +21,19 @@ Date: 2026-09-09
   统一处理，不随 BUG-011 关闭）。
 - **验证基线**：全量 pytest **413 passed**；migration replay 双路径 PASS；origin/main == local
   main == `9da09db`。
-- **Closure 边界（严格）**：Phase 9 / A–H / BUG-011 关闭 ≠ V3 全部关闭。D1/D3/D4/D5/F-4 保持
-  Deferred/Open；**剩余 BUG 状态翻转（005/009/012..026 共 17 项的 bugs.md Status → Resolved）
-  归 Errata Final Closure**；Phase 10+ Not Started。
-- **held 状态**：`backend/tests/_audit_*.py`（12 份）为一次性审计探针，**不属于正式仓库**，维持
-  untracked；处置（删除 / 归档 / 转正）归 Errata Final Closure 统一裁决，禁混入 main。
+- **Closure 边界（严格）**：Phase 9 / A–H / BUG-011 / errata 关闭 ≠ V3 全部关闭。D1/D3/D4/D5/F-4
+  保持 Deferred/Open；**005/009/012..026 共 17 项已 Resolved（Errata Final Closure 完成）**；
+  Phase 10+ Not Started。
+- **审计探针归档**：`backend/tests/_audit_*.py`（12 份）一次性审计/对抗探针已归档至
+  `backend/tests/_audit_archive/`（untracked，不入 git）；findings 已在各阶段转正为正式测试。
 - **红线（不变）**：HTTP retry（transport）≠ LLM retry（同 LE）≠ fallback（新 config/新 LE）；
   MAX_LLM_CALLS_PER_TASK 按真实 Provider Invocation 计数；非法 retry 配置 fail-fast；先冻结
   Spec 再改代码。
-- **下一步**：**Errata Final Closure**（系统性收口剩余 BUG 状态 + `_audit_*.py` 处置裁决），
-  之后进入新的功能 / Bug 阶段。**不得重复执行 D-1 至 D-6；不得重新施工 BUG-011**。
+- **下一步**：进入新的功能 / Bug 阶段（待用户裁决下一 Phase 范围）。**不得重复执行 D-1 至 D-6；
+  不得重新施工 BUG-011（已 Closed）**。D1/D3/D4/D5/F-4 deferred 项维持 Deferred/Open；
+  BUG-011-E2 延续为独立记录。
 - 重启后第一任务：读本文件 → Status.md 尾 → log.md 尾 → bugs.md（BUG-V3-001..036 现状）→
-  进入 Errata Final Closure。
+  待用户裁决下一 Phase 范围。
 
 ## 0. 当前工作状态（2026-09-08 14:01）
 
@@ -53,12 +54,11 @@ Date: 2026-09-09
   - H Implementation Plan Final 冻结（6 Locks + 4 Notes + 3 Clarifications + Step 1–7）。
 - **BUG 登记状态**：BUG-V3-001..020 Open（A–F 遗留）；BUG-V3-021..027 已写入 bugs.md（G 相关）。
   F1/F2 与 G 对抗 4 项为已修复实现 bug，不入 bugs.md 编号。
-- **当前要执行**：Errata Final Closure——系统性收口剩余 BUG 状态（005/009/012..026 的 bugs.md
-  Status → Resolved，逐条 Closure evidence）+ `backend/tests/_audit_*.py` 12 份处置裁决
-  （删除 / 归档 / 转正）。
+- **当前要执行**：待用户裁决下一 Phase 范围（新的功能 / Bug 阶段）；BUG-011-E2 延续为独立记录
+  （后续统一处理）。
 - **当前不要执行**：不重复执行 D-1 至 D-6；不重新施工 BUG-011（已 Closed）；不把
-  `_audit_*.py` 混入 main；不实现 Similarity / occurrence analytics / answer-evidence schema；
-  不提前进入新的功能阶段。
+  `_audit_*.py` 混入 main（已归档 `_audit_archive/`）；不实现 Similarity / occurrence
+  analytics / answer-evidence schema；不自行开启新 Phase（待用户裁决）。
 - **关键文件**：
   - `~/.claude/plans/giggly-enchanting-volcano.md` — H 实施计划（唯一实施指令，含全部 Lock/Note/Clarification）
   - `Docs/reference/H0_RUNTIME_READINESS_AUDIT.md` — H0 审计资产

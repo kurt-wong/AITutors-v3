@@ -925,3 +925,15 @@ Date: 2026-09-05
 - **下一步**：**Errata Final Closure**——系统性收口剩余 BUG 状态（005/009/012..026 共 17 项的
   bugs.md Status → Resolved 逐条 Closure evidence）+ `backend/tests/_audit_*.py`（12 份）处置
   裁决（删除 / 归档 / 转正）。之后进入新的功能 / Bug 阶段。
+
+### 2026-09-09 06:16（Errata Final Closure 完成）
+
+- **Status: BUG-V3-001..036 全量 errata 收口完成**——E/B/A + D-1..D-6 + BUG-011 全部关闭；
+  剩余 17 项（005/009/012..026）bugs.md Status → Resolved（逐条 Closure evidence，锚
+  D-2..D-6 冻结裁决）。A–G / H Phase 1–8 / Phase 9 维持 FINAL CLOSED。
+- **BUG 终态**：001..032/036 = Resolved；033/034/035 = Frozen for implementation（Phase 9
+  spec gap，非 Open）；BUG-011-E2 保持独立记录（E/B 跨层 figure 字段 drift，后续统一处理）。
+- **`_audit_*.py` 处置（用户裁决 = 归档到非正式目录）**：12 份一次性审计/对抗探针移入
+  `backend/tests/_audit_archive/`（untracked，不入 git；findings 已在各阶段转正为正式测试）。
+- **下一步**：进入新的功能 / Bug 阶段（待用户裁决下一 Phase 范围）。D1/D3/D4/D5/F-4 deferred
+  项维持 Deferred/Open；BUG-011-E2 延续为独立记录。

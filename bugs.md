@@ -62,6 +62,9 @@
 - 处置：段 A 用 `repr(float)` 作临时 deterministic representation（不代表冻结解释）；当前
   LE hash 身份输入不含 float，不阻塞。待 30 §16 终裁。
 - 验收：终裁后 utility 版本递增 + 走 Rebuild。
+- **Resolved（2026-09-09）**：终裁 float **不是**允许的 identity 输入类型——canonical identity
+  序列化遇 float 必须 fail-fast（30 §16 canonical_json），杜绝浮点 precision 进入身份 hash。
+  commit `a731e0d`。
 
 ### BUG-V3-006 — `budget` 列清单遗漏 reserved 数值列（30 §17 vs §11）
 - Status: Open
@@ -135,6 +138,10 @@
   Spec 授权）；在代码注释标注「implementation choice for unresolved BUG-V3-009」。errata
   终裁后按最终排序对齐。
 - 验收：errata 终裁后按最终语义对齐。
+- **Resolved（2026-09-09）**：终裁 M1 **禁止 implicit/default annotation 选择**——所有消费
+  annotation 的运行路径必须显式提供 `annotation_id`；不存在「默认最新 annotation」；
+  `annotation_id` 缺失/未解析到 valid → fail-fast（RepositoryError），绝不自行查询「最新」。
+  原「最新排序依据」命题被显式 id 语义消除。commit `3429671`。
 
 ### BUG-V3-010 — `json.loads` 失败时 invalid annotation payload 形态未冻结（10 §5.1）
 - Status: Open
@@ -223,6 +230,10 @@
 - 处置：段 E 采用与段 B IS-4 一致的 `"\n".join(行文本)` 的 raw UTF-8 SHA256 作
   **implementation choice**（代码注释 + 测试标注，不冒充 Frozen 授权）。
 - 验收：errata 终裁后按最终拼接规则对齐（升级即走 Rebuild）。
+- **Resolved（2026-09-09）**：终裁跨行 text 拼接 = `"\n".join(line.text for line in
+  span.line_refs)`（按 `line_refs` **声明顺序**，非行号重排）；拼接符固定单个 `\n`；每行 text
+  原样 UTF-8，不 strip/trim/whitespace-normalize；单行 span = 该行 text 本身；`text_hash` 再对
+  最终 `text.encode("utf-8")` 计算。commit `878fb10`（含跨行拼接 golden）。
 
 ### BUG-V3-013 — blank/image 的 annotation content JSON 形态未冻结（20 §4.5）
 - Status: Open
@@ -234,6 +245,11 @@
   `content.blank[].blank_label+question_number`）识别，代码注释标注 BUG-V3-013，不冒充
   Frozen 契约；policy 逻辑按 §5.3 规则实现。待 errata 冻结形态。
 - 验收：errata 冻结后按最终 shape 对齐。
+- **Resolved（2026-09-09）**：终裁 blank/image minimal shape——blank = list（或单 dict），每项
+  `blank_label`（必填，unit 内 blank identity）+ `question_label`（可选）；image =
+  `{image_ref: {figure_id}}`（figure_id 可选 = `source_figures.figure_id`，version-scoped）；
+  malformed shape（非 dict/list、缺 `blank_label`、`image_ref` 非 dict）→ fail-fast（ValueError）
+  绝不 silent skip。commit `3bbcf53`。
 
 ### BUG-V3-014 — original→canonical 题型别名映射表未冻结（20 §7.2 / DISPLAY_CONTRACT §0.2）
 - Status: Open
@@ -244,6 +260,9 @@
 - 处置：段 F 只做 canonical exact passthrough（原值 ∈ 12 种 → 直通；否则 None →
   incomplete）。禁实现 alias resolver。别名映射待 errata/50 资产清点。
 - 验收：errata 冻结别名表后按最终映射实现。
+- **Resolved（2026-09-09）**：终裁 canonical 映射 = **exact passthrough**——`original ∈ 12
+  canonical → 原样`，否则 `None → incomplete`；**禁 alias resolver**（`single-choice`/`单选题`
+  等别名不映射）。commit `ff64352`。
 
 ### BUG-V3-015 — LaTeX 符号等价清单未冻结（20 §7.3）
 - Status: Open
@@ -254,6 +273,9 @@
 - 处置：段 F identity_normalization 只做数学环境（$...$/\[...\]）内空白/换行折叠；
   不做符号语义等价（那会开始数学语义判断）。
 - 验收：errata/评审固化符号等价清单后实现。
+- **Resolved（2026-09-09）**：终裁 LaTeX normalization = **structural-only**——`$...$`/
+  `\[...\]` 内 `\s+`→`""`（空白/换行折叠）；**不做符号/语义等价**（`\frac{1}{2}`≠`0.5`、
+  `x^2`≠`x²`）；canonical identity ≠ mathematical equivalence。commit `a105bf8`。
 
 ### BUG-V3-016 — content_roles 的 per-canonical-type role spec 未集中冻结
 - Status: Open
@@ -268,6 +290,11 @@
   （single/multiple/true_false）/ not_applicable（fill_in/short_answer/essay）/
   按题型（composite 子结构由内容声明决定）。不扩展未冻结项。
 - 验收：errata 集中冻结 role spec 后按最终映射对齐。
+- **Resolved（2026-09-09）**：终裁 M1 Role Contract 表冻结（12 型 × 4 role 值域
+  {required/required_for_choice/optional/not_applicable}）——options 列
+  {single/multiple/true_false}→required_for_choice、其余 9 型→not_applicable；
+  stem/answer/explanation 沿用 conservative default（answer=required 为 M1 数据完整性，非
+  「无标准答案=not_applicable」）。commit `3cca050`。
 
 ### BUG-V3-017 — 2d compiled text_hash 的字节序列未冻结（10 §8 2d）
 - Status: Open
@@ -278,6 +305,8 @@
 - 处置：段 F 2d = 编译文本（compiled text 字符串）的 raw UTF-8 SHA256，非 canonical JSON；
   2c = source raw slice SHA256；两 hash ≠ sha256_hex（identity 键）。
 - 验收：errata 冻结序列化后对齐（升级即走 Rebuild）。
+- **Resolved（2026-09-09）**：终裁 2d compiled `text_hash = SHA256(text.encode("utf-8"))`
+  （raw，**不含 source refs**）；非 canonical JSON。commit `95c1700`（D-2 Spec 终裁）。
 
 ### BUG-V3-018 — IR.semantic_status 合法值域未冻结（20 §6.2）
 - Status: Open
@@ -289,6 +318,10 @@
   exact/normalized/contextual/fuzzy… 不搬运进 F；三层状态严格区分）。unit_id 缺省或任一
   内容 role 未 resolved → semantic_status=incomplete。待 errata 冻结枚举。
 - 验收：errata 冻结后按最终值域对齐。
+- **Resolved（2026-09-09）**：终裁 `semantic_status ∈ {ready, incomplete}`（仅此二值）；
+  **三层状态严格隔离**——E ResolvedStatus ≠ F semantic_status ≠ G gate_decision/
+  decision_status；E 的 ambiguous/missing/fuzzy/contextual 一律坍缩为 `incomplete`，不搬运进
+  F；`ready` 仅表示「语义完整可进 Compiler/Gate」，不表示 auto_approve。commit `c6014f7`。
 
 ### BUG-V3-019 — options identity serialization order 未冻结（20 §7.3）
 - Status: Open
@@ -300,6 +333,9 @@
   label——「看起来合理」不授权 Compiler 改 identity）。探针证实同 stem options (A,B) vs
   (B,A) → 不同 dedup（false-split 风险登记，非 false-resolved）。
 - 验收：errata 冻结 label 固定序后对齐（升级即走 Rebuild）。
+- **Resolved（2026-09-09）**：终裁 options 按 **label UTF-8 字节字典序**（Unicode 码点序）
+  排序，与源声明序无关；label 重复 → fail-fast；排序由 Compiler 唯一实现（Admission 复用同一
+  纯函数）。commit `878fb10`。
 
 ### BUG-V3-020 — image/unsupported content role 在 F IR/Compiler 被静默丢弃
 - Status: Open
@@ -314,6 +350,12 @@
   IR semantic_status=incomplete（绝不静默丢弃、不 guess figure_id、不扫正文、不造
   figure_refs、不转成其他语义 role）。完整 figure_refs/ownership 待跨层契约冻结后支持。
 - 验收：errata/跨层契约冻结后实现 figure_refs；M1 保持 fail-loud。
+- **Resolved（2026-09-09）**：终裁 figure_refs 跨层契约冻结（M1 只冻结不实现）——
+  `figure_refs[] = {unit_id, figure_id, role, order}`；`unit_id` = figure 归属 unit（business
+  provenance，非 runtime ID）；`figure_id` = `source_figures.figure_id`（version-scoped）；
+  `role` = `source_figures.placement` 值域；`order` = role 内顺序；image ResolvedSpan 携带
+  结构化 `figure_id`（text span = absent/null，禁伪造哨兵）。image 通道待 BUG-011 实现前 M1
+  保持 fail-loud incomplete。commit `0b0a4d3`。
 
 ### BUG-V3-021 — Question/Material subject·grade 确定性来源未冻结（10 §6.1/§6.4 vs 20 §4.2）
 - Status: Open
@@ -324,6 +366,10 @@
 - 处置：段 G M1 保守从 annotation payload 的 `document_metadata_claims.subject/grade` 取；
   null/缺省 → NOT NULL 占位（空串）。不自行实现上传/文件名优先级。待 errata。
 - 验收：errata 终裁后按最终来源/优先级对齐（升级即走 Rebuild）。
+- **Resolved（2026-09-09）**：终裁 subject/grade = annotation claim **直接映射**；claim 缺失
+  → `NULL` = unknown（**绝不用空串**）；删除 V2「上传/文件名优先级」链；Question identity 不含
+  subject/grade，metadata 独立于 identity；同 dedup_key 复用：NULL→known 允许、known→same
+  no-op、known→different fail-loud（RepositoryError）。commit `3429671` + migration 0008。
 
 ### BUG-V3-022 — `input_identity` 各 hash 的精确输入域未冻结（10 §9）
 - Status: Open
@@ -336,6 +382,10 @@
   (annotation_payload + source_version_id))；compiler_input_hash = sha256(canonical_json
   (per-unit resolved_spans 摘要 + compiled 摘要))；代码标注 BUG-V3-022，不冒充 Frozen。待 errata。
 - 验收：errata 终裁后按最终输入域对齐（升级即走 Rebuild）。
+- **Resolved（2026-09-09）**：终裁 compile LE `input = annotation_id + annotation payload
+  hash + unit_id`（unit_id 为多 top-level unit 区分）；`build_versions`/`input_identity`
+  （存储列，完整记录）≠ `contract_domain`/`input_domain`（LE hash，只含决定执行身份的最小
+  字段集），二者不可混用。commit `7cf21ba`。
 
 ### BUG-V3-023 — 复合/共享选项题型 per-type grammar 未冻结（20 §8.4）
 - Status: Open
@@ -348,6 +398,11 @@
   composite 子题递归（子题 ∈ 三种才判）；共享选项池/未覆盖题型 → pending_review 人工
   （verified_by=human|golden）。待 errata。
 - 验收：errata 冻结 per-type grammar 后按最终开放范围对齐。
+- **Resolved（2026-09-09）**：终裁 `STRICT_AUTO_TYPES = {single_choice, multiple_choice,
+  true_false}`；其余 9 型（fill_in/short_answer/**essay**/cloze/reading/grammar_fill/
+  vocabulary_fill/seven_to_five/reading_expression）`grammar=None` → pending_review，**禁止
+  编造各自 grammar**；composite 子题递归（子题 ∈ 开放集才 strict grammar，否则 composite
+  不自动）。commit `9c1d43f`。
 
 ### BUG-V3-024 — Gate 四层逐条检查项未完全冻结（20 §8.1）
 - Status: Open
@@ -361,6 +416,10 @@
   contextual 附 evidence、fuzzy/ambiguous/missing 不自动；semantic：composite 依赖完整 +
   闭合 + 材料不重复 + 状态与 IR 一致）；image 归属 M1 走 fail-loud（BUG-V3-020）。待 errata。
 - 验收：errata 冻结逐条后按最终检查对齐。
+- **Resolved（2026-09-09）**：终裁 Gate 四层逐条检查项冻结（Structural/Provenance/Semantic/
+  Admission）；关键分界——`text_hash` 不一致 = byte-level evidence contradiction → `rejected`
+  （terminal）；`resolution ∉ {exact, normalized}` = 不能 byte-proven → `pending_review`
+  （review downgrade，非 terminal）。commit `b24b5a7`。
 
 ### BUG-V3-025 — `review_trail` JSON 结构未完全冻结（20 §8.2）
 - Status: Open
@@ -371,6 +430,10 @@
 - 处置：段 G M1 用最小结构（append 不覆盖；time = ISO-8601 UTC 字符串；confirmed_fields =
   该次确认的 role/answer 标识列表）。待 errata。
 - 验收：errata 终裁后按最终结构对齐。
+- **Resolved（2026-09-09）**：终裁 review_trail entry schema——公共字段 `{decision,
+  verified_by, reviewer_id, time}`（time 由 `append_review_trail()` 统一注入 UTC ISO-8601，
+  调用方不手填）；decision-specific payload 互不共存：approve→`+ confirmed_fields`、
+  reject→`+ reasons`（禁止为对齐 schema 制造空字段）。commit `19d236b`。
 
 ### BUG-V3-026 — 人工 reject 理由归属 + gate_decision immutability 未冻结（10 §5.2 vs 20 §8.1/§8.2）
 - Status: Open
@@ -383,6 +446,11 @@
   gate_decision 保留原机器判断不覆盖；gate_decision 由 Gate 写入后不 UPDATE（应用层纪律，
   不自行加 DB trigger/RLS，P0-G-001）。待 errata。
 - 验收：errata 终裁后按最终归属对齐。
+- **Resolved（2026-09-09）**：终裁 `gate_decision` 由 Gate 一次性写入、写后**不可变**；机器
+  拒受理由→`gate_decision.reasons`、人工拒受理由→`review_trail.reasons`（append，不覆盖不写
+  回，二者不同证据链）；不可变性为 application-layer enforcement（Repository
+  `update_candidate_decision` 恒抛 AppendOnlyViolation），**不升级 DB trigger/RLS**。commit
+  `5f0d3d0`。
 
 ### BUG-V3-027 — Question `dedup_key` 无 DB UNIQUE 约束（10 §6.1）
 - Status: Open

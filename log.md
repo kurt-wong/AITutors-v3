@@ -972,3 +972,11 @@ Step 5 已于 commit `0917404` 落盘（含 Status/log/restart v1.10 收口）�
   `_image_span` IS-7 消费 4 字段 vs B 写 7 字段跨层 drift；Spec 已区分写入门 10 §4.4 7 字段 /
   消费资格 20 §5.3 4 字段子集，E 代码对齐留待后续统一处理，不随 BUG-011 关闭）。origin/main ==
   local main == `9da09db`。
+
+### 2026-09-09 06:16（Errata Final Closure）
+
+- **BUG 状态收口**：剩余 17 项（005/009/012..026）bugs.md Status → Resolved（逐条 Closure
+  evidence，锚 D-2..D-6 冻结裁决）。至此 BUG-V3-001..036 全部 Resolved（033/034/035 = Frozen
+  for implementation，非 Open）；BUG-011-E2 保持独立记录。
+- **`_audit_*.py` 处置（用户裁决 = 归档到非正式目录）**：12 份一次性审计/对抗探针移入
+  `backend/tests/_audit_archive/`（untracked，不入 git）；findings 已在各阶段转正为正式测试。
