@@ -450,6 +450,30 @@
   → 已修复：multi-provider 模式名未命中 → None（fail-closed→GatewayDenied），single-provider
   模式才回退默认（向后兼容）。commit `1e435a9`。
 
+### BUG-V3-036 — Negative retry configuration bypasses execution and can return None
+- Status: Open（Phase 9 Closure Reopened / Corrective Patch Pending）
+- 登记：2026-09-08
+- 现象：`config.py` 的 `llm_request_retry_count` / `http_retry_count` 无 `ge=0` 约束，且
+  `LLMExecutor.__init__` / `HTTPLLMProvider.__init__` 不校验构造参数。`LLM_REQUEST_RETRY_COUNT=-1`
+  时 executor `range(self._retry_count + 1)` = `range(0)` 零次迭代 → 0 次 Provider Invocation，
+  却仍 `finalize_audit(failed, error_type='unknown')` + `settle(actual=0)` + `return None`（违反
+  `-> str`）；`HTTP_RETRY_COUNT=-1` 时 `raise LLMNetworkError("LLM transport failed: None")`，
+  实际零 HTTP 请求。缺陷链：负值 → 0 迭代 → 执行管线照跑 → audit/budget 语义失真 → None 静默返回。
+- 根因：runtime safety config 未 fail-fast——无 Settings 约束、无构造层校验，非法负值穿透进
+  有副作用的执行路径，制造「0 真实调用却产生 failed/unknown audit + None 返回」的失真 Runtime
+  Truth（违反 V3 Runtime Truth 不变式）。
+- 处置：最小双保险——① `config.py` 两 retry 字段加 `Field(ge=0)`（env / Settings 路径 fail-fast）；
+  ② `LLMExecutor.__init__` / `HTTPLLMProvider.__init__` 加 `if < 0: raise ValueError`（构造路径
+  fail-fast，因构造参数绕过 pydantic）。不捆绑 `max_llm_calls_per_task` / `task_claim_lease_seconds`
+  / `worker_concurrency`（单独 errata 硬化）。保留 `retry_count=0` 合法语义（attempts = 1 +
+  retry_count）。
+- 验收：负 retry 两路径被拒（Settings ValidationError / 构造 ValueError）；0 真实调用 → 0 audit /
+  0 budget / 0 provider invocation / 0 None-return；`retry_count=0` → 恰 1 invocation；
+  `http_retry_count=0` → 恰 1 attempt。
+- **Resolved（2026-09-08）**：`config.py` 两 retry 字段加 `Field(ge=0)`；`LLMExecutor.__init__` /
+  `HTTPLLMProvider.__init__` 加 `if < 0: raise ValueError` 构造 fail-fast。+6 test（2 Settings
+  validation + 2 构造 fail-fast + 2 retry=0 边界）；全量 350 passed。commit `7ace837`。
+
 ## Resolved Bugs
 
 （暂无。）

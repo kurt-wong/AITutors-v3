@@ -905,3 +905,17 @@ Step 5 已于 commit `0917404` 落盘（含 Status/log/restart v1.10 收口）�
   D1/D3/D4/D5/F-4 保持 Deferred/Open；BUG-V3-001..028 待 errata 终裁；Phase 10+ Not Started。
 - **影响/下一步**：Runtime Layer 相对完整；不再立即新增 Runtime 功能。下一优先级 = BUG-V3-001..028
   系统性分类审计 → A–F Errata Final Ruling → 再决定下一开发 Phase 范围。
+
+### 2026-09-08（Phase 9 Closure Reopened → C-1 修复 → Re-Closure）
+
+- **裁决**：外部独立审查发现 C-1（负 retry 配置穿透执行层）。用户裁决选择 A——最小范围双保险修复，
+  重开 Phase 9 Final Closure assertion。
+- **C-1（MEDIUM）BUG-V3-036**：`llm_request_retry_count` / `http_retry_count` 无 `ge=0` 约束 +
+  构造不校验。负值 → `range(0)` 零迭代 → 0 真实调用却 failed/unknown audit + settle(0) + return
+  None；HTTP 负值 → `LLMNetworkError("...: None")` 零请求。
+- **修复（决策/实现）**：`config.py` 两字段 `Field(ge=0)`；`LLMExecutor.__init__` /
+  `HTTPLLMProvider.__init__` `if < 0: raise ValueError`。TDD：RED 4 failed → GREEN 6 passed。
+  commit `7ace837`。
+- **验证**：全量 pytest **350 passed**（原 344 + 6 新增）；git diff --check 干净。
+- **影响**：非法 retry 配置不再进入有副作用的执行路径（0 invocation/audit/budget/provider +
+  0 None-return 被永久钉死）；retry=0 合法语义（attempts = 1 + retry_count）保持。

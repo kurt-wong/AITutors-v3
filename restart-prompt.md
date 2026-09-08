@@ -1,27 +1,29 @@
 # AI Tutor V3 — RESTART PROMPT
 
-Version: v1.19
+Version: v1.20
 Status: H Phase 1–8 FINAL CLOSED；Phase 9 FINAL CLOSED（transport / exception translation /
-retry layering / explicit fallback / adversarial boundary 全部 verified）；
+retry layering / explicit fallback / adversarial boundary 全部 verified，含 C-1 负 retry 配置
+fail-fast 修复）；
 下一实施步 = BUG-V3-001..028 系统性 errata 分类审计
 Date: 2026-09-08
 
-## 0.0 当前结论（2026-09-08 06:30）
+## 0.0 当前结论（2026-09-08）
 
-- **H Phase 1–8 FINAL CLOSED**；**Phase 9 FINAL CLOSED**（用户宣布）；A–G 继续 CLOSED；
+- **H Phase 1–8 FINAL CLOSED**；**Phase 9 FINAL CLOSED**（C-1 修复后重新收口）；A–G 继续 CLOSED；
   V3 主链 A–H + Phase 9 冻结。
 - **Phase 9 关闭范围**：9-1A（BUG-V3-033/034/035 登记）+ 9-1B（provider exception translation）+
-  9-2（HTTP transport retry）+ 9-3（explicit provider fallback）+ Adversarial Fixes（B-1/B-2）。
-- **Closure 证据**：344 passed；re-probe 6/6 PASS；B-1 HIGH / B-2 MEDIUM resolved；all commits
-  synchronized to origin/main（`1e435a9`/`312d1f7`/`67737b5`）。
+  9-2（HTTP transport retry）+ 9-3（explicit provider fallback）+ Adversarial Fixes（B-1/B-2/C-1）。
+- **Closure 证据**：350 passed；re-probe 6/6 PASS；B-1 HIGH / B-2 MEDIUM / C-1 MEDIUM resolved；
+  all commits synchronized to origin/main（含 `7ace837` C-1 修复）。
 - **Closure 边界（严格）**：Phase 9 范围关闭 ≠ V3 全部关闭。D1/D3/D4/D5/F-4 保持 Deferred/Open；
   BUG-V3-001..028 待系统性 errata 终裁；Phase 10+ Not Started。
 - **红线（不变）**：HTTP retry（transport）≠ LLM retry（同 LE）≠ fallback（新 config/新 LE）；
-  MAX_LLM_CALLS_PER_TASK 按真实 Provider Invocation 计数。
+  MAX_LLM_CALLS_PER_TASK 按真实 Provider Invocation 计数；非法 retry 配置 fail-fast（Settings
+  ge=0 + 构造 raise），retry=0 合法（attempts = 1 + retry_count）。
 - **下一步（用户建议）**：不立即新增 Runtime 功能；下一优先级 = BUG-V3-001..028 系统性分类
   审计（已被后续设计覆盖 / 纯文档 errata / 真实 implementation gap / 必须改 Frozen Spec /
   可正式关闭）→ A–F Errata Final Ruling → 再决定下一开发 Phase 范围。
-- 重启后第一任务：读本文件 → Status.md 尾 → log.md 尾 → bugs.md（BUG-V3-001..035 现状）→
+- 重启后第一任务：读本文件 → Status.md 尾 → log.md 尾 → bugs.md（BUG-V3-001..036 现状）→
   按当前 Phase 继续（BUG-V3-001..028 errata 分类审计）。
 
 ## 0. 当前工作状态（2026-09-06 20:34:06）

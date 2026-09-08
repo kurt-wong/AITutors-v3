@@ -861,3 +861,20 @@ Date: 2026-09-05
 - **下一步（用户建议）**：不立即新增 Runtime 功能；下一优先级 = **BUG-V3-001..028 系统性分类
   审计**（已被后续设计覆盖 / 纯文档 errata / 真实 implementation gap / 必须改 Frozen Spec /
   可正式关闭）→ **A–F Errata Final Ruling** → 再决定下一开发 Phase 范围。
+
+### 2026-09-08（Phase 9 Closure Reopened → C-1 修复 → Re-Closure）
+
+- **背景**：外部独立审查（读取 GitHub main）发现 C-1 新缺陷——负 retry 配置穿透执行层。Phase 9
+  FINAL CLOSED 暂时重开为「Closure Reopened / Corrective Patch Pending」。
+- **C-1（MEDIUM）BUG-V3-036**：`llm_request_retry_count` / `http_retry_count` 无 `ge=0` 约束且构造
+  不校验。`-1` → `range(0)` 零迭代 → 0 次 Provider Invocation 却 finalize_audit(failed,'unknown')
+  + settle(0) + return None（违反 `-> str`）；HTTP `-1` → `LLMNetworkError("...: None")` 零请求。
+- **修复（最小双保险，用户裁决选择 A）**：`config.py` 两字段 `Field(ge=0)`（env/Settings 路径）；
+  `LLMExecutor.__init__` / `HTTPLLMProvider.__init__` `if < 0: raise ValueError`（构造路径）。不捆绑
+  `max_llm_calls_per_task` / `task_claim_lease_seconds` / `worker_concurrency`（单独 errata 硬化）。
+- **测试（TDD，RED 4 failed → GREEN 6 passed）**：+6 test——2 Settings validation（负 llm/http retry
+  → ValidationError）+ 2 构造 fail-fast（负 retry → ValueError + 0 invocation/audit/budget/provider
+  side effect）+ 2 retry=0 边界（恰 1 invocation / 恰 1 attempt，attempts = 1 + retry_count 不变）。
+- **验证**：全量 pytest **350 passed**（原 344 + 6 新增）；git diff --check 干净；commit `7ace837`。
+- **Phase 9 Re-Closure**：C-1 MEDIUM resolved；B-1 HIGH / B-2 MEDIUM 保持 resolved；Phase 9
+  adversarial probes + 全量 pytest 全 PASS；文档收口 + origin/main 同步后重新 FINAL CLOSED。
