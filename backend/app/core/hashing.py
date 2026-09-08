@@ -7,10 +7,9 @@
   dict/list/int/str/float/None/bool；其余类型（datetime/UUID/Decimal/set/自定义）显式抛错，
   **禁止 default=str 类隐式转换**。
 
-数字规范纪律：30 §16 要求浮点按定长十进制、避免科学计数/尾数漂移，但未冻结 precision 位数
-（规格缺口，见 bugs.md）。本实现用 Python 浮点 repr 语义（`json.dumps` 对 float 即调用
-`float.__repr__`）作**临时 deterministic representation**，不代表对 30 §16 最终语义的冻结
-解释；当前 LE hash 身份输入不含 float，不阻塞 Gate A4/A5。
+数字规范纪律（BUG-V3-005 终裁）：float **不是**允许的 identity 输入类型。identity domain
+不需要连续浮点，为 float 冻结 precision 是 YAGNI；canonical identity 序列化遇 float 必须
+fail-fast（`_ALLOWED` 不含 float）。身份 schema 需要数值时必须用显式非 float 的确定性表示。
 """
 
 import hashlib
@@ -18,16 +17,36 @@ import json
 
 HASHING_UTILITY_VERSION = "1.0.0"
 
-_ALLOWED = (dict, list, str, int, float, bool)
+_ALLOWED = (dict, list, str, int, bool)
+
+
+def _reject_float(obj) -> None:
+    """递归探测 float（BUG-V3-005）：identity 输入任意嵌套层出现 float → fail-fast。"""
+    if isinstance(obj, float):
+        raise ValueError(
+            "float forbidden in canonical identity input (BUG-V3-005); "
+            "use an explicit non-float deterministic representation"
+        )
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            _reject_float(key)
+            _reject_float(value)
+    elif isinstance(obj, (list, tuple)):
+        for item in obj:
+            _reject_float(item)
 
 
 def canonical_json(obj: object) -> str:
-    """确定性序列化：键字典序、无多余空白、字符串 UTF-8、数组保序。"""
+    """确定性序列化：键字典序、无多余空白、字符串 UTF-8、数组保序。
+
+    float 禁止（BUG-V3-005）：identity domain 不需要浮点；任意层级遇 float fail-fast。
+    """
     if obj is not None and not isinstance(obj, _ALLOWED):
         raise ValueError(
             f"unsupported type in canonical input: {type(obj).__name__}; "
-            f"allowed: dict/list/int/str/float/bool/None"
+            f"allowed: dict/list/int/str/bool/None (float forbidden, BUG-V3-005)"
         )
+    _reject_float(obj)
     try:
         return json.dumps(
             obj, ensure_ascii=False, sort_keys=True, separators=(",", ":")

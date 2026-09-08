@@ -28,9 +28,15 @@ def test_canonical_json_scalars_stable() -> None:
     assert canonical_json(False) == "false"
 
 
-def test_canonical_json_float_deterministic_only() -> None:
-    """float 只测当前临时 representation 的确定性，不测未冻结 precision/科学计数最终语义。"""
-    assert canonical_json(1.5) == canonical_json(1.5)
+def test_canonical_json_float_forbidden() -> None:
+    """BUG-V3-005：float 禁止进入 canonical identity serialization，任意层级遇 float fail-fast。"""
+    for bad in (1.5, 1e-5, 0.30000000000000004, 2.0, -0.0):
+        with pytest.raises(ValueError):
+            canonical_json(bad)
+    # 嵌套 float 同样 fail-fast（json.dumps 会静默序列化 float，须在序列化前拦截）
+    for bad in ({"score": 1.5}, {"x": [1, 2.0]}, [1, {"y": 0.1}]):
+        with pytest.raises(ValueError):
+            canonical_json(bad)
 
 
 def test_canonical_json_unsupported_raises() -> None:
