@@ -348,7 +348,8 @@ hash_value = SHA256( canonical_json( obj ) )
 canonical_json(obj)：
   递归序列化；对象键按字典序排序；数组保序；
   键/值间无多余空白（紧凑分隔）；字符串 UTF-8；
-  数字用稳定表示（整数原样；浮点按定长十进制格式化，避免科学计数/尾数漂移）；
+  数字用稳定表示（整数原样；float 不是允许的 identity 输入类型——canonical identity
+  序列化遇 float 必须 fail-fast，见 BUG-V3-005 终裁）；
   不引入时间戳/随机数/进程态；同一对象同键序必得同串
 ```
 
@@ -368,13 +369,22 @@ contract_domain(stage)= 该 stage 相关的 build_versions 子集（10 §9）
             如含 OCR 则 OCR 契约；本地确定性）
   ann     ：input = source_version_id + 文档内容引用；
             contract = annotation_schema_version + prompt_version + model_config_hash
-  compile ：input = annotation_id + annotation payload hash；
+  compile ：input = annotation_id + annotation payload hash + unit_id
+            （unit_id 为多 top-level unit 区分，BUG-V3-022 裁决新增）；
             contract = resolver_version + ir_schema_version + compiler_version
-            + gate_policy_version（compile 为确定性阶段，无 model_config 依赖，不含）
+            + gate_policy_version（compile 为确定性阶段，无 model_config 依赖，不含；
+            build_versions ≠ contract_domain，见下）
 
 hash = SHA256(canonical_json(
   { task_type, stage, contract_domain(stage), input_domain(stage) }
 ))
+
+**`build_versions`（存储列）≠ `contract_domain`；`input_identity`（存储列）≠
+`input_domain`（BUG-V3-022 终裁）**：Candidate 行的 `build_versions`（10 §9 完整 8 项）与
+`input_identity`（10 §9 完整 5 项）承担 **Replay / provenance / execution record** 职责，
+应完整记录；但 LE hash 的 `contract_domain` / `input_domain` 只含 **决定该 stage 执行身份**
+的最小字段集（上表）。二者不可混用——否则无关环境/存储字段变化会漂移 execution identity，
+违反最小 identity domain 原则。
 ```
 
 **含 `task_type`（执行目的类型：document_ingest / re-annotate / …），不含 `task_id`

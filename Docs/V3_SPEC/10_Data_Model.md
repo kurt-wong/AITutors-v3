@@ -417,7 +417,7 @@ candidate(unit) 进入物化
 | label | VARCHAR NULL | 仅 options 用，如 `A` |
 | role_index | INTEGER | options/多值顺序 |
 | text | TEXT | **Compiler 从 resolved span 的确定性正文** |
-| text_hash | CHAR(64) | SHA256(text + source refs) |
+| text_hash | CHAR(64) | SHA256(text.encode("utf-8"))（raw，不含 source refs，BUG-V3-017 终裁） |
 | source_span | JSONB | 该 role 的 Resolved Span（见下方 provenance 约束） |
 | answer_status | JSONB NULL | 仅 role=answer：`{source_located, complete, verified_correct}` 三字段独立（20） |
 

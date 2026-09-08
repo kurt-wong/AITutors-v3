@@ -418,6 +418,11 @@ input_identity 各 hash / logical_execution_hash 全部漂移却无版本信号�
 - **`text_hash` / `source_span` 保持 raw**：`text_hash` = source line/slice 的实际字节
   hash（10 §8 2c），**绝不套 normalization**；normalization 只作用于上述身份键。二者
   不可混用——这是 provenance 校验（2c/2d）不失效的前提。
+- **跨行 text 的 canonical 拼接（BUG-V3-012 终裁）**：span 覆盖多行时，`text` =
+  `"\n".join(line.text for line in span.line_refs)`（**按 `line_refs` 声明顺序，非行号重排**）；
+  拼接符固定单个 `\n`（U+000A）；每行 `text` 原样（UTF-8），**不 strip / trim /
+  whitespace-normalize / 插入额外空格**；单行 span = 该行 `text` 本身。`text_hash` 再对
+  最终 `text.encode("utf-8")` 计算。
 - **版本化**：normalization 规则版本记入 `build_versions`（10 §9）；升级走 Rebuild
   （新 compile 逻辑执行 + 新 candidate），不改旧行（10 §11）。
 
@@ -425,7 +430,7 @@ input_identity 各 hash / logical_execution_hash 全部漂移却无版本信号�
 
 | Key | canonical input（仅此组成） | 明确排除（不得参与 hash） |
 |---|---|---|
-| Question `dedup_key` | canonical question type + own stem + own options（按 DISPLAY_CONTRACT 固定 role/order/label 序列化） | shared material / answer / explanation / image / question no. / page / source_version_id / unit_id / occurrence 信息 |
+| Question `dedup_key` | canonical question type + own stem + own options（options 按 canonical label order 排序，声明序无关；label 重复 fail-fast） | shared material / answer / explanation / image / question no. / page / source_version_id / unit_id / occurrence 信息 |
 | Material `dedup_key` | canonical material type + own material compiled text | question / instance / unit / source location / source_version_id |
 | Instance `occurrence_key` | document-local unit/question identity（unit_id + question_number）+ resolved stem span（§7.3 serialization） | **`question_id`**（occurrence identity 与 canonical Question ID 无关，支持同一 source occurrence 映射到同一已复用 Question） |
 
@@ -433,6 +438,12 @@ input_identity 各 hash / logical_execution_hash 全部漂移却无版本信号�
 **Question canonical input 不含 shared material**（材料排版/OCR 差异不得把同一题拆裂，
 材料走独立 material identity，10 §6.4 source-scoped）；`occurrence_key` 是 document-local
 occurrence 身份，先于 question_id 存在。
+
+**options canonical label order（BUG-V3-019 终裁）**：选项按 **label 的 UTF-8 字节字典序**
+（Unicode 码点序，locale 无关）排序，与源声明序无关；对 choice 题（A/B/C/D 单 ASCII 大写）
+与 DISPLAY_CONTRACT §0.2 自然序一致。label 重复（同一 label 出现两次）在 canonical
+dedup serialization 时必须 **fail-fast**。排序由 Compiler 内唯一实现，Admission 侧复用
+同一纯函数，禁第二份实现。
 
 ---
 
