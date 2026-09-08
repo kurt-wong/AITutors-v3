@@ -400,6 +400,8 @@ Annotation/IR、在无 resolved span 时生成正文、生成 Source 中不存�
 2. canonical question type 映射：`original_question_type` → DISPLAY_CONTRACT
    `canonical_question_type`；**映射失败 = incomplete，不得以 NULL 静默入库**。
    content_roles 按 canonical type 的 role spec 判定（哪些 role required）。
+   **映射为 exact passthrough（BUG-V3-014 终裁）**：`original ∈ 12 canonical → 原样`，
+   否则 `None → incomplete`；禁 alias resolver（`single-choice`/`单选题` 不映射）。
 3. shared material **只输出一次**，绝不复制进任何子题 stem。A 域 material 行
    （10 §6.4）的 `text` 在 Admission 内对 shared-material resolved span 做**确定性编译**
    得到；payload 不携带材料副本（只经 ir_snapshot 存 span + 关系）——材料正文从不进

@@ -53,6 +53,14 @@ async def test_unknown_canonical_type_incomplete():
     assert ir.units[0].semantic_status == "incomplete"
 
 
+async def test_alias_type_not_resolved_incomplete():
+    """BUG-V3-014：别名（single-choice/单选题）不映射，fail-loud 判 incomplete（禁 alias resolver）。"""
+    for alias in ("single-choice", "单选题"):
+        payload = _single_choice_payload(original=alias)
+        ir = IRBuilder.build(_run(_ready_lines(), payload), payload, SVID, ANN_ID)
+        assert ir.units[0].semantic_status == "incomplete"
+
+
 async def test_stem_unresolved_incomplete():
     payload = _single_choice_payload(qn="9")
     ir = IRBuilder.build(_run(_ready_lines(), payload), payload, SVID, ANN_ID)

@@ -42,6 +42,11 @@ Date: 2026-09-03
 Phase 5 前置 DoD（03 契约 §13.1）：以下为 canonical question_type 枚举，
 所有新链和旧链入库均使用此映射；非 canonical 值必须在入库前映射到以下之一。
 
+**M1 映射收口（BUG-V3-014 终裁）**：`original_question_type` 必须 exact match 上表
+12 值之一；非 canonical 值（含 `single-choice`/`单选题`/`choice_single` 等别名）一律判
+`incomplete`（fail-loud，绝不 guess / alias-resolve）。别名映射表属 V2 资产
+（`QUESTION_TYPE_TREE.md` 是题型层级树，非 code-alias 表），延后 50 资产清点，M1 不实现。
+
 | canonical_question_type | 中文名 | answer 格式 | 选项要求 |
 |---|---|---|---|
 | single_choice | 单选题 | 单个大写字母（A/B/C/D/...） | required |
