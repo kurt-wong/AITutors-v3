@@ -7,9 +7,12 @@ external（只经 OCRGateway 调用）；Mock = 测试注入。
 
 from __future__ import annotations
 
-from typing import Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
-from app.ai.ocr.result import OCRLine, OCRResult
+from app.ai.ocr.result import OCRFigure, OCRLine, OCRResult
+
+if TYPE_CHECKING:
+    import fitz
 
 
 @runtime_checkable
@@ -56,6 +59,7 @@ class NativeTextProvider:
                                 bbox=_bbox(line.get("bbox")),
                             )
                         )
+            figures = self._extract_figures(doc)
         finally:
             doc.close()
         return OCRResult(
@@ -63,8 +67,38 @@ class NativeTextProvider:
             model=self.model,
             pages=page_count,
             lines=tuple(lines),
+            figures=tuple(figures),
             source_meta={"engine": self.name, "method": "text-layer"},
         )
+
+    def _extract_figures(self, doc: "fitz.Document") -> list[OCRFigure]:
+        """原生图片提取：已放置图（get_image_info）→ 图 bytes + page 定位。
+
+        失败语义（BUG-011 amendment ②）：无 image placement = 合法空集；已发现 placement 但
+        无法形成完整 figure（缺 bbox / xref 不可提取）→ 产不完整 OCRFigure（空 content/bbox），
+        交由 seal IS-7 fail-loud，绝不 try/except continue 静默丢图。
+        """
+        figures: list[OCRFigure] = []
+        for pno in range(doc.page_count):
+            page = doc[pno]
+            for info in page.get_image_info(xrefs=True):
+                bbox = _bbox(info.get("bbox"))
+                xref = info.get("xref")
+                content = b""
+                if xref is not None:
+                    try:
+                        content = doc.extract_image(xref)["image"]
+                    except Exception:
+                        content = b""  # 提取失败 → 不完整 figure（seal IS-7 fail-loud）
+                figures.append(
+                    OCRFigure(
+                        page_no=pno + 1,
+                        bbox=bbox or {},
+                        source=self.name,
+                        content=content,
+                    )
+                )
+        return figures
 
 
 class MockOCRProvider:

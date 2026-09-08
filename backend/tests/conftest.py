@@ -44,3 +44,22 @@ def pdf_bytes() -> bytes:
     doc.close()
     return data
 
+
+@pytest.fixture
+def pdf_bytes_with_figure() -> bytes:
+    """PyMuPDF 生成的一页文本 + 一张已放置图片 PDF（本地确定性，非外部资产）。
+
+    BUG-011-B：native 图提取需真实 image placement（get_image_info 可定位 + xref 可
+    extract_image），区别于纯文本 pdf_bytes（figures=()）。
+    """
+    import fitz
+
+    doc = fitz.open()
+    page = doc.new_page(width=595, height=842)
+    page.insert_text((72, 72), "Alpha 1 first line")
+    pix = fitz.Pixmap(fitz.csRGB, fitz.IRect(0, 0, 20, 20), True)
+    page.insert_image(fitz.Rect(72, 200, 172, 300), pixmap=pix)
+    data = doc.tobytes()
+    doc.close()
+    return data
+
