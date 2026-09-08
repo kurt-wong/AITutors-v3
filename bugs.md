@@ -18,6 +18,8 @@
 - 根因：10 v1.2.1 引言归类与 schema 定义位置不一致。
 - 处置：段 A 实现按 §4 归 B 域（models/source.py）；待 10 changelog/errata 澄清。
 - 验收：实现无偏差；登记为 spec 待裁决项。
+- **Resolved（2026-09-08）**：终裁 `documents` 归 B 域（§4 Schema 定义权威，§1 A 域清单删
+  documents；B 域澄清为 Source Domain）。加规则「总览 vs 逐表定义冲突时以 Schema 定义为准」。
 
 ### BUG-V3-002 — `document_source_selection_events` 列冻结缺失
 - Status: Open
@@ -27,6 +29,8 @@
 - 处置：段 A 按 01 v0.3 决策 5 补列（id/document_id/role/old_source_version_id/
   new_source_version_id/operated_by/reason/run_id/created_at）；待 10 errata。
 - 验收：实现与该补列一致。
+- **Resolved（2026-09-08）**：冻结 9 列（id/created_at/document_id/role/old_source_version_id/
+  new_source_version_id/operated_by/reason/run_id）；run_id ≠ LE identity；无 UNIQUE。
 
 ### BUG-V3-003 — embedding 模型名跨文档不一致
 - Status: Open
@@ -69,6 +73,9 @@
   `limit`/`used`/`reserved` 单位与精度（token/调用/金额）未冻结 → 以调用方同单位数值实现，
   不自行设币种/换算。待 30 §17 errata 终裁。
 - 验收：reserved 补列与 reserve/settle 语义一致；终裁后对齐。
+- **Resolved（2026-09-08）**：冻结 `reserved NUMERIC NOT NULL DEFAULT 0`；单位=调用方同单位
+  抽象标量（同一 scope 内同计量体系，DB 不存单位/币种、不跨单位换算）；精度=NUMERIC（禁 FLOAT/
+  固定 scale）；保留五账户正交禁派生。
 
 ### BUG-V3-007 — `original_sha256` 与 `document_source_versions` 基数关系未冻结
 - Status: Open
@@ -114,6 +121,9 @@
   接）；真实 live seal 的 role/provider 值待 10 errata 终裁（VL 是否新增 role/provider 枚举
   值，或归并 ocr_ppsv3/ppsv3）。
 - 验收：errata 终裁后按最终值域对齐。
+- **Resolved（2026-09-08）**：终裁新增独立 `provider='paddleocr-vl'` + `role='ocr_ppsvl'`
+  （不归并 ppsv3/ocr_ppsv3）；封闭配对 `ocr_ppsvl ⟺ paddleocr-vl`。防 PPS/PVL 共享 provider
+  导致 LE identity 碰撞。代码改动见 Commit C。
 
 ### BUG-V3-009 — `get_default_annotation` 最新排序依据未冻结（20 §4.7）
 - Status: Open
@@ -334,6 +344,9 @@
 - 处置：段 G 不自行加 UNIQUE（遵循 A–E 纪律，不擅自改 DB schema）；Instance 唯一由 DB
   constraint 兜底；重复 Question 风险登记待 errata 裁决是否补 UNIQUE。
 - 验收：errata 终裁后按最终约束对齐。
+- **Resolved（2026-09-08）**：终裁加**全局** `UNIQUE(dedup_key)`（非复合；dedup_key 不含
+  source_version/subject/grade，Question 本就跨文档 canonical identity）+ migration 0007
+  fail-loud 前置查重。代码改动见 Commit D。
 
 ### BUG-V3-028 — 历史 migration full-metadata bootstrap 使 from-empty replay 的 revision ownership 失效（0001/0003）
 - Status: Open

@@ -404,7 +404,7 @@ B 流会被 A 流的既有行 UNIQUE 挡回、被迫借用 A 产物 = 串台）�
 | `tasks` | id、task_type、status（created/queued/running/succeeded/failed/interrupted）、`task_params JSONB`（轻量目标/参数引用 id，**不内嵌内容**）、claim_round、current_stage、created_by、created_at、decided_at | 状态迁移只能经 Task Service 显式接口；无自动 stale→queued |
 | `task_claims`（append-only） | id、task_id、claim_round、start/end、outcome、error_type、lease 快照 | **task 级租约记录，非 LE attempt**；人工 retry/recovery 放行开新 claim_round |
 | `llm_call_audit`（append-only） | 见 §10；`logical_execution_stage/hash`、`attempt_id` | 不可变；进程未知死亡 → `unknown` |
-| `budget` | account_dim（request/task/le/document/daily）、`stage VARCHAR NULL`（le 账户用）、scope_id、limit、used、reserved_at、updated_at | 扣减条件 UPDATE（并发安全）；LE 账户按 `(stage, hash)` scope；LE 跨 attempt 累计；reserve 带时间，超时对账回收 |
+| `budget` | account_dim（request/task/le/document/daily）、`stage VARCHAR NULL`（le 账户用）、scope_id、limit、used、reserved、reserved_at、updated_at | 扣减条件 UPDATE（并发安全）；LE 账户按 `(stage, hash)` scope；LE 跨 attempt 累计；reserve 带时间，超时对账回收。`reserved NUMERIC NOT NULL DEFAULT 0`（预留量数值列，与 limit/used 同型；单位=调用方同单位抽象标量，同一 scope 内同计量体系，DB 不存单位/币种、不跨单位换算）；禁 FLOAT/固定 scale（BUG-V3-006 errata） |
 
 运行域表不得持有"内容快照/题目/材料"字段；需要复用的内容状态一律指向 A/B/C 行 id，
 不复制内容。`tasks.task_params` 只存目标引用（documents.id 等），**不存内容正文**。

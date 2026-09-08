@@ -22,12 +22,12 @@ Supersedes: `Docs/V3_DATA_MODEL.md`（起草输入）;上位约束 `00_Master_Sp
 
 ```text
 A. 内容事实域（live relational，Admission 后成为唯一活数据）
-   documents / questions / question_instances / instance_role_contents /
+   questions / question_instances / instance_role_contents /
    materials / material_links / unit_groups / instance_figure_links /
    knowledge_nodes / question_knowledge_links
 
-B. 不可变源域（sealed，只写一次）
-   document_source_versions / document_source_lines / source_figures /
+B. 源域（Source Domain：含可变主档 documents + active 指针 + 不可变 sealed 内容）
+   documents / document_source_versions / document_source_lines / source_figures /
    document_active_sources / document_source_selection_events
 
 C. 管线快照域（immutable snapshot，LLM 依赖或确定性编译的审计留存）
@@ -35,6 +35,9 @@ C. 管线快照域（immutable snapshot，LLM 依赖或确定性编译的审计�
 ```
 
 运行域（task/attempt/lease/audit/budget）不在本分册，见 30。
+
+> **域归属裁决（BUG-V3-001 errata）**：当章节级 Domain 总览清单与逐表 Schema 定义冲突时，
+> 以 **Canonical Schema Domain 定义**为准（§4/§5/§6 的逐表定义权威于本清单）。
 
 ### 1.0 V3 三大哲学边界（数据库 schema 的判据）
 
@@ -130,8 +133,8 @@ C. 管线快照域（immutable snapshot，LLM 依赖或确定性编译的审计�
 | id | UUID | PK |
 | document_id | UUID | FK documents |
 | artifact_kind | VARCHAR | original_binary / raw_l1 / canonical_l1 |
-| role | VARCHAR | native / ocr_ppsv3 / docx / canonical |
-| provider | VARCHAR | native / ppsv3 / docx |
+| role | VARCHAR | native / ocr_ppsv3 / ocr_ppsvl / docx / canonical |
+| provider | VARCHAR | native / ppsv3 / paddleocr-vl / docx |
 | parent_version_id | UUID NULL | 修正/派生来源 |
 | body_text | TEXT | seal 前由 line index 确定性重建 |
 | body_hash | CHAR(64) | SHA256(normalized body_text) |
@@ -144,6 +147,10 @@ C. 管线快照域（immutable snapshot，LLM 依赖或确定性编译的审计�
 约束：
 
 - `status=sealed` 后禁止任何 UPDATE（Repository 抛错，不静默忽略）。
+- **role/provider 封闭配对（BUG-V3-008 errata）**：`ocr_ppsv3 ⟺ ppsv3`、`ocr_ppsvl ⟺
+  paddleocr-vl`、`native ⟺ native`、`docx ⟺ docx`；`canonical` role 无 provider。禁止任意
+  组合。`provider`/`role` 均进入 seal LE hash（contract_domain.parser），独立引擎必须独立
+  身份，防 identity 漂移。
 - `body_text` 必须能从 line index 按 `seq` 以 `\n` 确定性重建（IS-4），读取比对
   `body_hash`，不一致拒绝使用。
 - 修改任意一行/一张图，`integrity_hash` 必须改变（回归测试）。
@@ -200,8 +207,21 @@ version 内去重。
 | source_version_id | UUID | 只允许指向 `sealed` version |
 | selected_at / selection_reason | TIMESTAMPTZ / TEXT | 自动/人工/回滚原因 |
 
-`document_source_selection_events`（append-only）：每次指针切换的旧/新 version、
-操作人、reason、run_id（01 v0.3 决策 5）。
+`document_source_selection_events`（append-only，BUG-V3-002 errata 冻结逐列）：
+
+| Field | Type | Note |
+|---|---|---|
+| id | UUID | PK |
+| created_at | TIMESTAMPTZ | NOT NULL |
+| document_id | UUID | FK documents |
+| role | VARCHAR | native / ocr_ppsv3 / ocr_ppsvl / canonical |
+| old_source_version_id | UUID NULL | FK document_source_versions |
+| new_source_version_id | UUID NULL | FK document_source_versions |
+| operated_by | VARCHAR | NOT NULL |
+| reason | TEXT NULL | |
+| run_id | VARCHAR NULL | 运行/批次关联串，**非 LE identity**（非 logical_execution_stage/hash 组成部分） |
+
+无 UNIQUE 约束（append-only 事件日志，同 document/role/old-new 在多时间/操作者/run 下多条合法）。
 
 规则：active 指针可随重跑变化，旧 sealed version 永远可读；旧 annotation 永远按
 其 `source_version_id` 回放。
@@ -351,6 +371,11 @@ candidate(unit) 进入物化
 ```
 
 - 近义 / 模糊命中 → **不自动合并**，列入人工确认候选（00 §5：semantic merge 延后）。
+- **DB 唯一性（BUG-V3-027 errata）**：`questions.dedup_key` 加**全局** `UNIQUE(dedup_key)`
+  （非复合；dedup_key 不含 source_version/subject/grade/document，Question 本就是跨文档
+  canonical identity）。`create_question` 用 `INSERT ... ON CONFLICT DO NOTHING` + re-read
+  收敛；并发 approve 同 dedup_key → 恰 1 Question、多个 Instance。存量重复 → migration
+  fail-loud（不静默 merge/删行）。
 - **dedup 命中永远不使 candidate 变成 rejected**：去重只影响"复用还是新建"，不否定
   题目本身有效。
 - `dedup_key` 基于 **20 定义的 Compiler canonical output** 计算（空格/换行/LaTeX/
