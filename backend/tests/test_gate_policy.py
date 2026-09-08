@@ -132,6 +132,24 @@ def test_text_hash_mismatch_rejected():
     assert any("text_hash mismatch" in r for r in d["reasons"])
 
 
+def test_non_byte_proven_resolution_downgrade_not_rejected():
+    """BUG-V3-024 分界：resolution ∉ {exact,normalized} → pending_review（review
+    downgrade，非 terminal rejected）；仅 text_hash mismatch 才 rejected。"""
+    for resolution in ("contextual", "fuzzy", "ambiguous"):
+        root, ir, snap, run = _pipeline(_single_lines("A"), _single_payload())
+        new_spans = tuple(
+            dataclasses.replace(s, resolution_status=resolution) for s in run.resolved_spans
+        )
+        run2 = ResolvedRun(source_version_id=run.source_version_id,
+                           resolved_spans=new_spans,
+                           unresolved_references=run.unresolved_references,
+                           resolved_relations=run.resolved_relations,
+                           unresolved_relations=run.unresolved_relations)
+        d = _decision(root, ir, snap, run2)
+        assert d["decision"] == "pending_review"
+        assert any("not byte-proven" in r for r in d["reasons"])
+
+
 def test_structural_missing_leaf_rejected():
     # root incomplete / 未知 canonical 不产 leaf → structural fail → rejected。
     payload = _single_payload("foo")

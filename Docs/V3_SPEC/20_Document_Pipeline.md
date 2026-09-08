@@ -525,6 +525,23 @@ dedup serialization 时必须 **fail-fast**。排序由 Compiler 内唯一实现
 | Semantic | standalone 无必需 material_dependency；composite 依赖完整；blank/option/answer 闭合；子题 image 归属正确；材料不重复；语义状态与 IR 一致 | IR 不变量 |
 | Admission | 前三层全过 + answer 达自动标准 → approved；否则 pending_review/rejected | 10 §5.4 |
 
+**逐条检查项（冻结，BUG-V3-024 终裁）**——`policy.evaluate()` 最小安全实现显式化：
+
+- **Structural（至少）**：`semantic_status == ready`；有 leaf；canonical type ∈
+  CANONICAL_TYPES；stem 非空；各 content role / answer span 在 ResolvedRun 内可溯源。
+- **Provenance（至少）**：content span resolution ∈ {exact, normalized} 才 byte-proven；
+  `text_hash == SHA256(raw text)`；无重复 span 消费（同一 span 不得被多个 leaf 消费两次）；
+  composite shared material 同样纳入白名单（resolution ∉ {exact, normalized} → 不自动）。
+- **Semantic（至少）**：composite material 存在 / 唯一 / 可溯源；子题 leaf 有效
+  （F 已校验 IR 不变量 1-8，G 只复核不重判）。
+- **Admission**：前三层任一 fail → `rejected`；前三层全过 → 逐 leaf strict-auto
+  grammar（§8.4）→ `auto_approve` / `pending_review`。
+
+**关键分界（冻结）**：`text_hash` 不一致 = **byte-level evidence contradiction** →
+`rejected`（terminal）；`resolution ∈ {contextual, fuzzy, ambiguous, …}` = 不能
+byte-proven → **`pending_review`**（review downgrade，**非 terminal**）。二者不得混为
+"所有非 exact → rejected"，否则破坏 evidence hierarchy。
+
 Gate **只产出 pass/fail + reasons**，不修改 content，不做语义猜测（00 §5）。
 分层判定与 reasons **只写入 candidate 行 `gate_decision` 列**（10 §5.2），**不写回
 payload**——payload 是不可变编译产物，其 `evidence[]` 仅含 Resolver/Compiler 证据
