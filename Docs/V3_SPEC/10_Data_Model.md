@@ -347,7 +347,7 @@ Image/unit）只在 Admission Transaction 内创建**；post-admission 的可选
 | Field | Type | Note |
 |---|---|---|
 | id | UUID | PK |
-| subject / grade | VARCHAR / VARCHAR | Derived（源自 annotation claim 的确定性映射，00 P3） |
+| subject / grade | VARCHAR NULL / VARCHAR NULL | Derived（annotation claim 直接映射；claim 缺失 → NULL = unknown，非空串，BUG-V3-021 终裁） |
 | canonical_question_type | VARCHAR | single_choice / multiple_choice / true_false / fill_in / short_answer / writing…（DISPLAY_CONTRACT） |
 | dedup_key | CHAR(64) | canonical 精确去重（§6.8） |
 | created_at | TIMESTAMPTZ | |
@@ -376,6 +376,11 @@ candidate(unit) 进入物化
   canonical identity）。`create_question` 用 `INSERT ... ON CONFLICT DO NOTHING` + re-read
   收敛；并发 approve 同 dedup_key → 恰 1 Question、多个 Instance。存量重复 → migration
   fail-loud（不静默 merge/删行）。
+
+**subject/grade metadata 收敛（BUG-V3-021 终裁）**：Question identity（dedup_key）不含
+subject/grade；metadata 是独立于 identity 的层次。同 dedup_key 复用既有 Question 时：
+`NULL → known` 允许（补写）；`known → same` 允许（no-op）；`known → different` → fail-loud
+（RepositoryError，禁止静默覆盖）。unknown 用 `NULL` 表示，**绝不用空串 `""`**。
 - **dedup 命中永远不使 candidate 变成 rejected**：去重只影响"复用还是新建"，不否定
   题目本身有效。
 - `dedup_key` 基于 **20 定义的 Compiler canonical output** 计算（空格/换行/LaTeX/
@@ -434,7 +439,7 @@ candidate(unit) 进入物化
 | Field | Type | Note |
 |---|---|---|
 | id | UUID | PK |
-| subject / grade | VARCHAR | 同上 Derived |
+| subject / grade | VARCHAR NULL | 同上 Derived（claim 缺失 → NULL，BUG-V3-021 终裁） |
 | source_version_id | UUID | **Scope**（见下） |
 | text | TEXT | material 编译正文（一次） |
 | text_hash | CHAR(64) | |

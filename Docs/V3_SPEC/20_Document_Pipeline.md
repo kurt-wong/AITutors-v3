@@ -106,8 +106,9 @@ LLM 只输出**语义 payload**；Envelope 字段由 pipeline 注入。持久化
 }
 ```
 
-- `source_version_id` 指向 sealed version；`document_metadata_claims` 只是 claim，遵守
-  上传/文件名优先级（02 §15），不直接写入最终事实。
+- `source_version_id` 指向 sealed version；`document_metadata_claims` 是 annotation claim，
+  M1 **直接映射**为最终事实的 subject/grade（BUG-V3-021 终裁：删除 V2 遗留的「上传/文件名
+  优先级（02 §15）」链；不再引用已删的 02 册）。
 - `semantic_units` 以 question/composite 为中心；`annotation_meta` 是诊断元数据。
 
 ### 4.3 递归禁止字段（schema 校验，失败即 invalid，不过滤继续）
@@ -190,6 +191,24 @@ task_instruction}` + `sub_questions[]`（每个含 stem/options/answer +
 - blank/option/answer/image 必须有 owner（question 或 composite）；同一 document-local
   question 不得属于两个 unit。
 
+**blank/image content 形态（BUG-V3-013 终裁，M1 minimal shape）**：
+
+```json
+{
+  "blank": [{"blank_label": "1", "question_label": "1"}],
+  "image": {"image_ref": {"figure_id": "fig-001"}}
+}
+```
+
+- `blank`：list（或单 dict）；每项 `blank_label`（**必填**，unit 内 blank identity）+
+  `question_label`（可选，闭合到具体 question）。术语统一用 `question_label`（V3 已有），
+  不用 `question_number`。
+- `image`：dict；`image_ref` 须 dict，`figure_id`（可选）是 **M1 唯一图像引用 identity**
+  （不提前加 image_url/inline payload/bbox/file path，这些延后 D-6 Figure Contract）。
+- **malformed shape（非 dict/list、缺必填 `blank_label`、`image_ref` 非 dict）→ fail-fast
+  （ValueError），绝不 silent skip**；合法 shape 但引用对象不存在 → resolver
+  missing/ambiguous/incomplete 状态（§5.5）。
+
 ### 4.6 关系与闭合（relations / mapping）
 
 关系表：`contains`、`material_dependency`、`word_bank_dependency`、
@@ -204,13 +223,15 @@ task_instruction}` + `sub_questions[]`（每个含 stem/options/answer +
 
 - Resolver 判 `incomplete`（§5.2）→ **回 Annotation 聚焦重试**：新的一次 annotation
   逻辑执行（新 annotation stage 键），**不产生 candidate**。
-- 重试成功的新 annotation 落库后，Application Service 的 annotation 提交步骤把该
-  source_version 上被替换的"当前默认"annotation 置 `superseded`（10 §5.1：valid /
-  invalid / superseded）。**写入者是确定性 Application 步骤，无 LLM。**
-- 消费规则：默认解析 / 编译消费该 source_version 上最新未 superseded 的 valid
-  annotation；历史（含 superseded）行保留，供 00 P7 Rebuild 显式引用
-  （candidate 的 `input_identity.annotation_id` 指它实际消费的那条，10 §5.3）——禁止
-  对同一 source 静默多消费 / 多 candidate 混指。
+- 重试成功的新 annotation 落库后，Application 提交步骤可把被替换的 annotation 置
+  `superseded`（10 §5.1：valid / invalid / superseded）。**写入者是确定性 Application
+  步骤，无 LLM。** `status` 只是生命周期状态，**不是默认选择器**（BUG-V3-009 终裁）。
+- 消费规则（BUG-V3-009 终裁）：**M1 禁止 implicit/default annotation 选择**——所有消费
+  annotation 的运行路径必须**显式提供 `annotation_id`**（candidate 的
+  `input_identity.annotation_id` 指它实际消费的那条，10 §5.3）；不存在「默认最新
+  annotation」。`annotation_id` 缺失或未解析到 valid annotation → **fail-fast**
+  （RepositoryError），绝不自行查询「最新 annotation」。历史（含 superseded）行保留，
+  供 00 P7 Rebuild 显式引用；禁止对同一 source 静默多消费 / 多 candidate 混指。
 
 ---
 
