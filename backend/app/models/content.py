@@ -24,6 +24,9 @@ class Question(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     """questions（10 §6.1）。无 status 列（存在即已 Admission）。"""
 
     __tablename__ = "questions"
+    __table_args__ = (
+        UniqueConstraint("dedup_key", name="uq_questions_dedup_key"),
+    )
 
     subject: Mapped[str] = mapped_column(String, nullable=False)
     grade: Mapped[str] = mapped_column(String, nullable=False)

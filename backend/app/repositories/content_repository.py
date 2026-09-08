@@ -3,6 +3,7 @@
 import uuid
 
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from app.models.content import (
     InstanceRoleContent,
@@ -13,7 +14,7 @@ from app.models.content import (
     UnitGroup,
     UnitGroupMember,
 )
-from app.repositories.base import BaseRepository
+from app.repositories.base import BaseRepository, RepositoryError
 
 
 class ContentRepository(BaseRepository):
@@ -65,14 +66,31 @@ class ContentRepository(BaseRepository):
         canonical_question_type: str,
         dedup_key: str,
     ) -> Question:
-        question = Question(
-            subject=subject,
-            grade=grade,
-            canonical_question_type=canonical_question_type,
-            dedup_key=dedup_key,
+        """幂等写（BUG-V3-027 errata）：锚 UNIQUE(dedup_key) ON CONFLICT DO NOTHING。
+
+        插入成功 → returning 新行；同 dedup_key 冲突（并发 approve）→ re-read existing
+        （幂等收敛，同一 canonical identity 恰一个 Question 行）。
+        """
+        stmt = (
+            pg_insert(Question)
+            .values(
+                subject=subject,
+                grade=grade,
+                canonical_question_type=canonical_question_type,
+                dedup_key=dedup_key,
+            )
+            .on_conflict_do_nothing(index_elements=["dedup_key"])
+            .returning(Question)
         )
-        await self.add(question)
-        return question
+        row = (await self._session.execute(stmt)).scalars().first()
+        if row is not None:
+            return row
+        existing = await self.find_question_by_dedup_key(dedup_key=dedup_key)
+        if existing is None:
+            raise RepositoryError(
+                "question (dedup_key) conflict but no existing row readable"
+            )
+        return existing
 
     async def create_instance(
         self,
