@@ -78,6 +78,8 @@ class LLMExecutor:
         self._retry_count = (
             settings.llm_request_retry_count if retry_count is None else retry_count
         )
+        if self._retry_count < 0:
+            raise ValueError(f"retry_count must be >= 0, got {self._retry_count}")
         self._reserve_amount = reserve_amount
         self._max_invocations = (
             settings.max_llm_calls_per_task if max_invocations is None else max_invocations

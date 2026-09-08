@@ -242,3 +242,20 @@ async def test_nonjson_body_raises_provider_error(monkeypatch) -> None:
     assert ei.value.retryable is False
     assert ei.value.error_type == "provider_error"
     assert len(calls) == 1
+
+
+# ---- BUG-V3-036（C-1）：负 http_retry 构造 fail-fast + http_retry_count=0 合法边界 ----
+
+
+def test_negative_http_retry_count_rejected() -> None:
+    """http_retry_count=-1 必须在构造层 fail-fast（ValueError），0 transport call。"""
+    with pytest.raises(ValueError):
+        _provider(http_retry_count=-1)
+
+
+async def test_http_retry_count_zero_success_single_attempt(monkeypatch) -> None:
+    """C-1 边界：http_retry_count=0 合法——成功恰好 1 次 HTTP attempt（1 + 0）。"""
+    calls = _patch_client(monkeypatch, [("response", _FakeResponse(200, "ok"))])
+    out = await _provider(http_retry_count=0).complete("q")
+    assert out == "ok"
+    assert len(calls) == 1

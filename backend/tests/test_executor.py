@@ -546,3 +546,44 @@ async def test_malformed_body_audit_error_type_provider_error(monkeypatch) -> No
         assert audit["error_type"] == "provider_error"  # 修复前为 'unknown'
         row = await _budget_row(s, "task", str(task_id))
         assert row == {"used": Decimal("0"), "reserved": Decimal("0")}  # 失败释放保留
+
+
+# ---- BUG-V3-036（C-1）：负 retry 构造 fail-fast + retry_count=0 合法边界 ----
+
+
+async def test_negative_retry_count_rejected_no_runtime_side_effect() -> None:
+    """C-1 专项 adversarial regression：retry_count=-1 必须在构造层 fail-fast，不得进入任何
+    execution side effect（0 Provider Invocation / 0 audit / 0 budget / 0 None-return）。
+
+    修复前缺陷链：负值 → range(0) 零迭代 → finalize_audit(failed, 'unknown') + settle(0) +
+    return None，制造「0 真实调用却生成 failed audit + None 返回」的失真 Runtime Truth。
+    """
+    async with async_session_maker() as s:
+        task_id = await _mk_task(s)
+    doc_id = uuid.uuid4()
+    provider = _FlakyProvider(fail_first=0)  # 正常本会成功，但构造即被拒，provider 永不调用
+    with pytest.raises(ValueError):
+        LLMExecutor(None, _live_gateway(provider), retry_count=-1)
+    assert provider.calls == 0  # 构造失败后无法进入 execution side effect
+    async with async_session_maker() as s:
+        assert await _invocations(s, task_id) == 0
+        assert await _audit_statuses(s, task_id) == []
+        assert await _budget_row(s, "task", str(task_id)) is None  # 零 reserve/零 settle
+
+
+async def test_live_retry_count_zero_still_one_invocation() -> None:
+    """C-1 边界：retry_count=0 合法——恰好 1 次 Provider Invocation（attempts = 1 + 0）。"""
+    async with async_session_maker() as s:
+        task_id = await _mk_task(s)
+    doc_id = uuid.uuid4()
+    provider = _FlakyProvider(fail_first=0)
+    async with async_session_maker() as s:
+        ex = LLMExecutor(s, _live_gateway(provider), retry_count=0)
+        out = await ex.complete("q", **_exec_params(task_id, doc_id, attempt_id=uuid.uuid4()))
+        assert out == "ok-text"
+    assert provider.calls == 1  # 1 + retry_count(0)
+    async with async_session_maker() as s:
+        assert await _invocations(s, task_id) == 1
+        assert await _audit_statuses(s, task_id) == ["completed"]
+        row = await _budget_row(s, "task", str(task_id))
+        assert row == {"used": Decimal("1"), "reserved": Decimal("0")}

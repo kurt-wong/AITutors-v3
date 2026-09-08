@@ -33,3 +33,32 @@ def test_future_surface_defaults_and_not_required() -> None:
     assert s.paddleocr_vl_token is None
     assert s.admin_api_key is None
     assert s.embedding_model == "qwen3-embedding:4b"
+
+
+# ---- BUG-V3-036（C-1）：负 retry 配置必须在 Settings 层 fail-fast ----
+
+
+def test_negative_llm_request_retry_count_rejects(monkeypatch) -> None:
+    """llm_request_retry_count=-1 → ValidationError（ge=0 约束，env/Settings 路径 fail-fast）。"""
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    monkeypatch.delenv("APP_ENV", raising=False)
+    with pytest.raises(ValidationError):
+        Settings(
+            database_url="postgresql+asyncpg://u:p@h/d",
+            app_env="development",
+            llm_request_retry_count=-1,
+            _env_file=None,
+        )
+
+
+def test_negative_http_retry_count_rejects(monkeypatch) -> None:
+    """http_retry_count=-1 → ValidationError（ge=0 约束，env/Settings 路径 fail-fast）。"""
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    monkeypatch.delenv("APP_ENV", raising=False)
+    with pytest.raises(ValidationError):
+        Settings(
+            database_url="postgresql+asyncpg://u:p@h/d",
+            app_env="development",
+            http_retry_count=-1,
+            _env_file=None,
+        )

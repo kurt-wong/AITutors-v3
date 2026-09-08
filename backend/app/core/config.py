@@ -5,6 +5,7 @@ cloud OCR / ollama / embedding / minio / admin_api_key）在段 C/B 接线后才
 段 A 提供默认值但**不校验**，保证启动零 LLM、零外部副作用（Gate A1）。
 """
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -48,12 +49,12 @@ class Settings(BaseSettings):
 
     # ---- 段 H Phase 4：runtime 重试/熔断常量（30 §7 数值未冻结；M1 安全默认）----
     max_llm_calls_per_task: int = 20
-    llm_request_retry_count: int = 2
+    llm_request_retry_count: int = Field(default=2, ge=0)
 
     # ---- 段 H Phase 9：Worker/lease/fallback 常量（30 §7 数值未冻结；M1 安全默认）----
     worker_concurrency: int = 1
     task_claim_lease_seconds: int = 60
-    http_retry_count: int = 2
+    http_retry_count: int = Field(default=2, ge=0)
     provider_fallback_enabled: bool = False
 
     # ---- cloud OCR（30 §6/§16 external：段 B OCRGateway 接线；disabled/mock 不要求 token）----

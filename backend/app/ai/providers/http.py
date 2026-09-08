@@ -41,6 +41,8 @@ class HTTPLLMProvider:
         self._http_retry_count = (
             settings.http_retry_count if http_retry_count is None else http_retry_count
         )
+        if self._http_retry_count < 0:
+            raise ValueError(f"http_retry_count must be >= 0, got {self._http_retry_count}")
 
     async def complete(self, prompt: str) -> str:
         resp = None
