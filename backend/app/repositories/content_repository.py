@@ -58,6 +58,34 @@ class ContentRepository(BaseRepository):
         )
         return res.scalars().first()
 
+    async def converge_subject_grade(
+        self,
+        row,
+        *,
+        subject: str | None,
+        grade: str | None,
+    ) -> None:
+        """BUG-V3-021 metadata 单调收敛（Question/Material 共用）。
+
+        NULL → known 补写；known → same no-op；known → different → RepositoryError
+        （fail-loud，禁 first-write-wins 静默覆盖）。unknown = None（非空串）。
+        """
+        changed = False
+        for attr, incoming in (("subject", subject), ("grade", grade)):
+            current = getattr(row, attr)
+            if incoming is None or current == incoming:
+                continue
+            if current is None:
+                setattr(row, attr, incoming)
+                changed = True
+            else:
+                raise RepositoryError(
+                    f"{type(row).__name__} {attr} metadata conflict: "
+                    f"existing={current!r} incoming={incoming!r}"
+                )
+        if changed:
+            await self.flush()
+
     async def create_question(
         self,
         *,

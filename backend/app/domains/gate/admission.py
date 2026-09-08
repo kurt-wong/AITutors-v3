@@ -175,8 +175,8 @@ class AdmissionService:
             )
         ann = await self._snap.find_annotation_by_id(candidate.annotation_id)
         claims = (ann.payload or {}).get("document_metadata_claims", {}) if ann else {}
-        subject = claims.get("subject") or ""  # BUG-V3-021 M1：annotation claim；null→占位
-        grade = claims.get("grade") or ""
+        subject = claims.get("subject")  # BUG-V3-021 终裁：claim 直接映射；缺失 → None（unknown）
+        grade = claims.get("grade")
 
         by_unit: dict[str, dict] = {u["unit_id"]: u for u in units}
         roles_by_unit: dict[str, list[dict]] = {}
@@ -230,6 +230,12 @@ class AdmissionService:
                 )
                 created_questions.append(question.id)
                 await self._content.flush()  # question.id 回填后供 instance FK
+            else:
+                # BUG-V3-021：复用既有 Question 收敛 metadata（NULL→known 补写；
+                # known→different fail-loud），禁 first-write-wins 静默吞。
+                await self._content.converge_subject_grade(
+                    question, subject=subject, grade=grade
+                )
             e["question"] = question
             instance = await self._content.find_instance_by_occurrence(
                 question_id=question.id,
@@ -264,6 +270,10 @@ class AdmissionService:
                     text_hash=m["text_hash"],
                     source_span={"span_id": m["span_id"]},
                     dedup_key=mdedup,
+                )
+            else:
+                await self._content.converge_subject_grade(
+                    mat, subject=subject, grade=grade
                 )
             materials.append((mat, m["role"]))
         if materials:

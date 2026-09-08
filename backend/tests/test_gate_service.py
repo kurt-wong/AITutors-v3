@@ -8,6 +8,7 @@ pending_review、composite 全子题物化（material 单出 + unit_group member
 
 import uuid
 
+import pytest
 from sqlalchemy import func, select
 
 from app.core.hashing import logical_execution_hash, sha256_hex
@@ -80,8 +81,10 @@ def _foo_units():
     ]
 
 
-async def _seed(session, texts=SINGLE_LINES, units=None):
+async def _seed(session, texts=SINGLE_LINES, units=None, claims=None):
     units = _single_units() if units is None else units
+    if claims is None:
+        claims = {"subject": "数学", "grade": "三年级"}
     src = SourceRepository(session)
     doc = await src.create_document(
         original_object_key=f"obj/{uuid.uuid4()}.pdf",
@@ -107,7 +110,7 @@ async def _seed(session, texts=SINGLE_LINES, units=None):
         source_version_id=sv.id, annotation_schema_version="semantic-metadata-annotation/v0.3",
         prompt_version="semantic-annotation/v1", model_config_hash=sha256_hex("m"),
         payload={"semantic_units": units,
-                 "document_metadata_claims": {"subject": "数学", "grade": "三年级"}},
+                 "document_metadata_claims": claims},
         status="valid", logical_execution_stage="ann",
         logical_execution_hash=sha256_hex(str(uuid.uuid4())),
     )
@@ -358,3 +361,62 @@ async def test_compile_le_sensitive_to_resolver_version(session, monkeypatch):
     c2, _ = await GateService(session).run(source_version_id=sv.id, annotation_id=ann.id)
     assert c2[0].id != c1[0].id
     assert c1[0].logical_execution_hash != c2[0].logical_execution_hash
+
+
+async def _reannotate(session, sv, claims):
+    """同 source_version 二次标注（不同 annotation_id/model，同题同 occurrence）。"""
+    ann = await SnapshotRepository(session).create_semantic_annotation(
+        source_version_id=sv.id, annotation_schema_version="semantic-metadata-annotation/v0.3",
+        prompt_version="semantic-annotation/v1", model_config_hash=sha256_hex(str(uuid.uuid4())),
+        payload={"semantic_units": _single_units(), "document_metadata_claims": claims},
+        status="valid", logical_execution_stage="ann",
+        logical_execution_hash=sha256_hex(str(uuid.uuid4())),
+    )
+    await session.flush()
+    return ann
+
+
+async def test_subject_grade_nullable_on_missing_claim(session):
+    """BUG-V3-021：claim 缺失 → subject/grade = NULL（非空串）。"""
+    sv, ann = await _seed(session, claims={"grade": "三年级"})  # subject missing
+    await GateService(session).run(source_version_id=sv.id, annotation_id=ann.id)
+    await session.flush()
+    q = (await session.execute(select(Question))).scalars().first()
+    assert q.subject is None  # unknown = NULL，非 ""
+    assert q.grade == "三年级"
+
+
+async def test_metadata_convergence_null_to_known(session):
+    """BUG-V3-021：NULL → known 允许补写。"""
+    sv, ann = await _seed(session, claims={})  # 全缺失 → NULL
+    await GateService(session).run(source_version_id=sv.id, annotation_id=ann.id)
+    await session.flush()
+    ann2 = await _reannotate(session, sv, {"subject": "数学", "grade": "三年级"})
+    await GateService(session).run(source_version_id=sv.id, annotation_id=ann2.id)
+    await session.flush()
+    q = (await session.execute(select(Question))).scalars().first()
+    assert q.subject == "数学"  # NULL → known 补写
+    assert q.grade == "三年级"
+
+
+async def test_metadata_conflict_fails_loud(session):
+    """BUG-V3-021：known → different → fail-loud（RepositoryError，非静默覆盖）。"""
+    from app.repositories.base import RepositoryError
+
+    sv, ann = await _seed(session, claims={"subject": "数学", "grade": "三年级"})
+    await GateService(session).run(source_version_id=sv.id, annotation_id=ann.id)
+    await session.flush()
+    ann2 = await _reannotate(session, sv, {"subject": "物理", "grade": "三年级"})
+    with pytest.raises(RepositoryError):
+        await GateService(session).run(source_version_id=sv.id, annotation_id=ann2.id)
+
+
+async def test_missing_annotation_fails_fast_no_fallback(session):
+    """BUG-V3-009：annotation_id 无效 → RepositoryError，绝不回退查询「最新 annotation」。"""
+    from app.repositories.base import RepositoryError
+
+    sv, _ = await _seed(session)
+    with pytest.raises(RepositoryError):
+        await GateService(session).run(
+            source_version_id=sv.id, annotation_id=uuid.uuid4()
+        )

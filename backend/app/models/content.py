@@ -28,8 +28,8 @@ class Question(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         UniqueConstraint("dedup_key", name="uq_questions_dedup_key"),
     )
 
-    subject: Mapped[str] = mapped_column(String, nullable=False)
-    grade: Mapped[str] = mapped_column(String, nullable=False)
+    subject: Mapped[str | None] = mapped_column(String, nullable=True)
+    grade: Mapped[str | None] = mapped_column(String, nullable=True)
     canonical_question_type: Mapped[str] = mapped_column(String, nullable=False)
     dedup_key: Mapped[str] = mapped_column(String(64), nullable=False)
 
@@ -89,8 +89,8 @@ class Material(UUIDPrimaryKeyMixin, Base):
 
     __tablename__ = "materials"
 
-    subject: Mapped[str] = mapped_column(String, nullable=False)
-    grade: Mapped[str] = mapped_column(String, nullable=False)
+    subject: Mapped[str | None] = mapped_column(String, nullable=True)
+    grade: Mapped[str | None] = mapped_column(String, nullable=True)
     source_version_id: Mapped[uuid.UUID] = mapped_column(
         Uuid, ForeignKey("document_source_versions.id"), nullable=False
     )
