@@ -436,8 +436,11 @@ input_identity 各 hash / logical_execution_hash 全部漂移却无版本信号�
 - **作用于**：`dedup_key`（per-Question、per-Material）、`occurrence_key`、
   `input_identity`（10 §9）、`logical_execution_hash`（10 §3）的计算输入。
 - **规则**（Compiler 内唯一实现，禁止 Admission / Resolver 侧再实现第二份）：全半角
-  折叠、空白与换行折叠、中英文标点归一、LaTeX 等价（数学环境内不换行语义）、Unicode
-  NFKC、题号/选项前后缀剥离；具体清单随实现评审固化，附 golden 正/反例（50）。
+  折叠、空白与换行折叠、中英文标点归一、Unicode NFKC、题号/选项前后缀剥离；
+  **LaTeX 数学环境内空白/换行折叠（structural，BUG-V3-015 终裁）**：`$...$`/`\[...\]`
+  内 `\s+`→`""`；**不做符号/语义等价**（`\frac{1}{2}`≠`0.5`、`x^2`≠`x²`、
+  `\sqrt{x^2}`≠`|x|`）。canonical identity ≠ mathematical equivalence。具体清单随
+  实现评审固化，附 golden 正/反例（50）。
 - **`text_hash` / `source_span` 保持 raw**：`text_hash` = source line/slice 的实际字节
   hash（10 §8 2c），**绝不套 normalization**；normalization 只作用于上述身份键。二者
   不可混用——这是 provenance 校验（2c/2d）不失效的前提。

@@ -212,3 +212,15 @@ def test_slice_span_multiline_join_golden():
     assert _slice_span(_span(["P1L003", "P1L001"]), line_by_ref) == "材料结束\n 材料开始 "
     # 单行 = 该行 text 本身
     assert _slice_span(_span(["P1L001"], "single_line"), line_by_ref) == " 材料开始 "
+
+
+def test_math_env_whitespace_folded_structural_only():
+    """BUG-V3-015：数学环境内空白/换行折叠（structural）；符号/语义等价不做。"""
+    from app.domains.compile.identity_normalization import normalize_identity
+    # 正例：数学环境内空白/换行折叠 → 同一 identity
+    assert normalize_identity("$x^2 + 1$") == normalize_identity("$x^2+1$")
+    assert normalize_identity("$x^2 +\n 1$") == normalize_identity("$x^2+1$")
+    # 反例：canonical identity ≠ mathematical equivalence（不做符号/语义等价）
+    assert normalize_identity(r"\frac{1}{2}") != normalize_identity("0.5")
+    assert normalize_identity(r"\sqrt{x^2}") != normalize_identity("|x|")
+    assert normalize_identity("x^2") != normalize_identity("x²")
