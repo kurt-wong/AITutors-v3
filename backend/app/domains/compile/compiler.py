@@ -14,6 +14,7 @@ import uuid
 
 from app.domains.compile import map_canonical_type
 from app.domains.compile.identity_normalization import (
+    canonical_options_input,
     identity_hash,
     normalize_identity,
     strip_option_label,
@@ -143,14 +144,16 @@ class Compiler:
         )
 
     def _question_dedup_key(self, canonical: str, stem: CompiledRole, opts: tuple) -> str:
-        """Question dedup_key（20 §7.3）：canonical type + own stem + own options（声明序）。
+        """Question dedup_key（20 §7.3）：canonical type + own stem + own options
+        （options 按 canonical label order 排序，声明序无关，BUG-V3-019）。
 
         不含 shared material / answer / explanation / question no. / source_version / unit_id。
         """
-        options_input = [
-            {"label": o.label, "text": normalize_identity(strip_option_label(o.text))}
+        labeled = [
+            (o.label, normalize_identity(strip_option_label(o.text)))
             for o in opts if o.label
         ]
+        options_input = canonical_options_input(labeled)
         return identity_hash(
             {
                 "canonical_question_type": canonical,

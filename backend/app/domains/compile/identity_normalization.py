@@ -63,3 +63,19 @@ def strip_option_label(text: str) -> str:
 def identity_hash(canonical_input: object) -> str:
     """identity 键 hash = canonical JSON SHA256（段 A hashing.sha256_hex）。"""
     return sha256_hex(canonical_input)
+
+
+def canonical_options_input(labeled_options: list[tuple[str, str]]) -> list[dict]:
+    """BUG-V3-019：选项 identity 成分的 canonical 序列化（Compiler/Admission 共用纯函数）。
+
+    labeled_options：[(label, normalized_text), ...]（调用方已 normalize + strip label）。
+    返回按 canonical label order 排序的 [{"label", "text"}, ...]；label 重复 fail-fast。
+
+    canonical label order = label 的 UTF-8 字节字典序（Unicode 码点序，locale 无关），
+    对 choice 题（A/B/C/D 单 ASCII 大写）与 DISPLAY_CONTRACT §0.2 自然序一致。
+    """
+    labels = [lb for lb, _ in labeled_options]
+    if len(labels) != len(set(labels)):
+        raise ValueError(f"duplicate option label in canonical input: {labels}")
+    ordered = sorted(labeled_options, key=lambda t: t[0])
+    return [{"label": lb, "text": tx} for lb, tx in ordered]

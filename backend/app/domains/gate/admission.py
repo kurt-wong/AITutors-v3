@@ -33,6 +33,7 @@ import uuid
 
 from app.domains.compile import map_canonical_type
 from app.domains.compile.identity_normalization import (
+    canonical_options_input,
     identity_hash,
     normalize_identity,
     strip_option_label,
@@ -387,11 +388,12 @@ def _role(roles: list[dict], role: str) -> dict | None:
 
 def _dedup_key(canonical: str, stem: dict, roles: list[dict]) -> str:
     """Question dedup_key（20 §7.3）——与 Compiler._question_dedup_key 数学一致：选项文本
-    剥 label 后再整体 normalize（选项正文以数字开头时与 Compiler 同键，防跨路径重复）。"""
-    options_input = [
-        {"label": o["label"], "text": normalize_identity(strip_option_label(o["text"]))}
+    剥 label 后再整体 normalize + canonical_options_input 排序（声明序无关，BUG-V3-019）。"""
+    labeled = [
+        (o["label"], normalize_identity(strip_option_label(o["text"])))
         for o in roles if o["role"] == "option" and o.get("label")
     ]
+    options_input = canonical_options_input(labeled)
     return identity_hash(
         {
             "canonical_question_type": canonical,

@@ -4,6 +4,8 @@ import copy
 import hashlib
 import uuid
 
+import pytest
+
 from app.core.hashing import sha256_hex
 from app.domains.compile.compiler import Compiler
 from app.domains.compile.ir import IRBuilder
@@ -140,3 +142,73 @@ async def test_compile_deterministic_and_immutable():
     assert s1.leaves[0].dedup_key == s2.leaves[0].dedup_key
     assert s1.leaves[0].occurrence_key == s2.leaves[0].occurrence_key
     assert lines == lines_before and payload == payload_before
+
+
+def test_question_dedup_key_declaration_order_invariant():
+    """BUG-V3-019：同一语义选项集不同声明序 → 同一 dedup_key（选项按 canonical label order）。
+
+    注：不走 resolver 全链路——resolver 的选项定位按源行序前进（cursor），乱序声明会
+    incomplete；此处直接测 Compiler._question_dedup_key 对声明序的不敏感性。
+    """
+    from app.domains.compile.snapshot import CompiledRole
+
+    stem = CompiledRole(role="stem", span_id="s0", line_refs=(),
+                        text="1. 下列哪个是水果", text_hash="0" * 64, label=None)
+    texts = {"A": "A. 苹果", "B": "B. 香蕉", "C": "C. 汽车", "D": "D. 桌子"}
+
+    def opts(order):
+        return tuple(
+            CompiledRole(role="option", span_id=f"o{l}", line_refs=(),
+                         text=texts[l], text_hash="0" * 64, label=l)
+            for l in order
+        )
+
+    compiler = Compiler({}, {})
+    a = compiler._question_dedup_key("single_choice", stem, opts("ABCD"))
+    b = compiler._question_dedup_key("single_choice", stem, opts("BDAC"))
+    assert a == b
+
+
+def test_canonical_options_input_sorts_and_rejects_dupes():
+    """BUG-V3-019：canonical_options_input 按 label 排序 + label 重复 fail-fast。"""
+    from app.domains.compile.identity_normalization import canonical_options_input
+    out = canonical_options_input(
+        [("B", "香蕉"), ("D", "桌子"), ("A", "苹果"), ("C", "汽车")]
+    )
+    assert [o["label"] for o in out] == ["A", "B", "C", "D"]
+    assert out == [
+        {"label": "A", "text": "苹果"},
+        {"label": "B", "text": "香蕉"},
+        {"label": "C", "text": "汽车"},
+        {"label": "D", "text": "桌子"},
+    ]
+    with pytest.raises(ValueError):
+        canonical_options_input([("A", "苹果"), ("A", "香蕉")])
+
+
+def test_slice_span_multiline_join_golden():
+    """BUG-V3-012：跨行 text 单个 \\n 按声明顺序拼接，不 strip 首尾空白；单行=该行本身。"""
+    from app.domains.compile.compiler import _slice_span
+    from app.domains.resolver.span import ResolvedSpan, SourceLineView
+    line_by_ref = {
+        "P1L001": SourceLineView("P1L001", " 材料开始 ", 1, 1, 1),
+        "P1L002": SourceLineView("P1L002", " 材料甲内容段落 ", 2, 1, 2),
+        "P1L003": SourceLineView("P1L003", "材料结束", 3, 1, 3),
+    }
+
+    def _span(refs, granularity="multi_line_pair"):
+        return ResolvedSpan(
+            span_id="sp-1", source_version_id=SVID, role="material",
+            start_line_ref=refs[0], end_line_ref=refs[-1],
+            line_refs=tuple(refs), granularity=granularity,
+            start_offset=None, end_offset=None, text_hash="0" * 64,
+            resolution_status="exact",
+        )
+
+    # 声明顺序 + 单个 \n + 不 strip
+    assert _slice_span(_span(["P1L001", "P1L002", "P1L003"]), line_by_ref) == \
+        " 材料开始 \n 材料甲内容段落 \n材料结束"
+    # 声明顺序反序 → 结果反序（不按行号重排）
+    assert _slice_span(_span(["P1L003", "P1L001"]), line_by_ref) == "材料结束\n 材料开始 "
+    # 单行 = 该行 text 本身
+    assert _slice_span(_span(["P1L001"], "single_line"), line_by_ref) == " 材料开始 "
