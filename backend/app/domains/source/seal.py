@@ -34,6 +34,26 @@ SEAL_CONTRACT_VERSION = "seal/v1"
 _STAGE = "seal"
 _ARTIFACT_KIND = "raw_l1"  # OCR/native 第一层结构化文本（10 §4.2）
 
+# BUG-V3-008（errata）：seal role/provider 封闭配对。独立引擎必须独立身份，防 LE identity 漂移。
+_SEAL_ROLE_PROVIDERS = {
+    "native": {"native"},
+    "ocr_ppsv3": {"ppsv3"},
+    "ocr_ppsvl": {"paddleocr-vl"},
+    "docx": {"docx"},
+}
+
+
+def validate_seal_role_provider(role: str, provider: str) -> None:
+    """校验 seal role/provider 封闭配对（BUG-V3-008 errata）；非法组合 fail-fast。"""
+    allowed = _SEAL_ROLE_PROVIDERS.get(role)
+    if allowed is None:
+        raise ValueError(f"unknown seal role: {role!r}")
+    if provider not in allowed:
+        raise ValueError(
+            f"seal role/provider mismatch: role={role!r} provider={provider!r}"
+            f" (allowed: {sorted(allowed)})"
+        )
+
 Extractor = Callable[[bytes], Awaitable[OCRResult]]
 
 
@@ -58,6 +78,7 @@ class SealService:
         role/provider 为 seal 执行契约的一部分（10 §4.2 role / §4.3 provider 语义），
         extractor 必须与 role/provider 一致（native 本地确定性 / cloud 经 OCRGateway）。
         """
+        validate_seal_role_provider(role, provider)
         original_sha256 = hashlib.sha256(file_bytes).hexdigest()
 
         document = await self._repo.find_document_by_sha256(original_sha256)

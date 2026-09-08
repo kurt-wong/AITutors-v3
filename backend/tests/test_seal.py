@@ -5,6 +5,8 @@
 
 import hashlib
 
+import pytest
+
 from app.ai.ocr.result import OCRLine
 from app.core.hashing import sha256_hex
 from app.domains.source.line_index import (
@@ -15,6 +17,7 @@ from app.domains.source.line_index import (
     rebuild_body_text,
     verify_body_rebuild,
 )
+from app.domains.source.seal import validate_seal_role_provider
 
 
 def _ocr_lines():
@@ -77,3 +80,27 @@ def test_line_hash_deterministic_and_sensitive():
     assert compute_line_hash(**args) == compute_line_hash(**args)
     assert compute_line_hash(**{**args, "text": "t2"}) != compute_line_hash(**args)
     assert compute_line_hash(**{**args, "evidence": "other"}) != compute_line_hash(**args)
+
+
+# ---- BUG-V3-008（errata）：seal role/provider 封闭配对 fail-fast ----
+
+
+def test_validate_seal_role_provider_accepts_closed_pairs():
+    validate_seal_role_provider("native", "native")
+    validate_seal_role_provider("ocr_ppsv3", "ppsv3")
+    validate_seal_role_provider("ocr_ppsvl", "paddleocr-vl")
+    validate_seal_role_provider("docx", "docx")
+
+
+def test_validate_seal_role_provider_rejects_mismatched_pair():
+    with pytest.raises(ValueError):
+        validate_seal_role_provider("ocr_ppsv3", "paddleocr-vl")  # 归并会致 identity 漂移
+    with pytest.raises(ValueError):
+        validate_seal_role_provider("ocr_ppsvl", "ppsv3")
+
+
+def test_validate_seal_role_provider_rejects_unknown_role():
+    with pytest.raises(ValueError):
+        validate_seal_role_provider("main", "native")  # 历史无效默认值
+    with pytest.raises(ValueError):
+        validate_seal_role_provider("canonical", "native")  # seal 阶段不产 canonical

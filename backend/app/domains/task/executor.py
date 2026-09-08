@@ -151,7 +151,7 @@ class TaskExecutor:
                 file_bytes=file_bytes,
                 file_name=params.get("file_name", "document.pdf"),
                 file_type=params.get("file_type", "pdf"),
-                role=params.get("role", "main"),
+                role=params.get("role", "native"),
                 provider=params.get("seal_provider", "native"),
                 extractor=self._ocr_extractor,
             )

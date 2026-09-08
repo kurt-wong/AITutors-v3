@@ -136,7 +136,7 @@ async def test_cloud_path_goes_through_gateway_mock(session, pdf_bytes):
         file_bytes=pdf_bytes,
         file_name="cloud.pdf",
         file_type="pdf",
-        role="ocr_ppsv3",
+        role="ocr_ppsvl",
         provider="paddleocr-vl",
         extractor=gw.extract,
     )
