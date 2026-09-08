@@ -383,6 +383,40 @@ relations，且必须有指向同 unit shared material 的 `material_dependency`
    搬运进 F**（ambiguous/missing/fuzzy/contextual 一律坍缩为 `incomplete`）；`ready`
    仅表示「语义完整、可进 Compiler/Gate 管线」，**不表示 auto_approve**。
 
+### 6.3 M1 Role Contract（BUG-V3-016 终裁）
+
+`content_roles` 是「canonical question type → role requirement」的**唯一规范来源**；
+值域 ∈ `{required, required_for_choice, optional, not_applicable}`。对当前 12 个 canonical
+question types，下表冻结为 **M1 的 role requirement contract**。**对于尚无逐题型独立
+Frozen Spec 证据的 role，M1 采用当前实现中的 conservative default；该 default 不构成对
+后续题型语义模型的永久性定义**——即冻结的是 M1 契约，而非「12 型的完整领域语义论证」。
+
+| canonical_question_type | stem | options | answer | explanation |
+|---|---|---|---|---|
+| single_choice | required | required_for_choice | required | optional |
+| multiple_choice | required | required_for_choice | required | optional |
+| true_false | required | required_for_choice | required | optional |
+| fill_in | required | not_applicable | required | optional |
+| short_answer | required | not_applicable | required | optional |
+| essay | required | not_applicable | required | optional |
+| cloze | required | not_applicable | required | optional |
+| reading | required | not_applicable | required | optional |
+| grammar_fill | required | not_applicable | required | optional |
+| vocabulary_fill | required | not_applicable | required | optional |
+| seven_to_five | required | not_applicable | required | optional |
+| reading_expression | required | not_applicable | required | optional |
+
+- **options 列**：`{single_choice, multiple_choice, true_false}` → `required_for_choice`
+  （DISPLAY_CONTRACT §0.2 选项要求 `required`/`固定2`）；其余 9 型 → `not_applicable`
+  （§0.2 `not_applicable`/`按题型`/`按词库`/`按共享选项` 的 M1 保守坍缩）。M1 不建模
+  per-question 的 `shared_option_pool`/`word_bank`/`cloze_options` 等专用 option 依赖
+  （属 D-6 / 50 资产清点）。`true_false`「固定 2 选项」属 strict-auto **grammar 层（G）**
+  约束，非 content_roles 值域。
+- **stem/answer/explanation 列**：唯一逐题型证据 = §6.1 standalone 示例（single_choice
+  `{stem required, answer required, explanation optional}`）；其余 11 型沿用该
+  conservative default。`answer=required` 是 M1 数据完整性要求——answer 可为标准答案/
+  参考答案/范文/评分要点等，**「无标准答案」≠「answer role not_applicable」**。
+
 ---
 
 ## 7. Deterministic Compiler（IR → Compiled Snapshot / Candidate payload）

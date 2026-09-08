@@ -67,6 +67,22 @@ def test_semantic_status_domain_frozen():
     assert SEMANTIC_STATUS == frozenset({"ready", "incomplete"})
 
 
+def test_content_roles_m1_contract_frozen():
+    """BUG-V3-016：12×4 M1 role contract 冻结；逐型锁定 content_roles_for（零语义扩展）。"""
+    from app.domains.compile import CANONICAL_TYPES, content_roles_for
+    choice = frozenset({"single_choice", "multiple_choice", "true_false"})
+    for t in sorted(CANONICAL_TYPES):
+        roles = content_roles_for(t)
+        assert roles["stem"] == "required"
+        assert roles["answer"] == "required"
+        assert roles["explanation"] == "optional"
+        assert roles["options"] == ("required_for_choice" if t in choice else "not_applicable")
+    # canonical_type=None（未知题型）→ 保守三元，无 options 键
+    assert content_roles_for(None) == {
+        "stem": "required", "answer": "required", "explanation": "optional",
+    }
+
+
 async def test_stem_unresolved_incomplete():
     payload = _single_choice_payload(qn="9")
     ir = IRBuilder.build(_run(_ready_lines(), payload), payload, SVID, ANN_ID)
