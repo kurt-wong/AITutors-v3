@@ -203,8 +203,9 @@ task_instruction}` + `sub_questions[]`（每个含 stem/options/answer +
 - `blank`：list（或单 dict）；每项 `blank_label`（**必填**，unit 内 blank identity）+
   `question_label`（可选，闭合到具体 question）。术语统一用 `question_label`（V3 已有），
   不用 `question_number`。
-- `image`：dict；`image_ref` 须 dict，`figure_id`（可选）是 **M1 唯一图像引用 identity**
-  （不提前加 image_url/inline payload/bbox/file path，这些延后 D-6 Figure Contract）。
+- `image`：dict；`image_ref` 须 dict，`figure_id`（可选）是 **唯一图像引用 identity** =
+  `source_figures.figure_id`（version-scoped，非 UUID，D-6 Figure Contract 冻结）。image
+  的 URL/inline payload/bbox/file path 不在此处——由 `source_figures`（10 §4.4）承载。
 - **malformed shape（非 dict/list、缺必填 `blank_label`、`image_ref` 非 dict）→ fail-fast
   （ValueError），绝不 silent skip**；合法 shape 但引用对象不存在 → resolver
   missing/ambiguous/incomplete 状态（§5.5）。
@@ -280,8 +281,10 @@ Normalized 至少处理：全半角、空白、中英文标点、OCR 转义噪�
   `inline_answer` 按【答案】区；Resolver 只输出答案 source span，不生成答案正文。
 - **explanation**：定位【详解/解析】区；找不到完整区域 → ambiguous，不截断。
 - **blank**：一个 blank 必须映射到一个 sub_question/answer；无闭合 → IR incomplete。
-- **image**：reference 必须解析到 source version 图片索引；图须带 page/bbox/
-  placement/source；无唯一图 → ambiguous，禁止跨题广播。
+- **image**：reference 必须解析到 source version 图片索引（`source_figures`）；图须带
+  page/bbox/placement/source（IS-7）；无唯一图 → ambiguous，禁止跨题广播。`figure_id`
+  是 E→F→A 的 **version-scoped join key**（annotation `image_ref.figure_id` →
+  ResolvedSpan 结构化 `figure_id` → `source_figures.figure_id`，D-6 Figure Contract）。
 
 ### 5.4 Contextual 自动通过条件（03 §4.2 收敛）
 
@@ -314,6 +317,11 @@ ambiguous；(6) contextual 不得静默改 Annotation，保留候选集快照。
   一定位"同行多题答案/单行多选项"场景。
 - `text_hash` 由程序按该 span 实际内容计算；同一 source version 内 span 可重放。
 - **Annotation 不得包含本结构**（只在 Resolver 及之后出现）。
+- **`figure_id` 结构化字段（D-6 Figure Contract 冻结）**：`image` ResolvedSpan 额外携带
+  结构化 `figure_id`（= `source_figures.figure_id`）；**仅 image span 有意义**——text span
+  `figure_id` = absent/null，不得伪造或填充 `""`/`"unknown"` 等字符串哨兵。figure_id 在
+  跨层传递中**不得仅依赖非结构化 `evidence` 字符串重新解析**（structured field →
+  structured field，BUG-020 根因修复原则）。
 
 Resolved Relation：
 
@@ -449,8 +457,14 @@ Annotation/IR、在无 resolved span 时生成正文、生成 Source 中不存�
    子题 stem，也不进任何 live 结构两份并存。
 4. answer：从答案 source span **确定性提取**答案正文 + 置 `answer_status` 的
    `source_located/complete`；`verified_correct` 的置 true 规则见 §8.3。
-5. figure_refs[]：由 image reference 的归属（owner=unit/sub_question + role）产出
-   `(figure_id, role, order)`，仅当 figure 通过 IS-7（page/bbox/placement/source）。
+5. figure_refs[]：由 image reference 的归属产出 `{unit_id, figure_id, role, order}`，
+   仅当 figure 通过 IS-7（page/bbox/placement/source）。**字段语义（D-6 Figure Contract
+   冻结）**：`unit_id` = figure 归属的 unit（business/content provenance，**非** runtime/
+   task/attempt/request ID）；`figure_id` = `source_figures.figure_id`（version-scoped，
+   非 UUID）；`role` = `source_figures.placement` 值域（stem/options/explanation/
+   answer_area/standalone，**不另造 figure-role enum**）；`order` = **role 内顺序**（非全局
+   顺序）。composite 子题级归属不设顶层 `sub_question_id` 字段——figure 首层 owner 恒为
+   `unit_id`，子题级语义在 unit 结构内进一步表达。
 6. 去重身份（**per 待物化实体**，非整个 candidate 一键）：规范化规则见 §7.3；
    **Admission 层不再二次 normalize**（10 §6.1 P1-2）。
    - 每个待物化 Question（standalone 或 composite 的每个 leaf，10 §6.1）基于其

@@ -298,7 +298,7 @@ payload
 ├── resolved_spans[]     每个 content role 的 Resolved Source Span（line_ref/offset/text_hash）
 ├── compiled_roles[]     role → compiled text（Deterministic Compiler 产物）+ text_hash
 ├── answer[]             编译后答案 + answer_status 三字段（source_located/complete/verified_correct）
-├── figure_refs[]        (figure_id, role, order)（IS-7 齐全才可带；落库见 §6.6）
+├── figure_refs[]        (unit_id, figure_id, role, order)（IS-7 齐全才可带；落库见 §6.6）
 ├── knowledge_links[]    （可选）建议的知识点映射，源自 annotation claim（§6.7）
 ├── evidence[]           gate 判定证据
 └── display_hint         canonical_question_type / content_roles（DISPLAY_CONTRACT 兼容）
@@ -521,6 +521,14 @@ Question 的不同 Instance 可能各配不同图，某次出现甚至无图。�
 
 candidate payload 的 `figure_refs[]`（§5.3）经 Admission 落成这些行；缺 page/bbox/
 placement/source 的图不得成为关联（IS-7）。
+
+**Admission mapping（D-6 Figure Contract 冻结，M1 只冻结不实现）**：
+`figure_refs[] → instance_figure_links` 的映射为：由 `(source_version_id, figure_id)`
+在 `source_figures` 内唯一反查 `source_figure_id`，再写 `(instance_id, source_figure_id,
+role, order)`；`figure_id` 是 version-scoped 字符串 join key（非 UUID），不改动既有
+SourceFigure identity 模型。**段 B 未接 seal figures（BUG-011）前 `source_figures` 恒空**
+→ image reference 恒 ambiguous → F image `unsupported → incomplete`（fail-loud）、
+`figure_refs[]` 恒空——**本映射为契约定义，非当前已实现的 figure 通道**。
 
 ### 6.7 knowledge_nodes + question_knowledge_links（可选派生映射）
 
