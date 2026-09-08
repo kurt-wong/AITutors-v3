@@ -296,6 +296,24 @@ async def test_review_trail_entry_schema_frozen_025(session):
     assert "confirmed_fields" not in reject_entry
 
 
+async def test_human_reject_gate_decision_immutable_026(session):
+    """BUG-V3-026 终裁：人工 reject 不改 gate_decision（逐字段保留机器判断）；机器拒受
+    理由在 gate_decision.reasons，人工拒受理由在 review_trail.reasons，二者不同物。"""
+    sv, ann = await _seed(session)
+    gd = {"gate_policy_version": "admission-gate/v1", "decision": "pending_review",
+          "layers": {}, "reasons": ["machine-kept"]}
+    cand = await _make_candidate(session, sv, ann, gd)
+    await session.flush()
+    decided = await AdmissionService(session).reject(
+        candidate_id=cand.id, reasons=["human-reason"], source="human", reviewer_id="u9")
+    assert decided.decision_status == "rejected"
+    assert decided.gate_decision == {
+        "gate_policy_version": "admission-gate/v1", "decision": "pending_review",
+        "layers": {}, "reasons": ["machine-kept"]}  # gate_decision 保留，人工不改
+    assert decided.review_trail[-1]["reasons"] == ["human-reason"]
+    assert decided.review_trail[-1]["reasons"] != decided.gate_decision["reasons"]
+
+
 async def test_terminal_rejected_approve_denied(session):
     sv, ann = await _seed(session)
     cand = await _make_candidate(session, sv, ann, _pending_gd())

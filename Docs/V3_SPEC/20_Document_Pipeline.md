@@ -597,6 +597,22 @@ approved**——自动准入由 Application Service 依 Gate Decision 调 `appro
 由 Review/Application Service 依合法 `review_trail` 调**同一 `approve()`**，两条路径
 汇入**同一个 Admission Transaction**（10 §5.4）。
 
+**gate_decision 不可变 + 人工 reject 理由归属（冻结，BUG-V3-026 终裁）**：
+`gate_decision` 由 **Gate 判定一次性写入**（含 machine rejected 的
+`gate_decision.reasons`），写后**不可变**——任何人工动作不得 UPDATE
+`gate_decision.decision` / `gate_decision.reasons`。机器拒受理由与人工拒受理由
+**不是同一物**，分属不同证据链：
+
+- **Gate 拒受理由 → `gate_decision.reasons`**（machine_gate 判定，terminal rejected
+  的证据）。
+- **人工拒受理由 → `review_trail.reasons`**（`decision=reject` 的 entry；`review_trail`
+  append 证据，不覆盖、不写回 `gate_decision`）。
+
+不可变性为 **application-layer enforcement**（P0-G-001）：`_transition_decision` 是
+唯一合法 decision-transition path；Repository 公共接口 `update_candidate_decision`
+恒抛 `AppendOnlyViolation`。**不升级为 PostgreSQL trigger / RLS / 数据库级 immutable
+trigger**。
+
 Gate 不做语义猜测的边界：Gate 只能拒绝证据不足的候选，不能把错误内容改成正确内容
 （00 P2：Gate Policy 拥有 Admission Authority，但基于 evidence）。
 

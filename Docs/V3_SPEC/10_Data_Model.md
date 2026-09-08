@@ -280,6 +280,13 @@ Admission 物化**"。`pending_review →（approve 事务：物化 A 域 + 写 
 rollback，Candidate 保持 `pending_review` 可再次 approve。M1 **不存在 "approved 但
 未物化" 的中间态**。
 
+**gate_decision 不可变 + 人工 reject 理由归属（冻结，BUG-V3-026 终裁，20 §8.2）**：
+`gate_decision` 由 Gate 判定一次性写入，写后不可变；机器拒受理由写
+`gate_decision.reasons`，人工拒受理由写 `review_trail.reasons`（append，不覆盖、不写回
+`gate_decision`）——二者分属不同证据链，**不是同一物**。不可变性为 application-layer
+enforcement（Repository `update_candidate_decision` 恒抛 `AppendOnlyViolation`；
+`_transition_decision` 唯一合法 transition path），**不加 DB trigger / RLS**。
+
 ### 5.3 Candidate payload 的完整性契约
 
 `payload` 不是"stem+answer"，必须能在不重跑 LLM 的情况下重建 Question/Instance/
