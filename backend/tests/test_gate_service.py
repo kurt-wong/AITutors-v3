@@ -10,7 +10,7 @@ import uuid
 
 from sqlalchemy import func, select
 
-from app.core.hashing import sha256_hex
+from app.core.hashing import logical_execution_hash, sha256_hex
 from app.domains.gate.service import GateService
 from app.models.content import (
     InstanceRoleContent,
@@ -295,3 +295,66 @@ def test_admission_question_dedup_matches_compiler_key():
               "text": o["text"], "text_hash": "0" * 64, "label": o["label"]}
              for i, o in enumerate(opts)]
     assert _dedup_key("single_choice", stem_dict, roles) == compiler_key
+
+
+async def test_compile_le_hash_uses_minimal_domain(session):
+    """BUG-V3-022：compile LE hash 只含 contract 4 项 + input 3 项（含 unit_id），
+    不含 prompt_version/model_config_hash/source_version 等存储字段。"""
+    from app.domains.gate import service as gate_service
+    sv, ann = await _seed(session)
+    candidates, _ = await GateService(session).run(
+        source_version_id=sv.id, annotation_id=ann.id)
+    cand = candidates[0]
+    expected = logical_execution_hash(
+        task_type="document_ingest",
+        stage="compile",
+        contract_domain={
+            "resolver_version": gate_service.RESOLVER_VERSION,
+            "ir_schema_version": gate_service.IR_SCHEMA_VERSION,
+            "compiler_version": gate_service.COMPILER_VERSION,
+            "gate_policy_version": gate_service.GATE_POLICY_VERSION,
+        },
+        input_domain={
+            "annotation_id": str(ann.id),
+            "annotation_payload_hash": sha256_hex(ann.payload),
+            "unit_id": "Q1",
+        },
+    )
+    assert cand.logical_execution_hash == expected
+
+
+def test_compile_contract_domain_exact_field_set():
+    """BUG-V3-022：contract_domain 恰 4 项（不含 ann 的 prompt/model_config/source）。"""
+    contract = GateService._compile_contract_domain()
+    assert set(contract) == {"resolver_version", "ir_schema_version",
+                             "compiler_version", "gate_policy_version"}
+
+
+def test_compile_input_domain_exact_field_set():
+    """BUG-V3-022：input_domain 恰 3 项（不含派生指纹 source_version_id/resolver/compiler hash）。"""
+    from types import SimpleNamespace
+    ann = SimpleNamespace(payload={"semantic_units": []})
+    input_domain = GateService._compile_input_domain(uuid.uuid4(), ann, "Q1")
+    assert set(input_domain) == {"annotation_id", "annotation_payload_hash", "unit_id"}
+
+
+async def test_compile_le_insensitive_to_ann_build_metadata(session):
+    """BUG-V3-022 negative：prompt_version/model_config_hash 不进 compile LE → 改它们 LE 不变。"""
+    sv, ann = await _seed(session)
+    c1, _ = await GateService(session).run(source_version_id=sv.id, annotation_id=ann.id)
+    ann.model_config_hash = sha256_hex("CHANGED-model")
+    ann.prompt_version = "semantic-annotation/v99"
+    await session.flush()
+    c2, _ = await GateService(session).run(source_version_id=sv.id, annotation_id=ann.id)
+    assert c2[0].id == c1[0].id  # 幂等复用：build metadata 不进 compile LE
+
+
+async def test_compile_le_sensitive_to_resolver_version(session, monkeypatch):
+    """BUG-V3-022 negative：resolver_version 在 contract → 变则 LE 变（新 candidate）。"""
+    from app.domains.gate import service as gate_service
+    sv, ann = await _seed(session)
+    c1, _ = await GateService(session).run(source_version_id=sv.id, annotation_id=ann.id)
+    monkeypatch.setattr(gate_service, "RESOLVER_VERSION", "resolver/v2")
+    c2, _ = await GateService(session).run(source_version_id=sv.id, annotation_id=ann.id)
+    assert c2[0].id != c1[0].id
+    assert c1[0].logical_execution_hash != c2[0].logical_execution_hash

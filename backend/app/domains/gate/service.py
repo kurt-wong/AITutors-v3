@@ -104,13 +104,13 @@ class GateService:
             input_identity = self._input_identity(
                 source_version_id, annotation_id, ann, resolved_run
             )
-            # D7：compile-stage LE 覆盖全部版本/输入 + unit_id 区分（多 top-level unit 同
-            # resolved/compiled 摘要 → 不同 candidate identity）。
+            # BUG-V3-022：compile-stage LE 用最小 identity 字段集（contract 4 + input 3），
+            # 与存储列 build_versions(8)/input_identity(5) 分离；unit_id 区分多 top-level unit。
             le_hash = logical_execution_hash(
                 task_type=task_type,
                 stage=_STAGE,
-                contract_domain=build_versions,
-                input_domain={**input_identity, "unit_id": root.unit_id},
+                contract_domain=self._compile_contract_domain(),
+                input_domain=self._compile_input_domain(annotation_id, ann, root.unit_id),
             )
             candidate = await self._snap.find_candidate_by_le_hash(
                 logical_execution_stage=_STAGE, logical_execution_hash=le_hash
@@ -161,6 +161,34 @@ class GateService:
             "compiler_version": COMPILER_VERSION,
             "gate_policy_version": GATE_POLICY_VERSION,
             "source_version": str(ann.source_version_id),
+        }
+
+    @staticmethod
+    def _compile_contract_domain() -> dict:
+        """compile LE contract_domain（30 §16 / BUG-V3-022）：4 项相关 build_versions 子集。
+
+        不含 annotation_schema_version / prompt_version / model_config_hash / source_version
+        ——compile 为确定性阶段，ann 契约经 payload hash 间接反映；model_config 明文禁用。
+        """
+        return {
+            "resolver_version": RESOLVER_VERSION,
+            "ir_schema_version": IR_SCHEMA_VERSION,
+            "compiler_version": COMPILER_VERSION,
+            "gate_policy_version": GATE_POLICY_VERSION,
+        }
+
+    @staticmethod
+    def _compile_input_domain(annotation_id: uuid.UUID, ann, unit_id: str) -> dict:
+        """compile LE input_domain（30 §16 / BUG-V3-022）：3 项（含 unit_id 多 unit 区分）。
+
+        不含 source_version_id / resolver_input_hash / compiler_input_hash——它们是存储列
+        （input_identity）派生指纹，annotation_payload_hash 已唯一决定 resolved/compiled
+        结果；重复纳入会漂移 execution identity。
+        """
+        return {
+            "annotation_id": str(annotation_id),
+            "annotation_payload_hash": sha256_hex(ann.payload),
+            "unit_id": unit_id,
         }
 
     def _input_identity(self, sv: uuid.UUID, ann_id: uuid.UUID, ann, resolved_run) -> dict:
