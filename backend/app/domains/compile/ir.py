@@ -12,7 +12,7 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass, field
 
-from app.domains.compile import map_canonical_type, content_roles_for
+from app.domains.compile import SEMANTIC_STATUS, content_roles_for, map_canonical_type
 from app.domains.resolver.span import ResolvedRun
 
 # span_id 命名与段 E reference.py target_id 保持一致（防跨段漂移）。
@@ -242,6 +242,8 @@ def _validate_node(node: IRNode, seen: set[str]) -> IRNode:
             problems.append("composite sub_question not ready")  # invariant 7
 
     status = "incomplete" if problems else "ready"
+    if status not in SEMANTIC_STATUS:  # BUG-V3-018：值域冻结，第三状态 fail-loud
+        raise AssertionError(f"IR semantic_status {status!r} 不在冻结值域 {SEMANTIC_STATUS!r}")
     return IRNode(
         node.unit_id, node.unit_type, node.question_number, node.question_number_range,
         node.original_question_type, node.content, node.shared_components,

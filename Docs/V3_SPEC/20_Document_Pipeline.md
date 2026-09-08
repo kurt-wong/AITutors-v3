@@ -375,6 +375,13 @@ relations，且必须有指向同 unit shared material 的 `material_dependency`
 6. 共享材料只出现一次，不落在任何子题 stem span 内。
 7. 任一子题 unresolved → composite 整体非 ready。
 8. `semantic_status=ready` 才可进入 Compiler；`ready` 之前任何状态都不得进自动准入。
+   **值域冻结（BUG-V3-018 终裁）**：`semantic_status ∈ {ready, incomplete}`（仅此二值）；
+   任一不变量违规 → `incomplete`。**三层状态严格隔离**：E `ResolvedStatus`
+   （exact/normalized/contextual/fuzzy/ambiguous/missing/incomplete，§5）≠ F
+   `semantic_status`（ready/incomplete）≠ G `gate_decision`（auto_approve/pending_review/
+   rejected）+ `decision_status`（pending_review/approved/rejected）。E 的解析状态**不得
+   搬运进 F**（ambiguous/missing/fuzzy/contextual 一律坍缩为 `incomplete`）；`ready`
+   仅表示「语义完整、可进 Compiler/Gate 管线」，**不表示 auto_approve**。
 
 ---
 

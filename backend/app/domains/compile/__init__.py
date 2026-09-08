@@ -25,7 +25,7 @@ CANONICAL_TYPES = frozenset(
     }
 )
 
-# 20 §6.2 IR.semantic_status 最小可确定值域（BUG-V3-018；不搬 E ResolvedStatus）。
+# 20 §6.2 IR.semantic_status 冻结值域（BUG-V3-018 终裁；仅 {ready, incomplete}，不搬 E ResolvedStatus）。
 SEMANTIC_STATUS = frozenset({"ready", "incomplete"})
 
 # content role 必需性值域（20 §6.1 示例 + DISPLAY_CONTRACT §0.2；per-type 未集中冻结

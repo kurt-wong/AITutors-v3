@@ -61,6 +61,12 @@ async def test_alias_type_not_resolved_incomplete():
         assert ir.units[0].semantic_status == "incomplete"
 
 
+def test_semantic_status_domain_frozen():
+    """BUG-V3-018：IR.semantic_status 值域冻结为 {ready, incomplete}，禁第三状态漂移。"""
+    from app.domains.compile import SEMANTIC_STATUS
+    assert SEMANTIC_STATUS == frozenset({"ready", "incomplete"})
+
+
 async def test_stem_unresolved_incomplete():
     payload = _single_choice_payload(qn="9")
     ir = IRBuilder.build(_run(_ready_lines(), payload), payload, SVID, ANN_ID)
