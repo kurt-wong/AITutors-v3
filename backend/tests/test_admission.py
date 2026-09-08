@@ -216,7 +216,7 @@ async def test_manual_approve_requires_review_trail(session):
                                 provenance={"source": "human", "reviewer_id": "u1"})
     await snap.append_review_trail(
         cand.id, {"decision": "approve", "verified_by": "human",
-                  "reviewer_id": "u1", "confirmed_fields": ["answer"], "time": "2026-09-06T00:00:00Z"})
+                  "reviewer_id": "u1", "confirmed_fields": ["answer"]})
     await session.flush()
     decided = await admission.approve(candidate_id=cand.id,
                                       provenance={"source": "human", "reviewer_id": "u1"})
@@ -263,8 +263,37 @@ async def test_human_reject_reasons_only_review_trail(session):
     assert decided.gate_decision["decision"] == "pending_review"  # 保留
     trail = decided.review_trail
     assert trail and trail[-1]["decision"] == "reject"
-    assert trail[-1]["reason"] == ["student file expired"]
+    assert trail[-1]["reasons"] == ["student file expired"]
     assert trail[-1]["verified_by"] == "human"
+    assert "time" in trail[-1] and trail[-1]["time"]  # BUG-V3-025：append 统一注入 time
+
+
+async def test_review_trail_entry_schema_frozen_025(session):
+    """BUG-V3-025 终裁：review_trail 统一 entry schema——公共字段 {decision,
+    verified_by, reviewer_id, time}（time 由 append_review_trail 注入）；approve→
+    confirmed_fields，reject→reasons，二者互不共存（不制造无意义空字段）。"""
+    sv, ann = await _seed(session)
+    cand = await _make_candidate(session, sv, ann, _pending_gd())
+    await session.flush()
+    snap = SnapshotRepository(session)
+    await snap.append_review_trail(cand.id, {
+        "decision": "approve", "verified_by": "human",
+        "reviewer_id": "u1", "confirmed_fields": ["answer"]})
+    await snap.append_review_trail(cand.id, {
+        "decision": "reject", "verified_by": "golden",
+        "reviewer_id": "g1", "reasons": ["expired"]})
+    await session.flush()
+    approve_entry, reject_entry = cand.review_trail
+    for entry in (approve_entry, reject_entry):
+        assert entry["verified_by"] in ("human", "golden")
+        assert entry["reviewer_id"]
+        assert "time" in entry and isinstance(entry["time"], str) and entry["time"]
+    assert approve_entry["decision"] == "approve"
+    assert approve_entry["confirmed_fields"] == ["answer"]
+    assert "reasons" not in approve_entry
+    assert reject_entry["decision"] == "reject"
+    assert reject_entry["reasons"] == ["expired"]
+    assert "confirmed_fields" not in reject_entry
 
 
 async def test_terminal_rejected_approve_denied(session):

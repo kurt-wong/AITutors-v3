@@ -47,7 +47,8 @@ from app.repositories.source_repository import SourceRepository
 _HUMAN_SOURCES = frozenset({"human", "golden"})
 _LINE_REF_PAGE_RE = re.compile(r"^P(\d+)L(\d+)$")
 
-# 人工 review entry 常量键（20 §8.2 review_trail；BUG-V3-025 结构未冻结 → M1 最小字段）。
+# 人工 review entry 常量键（20 §8.2 review_trail；BUG-V3-025 终裁：统一 schema，time 由
+# append_review_trail 注入，reject 用 reasons 列表，approve 用 confirmed_fields）。
 _REVIEW_APPROVE = "approve"
 _REVIEW_REJECT = "reject"
 
@@ -147,7 +148,7 @@ class AdmissionService:
             "decision": _REVIEW_REJECT,
             "verified_by": source,
             "reviewer_id": reviewer_id,
-            "reason": reasons,
+            "reasons": reasons,
         }
         await self._snap.append_review_trail(candidate_id, entry)
         return await self._snap._transition_decision(candidate.id, "rejected")

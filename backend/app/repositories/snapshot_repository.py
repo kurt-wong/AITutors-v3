@@ -213,9 +213,17 @@ class SnapshotRepository(BaseRepository):
     async def append_review_trail(
         self, candidate_id: uuid.UUID, entry: dict
     ) -> AdmissionCandidate:
-        """人工 review append 证据（20 §8.2 append 不覆盖）。只加证据，不迁状态。"""
+        """人工 review append 证据（20 §8.2 append 不覆盖）。只加证据，不迁状态。
+
+        BUG-V3-025 终裁：`time` 由本方法统一注入（UTC ISO-8601，review event 的
+        provenance timestamp）；调用方只提供业务字段（decision/verified_by/reviewer_id
+        + confirmed_fields 或 reasons），不得手填 time。
+        """
+        from datetime import datetime, timezone
+
         row = await self.lock_candidate(candidate_id)
         trail = list(row.review_trail) if row.review_trail else []
+        entry = {**entry, "time": datetime.now(timezone.utc).isoformat()}
         trail.append(entry)
         row.review_trail = trail
         return row

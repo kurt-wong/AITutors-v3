@@ -576,6 +576,19 @@ LLM 调用不写本列。
    来源记 review_trail / gate_decision。无任一入口的候选**永久 pending_review**，不得
    静默消失。
 
+**review_trail entry schema（冻结，BUG-V3-025 终裁）**：每条 entry 公共字段为
+`{decision: approve|reject, verified_by: human|golden, reviewer_id, time}`；`time` 为
+review event 的 provenance timestamp（**UTC ISO-8601，由 `append_review_trail()`
+统一注入**，调用方不手填），**不是** task/attempt/gate/admission timestamp，也不是
+database `created_at` 的替代品。decision-specific payload 按 decision 分支、**互不共存**：
+
+- `approve` → `+ confirmed_fields: [该次确认的 role/answer 标识]`；
+- `reject` → `+ reasons: [str]`（人工拒受理由，**与 `gate_decision.reasons` 不是同一物**，
+  见下）。
+
+**禁止**为对齐 schema 而要求 approve/reject 双方同时携带 `confirmed_fields` 与 `reasons`
+（不制造无意义空字段）。
+
 **唯一迁移入口（冻结）**：`decision_status` 的任何状态迁移必须经 Admission Service 的
 `approve()` / `reject()` **唯一入口**完成；Repository / ORM / Review Service / Worker
 一律不得直接 UPDATE `decision_status`。人工 Review 只能**追加 `review_trail`（证据）**，
