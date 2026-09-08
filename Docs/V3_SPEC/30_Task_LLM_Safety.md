@@ -386,7 +386,9 @@ B 流会被 A 流的既有行 UNIQUE 挡回、被迫借用 A 产物 = 串台）�
 **seal 与 external OCR 的归属裁决（P1-3）**：
 - 本地确定性 seal（本地 OCR / 本地解析）按 00 P4 属 deterministic computation，
   **不强审计**——记录 seal/解析器版本 + 输入/输出 hash + 结果即可；其幂等由
-  source_version 唯一（原始文件内容 hash）保证，不需要本分册 budget。seal 也按上式
+  source_version 的 LE 身份 `UNIQUE(logical_execution_stage, logical_execution_hash)` 保证
+  （同一 `original_sha256` 允许多 sealed version 跨 role/provider；非原始文件 hash 全局唯一；
+  `documents` 层 `UNIQUE(original_sha256)` 只保证一个原始文件一个主档），不需要本分册 budget。seal 也按上式
   有 LE 身份（`task_type + seal + …`），供 Replay 根对齐。
 - 若 seal 走 **cloud OCR**（external service call，00 P4）→ 必须过 Gateway + 审计 +
   budget 同类闸（§6/§10/§11），缺任一不放行。cloud OCR 是否在 M1 纳入属跨册裁决

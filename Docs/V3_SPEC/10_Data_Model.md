@@ -610,7 +610,7 @@ JSONB。**
 - **Rebuild**：换 resolver/compiler/gate 版本（改 `build_versions`）→ 新 compile
   logical execution、新 key、新 candidate；不覆盖旧 candidate。这是版本演进正常机制。
 - 旧 annotation 永远按 `source_version_id` + 自身版本回放（01 §17 验收 4）。
-- 工具：`python -m v3 replay <candidate_id>`（只读确定性重放比对）。
+- 工具：`python -m app.cli replay <candidate_id>`（只读确定性重放比对）。
 
 ---
 

@@ -36,6 +36,8 @@
 - 根因：文档口径不一致。
 - 处置：段 A config/.env.example 用 4b/2560；待段 C 前终裁。
 - 验收：配置与最终裁决一致。
+- **Resolved（2026-09-08）**：终裁 embedding = `qwen3-embedding:4b` / dim 2560；50 §3 措辞
+  errata 为 4b/2560（原「0.6B」为离群值）。
 
 ### BUG-V3-004 — replay 入口措辞不一致（10 §9 vs 30 §2）
 - Status: Open
@@ -45,6 +47,8 @@
 - 处置：段 A 全用 `app`；replay 实装（段 H）用 `python -m app.cli replay`；10 §9 措辞待
   errata。
 - 验收：CLI 入口与包名裁决一致。
+- **Resolved（2026-09-08）**：10 §9 措辞 errata 为 `python -m app.cli replay`（包名 `app`）；
+  replay 工具本身按段 I 排期实现。
 
 ### BUG-V3-005 — canonical_json 浮点 precision 位数未冻结
 - Status: Open
@@ -93,6 +97,9 @@
   的 Seal 层全局唯一（禁）；`documents` 层的 `UNIQUE(original_sha256)` 放行（Source/Document Identity，
   一个原始文件一个主档）。Seal Version canonical uniqueness 由 Frozen LE Identity 表达
   `UNIQUE(logical_execution_stage, logical_execution_hash)`。
+- **Resolved（2026-09-08）**：按终裁 + Clarification 闭合；Frozen Spec 30:389 / 40:55 已同步
+  裁决后语义（documents `UNIQUE(original_sha256)` ≠ Seal 层全局 UNIQUE；Seal canonical uniqueness
+  由 `UNIQUE(logical_execution_stage, logical_execution_hash)` 表达）。
 
 ### BUG-V3-008 — cloud OCR（PaddleOCR-VL）role/provider 值域未冻结（10 §4.2 vs OCR_PROVIDER_POLICY）
 - Status: Open
@@ -128,6 +135,9 @@
 - 处置：段 D 落库 `payload={"parse_error": str(exc)}`（NOT NULL 占位，非正文，不触发禁字段
   检查）；登记 bugs.md 待 errata。
 - 验收：errata 终裁后按最终语义对齐。
+- **Resolved（2026-09-08）**：Closed as Superseded——被 H Phase 7「H0-15 方案 B」覆盖（parse
+  失败 → 0 artifact、直接 raise，不再落 invalid 行），本 BUG 的「invalid payload 形态」命题
+  已不成立。
 
 ### BUG-V3-011 — 段 B seal 未接 figures；OCRFigure 缺 IS-7 字段（20 §4.4/§5.3 image）
 - Status: Open
@@ -343,6 +353,8 @@
   0003→0004 delta == {tasks, task_claims}。Owner = A–G migration history；Resolution:
   deferred（若未来真处理 A 再按 A–G Reconciliation 重审迁移）。
 - 验收：from-empty / incremental 双路径测试全绿；0004 专责语义不因空库 no-op 而误导。
+- **Resolved（2026-09-08）**：按 B 语义裁决 + deferred 闭合；双路径测试已补；如未来处理 A
+  再按 A–G Reconciliation 重审迁移。
 
 ### BUG-V3-029 — seal/document 并发幂等无 DB UNIQUE 兜底（H-1，HIGH）
 - Status: Open（H Final Closure Blocker）

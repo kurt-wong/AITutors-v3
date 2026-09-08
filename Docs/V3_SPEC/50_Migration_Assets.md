@@ -71,7 +71,7 @@ Supersedes: `Docs/V3_MIGRATION_MAP.md`（起草输入，将归档至 V3 `docs_ar
 
 | 类别 | 资产 | 处理 | 去处 |
 |---|---|---|---|
-| 外部能力 | PP-StructureV3 / PaddleOCR（双源）、本地 embedding 模型（Qwen3-Embedding 0.6B） | 保留；版本与契约记录 | seal（10 §4）；本地确定性（30 §16） |
+| 外部能力 | PP-StructureV3 / PaddleOCR（双源）、本地 embedding 模型（`qwen3-embedding:4b`，dim 2560） | 保留；版本与契约记录 | seal（10 §4）；本地确定性（30 §16） |
 | 数据样本 | 真实 PDF（经 V2 多轮验收的文档）、golden 对照样本 | 保留；去 V2 标注污染，重新以 V3 逐层结构标注 | Golden Corpus（§4）/ fixture（40 §2） |
 | 知识种子 | 标准知识树 seed（知识/题型种子） | 保留 | knowledge_nodes seed（10 §6.7） |
 | 非代码资产 | DISPLAY_CONTRACT / canonical question type / true_false 映射需求（00 §1 第四类已验收业务语言） | 保留为业务语言 | canonical type（10 §6.1）；grammar 前置（20 §8.4） |

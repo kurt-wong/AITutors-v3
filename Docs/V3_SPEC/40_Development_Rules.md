@@ -52,7 +52,7 @@ Supersedes: `Docs/V3_DEVELOPMENT_RULES.md`（起草输入，归档后不再作�
 | 段 | 建什么 | 权威 | 出口闸（全部过才前进） |
 |---|---|---|---|
 | A | 骨架：配置/密钥校验、DB + Alembic + A/B/C 表（10）、Repository、canonical hashing utility（30 §16） | 10 §3-6、30 §16 | **API 启动零 LLM（00 硬门槛 1）**；**未显式启动 Worker 不消费 Task（门槛 2）**；常规 pytest 不碰真实外部 API（门槛 9）；schema 模型测试过；hash utility 同键序同串黄金测试 |
-| B | B 域 seal + line/figure 索引 | 10 §4 | seal 幂等（原始文件 hash 唯一）；line_ref 确定性；sealed 行禁 UPDATE 测试。**默认本地确定性 seal**；若启用 **cloud OCR（external）必须先有 C 段 external 闸**（30 §6/§16），否则只准本地 OCR |
+| B | B 域 seal + line/figure 索引 | 10 §4 | seal 幂等（`UNIQUE(logical_execution_stage, logical_execution_hash)`；同一 original_sha256 + role/provider scope 内 canonical sealed version 至多一个）；line_ref 确定性；sealed 行禁 UPDATE 测试。**默认本地确定性 seal**；若启用 **cloud OCR（external）必须先有 C 段 external 闸**（30 §6/§16），否则只准本地 OCR |
 | C | LLM Gateway + audit + budget 骨架（mock/disabled） | 30 §6/§10/§11 | disabled 态创建 HTTP 即失败；audit 不可变；budget 条件 UPDATE 并发测试；五账户正交实现（30 §11 禁令） |
 | D | Annotation stage（Envelope/Payload、递归禁字段、Semantic Reference schema） | 20 §4、30 §4.2 | schema 校验拒绝携带 line_ref/正文；annotation (stage,hash) 幂等 + supersede（20 §4.7）；无正文入库；每题型带**段内 fixture golden**（正/反例，作种子） |
 | E | Source Resolver | 20 §5 | 级联确定性；missing/ambiguous/fuzzy **永不自动**；contextual 不自动准入（20 §8.2）；fixture golden 解析率对照 |
