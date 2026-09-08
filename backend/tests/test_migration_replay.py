@@ -57,6 +57,21 @@ async def _list_tables(dsn: str) -> set[str]:
         await conn.close()
 
 
+async def _list_constraints(dsn: str, table: str) -> set[str]:
+    import asyncpg
+
+    conn = await asyncpg.connect(_plain(dsn))
+    try:
+        rows = await conn.fetch(
+            "SELECT conname FROM pg_constraint "
+            "WHERE conrelid = $1::regclass AND contype = 'u'",
+            table,
+        )
+        return {r["conname"] for r in rows}
+    finally:
+        await conn.close()
+
+
 async def _db_struct(dsn: str, table: str) -> dict[str, tuple[str, str]]:
     import asyncpg
 
@@ -132,6 +147,10 @@ def test_from_empty_replay_reaches_head() -> None:
         # C-1：from-empty 路径（create_all 带 server_default）llm_invocations column_default 亦为
         # '0'，与增量 0005 ADD COLUMN DEFAULT 0 双路径一致（增量侧由 test_task_schema 锁）。
         assert asyncio.run(_column_default(scratch_plain, "tasks", "llm_invocations")) == "0"
+        # BUG-011-E：from-empty（0001 create_all 读活 ORM __table_args__）建出 figure UNIQUE
+        assert "uq_source_figures_figure_id" in asyncio.run(
+            _list_constraints(scratch_plain, "source_figures")
+        )
     finally:
         settings.database_url = original
         asyncio.run(_drop_scratch(scratch))
@@ -149,3 +168,18 @@ def test_incremental_0003_to_0004_delta() -> None:
         command.upgrade(cfg, "head")  # 无条件恢复到 head，防失败态污染后续测试
     delta = after - before
     assert delta == {"tasks", "task_claims"}, f"0004 增量 delta 期望 +2，实得 {sorted(delta)}"
+
+
+def test_incremental_0008_to_0009_adds_figure_unique() -> None:
+    """层 2：增量库 pre-0009 → 0009 恰新增 uq_source_figures_figure_id（DB 级 figure identity）。"""
+    cfg = Config("alembic.ini")
+    command.downgrade(cfg, "0008")
+    try:
+        before = asyncio.run(_list_constraints(_MAIN_SQLA, "source_figures"))
+        command.upgrade(cfg, "head")  # = 0009
+        after = asyncio.run(_list_constraints(_MAIN_SQLA, "source_figures"))
+    finally:
+        command.upgrade(cfg, "head")  # 无条件恢复到 head，防失败态污染后续测试
+    assert "uq_source_figures_figure_id" in after - before, (
+        f"0009 增量应新增 figure UNIQUE，实得 {sorted(after - before)}"
+    )

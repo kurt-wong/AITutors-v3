@@ -31,11 +31,12 @@ EXPECTED_TABLES = {
     "question_knowledge_links",
 }
 
-# 10 冻结正文显式声明的 7 组 + BUG-V3-007 终裁 2 组唯一性（UNIQUE 或 composite PK 实现，exact-set）
+# 10 冻结正文显式声明的 7 组 + BUG-V3-007 终裁 2 组 + BUG-V3-011 终裁 1 组唯一性（UNIQUE 或 composite PK 实现，exact-set）
 DECLARED_UNIQUES = {
     "documents": {"original_sha256"},  # BUG-V3-007 终裁：Source/Document Identity
     "document_source_versions": {"logical_execution_stage", "logical_execution_hash"},  # Seal LE Identity
     "document_source_lines": {"source_version_id", "line_ref"},
+    "source_figures": {"source_version_id", "figure_id"},  # BUG-V3-011 终裁：Figure identity (version-scoped)
     "semantic_annotations": {"logical_execution_stage", "logical_execution_hash"},
     "admission_candidates": {"logical_execution_stage", "logical_execution_hash"},
     "admission_events": {"candidate_id"},
@@ -110,7 +111,7 @@ async def test_link_tables_have_no_unique_constraint() -> None:
 
 
 async def test_no_unauthorized_unique_constraints() -> None:
-    """全库非-PK UNIQUE 约束总数须恰为 9（声明表：10 冻结 6 + BUG-V3-007 终裁 2 + BUG-V3-027 终裁 1），无越权。"""
+    """全库非-PK UNIQUE 约束总数须恰为 10（10 冻结 6 + BUG-V3-007 2 + BUG-V3-027 1 + BUG-V3-011 1），无越权。"""
     tables, uniq, _ = await _snapshot()
     tables = tables - _RUNTIME  # 内容域 19 表；runtime 唯一性由 test_runtime_schema 断
     declared_flat = {frozenset(c) for c in DECLARED_UNIQUES.values()}
@@ -119,4 +120,4 @@ async def test_no_unauthorized_unique_constraints() -> None:
         for u in uniq[table]:
             assert u in declared_flat, f"未授权 UNIQUE {table}: {u}"
             seen.append(u)
-    assert len(seen) == 9, f"期望 9 条 UNIQUE 约束，实得 {len(seen)}"
+    assert len(seen) == 10, f"期望 10 条 UNIQUE 约束，实得 {len(seen)}"
