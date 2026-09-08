@@ -600,13 +600,17 @@ verified_correct=true 的可自动来源（02 §14 收敛）仅限：
 - 每个 canonical_question_type 一份 role-aware grammar（stem required；options
   required_for_choice/not_applicable；answer 声明允许 token 集与规范化；explanation
   optional）。
-- 首批：single_choice（选项标签集合=该题实际 resolved labels）；multiple_choice
-  （字母 canonical 去重）；true_false（**先补 DISPLAY_CONTRACT 的 T/F↔A/B canonical
-  映射**，再启用 strict auto）；fill_in/short_answer/writing 本阶段不开放 strict auto
-  grammar（verified_correct 只能由 human/golden 置 true）。
-- 未覆盖题型不满足 strict auto 路径 → 不能自动 approved，进入 `pending_review`；其
-  `verified_correct` 只能经人工路径（review_trail，`verified_by=human|golden`）置 true
-  （§8.2 人工路径）。
+- **开放集冻结（BUG-V3-023 终裁）**：`STRICT_AUTO_TYPES = {single_choice,
+  multiple_choice, true_false}`——仅这三型进入 strict-auto grammar：single_choice
+  （选项标签集合 = 该题实际 resolved labels）；multiple_choice（字母 canonical 去重）；
+  true_false（T/F canonical token 集，DISPLAY_CONTRACT §0.2）。
+- **其余 9 型**（fill_in / short_answer / **essay** / cloze / reading / grammar_fill /
+  vocabulary_fill / seven_to_five / reading_expression）`grammar = None` → 不满足
+  strict auto 路径 → 不能自动 approved，进入 `pending_review`；其 `verified_correct`
+  只能经人工路径（review_trail，`verified_by=human|golden`）置 true（§8.2 人工路径）。
+  **禁止为这 9 型编造各自 grammar**——冻结的是开放边界，不是扩大能力边界。
+- **composite 子题递归（冻结）**：composite 子题 `∈ STRICT_AUTO_TYPES` 才进入 strict
+  grammar；子题 `∉` 开放集 → 该子题 `grammar=None` → 整个 composite 不自动（§8.5 原子性）。
 - grammar 必须附 golden 正例/反例与测试；**禁止用解析器实现代替文档评审**。没有
   grammar 文档时，strict auto verified_correct 视为未实现（00 §7 硬门槛 5）。
 

@@ -103,3 +103,17 @@ def test_non_open_types_return_none(ctype):
 def test_unknown_type_returns_none():
     assert verify("seven_to_five", "1. B", ()) is None
     assert verify("foo", "1. A", ()) is None
+
+
+def test_strict_auto_types_frozen_domain_023():
+    """BUG-V3-023 终裁：开放集冻结 = {single_choice, multiple_choice, true_false}；
+    其余 9 型（fill_in/short_answer/essay/cloze/reading/grammar_fill/vocabulary_fill/
+    seven_to_five/reading_expression）grammar=None → pending_review。"""
+    from app.domains.compile import CANONICAL_TYPES
+    from app.domains.gate import STRICT_AUTO_TYPES
+    assert STRICT_AUTO_TYPES == frozenset(
+        {"single_choice", "multiple_choice", "true_false"}
+    )
+    assert STRICT_AUTO_TYPES <= CANONICAL_TYPES
+    for ctype in sorted(CANONICAL_TYPES - STRICT_AUTO_TYPES):
+        assert verify(ctype, "1. A", LABELS_ABCD) is None
