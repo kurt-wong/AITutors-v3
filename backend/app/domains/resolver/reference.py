@@ -113,15 +113,29 @@ def _extract_content_targets(
 
 
 def _blank_target(targets: list, unit_id: str, blank) -> None:
+    """20 §4.5 / BUG-V3-013 终裁：blank 形态 = [{blank_label(必填), question_label(可选)}]。
+
+    malformed（非 dict/list、缺必填 blank_label）→ fail-fast（ValueError），非静默跳过。
+    """
+    if blank is None:
+        return
     if isinstance(blank, dict):
         blank = [blank]
-    for b in blank or []:
+    if not isinstance(blank, list):
+        raise ValueError(
+            f"unit {unit_id!r} content.blank must be dict or list, got {type(blank).__name__}"
+        )
+    for b in blank:
         if not isinstance(b, dict):
-            continue
-        label = b.get("blank_label") or b.get("label")
-        qn = b.get("question_number") or b.get("question_label")
+            raise ValueError(
+                f"unit {unit_id!r} content.blank[] must be dict, got {type(b).__name__}"
+            )
+        label = b.get("blank_label")
         if label is None:
-            continue
+            raise ValueError(
+                f"unit {unit_id!r} content.blank[] missing required blank_label"
+            )
+        qn = b.get("question_label")
         targets.append(
             ResolveTarget(
                 target_id=f"{unit_id}.blank.{label}", unit_id=unit_id,
@@ -132,9 +146,21 @@ def _blank_target(targets: list, unit_id: str, blank) -> None:
 
 
 def _image_target(targets: list, unit_id: str, image) -> None:
-    if not isinstance(image, dict):
+    """20 §4.5 / BUG-V3-013 终裁：image 形态 = {image_ref: {figure_id(可选)}}。
+
+    figure_id 是 M1 唯一图像引用 identity；malformed → fail-fast（ValueError）。
+    """
+    if image is None:
         return
-    img_ref = image.get("image_ref") if isinstance(image.get("image_ref"), dict) else {}
+    if not isinstance(image, dict):
+        raise ValueError(
+            f"unit {unit_id!r} content.image must be dict, got {type(image).__name__}"
+        )
+    img_ref = image.get("image_ref")
+    if not isinstance(img_ref, dict):
+        raise ValueError(
+            f"unit {unit_id!r} content.image.image_ref must be dict, got {type(img_ref).__name__}"
+        )
     targets.append(
         ResolveTarget(
             target_id=f"{unit_id}.image", unit_id=unit_id, role="image",
