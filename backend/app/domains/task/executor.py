@@ -49,17 +49,67 @@ _TASK_TYPE = "document_ingest"
 _FALLBACK_RETRYABLE = (LLMNetworkError, LLMProviderError)
 
 
-def build_annotation_prompt(body_text: str) -> str:
-    """M1 最小 prompt 构造（annotation 的 prompt 由 caller 提供，本层即 caller）。
+# I-0-1 Prompt Contract Alignment：把 Frozen Annotation Payload Contract（20 §4.1–4.5）
+# 真实写入模型输入。Schema Source of Truth = Docs/V3_SPEC/20_Document_Pipeline.md
+# （非 test fixture）。LLM 只输出三字段（document_metadata_claims / sections /
+# semantic_units）；annotation_schema / source_version_id / annotation_meta 属 pipeline
+# 注入，LLM 不得输出（20 §4.1）。answer 只声明位置、不转录正文（20 §4.3）。
+_ANNOTATION_PROMPT_PREFIX = """你是题目语义标注助手。把文档文本结构化为语义标注 JSON。
 
-    prompt 契约属未来完善（真实 live 前）；M1 mock/确定性流程仅需把 sealed 正文喂给
-    annotation stage，真实指令模板不在本轮冻结。
+【输出格式】只输出一个 JSON 对象（裸 JSON）。不要用 ```json 或任何 Markdown 代码栅栏包裹，不要输出任何解释、前言、结语。
+
+【顶层字段】输出且仅输出以下三个字段：
+- document_metadata_claims：文档级元数据 claim
+- sections：数组（M1 输出 []）
+- semantic_units：语义单元数组
+
+【document_metadata_claims】
+{"subject": <学科字符串或 null>, "grade": <年级字符串或 null>, "year": <年份字符串或 null>, "school": <学校字符串或 null>}
+subject/grade 能判断就填（如 "数学"/"三年级"），判断不出填 null。
+
+【semantic_units 元素】standalone_question 完整结构：
+{
+  "unit_id": "Q1", "unit_type": "standalone_question", "question_number": "1",
+  "section_id": "SEC-1", "original_question_type": "single_choice",
+  "content": {
+    "stem": {"role": "stem", "question_label": "1"},
+    "options": [{"label": "A", "role": "option", "question_label": "1"}],
+    "answer": {"role": "answer", "question_label": "1", "answer_zone": "answer_table"},
+    "explanation": {"role": "explanation", "explanation_zone": "inline_explanation"},
+    "confidence": 0.98
+  }
+}
+
+【字段约束】
+- unit_type ∈ {"standalone_question", "composite_unit"}
+- original_question_type ∈ {"single_choice", "multiple_choice", "true_false", "fill_in", "short_answer", "essay", "cloze", "reading", "grammar_fill", "vocabulary_fill", "seven_to_five", "reading_expression"}
+- role ∈ {"stem", "option", "answer", "explanation"}
+- answer_zone ∈ {"answer_table", "inline_answer"}；explanation_zone ∈ {"inline_explanation"}
+- options 仅 single_choice / multiple_choice / true_false 需要；其余类型省略 options 字段
+- answer 只声明答案位置（answer_zone），绝不转录答案正文
+
+【explanation 源证据约束】（Annotation 是对 Source 的语义声明，不是模型自由生成的信息结构）
+- 仅当文档中存在该单元明确的【详解】/【解析】区、或可识别的详解 span 时，才声明 explanation 字段
+- 文档没有详解/解析区、或该单元无可识别的详解内容 → 省略 explanation 字段（不输出该 key）
+- 绝不因为 schema 或示例中出现 explanation 就凭空声明；绝不虚构、推断或生成详解内容
+- explanation 缺席是合法结果；禁止用占位符、空对象或伪造文本表示「无详解」
+
+【硬性禁止】
+1. 不要用 Markdown 代码栅栏包裹 JSON
+2. 不要输出 JSON 之外的任何文字
+3. 不要新增上述字段之外的字段
+4. 不要转录题干/选项/答案/详解正文——只输出结构标签（question_label/option_label/role/zone），正文由系统从原文切片
+"""
+
+
+def build_annotation_prompt(body_text: str) -> str:
+    """构造 annotation prompt（I-0-1：真实 Frozen Contract 已写入前缀）。
+
+    Schema Source of Truth = Docs/V3_SPEC/20_Document_Pipeline.md（20 §4.1–4.5），
+    非 test fixture。M1 mock/确定性流程与 live 共用同一 prompt；真实指令模板在本轮
+    I-0-1 首次对齐 Frozen Contract（此前为占位模板）。
     """
-    return (
-        "你是题目语义标注助手。对下列文档文本做语义标注，输出符合 "
-        "semantic-metadata-annotation schema 的 JSON（semantic_units 数组）。\n\n"
-        f"<document>\n{body_text}\n</document>\n"
-    )
+    return _ANNOTATION_PROMPT_PREFIX + f"\n<document>\n{body_text}\n</document>\n"
 
 
 def _classify_error(exc: BaseException) -> str:
