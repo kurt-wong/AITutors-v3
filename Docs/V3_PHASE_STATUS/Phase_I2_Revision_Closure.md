@@ -226,7 +226,7 @@ Source Evidence → Resolved Span → Semantic Question IR
 
 ## 9. Git Commit History
 
-### Commit 1: Documentation Freeze
+### Commit 1: Documentation Freeze (`ee4d08f`)
 ```
 docs: freeze Phase I-2 Revision conclusions
 
@@ -235,20 +235,22 @@ docs: freeze Phase I-2 Revision conclusions
 - Update bugs.md (BUG-V3-040/041/042)
 ```
 
-### Commit 2: PUA Fix
+### Commit 2: PUA Fix (`1c31fdf`)
 ```
 fix: exclude mathematical PUA symbols from source quality failure
 
-PUA alone ≠ quality failure. Require combined PUA + replacement chars
-for invalid status. Prevents false-positive rejection of math PDFs.
+PUA alone ≠ quality failure. Exclude Co (Private Use Area) from
+non-printable count. Prevents false-positive rejection of math PDFs.
 ```
 
-### Commit 3: Quality Gate Tests
+### Commit 3: Quality Gate Tests (`0ef64ab`)
 ```
-test: add source quality regression coverage
+test: add source quality regression coverage for PUA handling
 
-- PUA false positive test
-- Math PDF quality validation
+- PUA 20% alone → valid
+- PUA + replacement → invalid
+- replacement > 5% alone → invalid
+- Realistic math PDF scenario → valid
 ```
 
 ---
