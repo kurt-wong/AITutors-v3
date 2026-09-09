@@ -980,3 +980,96 @@ Step 5 已于 commit `0917404` 落盘（含 Status/log/restart v1.10 收口）�
   for implementation，非 Open）；BUG-011-E2 保持独立记录。
 - **`_audit_*.py` 处置（用户裁决 = 归档到非正式目录）**：12 份一次性审计/对抗探针移入
   `backend/tests/_audit_archive/`（untracked，不入 git）；findings 已在各阶段转正为正式测试。
+
+### 2026-09-09 14:58（Phase I Live Data Plane Integration + BUG-V3-037 lease 修复完成）
+
+- **背景**：Errata Final Closure（BUG-V3-001..036 收口）后进入新阶段 Phase I（Live Data Plane
+  Integration）——证明真实 Ollama/Qwen 数据面（非 mock）驱动完整 V3 Runtime 链并在 PostgreSQL
+  留下可验证 provenance。
+- **I-0 Prompt Contract Alignment**：旧 prompt 从不把 Frozen Annotation Contract 传给模型 →
+  真实 Qwen 输出栅栏 + schema 全盘漂移。`build_annotation_prompt` 把 20 §4.1–4.5 真实写入前缀
+  （顶层三字段 / standalone_question 完整结构 / 字段约束 / 硬性禁止）。`test_prompt_contract.py`
+  锁 presence + strength。
+- **BUG-V3-037（Live Long-Running Stage Lease Loss）**：live smoke 实证 Task 卡 running
+  （`lease already lost (recover-owned)`）——annotation stage 内 ~300s 冷加载 LLM 调用期间无
+  heartbeat，60s lease 中途过期。方案 2（用户裁决，不延长 lease）：新增
+  `TaskExecutor._lease_heartbeat` 后台 renew loop（周期 = lease/4，严格 < lease），`finally`
+  清理无 orphan；LeaseConflict 停循环 + 边界 fail-loud；不 cancel 在途 LLM 调用（避免与
+  BUG-V3-035 fallback/cancellation 契约交叉）。Compile stage（M1 确定性无 LLM）暂不接入。
+- **验证**：targeted（test_task_executor.py）18 passed + 全量 pytest **426 passed**（零回归）；
+  live smoke 核心层 PASS（Task succeeded / audit ollama completed / budget settled /
+  annotation valid / replay 零重复）。
+- **BUG-V3-038（Resolver 跨层契约漂移）→ Resolved（2026-09-09 18:09）**：用户裁决方向 =
+  Resolver 读 `question_label`，**禁止 alias fallback**。修 `reference.py` `_answer_target`/
+  `_explanation_target`；`resolver.py:486` 诊断文案对齐；9 个 mock fixture 文件 content-role
+  字段迁移；新增 strict contract 回归锁（payload 仅带 question_label、全文无 question_number
+  → 必须完整解析 stem/answer/explanation）。
+- **smoke harness correction（独立 commit）**：`_SMOKE_LINES` `[Answer]`→`【答案】` +
+  `fontname="china-s"`；补【详解】区（模型声明 explanation role 时 fixture 须提供 source
+  evidence，否则 Resolver fail-loud 判 missing——行为正确，非生产 bug）。
+- **Prompt Contract（独立 commit）**：新增【explanation 源证据约束】块——仅当源中有
+  【详解/解析】证据才声明 explanation；无证据省略字段；禁止凭空声明/占位。回归锁
+  `test_prompt_explanation_source_grounding`（只锁文本 presence，服从由 live probe 证明）。
+- **BUG-V3-039（Diagnostic Metadata Leaks into Compile Identity）→ Resolved（2026-09-09
+  18:09）**：live smoke 实证真实 Qwen 输出 `confidence: 0.98`（float）→ `gate/service.py` 三处
+  `sha256_hex(ann.payload)` → BUG-V3-005 `_reject_float` fail-fast → validation_error。
+  Frozen Spec（20 §8.1:568/P1-6:768）confidence 是诊断元数据不作 decision 触发 → 建单一
+  `_annotation_identity_projection`（仅剔 unit 顶层 confidence，不 mutate，三处 hash 复用）；
+  prompt 示例删除 `"confidence": 0.98`（不新增「禁止输出 confidence」规则）；新增 5 类回归锁
+  （`tests/test_identity_projection.py`）：confidence float 不破 identity / confidence 波动
+  不改 identity（核心）/ semantic 变化仍改 identity / 其它 float 仍 fail-fast（BUG-V3-005
+  反向锁）/ 无 confidence 向后兼容。
+- **验证（2026-09-09 18:09）**：targeted 全绿；全量 pytest **433 passed**（428 + 5 新锁）；
+  live smoke 12 层 Hard Gate **全 PASS**（Task succeeded + Candidate + Gate approved +
+  Question=1 + Instance=1 + audit ollama completed + budget settled + replay 零重复）。
+- **Phase I live data plane 四层阻断全部关闭**：I-0-1 prompt contract → BUG-V3-037 lease →
+  BUG-V3-038 field drift → BUG-V3-039 identity leakage。mock/contract test 均未覆盖，由 live
+  smoke 逐一暴露。
+- **影响**：Phase I-1-D 验收达成。Phase I 全部变更未 commit；4 个 commit 边界已冻结（①
+  BUG-V3-037；② BUG-V3-038；③ Live Smoke Fixture + Prompt Grounding；④ BUG-V3-039），待
+  用户明示执行。
+- **下一步**：用户明示 commit → Post-Implementation Gate Review（重点：identity-bearing
+  production path 是否存在「fixture 未覆盖、真实模型可能生成」的字段）→ 判断 Phase I-1
+  closure。
+
+### 2026-09-09 18:30 — Phase I-1-D CLOSED（4 Commits + Gate Review PASS）
+
+- **4 commits 已提交**（精确 staging，executor.py 跨 commit hunk 经中间版本分离）：
+  1. `9730351` fix: BUG-V3-037 lease heartbeat（executor.py heartbeat hunks + test_task_executor.py）
+  2. `02c3431` fix: BUG-V3-038 resolver question_label（reference.py + resolver.py + 9 test fixtures）
+  3. `168d17b` test: live smoke fixture + prompt grounding（live_smoke_ollama.py + executor.py prompt + test_prompt_contract.py）
+  4. `0f71241` fix: BUG-V3-039 identity projection（gate/service.py + test_identity_projection.py + executor.py prompt 减噪）
+- **Post-Implementation Gate Review PASS**：
+  - Identity-bearing Path Inventory：所有 annotation payload hash（`_compile_input_domain` /
+    `_input_identity` 三处）统一经 `_annotation_identity_projection`；`logical_execution_hash` /
+    `build_idempotency_key` 继承上游 projected input；`identity_hash`（question 级）消费
+    compiled/normalized text 非 annotation payload；无绕过路径。
+  - Unknown Field Policy：`validate_annotation_payload` 仅 FORBIDDEN_FIELDS 检查，不拒绝
+    unknown fields（P1-a 冻结）；unknown semantic fields 进 identity（正确）；仅 confidence
+    被 projection 排除（diagnostic metadata，20 §8.1:568）。
+  - Fixture Coverage：无 confirmed gap。
+  - Required Action: None。
+- **验证**：全量 pytest **433 passed**；live smoke 12 层 Hard Gate 全 PASS（代码未变，仅
+  staging）。
+- **Working Tree 剩余**（不属于本轮 4 commits）：gateway.py / providers/http.py /
+  worker/__main__.py / test_gateway.py / test_http_provider.py（早期 Phase I transport）；
+  Status.md / log.md / restart-prompt.md / bugs.md（文档）；_audit_archive/ / probe 脚本 /
+  PDF fixtures（辅助工具）。
+- **Phase I-1-D 正式 CLOSED**。项目状态：V3 Core Architecture Closed → Phase I Live Data
+  Plane Verified → Real File E2E Next → Productization Not Started。
+
+### 2026-09-09 20:15 — Phase I-1 Closure（Heartbeat Flaky 修复 + Identity Gate Review + Transport 接线）
+
+- **BUG-V3-037 Heartbeat Flaky 修复**（`bfe4434`）：全量测试实证
+  `test_long_annotation_keeps_lease_alive` 间歇性失败。根因 = `_renew_loop` 先 sleep 再
+  heartbeat，首次续租延迟一个 interval；NullPool 连接建立 + event-loop 竞争下首次续租可能
+  晚于 lease 过期 → LeaseConflict → 循环退出。修复 = 循环倒置为先 heartbeat 再 sleep。
+  压力验证：单测 ×20 / heartbeat 组 ×20 / 全量 ×3 全 PASS。
+- **Post-Implementation Identity Gate Review**（`1f08882`）：PASS WITH DOCUMENTATION。
+  Identity Projection Rule 契约固化（bugs.md）。新增反向锁
+  `test_nested_confidence_is_not_silently_projected`。
+- **全量对抗性审查**：434 tests 全 PASS。SPEC 约束逐条验证通过。0 TODO/FIXME/HACK。
+- **Phase I Transport 接线**（本轮提交）：
+  - I-1-A: `HTTPLLMProvider` 条件 Authorization + `trust_env=False`。
+  - I-1-B: `build_gateway()` 工厂 + worker 改用工厂 + 3 新测试。
+- **Closure Gate 5/5 通过** → Phase I-1 CLOSED → Phase I-2 Real File E2E Next。

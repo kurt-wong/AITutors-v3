@@ -937,3 +937,110 @@ Date: 2026-09-05
   `backend/tests/_audit_archive/`（untracked，不入 git；findings 已在各阶段转正为正式测试）。
 - **下一步**：进入新的功能 / Bug 阶段（待用户裁决下一 Phase 范围）。D1/D3/D4/D5/F-4 deferred
   项维持 Deferred/Open；BUG-011-E2 延续为独立记录。
+
+### 2026-09-09 14:58（Phase I Live Data Plane Integration 进行中 + BUG-V3-037 lease 修复完成）
+
+- **Status: Phase I（Live Data Plane Integration）进行中**。A–G / H Phase 1–8 / Phase 9 维持
+  FINAL CLOSED；Errata Final Closure（BUG-V3-001..036 收口）维持。新阶段目标 = 证明真实
+  Ollama/Qwen 数据面（非 mock）驱动完整 V3 Runtime 链（Task→Attempt→Audit→Budget→Artifact→
+  Candidate→Question→Instance）+ PostgreSQL provenance 可验证。
+- **I-0 Prompt Contract Alignment 完成**：`build_annotation_prompt`（`executor.py`）首次把真实
+  Frozen Annotation Payload Contract（20 §4.1–4.5）写入模型输入（Schema Source of Truth =
+  `20_Document_Pipeline.md`，非 test fixture）。`test_prompt_contract.py` 4 测试锁 presence +
+  strength（JSON-only / 禁 fence / nested schema example / 正文注入）。
+- **I-1-D live smoke harness**：`scripts/live_smoke_ollama.py`（不进 pytest；真实 Ollama +
+  `LLM_GATEWAY_MODE=live` + 12 层 Hard Gate）。live gateway 显式构造（task_context/budget_ok），
+  不 monkeypatch / 不绕过 `_live()` 放行。
+- **BUG-V3-037（lease loss）修复完成**：`TaskExecutor._lease_heartbeat`
+  （`@asynccontextmanager` 后台 renew loop，周期 = lease/4）包裹 `_annotation_stage`，长 LLM
+  调用（~300s > 60s lease）期间持续续租。targeted 18 passed + 全量 pytest **426 passed**（零
+  回归）；live smoke 核心层 PASS（Task succeeded / audit ollama completed / budget settled /
+  annotation valid / replay 零重复）。
+- **Status: Phase I-1-D live smoke 12 层 Hard Gate 全 PASS（2026-09-09 18:09）**。真实
+  Ollama/Qwen（qwen3.5:4b）数据面驱动完整 V3 Runtime 链：Task succeeded + Candidate +
+  Gate approved + **Question=1** + **Instance=1** + audit ollama completed + budget settled +
+  replay 零重复。全量 pytest **433 passed**。
+- **I-0 Prompt Contract Alignment 完成**：`build_annotation_prompt`（`executor.py`）首次把真实
+  Frozen Annotation Payload Contract（20 §4.1–4.5）写入模型输入（Schema Source of Truth =
+  `20_Document_Pipeline.md`，非 test fixture）。`test_prompt_contract.py` 锁 presence + strength
+  （JSON-only / 禁 fence / nested schema example / 正文注入 / explanation 源证据约束）。
+- **I-1-D live smoke harness**：`scripts/live_smoke_ollama.py`（不进 pytest；真实 Ollama +
+  `LLM_GATEWAY_MODE=live` + 12 层 Hard Gate）。live gateway 显式构造（task_context/budget_ok），
+  不 monkeypatch / 不绕过 `_live()` 放行。
+- **Phase I live data plane 四层阻断全部关闭**（mock/contract test 均未覆盖，live smoke 逐一
+  暴露）：
+  1. **I-0-1 Prompt Contract 缺失**：旧 prompt 不喂 Frozen Schema → 真实模型输出全盘漂移。
+  2. **BUG-V3-037 Lease loss（Resolved）**：`TaskExecutor._lease_heartbeat` renew loop
+     （lease/4）包裹 annotation stage，长 LLM 调用期间持续续租。
+  3. **BUG-V3-038 Resolver 字段漂移（Resolved）**：`reference.py` `_answer_target`/
+     `_explanation_target` 读 `answer.question_number`，Frozen Schema（20 §4.5）content role 用
+     `question_label`。修 Resolver（**禁止 alias fallback**）+ 9 个 mock fixture 迁移 + strict
+     contract 回归锁（payload 无 question_number 必须完整解析）。
+  4. **BUG-V3-039 Diagnostic metadata 泄漏进 Compile identity（Resolved）**：真实 Qwen 输出
+     `confidence: 0.98`（float）→ `gate/service.py` 三处 `sha256_hex(ann.payload)` → BUG-V3-005
+     fail-fast → validation_error。建立单一 `_annotation_identity_projection`（仅剔 unit 顶层
+     confidence，三处 hash 复用）；prompt 示例删除 confidence；新增 5 类回归锁（核心 =
+     confidence 波动不改 identity + 其它 semantic float 仍 fail-fast 反向锁）。
+- **两项独立 harness/prompt 修正（独立 commit，不计入 BUG 根因）**：smoke fixture `[Answer]`→
+  `【答案】`+`china-s` 字体+补【详解】区；Prompt Contract explanation 源证据约束（无源证据 →
+  省略字段，禁止凭空声明/占位）。
+- **未 commit（4 个 commit 边界已冻结，待用户明示）**：① BUG-V3-037 lease heartbeat；②
+  BUG-V3-038 Resolver question_label 对齐 + fixture 迁移 + strict regression；③ Live Smoke
+  Fixture + Prompt Grounding；④ BUG-V3-039 identity projection + 5 锁 + prompt 减噪。
+- **模式警示**：test fixture / Frozen Spec / Prompt Example / Real Model Output 四者漂移风险
+  已重复出现两次（038 + 039）。Post-Implementation Gate Review 应专项检查所有 identity-bearing
+  production path 是否存在「测试 fixture 未覆盖、真实模型可能生成」的字段。
+- **下一步**：用户明示后按 4-commit 边界提交 → Post-Implementation Gate Review → 判断 Phase
+  I-1 是否 closure。I-1-B（worker per-task task_context/budget_ok）仍 deferred；I-2（Cloud
+  OCR data plane）未来阶段。
+
+### 2026-09-09 18:30:00
+
+- **Status: Phase I-1-D CLOSED → Phase I Live Data Plane Verified → Real File E2E Next**。
+- **4 commits 已提交**（精确 staging，无无关文件混入）：
+  1. `9730351` fix: BUG-V3-037 lease heartbeat for long-running annotation stage
+  2. `02c3431` fix: BUG-V3-038 resolver question_label contract alignment
+  3. `168d17b` test: live smoke fixture + explanation source-grounding prompt contract
+  4. `0f71241` fix: BUG-V3-039 exclude diagnostic confidence from compile identity
+- **Post-Implementation Gate Review PASS**：所有 annotation identity path 统一经
+  `_annotation_identity_projection`；无绕过 projection 的 production hash path；unknown field
+  policy 明确（semantic fields 进 identity，仅 confidence 作为 diagnostic metadata 被排除）；
+  fixture 无已确认 contract blind spot。Required Action: None。
+- **验证**：全量 pytest **433 passed**；live smoke 12 层 Hard Gate 全 PASS。
+- **Working Tree 剩余**（不属于本轮 4 commits）：gateway.py / providers/http.py /
+  worker/__main__.py / test_gateway.py / test_http_provider.py（早期 Phase I transport）；
+  Status.md / log.md / restart-prompt.md / bugs.md（文档）；_audit_archive/ / probe 脚本 /
+  PDF fixtures（辅助工具）。
+- **下一步**：Phase I-2 Real File E2E Validation（Native PDF → Cloud OCR → Minimal API）。
+  I-1-B（worker per-task task_context/budget_ok）仍 deferred；I-2（Cloud OCR data plane）
+  在 Native PDF E2E 后接线。
+
+### 2026-09-09 20:15（Phase I-1 Closure — Heartbeat Flaky 修复 + Identity Gate Review）
+
+- **Status: Phase I-1 CLOSED**。Closure Gate 5/5 全部通过。
+- **BUG-V3-037 Heartbeat Flaky 修复**（`bfe4434`）：全量测试实证 `test_long_annotation_keeps_lease_alive`
+  间歇性失败（单独 PASS / 全量 FAIL / 再全量 PASS）。根因 = `_renew_loop` 先 `sleep(interval)`
+  再 heartbeat，首次续租延迟一个 interval；全量测试 event-loop 竞争 + NullPool 连接建立下，
+  首次续租可能晚于 lease 过期 → LeaseConflict → 循环退出 → 后续续租全部停止。修复 = 循环倒置
+  为先 heartbeat 再 sleep，进入 context 立即续租。压力验证：单测 ×20 全 PASS、heartbeat 组
+  ×20 全 PASS、全量 ×3 全 PASS。
+- **Post-Implementation Identity Gate Review**（`1f08882`）：裁决 **PASS WITH DOCUMENTATION**。
+  Identity Projection Rule 契约固化（bugs.md）：仅剔 `semantic_units[*].confidence`（unit 顶层），
+  不做递归剥离 / unknown-field 剥离 / float 归一化。新增反向锁
+  `test_nested_confidence_is_not_silently_projected`（嵌套 float → fail-fast；嵌套 str → 参与
+  identity；unit 顶层仍剥离）。
+- **全量对抗性审查完成**：434 tests 全 PASS。SPEC 约束逐条验证（Identity/Hash、Gate Grammar、
+  Gate Policy、Admission、Task State Machine、Budget、Compiler/IR、Seal/Source、Annotation、
+  Gateway、Resolver）全部通过。0 个 TODO/FIXME/HACK。仅 4 个 deferred items（M1 设计决策）。
+- **Closure Gate 汇总**：
+  - Gate 1 Commit Boundary: 6 commits 干净（4 frozen + heartbeat fix + identity review）
+  - Gate 2 Heartbeat Stability: 20/20 单测 + 100/100 组
+  - Gate 3 Full Suite: 433×3 → 434（含新增反向锁）
+  - Gate 4 Identity Review: PASS WITH DOCUMENTATION
+  - Gate 5 Regression: 126 targeted PASS
+- **Phase I Transport 接线**（I-1-A / I-1-B，本轮提交）：
+  - I-1-A: `HTTPLLMProvider` 条件 Authorization 头（api_key 非空才发）+ `trust_env=False`
+    （防 Windows 本地代理劫持 localhost）。
+  - I-1-B: `build_gateway()` 工厂从 settings 构造 `HTTPLLMProvider(Ollama)`，worker 改用工厂。
+    3 新测试锁 live 注入 / mock 不注入 / disabled 不注入。
+- **下一步**：Phase I-2 Real File E2E Validation。

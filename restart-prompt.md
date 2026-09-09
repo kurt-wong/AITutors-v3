@@ -1,39 +1,37 @@
 # AI Tutor V3 — RESTART PROMPT
 
-Version: v1.23
-Status: Errata Final Closure 完成；BUG-V3-001..036 全量收口（033/034/035 = Frozen）；代码
-baseline = 9da09db；全量 pytest 413 passed；下一阶段 = 新的功能 / Bug 阶段（待用户裁决 Phase
-范围）
+Version: v1.27
+Status: **Phase I-1 CLOSED** — Closure Gate 5/5 通过；heartbeat flaky 已修复（heartbeat-first）；
+Identity Gate Review PASS WITH DOCUMENTATION；全量 pytest 434 passed。下一步 = Phase I-2 Real File E2E
 Date: 2026-09-09
 
-## 0.0 当前结论（2026-09-09 05:55）
+## 0.0 当前结论（2026-09-09 20:15:00）
 
-- **H Phase 1–8 FINAL CLOSED**；**Phase 9 FINAL CLOSED**（C-1 修复后重新收口）；A–G 继续 CLOSED；
-  V3 主链 A–H + Phase 9 冻结。
-- **BUG-V3-001..028 errata 执行完成（D-1 → D-6 全链）**：E/B/A + D-1 Schema（001/002/006/008/027）
-  + D-2 Identity/Hash（005/012/017/019/022）+ D-3 Annotation/Content Shape（009/013/021）+
-  D-4 IR/Compiler（014/015/016/018）+ D-5 Gate（023/024/025/026）+ D-6 Figure Contract（020）
-  全部关闭。红线「先冻结 Spec，再改代码」贯穿全程。
-- **BUG-011（C 类真实 gap）Final Closed**：Source figure identity/persistence 全链闭环（5 个
-  atomic commits：`5c9ecc9` docs Scope Freeze / `a8cd129` A Figure Identity / `dd26a6b` B Native
-  Extraction / `716875e` C Persistence+Integrity / `9da09db` E DB UNIQUE + migration 0009）。
-  **BUG-011-E2 仍 Open**（E `_image_span` IS-7 消费 4 字段 vs B 写 7 字段跨层 drift，留待后续
-  统一处理，不随 BUG-011 关闭）。
-- **验证基线**：全量 pytest **413 passed**；migration replay 双路径 PASS；origin/main == local
-  main == `9da09db`。
-- **Closure 边界（严格）**：Phase 9 / A–H / BUG-011 / errata 关闭 ≠ V3 全部关闭。D1/D3/D4/D5/F-4
-  保持 Deferred/Open；**005/009/012..026 共 17 项已 Resolved（Errata Final Closure 完成）**；
-  Phase 10+ Not Started。
-- **审计探针归档**：`backend/tests/_audit_*.py`（12 份）一次性审计/对抗探针已归档至
-  `backend/tests/_audit_archive/`（untracked，不入 git）；findings 已在各阶段转正为正式测试。
-- **红线（不变）**：HTTP retry（transport）≠ LLM retry（同 LE）≠ fallback（新 config/新 LE）；
+- **A–G / H Phase 1–8 / Phase 9 维持 FINAL CLOSED**；Errata Final Closure（BUG-V3-001..036
+  全量收口）维持；BUG-011-E2 维持独立 Open 记录。
+- **Phase I-1 正式 CLOSED**：Closure Gate 5/5 全部通过。
+  - Gate 1 Commit Boundary: 8 commits 干净（4 frozen + heartbeat fix + identity review + transport + docs）
+  - Gate 2 Heartbeat Stability: 单测 ×20 全 PASS + heartbeat 组 ×20 全 PASS
+  - Gate 3 Full Suite: 433×3 → 434（含新增反向锁）
+  - Gate 4 Identity Review: PASS WITH DOCUMENTATION
+  - Gate 5 Regression: 126 targeted PASS
+- **BUG-V3-037 Heartbeat Flaky 修复**（`bfe4434`）：根因 = `_renew_loop` 先 sleep 再 heartbeat；
+  修复 = 循环倒置为先 heartbeat 再 sleep。
+- **Identity Projection Rule 契约固化**（`1f08882`）：仅剔 `semantic_units[*].confidence`
+  （unit 顶层）；不做递归剥离。反向锁 `test_nested_confidence_is_not_silently_projected`。
+- **Phase I Transport 接线**（本轮）：I-1-A 条件 Authorization + trust_env=False；
+  I-1-B `build_gateway()` 工厂 + worker 改用工厂。
+- **全量对抗性审查**：434 tests 全 PASS。SPEC 约束逐条验证通过。0 TODO/FIXME/HACK。
+- **项目状态**：V3 Core Architecture Closed → Phase I-1 CLOSED →
+  **Phase I-2 Real File E2E Next** → Productization Not Started
+- **红线（不变）**：HTTP retry（transport）≠ LLM retry（同 LE）≠ fallback（new config/新 LE）；
   MAX_LLM_CALLS_PER_TASK 按真实 Provider Invocation 计数；非法 retry 配置 fail-fast；先冻结
-  Spec 再改代码。
-- **下一步**：进入新的功能 / Bug 阶段（待用户裁决下一 Phase 范围）。**不得重复执行 D-1 至 D-6；
-  不得重新施工 BUG-011（已 Closed）**。D1/D3/D4/D5/F-4 deferred 项维持 Deferred/Open；
-  BUG-011-E2 延续为独立记录。
-- 重启后第一任务：读本文件 → Status.md 尾 → log.md 尾 → bugs.md（BUG-V3-001..036 现状）→
-  待用户裁决下一 Phase 范围。
+  Spec 再改代码；Schema Source of Truth = 20_Document_Pipeline.md（非 test fixture）；
+  BUG-V3-005 float 红线不动（confidence 不进 identity ≠ identity 自动接受 float）。
+- **下一步**：Phase I-2 Real File E2E Validation（Native PDF → Single Question → Multi-question →
+  Answer only → Answer+Explanation → Repeated Same File → Same Question Different Source →
+  Figure-containing → Scanned PDF）。
+- 重启后第一任务：读本文件 → Status.md 尾 → log.md 尾 → bugs.md → 进入 Phase I-2。
 
 ## 0. 当前工作状态（2026-09-08 14:01）
 
