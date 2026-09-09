@@ -75,10 +75,11 @@ subject/grade 能判断就填（如 "数学"/"三年级"），判断不出填 nu
     "stem": {"role": "stem", "question_label": "1"},
     "options": [{"label": "A", "role": "option", "question_label": "1"}],
     "answer": {"role": "answer", "question_label": "1", "answer_zone": "answer_table"},
-    "explanation": {"role": "explanation", "explanation_zone": "inline_explanation"},
-    "confidence": 0.98
+    "explanation": {"role": "explanation", "explanation_zone": "inline_explanation"}
   }
 }
+（示例不含 confidence：它是诊断元数据，主链 decision/identity 均不消费；示例不主动诱导输出。
+若模型仍输出 confidence 亦合法——identity 层已隔离，BUG-V3-039。）
 
 【字段约束】
 - unit_type ∈ {"standalone_question", "composite_unit"}
