@@ -17,8 +17,11 @@ domain service 执行与恢复安全。
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import uuid
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from app.ai.executor import LLMExecutor
@@ -127,7 +130,8 @@ class TaskExecutor:
         await self._heartbeat(task_id, worker_id, lease_token)
         version = await self._seal_stage(params)
         await self._heartbeat(task_id, worker_id, lease_token)
-        ann = await self._annotation_stage(task_id, version, params)
+        async with self._lease_heartbeat(task_id, worker_id, lease_token):
+            ann = await self._annotation_stage(task_id, version, params)
         await self._heartbeat(task_id, worker_id, lease_token)
         await self._compile_stage(version, ann)
         await self._complete_task(task_id, worker_id, lease_token)
@@ -252,17 +256,85 @@ class TaskExecutor:
     async def _heartbeat(
         self, task_id: uuid.UUID, worker_id: str, lease_token: str
     ) -> None:
-        """stage 边界续租（liveness renewal）：防长 stage 使 lease 过期被 recover 误判
-        interrupted（审查 HIGH）。独立 session commit（DB now() 单源）。
-
-        M1 stage 快（mock/native）；live 长 LLM stage（bounded retry 可越 60s lease）内的
-        持续 heartbeat 属 Phase 9+/live smoke（transport 接线后），此处只保证 stage 边界续租。
+        """续租（liveness renewal）：把 lease 滑到 now()+lease（DB now() 单源，独立 session
+        commit）。stage 边界调用；长 LLM stage 内由 _lease_heartbeat 持续调用（BUG-V3-037）。
         """
         async with self._session_factory() as s:
             await self._task_service(s).heartbeat(
                 task_id, worker_id=worker_id, lease_token=lease_token
             )
             await s.commit()
+
+    # -- 持续 heartbeat（BUG-V3-037：长 LLM stage 内续租） --------------------------
+
+    @property
+    def _resolved_lease_seconds(self) -> int:
+        """实际生效的 lease 秒数（与 _task_service 的 lease_seconds 解析一致）。"""
+        if self._lease_seconds is not None:
+            return self._lease_seconds
+        return settings.task_claim_lease_seconds
+
+    @property
+    def _heartbeat_interval_seconds(self) -> float:
+        """持续 heartbeat 周期 = lease / 4（严格 < lease，lease 过期前至少续一次）。"""
+        return self._resolved_lease_seconds / 4.0
+
+    @asynccontextmanager
+    async def _lease_heartbeat(
+        self, task_id: uuid.UUID, worker_id: str, lease_token: str
+    ) -> AsyncIterator[asyncio.Task[None]]:
+        """长阻塞 stage 内的持续续租（BUG-V3-037）。
+
+        后台 renew loop 周期调用 _heartbeat，把 lease 持续滑到 now()+lease，使慢 LLM 调用
+        （> lease）不再天然触发 lease 过期。只做 liveness renewal（复用 _heartbeat，独立
+        session + commit，DB now() 单源），不创建 attempt / 不写 audit / 不耗 budget /
+        不参与 artifact identity（R6）。
+
+        异常语义（R5）：
+          - LeaseConflict（情况 B：lease 真丢失 / 被 recover 接管 / 四元组不匹配）→ 停循环
+            （不无限重试失效 claim）；边界 _heartbeat/_complete 会再抛 LeaseConflict 走既有
+            fail-loud 路径。
+          - 其它 Exception（情况 A：瞬时 DB/网络故障等）→ 下一 tick 重试（Worker 仍自认拥有
+            Task，只是暂时无法向 DB 证明）。
+          - CancelledError（BaseException）→ 静默退出（finally 清理所致）。
+        finally 保证 loop cancel + await，无 orphan background task（R2）。
+        """
+        stop = asyncio.Event()
+
+        async def _renew_loop() -> None:
+            try:
+                while not stop.is_set():
+                    await asyncio.sleep(self._heartbeat_interval_seconds)
+                    if stop.is_set():
+                        return
+                    try:
+                        await self._heartbeat(task_id, worker_id, lease_token)
+                    except LeaseConflict as exc:
+                        # 情况 B：lease ownership 已失 → 停续租；边界检查会 fail-loud
+                        logger.warning(
+                            "task %s heartbeat stopped: lease ownership lost (%s) by worker %s",
+                            task_id, exc, worker_id,
+                        )
+                        return
+                    except Exception as exc:
+                        # 情况 A：瞬时 DB/网络故障 → 下一 tick 重试
+                        logger.warning(
+                            "task %s heartbeat renewal failed; will retry (%s) by worker %s",
+                            task_id, exc, worker_id,
+                        )
+            except asyncio.CancelledError:
+                pass
+
+        loop = asyncio.create_task(_renew_loop())
+        try:
+            yield loop
+        finally:
+            stop.set()
+            loop.cancel()
+            try:
+                await loop
+            except asyncio.CancelledError:
+                pass
 
     # ------------------------------------------------------------------ terminal
 

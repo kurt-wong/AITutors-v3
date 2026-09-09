@@ -75,11 +75,12 @@ class _BoomProvider:
         raise RuntimeError("provider boom")
 
 
-def _executor(gateway) -> TaskExecutor:
+def _executor(gateway, *, lease_seconds: int | None = None) -> TaskExecutor:
     return TaskExecutor(
         async_session_maker,
         llm_gateway=gateway,
         ocr_extractor=_mock_extractor(),
+        lease_seconds=lease_seconds,
     )
 
 
@@ -522,3 +523,151 @@ async def test_fallback_not_triggered_on_cancellation(monkeypatch, tmp_path) -> 
 
     assert primary.calls == 1
     assert fb.calls == 0  # 取消不 fallback
+
+
+# ---- BUG-V3-037：Annotation 阶段持续 Heartbeat（lease 不因慢 LLM 调用过期） ----
+
+
+class _SlowProvider:
+    """sleep > lease 后返回 valid JSON，模拟真实慢 LLM cold-load。"""
+
+    name = "slow"
+
+    def __init__(self, delay: float, payload: str) -> None:
+        self._delay = delay
+        self._payload = payload
+
+    async def complete(self, prompt: str) -> str:
+        await asyncio.sleep(self._delay)
+        return self._payload
+
+
+class _GateProvider:
+    """卡在 LLM 调用中直到 release，供测试在调用期间模拟 recover 接管。"""
+
+    name = "gate"
+
+    def __init__(self, started: asyncio.Event, release: asyncio.Event) -> None:
+        self._started = started
+        self._release = release
+
+    async def complete(self, prompt: str) -> str:
+        self._started.set()
+        await self._release.wait()
+        return _compile_payload_json()
+
+
+class _SlowBoomProvider:
+    """sleep 后抛异常：验证 LLM 异常时 heartbeat 循环已 tick 过再随 finally 清理。"""
+
+    name = "slow-boom"
+
+    async def complete(self, prompt: str) -> str:
+        await asyncio.sleep(0.6)
+        raise RuntimeError("provider boom after delay")
+
+
+class _CancelProvider:
+    """抛 CancelledError（BaseException）：验证取消路径 heartbeat 循环不残留。"""
+
+    name = "cancel"
+
+    async def complete(self, prompt: str) -> str:
+        raise asyncio.CancelledError()
+
+
+async def test_long_annotation_keeps_lease_alive(tmp_path):
+    """BUG-V3-037 核心回归锁：annotation 慢（2.5s）> lease（1s），持续 heartbeat 保持
+    lease 存活 → task succeeded。无此修复时 lease 在 1s 过期、边界 _heartbeat 抛
+    LeaseConflict、task 卡 running。"""
+    pdf = tmp_path / "doc.pdf"
+    pdf.write_bytes(b"test pdf bytes")
+    task_id = await _enqueue(pdf)
+
+    gw = LLMGateway("mock", mock_provider=_SlowProvider(2.5, _compile_payload_json()))
+    assert await _executor(gw, lease_seconds=1).run_once(worker_id="w1") is True
+
+    assert await _task_status(task_id) == "succeeded"
+    assert await _count(SemanticAnnotation, status="valid") == 1
+    cand = await _load_candidate()
+    assert cand.decision_status == "approved"
+    assert await _count(Question) == 1
+
+
+async def test_heartbeat_lease_loss_no_silent_success(tmp_path):
+    """BUG-V3-037（R5 情况 B，ownership fencing）：annotation 期间 task 被 recover 接管
+    （status→interrupted）→ executor 绝不写 succeeded，终态精确 = interrupted。"""
+    pdf = tmp_path / "doc.pdf"
+    pdf.write_bytes(b"test pdf bytes")
+    task_id = await _enqueue(pdf)
+
+    started = asyncio.Event()
+    release = asyncio.Event()
+    gw = LLMGateway("mock", mock_provider=_GateProvider(started, release))
+    ex = _executor(gw, lease_seconds=1)
+
+    run_task = asyncio.create_task(ex.run_once(worker_id="w1"))
+    await started.wait()  # LLM 调用已开始（annotation stage 内，lease 已 claim）
+
+    # 模拟 recover 接管：直接置 interrupted + lease 过期（等价 recover_expired）
+    async with async_session_maker() as s:
+        await s.execute(
+            text(
+                "UPDATE tasks SET status='interrupted', lease_expires_at=now(), "
+                "heartbeat_at=now() WHERE id=:i"
+            ),
+            {"i": task_id},
+        )
+        await s.commit()
+
+    release.set()
+    assert await run_task is True
+
+    assert await _task_status(task_id) == "interrupted"
+
+
+async def test_heartbeat_stops_on_llm_error(tmp_path):
+    """BUG-V3-037：慢 LLM 调用内抛异常 → 既有失败语义不变（task failed、0 artifact、
+    error_type=system_error），且 heartbeat 循环已 tick 过并随 finally 清理。"""
+    pdf = tmp_path / "doc.pdf"
+    pdf.write_bytes(b"test pdf bytes")
+    task_id = await _enqueue(pdf)
+
+    gw = LLMGateway("mock", mock_provider=_SlowBoomProvider())
+    assert await _executor(gw, lease_seconds=1).run_once(worker_id="w1") is True
+
+    assert await _task_status(task_id) == "failed"
+    assert await _count(SemanticAnnotation) == 0
+    row = await _claims_row(task_id)
+    assert row["outcome"] == "failed"
+    assert row["error_type"] == "system_error"
+
+
+async def test_heartbeat_cleanup_on_cancellation(tmp_path):
+    """BUG-V3-037（R2）：annotation 抛 CancelledError → 直接传播（进程取消信号，非业务
+    fail），heartbeat 循环在 finally 清理、不残留。"""
+    pdf = tmp_path / "doc.pdf"
+    pdf.write_bytes(b"test pdf bytes")
+    task_id = await _enqueue(pdf)
+
+    gw = LLMGateway("mock", mock_provider=_CancelProvider())
+    with pytest.raises(asyncio.CancelledError):
+        await _executor(gw, lease_seconds=1).run_once(worker_id="w1")
+
+
+async def test_lease_heartbeat_loop_cleaned_up():
+    """BUG-V3-037（R2 无 orphan）：_lease_heartbeat context 退出后 renew loop 已 done
+    （finally 已在正常生命周期内 cancel + await，非等 event-loop teardown 顺带取消）。"""
+    async with async_session_maker() as s:
+        t = await TaskService(s).enqueue(task_type="document_ingest", task_params={})
+        await s.commit()
+        await TaskService(s, lease_seconds=1).claim(
+            t.id, worker_id="w1", lease_token="tok1"
+        )
+        await s.commit()
+
+    ex = _executor(LLMGateway("mock"), lease_seconds=1)
+    async with ex._lease_heartbeat(t.id, "w1", "tok1") as loop:
+        assert not loop.done()
+        await asyncio.sleep(0.6)  # 让 loop 至少 tick 一次
+    assert loop.done()  # 无 orphan：finally 已 cancel + await
