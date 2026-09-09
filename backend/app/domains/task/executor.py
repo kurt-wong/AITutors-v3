@@ -353,11 +353,14 @@ class TaskExecutor:
         stop = asyncio.Event()
 
         async def _renew_loop() -> None:
+            """先续租再等待：进入 context 立即 heartbeat，最大化 lease 安全窗口。
+
+            原实现先 sleep 再 heartbeat——首次续租延迟一个 interval，全量测试
+            event-loop 竞争 + NullPool 连接建立下，首次续租可能晚于 lease 过期，
+            导致 LeaseConflict 退出循环、后续续租全部停止（flaky 根因）。
+            """
             try:
                 while not stop.is_set():
-                    await asyncio.sleep(self._heartbeat_interval_seconds)
-                    if stop.is_set():
-                        return
                     try:
                         await self._heartbeat(task_id, worker_id, lease_token)
                     except LeaseConflict as exc:
@@ -373,6 +376,7 @@ class TaskExecutor:
                             "task %s heartbeat renewal failed; will retry (%s) by worker %s",
                             task_id, exc, worker_id,
                         )
+                    await asyncio.sleep(self._heartbeat_interval_seconds)
             except asyncio.CancelledError:
                 pass
 
