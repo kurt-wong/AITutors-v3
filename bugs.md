@@ -744,6 +744,57 @@
   反向锁：`test_nested_confidence_is_not_silently_projected`
   （`tests/test_identity_projection.py`）。
 
+### BUG-V3-040 — PDF Encoding False Alarm (Windows Terminal Display Issue)
+- Status: Resolved
+- 登记：2026-09-09 20:30:00
+- 现象：Phase I-2 E2E 初始判断 "PyMuPDF 中文编码失败"，显示中文乱码。
+- 根因：**Windows 终端编码显示问题**，非 PDF/PuMuPDF 编码失败。文本写入文件（显式 UTF-8）
+  后验证完全正常：
+  ```
+  第1页/共11页
+  2026 北京北师大实验中学高一（下）阶段测试一
+  一、单选题（每小题4 分，共32 分）
+  1. 已知弧长为5π 的弧所对的圆心角为150...
+  ```
+- 影响：无。Native extraction 正确提取中文文本。
+- 修复：无需代码修复。文档修正认知——"不要相信观察层输出，要相信 Source Artifact"。
+- **Resolved（2026-09-09 20:30:00）**：经文件写入验证，中文文本完全正常。终端乱码为 Windows
+  编码显示问题。
+
+### BUG-V3-041 — Mathematical Layout Fragmentation (Resolver Bottleneck)
+- Status: Open / Deferred
+- 登记：2026-09-09 20:30:00
+- 现象：数学 PDF 中公式/表达式被 native extraction 拆散到多行，Resolver 无法建立语义 span。
+- 示例：
+  ```
+  P1L014: '2. 已知角的终边经过点1'   # 期望：点(1/2, 2)
+  P1L015: '1'
+  P1L016: ','
+  P1L017: '2'
+  P1L018: '2'
+  ```
+- 根因：PDF extraction 输出的是 text stream + font mapping + layout objects，数学公式被
+  物理拆分。这是 Mathematical Document Understanding 问题，非 OCR 问题。
+- 影响：Resolver 成为 Phase I-2 瓶颈（17 resolved / 85 unresolved）。
+- 处置：Phase I-2C Resolver Robustness Validation 专项处理。不做自动修复（错误修复比失败
+  更危险）。
+- 验收：Resolver 能正确处理布局碎片，或诚实报告 ambiguous/incomplete。
+
+### BUG-V3-042 — PUA False Positive in Source Quality Gate
+- Status: Open
+- 登记：2026-09-09 20:30:00
+- 现象：`_is_non_printable()` 将 Private Use Area（U+F000-U+F8FF, category "Co"）归类为
+  不可打印。数学 PDF 用 PUA 编码符号（≥, ≤, →, 向量箭头）。
+- 风险：数学密集 PDF 的 PUA 比例 > 10% 时，会被错误标记为 `invalid`，阻断 pipeline。
+- 当前状态：本 PDF PUA 7% < 10% 阈值，未触发。
+- 修复：修改 invalid 判定条件为 **AND** 逻辑：
+  ```python
+  if non_printable_ratio > _MAX_NON_PRINTABLE_RATIO and replacement_ratio > 0.01:
+      status = "invalid"
+  ```
+  PUA 单独存在 ≠ quality failure。需 combined with replacement chars 才判 invalid。
+- 验收：PUA 20% + replacement 0% → degraded（非 invalid）；PUA 20% + replacement 2% → invalid。
+
 ## Resolved Bugs
 
 （暂无。）

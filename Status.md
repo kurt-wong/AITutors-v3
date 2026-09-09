@@ -1044,3 +1044,43 @@ Date: 2026-09-05
   - I-1-B: `build_gateway()` 工厂从 settings 构造 `HTTPLLMProvider(Ollama)`，worker 改用工厂。
     3 新测试锁 live 注入 / mock 不注入 / disabled 不注入。
 - **下一步**：Phase I-2 Real File E2E Validation。
+
+### 2026-09-09 20:30:00（Phase I-2 Revision CLOSED — Source Quality Gate + Real File E2E）
+
+- **Status: Phase I-2 Revision CLOSED**。SourceQualityGate 架构层验证完成，真实 PDF E2E
+  边界建立。文档冻结 → PUA 修复 → 进入 Phase I-2C。
+- **关键认知修正（BUG-V3-040 Resolved）**：初始判断 "PyMuPDF 中文编码失败" **不存在**。
+  实际为 Windows 终端编码显示问题。Native extraction 正确提取中文文本（经文件写入验证）。
+  核心教训："不要相信观察层输出，要相信 Source Artifact"。
+- **SourceQualityGate 正式架构层确立**：
+  ```
+  Import → Seal → SourceQualityGate → Annotation → Resolve → Compile → Gate → Admission
+  ```
+  - 纯函数（无 IO，确定性）
+  - 位于 Seal 后、Annotation 前（fail-loud before LLM consumption）
+  - QualityReport 落 source_meta 供 Review Console 展示
+- **测试证据**：
+  - 全量 pytest：421 passed（baseline 417，net +4）
+  - Quality Gate：11/11 tests PASSED
+  - Import E2E：4/4 tests PASSED
+  - Frontend TypeScript：0 errors
+  - API：GET /source-quality → 200，GET /source-lines → 200，invalid id → 404
+- **真实 PDF E2E 验证**：
+  - PDF：2026北京北师大实验中学高一（下）阶段测试一数学（教师版）.pdf
+  - 11 pages / 2377 lines / 11 figures
+  - Quality status：valid（CJK 42%, replacement 0%, non-printable 7%）
+- **架构瓶颈定位**：Resolver 成为 Phase I-2 真正瓶颈（17 resolved / 85 unresolved）。
+  数学公式被 native extraction 物理拆散（BUG-V3-041），非 OCR 问题。OCR 不应优先。
+- **BUG 登记**：
+  - BUG-V3-040（PDF Encoding False Alarm）：Resolved（认知修正）
+  - BUG-V3-041（Mathematical Layout Fragmentation）：Open / Deferred（Phase I-2C）
+  - BUG-V3-042（PUA False Positive）：Open（本轮 P0 修复）
+- **下一阶段：Phase I-2C Resolver Robustness Validation**：
+  - 目标：建立 Source Evidence → Resolved Span → Semantic Question IR 的可靠转换
+  - 范围：Resolver debug view / line-block relationship / formula fragment detection /
+    ambiguous status display
+  - 不做：OCR integration / LLM auto-repair / LaTeX reconstruction
+- **文档冻结**：
+  - `Docs/V3_PHASE_STATUS/Phase_I2_Revision_Closure.md`：完整 Closure 文档
+  - `bugs.md`：BUG-V3-040/041/042 登记
+  - 本文件：Phase I-2 Revision CLOSED
