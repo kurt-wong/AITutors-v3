@@ -41,7 +41,7 @@ def _single_units():
         {"unit_id": "Q1", "original_question_type": "single_choice",
          "content": {"stem": {"question_label": "1"},
                      "options": [{"label": l} for l in "ABCD"],
-                     "answer": {"answer_zone": "answer_table", "question_number": "1"}}}
+                     "answer": {"answer_zone": "answer_table", "question_label": "1"}}}
     ]
 
 
@@ -49,7 +49,7 @@ def _fillin_units():
     return [
         {"unit_id": "Q1", "original_question_type": "fill_in",
          "content": {"stem": {"question_label": "1"},
-                     "answer": {"answer_zone": "answer_table", "question_number": "1"}}}
+                     "answer": {"answer_zone": "answer_table", "question_label": "1"}}}
     ]
 
 
@@ -59,7 +59,7 @@ def _composite_units():
                 "original_question_type": "single_choice",
                 "content": {"stem": {"question_label": qlabel},
                             "options": [{"label": l} for l in "ABC"],
-                            "answer": {"answer_zone": "answer_table", "question_number": qn}}}
+                            "answer": {"answer_zone": "answer_table", "question_label": qn}}}
     return [
         {"unit_id": "U1-1", "unit_type": "composite_unit",
          "original_question_type": "single_choice",
@@ -77,7 +77,7 @@ def _foo_units():
         {"unit_id": "Q1", "original_question_type": "foo",
          "content": {"stem": {"question_label": "1"},
                      "options": [{"label": l} for l in "ABCD"],
-                     "answer": {"answer_zone": "answer_table", "question_number": "1"}}}
+                     "answer": {"answer_zone": "answer_table", "question_label": "1"}}}
     ]
 
 

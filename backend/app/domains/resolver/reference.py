@@ -205,12 +205,14 @@ def _answer_target(targets: list, unit_id: str, answer) -> None:
     zone = answer.get("answer_zone") or answer.get("zone")
     if zone is None:
         return
+    # BUG-V3-038：content role 术语统一 question_label（20 §4.5:169/204-205），
+    # 不读 question_number（那是 unit 顶层字段）。禁 alias fallback。
     targets.append(
         ResolveTarget(
             target_id=f"{unit_id}.answer", unit_id=unit_id, role="answer",
             kind="answer_zone", zone=str(zone),
             question_number=(
-                str(answer["question_number"]) if answer.get("question_number") else None
+                str(answer["question_label"]) if answer.get("question_label") else None
             ),
         )
     )
@@ -222,12 +224,13 @@ def _explanation_target(targets: list, unit_id: str, expl) -> None:
     zone = expl.get("explanation_zone") or expl.get("zone")
     if zone is None:
         return
+    # BUG-V3-038：同 _answer_target，content role 用 question_label。
     targets.append(
         ResolveTarget(
             target_id=f"{unit_id}.explanation", unit_id=unit_id,
             role="explanation", kind="explanation_zone", zone=str(zone),
             question_number=(
-                str(expl["question_number"]) if expl.get("question_number") else None
+                str(expl["question_label"]) if expl.get("question_label") else None
             ),
         )
     )

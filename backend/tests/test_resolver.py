@@ -40,7 +40,7 @@ def _q1_payload():
                 "content": {
                     "stem": {"question_label": "1"},
                     "options": [{"label": "A"}, {"label": "B"}, {"label": "C"}, {"label": "D"}],
-                    "answer": {"answer_zone": "inline_answer", "question_number": "1"},
+                    "answer": {"answer_zone": "inline_answer", "question_label": "1"},
                 },
             }
         ]
@@ -248,15 +248,15 @@ def _two_question_payload():
             {"unit_id": "Q1", "content": {
                 "stem": {"question_label": "1"},
                 "options": [{"label": "A"}, {"label": "B"}],
-                "answer": {"answer_zone": "inline_answer", "question_number": "1"},
+                "answer": {"answer_zone": "inline_answer", "question_label": "1"},
                 "explanation": {"explanation_zone": "inline_explanation",
-                                "question_number": "1"}}},
+                                "question_label": "1"}}},
             {"unit_id": "Q2", "content": {
                 "stem": {"question_label": "2"},
                 "options": [{"label": "A"}, {"label": "B"}],
-                "answer": {"answer_zone": "inline_answer", "question_number": "2"},
+                "answer": {"answer_zone": "inline_answer", "question_label": "2"},
                 "explanation": {"explanation_zone": "inline_explanation",
-                                "question_number": "2"}}},
+                                "question_label": "2"}}},
         ]
     }
 
@@ -320,7 +320,7 @@ async def test_blank_requires_closure_incomplete():
     lines = mk("1. 填空 ____", "A. 甲")
     payload = {"semantic_units": [{"unit_id": "Q1", "content": {
         "stem": {"question_label": "1"}, "options": [],
-        "blank": {"blank_label": "第1空", "question_number": "1"}}}]}
+        "blank": {"blank_label": "第1空", "question_label": "1"}}}]}
     run = resolver(lines).resolve(payload)
     # blank 无 sub_question/answer 闭合 → incomplete（段 F 之前不造闭合）。
     assert not any(s.role == "blank" for s in run.resolved_spans)
@@ -368,8 +368,8 @@ async def test_prefix_collision_answer_explanation_not_cross():
     # 只问 Q1：answer/explanation 必须各自唯一指向自身行，不得吞 10/11/12。
     payload = {"semantic_units": [{"unit_id": "Q1", "content": {
         "stem": {"question_label": "1"}, "options": [{"label": "A"}],
-        "answer": {"answer_zone": "answer_table", "question_number": "1"},
-        "explanation": {"explanation_zone": "inline_explanation", "question_number": "1"}}}]}
+        "answer": {"answer_zone": "answer_table", "question_label": "1"},
+        "explanation": {"explanation_zone": "inline_explanation", "question_label": "1"}}}]}
     run = resolver(lines).resolve(payload)
     a = next(s for s in run.resolved_spans if s.span_id == "sp-Q1.answer")
     e = next(s for s in run.resolved_spans if s.span_id == "sp-Q1.explanation")
@@ -472,9 +472,9 @@ async def test_answer_shared_line_multi_qn():
     lines = mk("1. 第一题", "A. 甲", "2. 第二题", "A. 乙", "【答案】", "1. A  2. B")
     payload = {"semantic_units": [
         {"unit_id": "Q1", "content": {"stem": {"question_label": "1"},
-          "options": [], "answer": {"answer_zone": "answer_table", "question_number": "1"}}},
+          "options": [], "answer": {"answer_zone": "answer_table", "question_label": "1"}}},
         {"unit_id": "Q2", "content": {"stem": {"question_label": "2"},
-          "options": [], "answer": {"answer_zone": "answer_table", "question_number": "2"}}}]}
+          "options": [], "answer": {"answer_zone": "answer_table", "question_label": "2"}}}]}
     run = resolver(lines).resolve(payload)
     a1 = next(s for s in run.resolved_spans if s.span_id == "sp-Q1.answer")
     a2 = next(s for s in run.resolved_spans if s.span_id == "sp-Q2.answer")
@@ -510,16 +510,16 @@ async def test_fixture_golden_composite_full_resolution():
                  {"unit_id": "Q1", "question_label": "1", "content": {
                      "stem": {"question_label": "1"},
                      "options": [{"label": "A"}, {"label": "B"}],
-                     "answer": {"answer_zone": "answer_table", "question_number": "1"},
+                     "answer": {"answer_zone": "answer_table", "question_label": "1"},
                      "explanation": {"explanation_zone": "inline_explanation",
-                                     "question_number": "1"}},
+                                     "question_label": "1"}},
                   "depends_on": [{"type": "material_dependency", "target": "material"}]},
                  {"unit_id": "Q2", "question_label": "2", "content": {
                      "stem": {"question_label": "2"},
                      "options": [{"label": "A"}, {"label": "B"}],
-                     "answer": {"answer_zone": "answer_table", "question_number": "2"},
+                     "answer": {"answer_zone": "answer_table", "question_label": "2"},
                      "explanation": {"explanation_zone": "inline_explanation",
-                                     "question_number": "2"}},
+                                     "question_label": "2"}},
                   "depends_on": [{"type": "material_dependency", "target": "material"}]},
              ],
             }
@@ -550,3 +550,35 @@ async def test_fixture_golden_repeats_consistent():
     g1 = resolver(lines).resolve(p)
     g2 = resolver(lines).resolve(p)
     assert g1 == g2  # ResolvedRun frozen 等值（确定性 golden）
+
+
+# ------------------------------------------------------------------ BUG-V3-038 contract lock
+async def test_frozen_contract_question_label_only_answer_explanation():
+    """BUG-V3-038 regression lock：严格 Frozen Schema（20 §4.5）payload——content role 的
+    answer/explanation 只带 question_label，全文不存在 question_number——Resolver 必须
+    完整解析 stem/answer/explanation。若 Resolver 再漂回读 question_number，本测试即失败
+    （answer/explanation 会因 qn=None 判 incomplete）。"""
+    lines = mk(
+        "1. 下列哪个是水果?", "A. 苹果", "B. 香蕉",
+        "【答案】", "1. A",
+        "【详解】", "1. 因为苹果是水果",
+    )
+    payload = {"semantic_units": [
+        {"unit_id": "Q1", "unit_type": "standalone_question",
+         "question_number": "1",  # unit 顶层合法字段（20 §4.5:164）
+         "content": {
+             "stem": {"role": "stem", "question_label": "1"},
+             "options": [{"label": "A", "role": "option", "question_label": "1"},
+                         {"label": "B", "role": "option", "question_label": "1"}],
+             "answer": {"role": "answer", "question_label": "1",
+                        "answer_zone": "answer_table"},
+             "explanation": {"role": "explanation", "question_label": "1",
+                             "explanation_zone": "inline_explanation"},
+         }},
+    ]}
+    run = resolver(lines).resolve(payload)
+    refs = _run_refs(run)
+    assert refs["sp-Q1.stem"] == ["P1L001"]
+    assert refs["sp-Q1.answer"] == ["P1L005"]
+    assert refs["sp-Q1.explanation"] == ["P1L007"]
+    assert not any(u.reference_id.startswith("Q1.") for u in run.unresolved_references)

@@ -43,7 +43,7 @@ def _single_payload():
     return {"semantic_units": [
         {"unit_id": "Q1", "original_question_type": "single_choice",
          "content": {"stem": {"question_label": "1"}, "options": [{"label": l} for l in "ABCD"],
-                     "answer": {"answer_zone": "answer_table", "question_number": "1"}}}]}
+                     "answer": {"answer_zone": "answer_table", "question_label": "1"}}}]}
 
 
 # ---------------------------------------------------------------- standalone
@@ -100,11 +100,11 @@ def _composite():
              {"unit_id": "Q1", "question_label": "1", "original_question_type": "single_choice",
               "content": {"stem": {"question_label": "1"},
                           "options": [{"label": l} for l in "ABC"],
-                          "answer": {"answer_zone": "answer_table", "question_number": "1"}}},
+                          "answer": {"answer_zone": "answer_table", "question_label": "1"}}},
              {"unit_id": "Q2", "question_label": "2", "original_question_type": "single_choice",
               "content": {"stem": {"question_label": "2"},
                           "options": [{"label": l} for l in "ABC"],
-                          "answer": {"answer_zone": "answer_table", "question_number": "2"}}}]}]}
+                          "answer": {"answer_zone": "answer_table", "question_label": "2"}}}]}]}
     return lines, payload
 
 

@@ -26,7 +26,7 @@ def _single_choice_payload(qn="1", original="single_choice", options=("A", "B", 
         "options": [{"label": l} for l in options],
     }
     if with_answer:
-        content["answer"] = {"answer_zone": "answer_table", "question_number": qn}
+        content["answer"] = {"answer_zone": "answer_table", "question_label": qn}
     return {"semantic_units": [{"unit_id": f"Q{qn}", "original_question_type": original,
              "content": content}]}
 
@@ -92,7 +92,7 @@ async def test_stem_unresolved_incomplete():
 async def test_choice_options_missing_incomplete():
     payload = {"semantic_units": [{"unit_id": "Q1", "original_question_type": "single_choice",
         "content": {"stem": {"question_label": "1"},
-                    "answer": {"answer_zone": "answer_table", "question_number": "1"}}}]}
+                    "answer": {"answer_zone": "answer_table", "question_label": "1"}}}]}
     ir = IRBuilder.build(_run(_ready_lines(), payload), payload, SVID, ANN_ID)
     assert ir.units[0].semantic_status == "incomplete"
 
@@ -119,11 +119,11 @@ async def test_composite_child_unresolved_not_ready():
             "sub_questions": [
                 {"unit_id": "Q1", "question_label": "1", "content": {
                     "stem": {"question_label": "1"}, "options": [{"label": "A"}, {"label": "B"}],
-                    "answer": {"answer_zone": "answer_table", "question_number": "1"}}},
+                    "answer": {"answer_zone": "answer_table", "question_label": "1"}}},
                 {"unit_id": "Q2", "question_label": "2", "content": {
                     "stem": {"question_label": "9"},  # 题号 9 不存在
                     "options": [{"label": "A"}, {"label": "B"}],
-                    "answer": {"answer_zone": "answer_table", "question_number": "2"}}},
+                    "answer": {"answer_zone": "answer_table", "question_label": "2"}}},
             ],
         }]
     }
@@ -149,10 +149,10 @@ async def test_composite_all_ready():
             "sub_questions": [
                 {"unit_id": "Q1", "question_label": "1", "content": {
                     "stem": {"question_label": "1"}, "options": [{"label": "A"}, {"label": "B"}],
-                    "answer": {"answer_zone": "answer_table", "question_number": "1"}}},
+                    "answer": {"answer_zone": "answer_table", "question_label": "1"}}},
                 {"unit_id": "Q2", "question_label": "2", "content": {
                     "stem": {"question_label": "2"}, "options": [{"label": "A"}, {"label": "B"}],
-                    "answer": {"answer_zone": "answer_table", "question_number": "2"}}},
+                    "answer": {"answer_zone": "answer_table", "question_label": "2"}}},
             ],
         }]
     }
@@ -198,7 +198,7 @@ async def test_material_dependency_unresolved_composite_incomplete():
               "depends_on": [{"type": "material_dependency", "target": "material"}],
               "content": {"stem": {"question_label": "1"},
                           "options": [{"label": "A"}, {"label": "B"}],
-                          "answer": {"answer_zone": "answer_table", "question_number": "1"}}}]}]}
+                          "answer": {"answer_zone": "answer_table", "question_label": "1"}}}]}]}
     ir = IRBuilder.build(_run(lines, payload), payload, SVID, ANN_ID)
     assert ir.units[0].semantic_status == "incomplete"  # material span 未 resolved
 
@@ -220,7 +220,7 @@ async def test_composite_child_missing_answer_propagates_incomplete():
              {"unit_id": "Q1", "question_label": "1",
               "content": {"stem": {"question_label": "1"},
                           "options": [{"label": "A"}, {"label": "B"}],
-                          "answer": {"answer_zone": "answer_table", "question_number": "1"}}},
+                          "answer": {"answer_zone": "answer_table", "question_label": "1"}}},
              {"unit_id": "Q2", "question_label": "2",
               "content": {"stem": {"question_label": "2"},
                           "options": [{"label": "A"}, {"label": "B"}]}}]}]}  # Q2 无 answer
@@ -234,7 +234,7 @@ async def test_declared_image_fail_loud_incomplete():
     payload = {"semantic_units": [{"unit_id": "Q1", "original_question_type": "single_choice",
         "content": {"stem": {"question_label": "1"},
                     "options": [{"label": "A"}, {"label": "B"}],
-                    "answer": {"answer_zone": "answer_table", "question_number": "1"},
+                    "answer": {"answer_zone": "answer_table", "question_label": "1"},
                     "image": {"image_ref": {"figure_id": "fig1"}}}}]}
     ir = IRBuilder.build(_run(lines, payload), payload, SVID, ANN_ID)
     assert ir.units[0].semantic_status == "incomplete"  # fail-loud，非 ready + 丢图

@@ -38,7 +38,7 @@ def _single_payload(ctype="single_choice"):
         {"unit_id": "Q1", "original_question_type": ctype,
          "content": {"stem": {"question_label": "1"},
                      "options": [{"label": l} for l in "ABCD"],
-                     "answer": {"answer_zone": "answer_table", "question_number": "1"}}}]}
+                     "answer": {"answer_zone": "answer_table", "question_label": "1"}}}]}
 
 
 def _pipeline(lines, payload, root_unit_id="Q1"):
@@ -88,7 +88,7 @@ def test_fill_in_pending():
     payload = {"semantic_units": [
         {"unit_id": "Q1", "original_question_type": "fill_in",
          "content": {"stem": {"question_label": "1"},
-                     "answer": {"answer_zone": "answer_table", "question_number": "1"}}}]}
+                     "answer": {"answer_zone": "answer_table", "question_label": "1"}}}]}
     root, ir, snap, run = _pipeline(lines, payload)
     d = _decision(root, ir, snap, run)
     assert d["decision"] == "pending_review"
@@ -186,12 +186,12 @@ def _composite_payload(sub2_type="single_choice"):
              {"unit_id": "Q1", "question_label": "1", "original_question_type": "single_choice",
               "content": {"stem": {"question_label": "1"},
                           "options": [{"label": l} for l in "ABC"],
-                          "answer": {"answer_zone": "answer_table", "question_number": "1"}}},
+                          "answer": {"answer_zone": "answer_table", "question_label": "1"}}},
              {"unit_id": "Q2", "question_label": "2",
               "original_question_type": sub2_type,
               "content": {"stem": {"question_label": "2"},
                           "options": [{"label": l} for l in "ABC"],
-                          "answer": {"answer_zone": "answer_table", "question_number": "2"}}}]}]}
+                          "answer": {"answer_zone": "answer_table", "question_label": "2"}}}]}]}
 
 
 def test_composite_all_sub_ready_auto():
@@ -245,10 +245,10 @@ def test_two_standalone_units_decide_independently():
     payload = {"semantic_units": [
         {"unit_id": "Q1", "original_question_type": "single_choice",
          "content": {"stem": {"question_label": "1"}, "options": [{"label": "A"}, {"label": "B"}],
-                     "answer": {"answer_zone": "answer_table", "question_number": "1"}}},
+                     "answer": {"answer_zone": "answer_table", "question_label": "1"}}},
         {"unit_id": "Q2", "original_question_type": "single_choice",
          "content": {"stem": {"question_label": "2"}, "options": [{"label": "A"}, {"label": "B"}],
-                     "answer": {"answer_zone": "answer_table", "question_number": "2"}}},
+                     "answer": {"answer_zone": "answer_table", "question_label": "2"}}},
     ]}
     run = SourceResolver(source_version_id=SVID, lines=lines).resolve(payload)
     ir = IRBuilder.build(run, payload, SVID, ANN_ID)

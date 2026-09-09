@@ -483,7 +483,7 @@ class SourceResolver:
     def _answer_span(self, out, unit_id, t):
         qn = t.question_number
         if not qn:
-            out.add_unresolved(t, "incomplete", ("answer needs question_number",))
+            out.add_unresolved(t, "incomplete", ("answer needs question_label",))
             return
         # 答案区：答案表头后、详解/解析表头前的行。qnbounded entry（题号 token+分隔）。
         entries: list[tuple[str, int, int]] = []

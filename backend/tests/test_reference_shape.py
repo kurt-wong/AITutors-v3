@@ -11,7 +11,7 @@ def _payload(content_extra):
         "content": {
             "stem": {"question_label": "1"},
             "options": [{"label": "A"}, {"label": "B"}],
-            "answer": {"answer_zone": "answer_table", "question_number": "1"},
+            "answer": {"answer_zone": "answer_table", "question_label": "1"},
             **content_extra,
         },
     }]}

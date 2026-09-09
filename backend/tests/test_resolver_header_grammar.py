@@ -103,7 +103,7 @@ def test_resolver_question_containing_answer_not_misjudged():
         {"unit_id": "Q1", "original_question_type": "single_choice",
          "content": {"stem": {"question_label": "1"},
                      "options": [{"label": "A"}, {"label": "B"}],
-                     "answer": {"answer_zone": "answer_table", "question_number": "1"}}}]}
+                     "answer": {"answer_zone": "answer_table", "question_label": "1"}}}]}
     run = SourceResolver(source_version_id=uuid.uuid4(), lines=lines).resolve(payload)
     answers = [s for s in run.resolved_spans if s.role == "answer"]
     assert answers == [], "题干含「答案」不应产生指向题干的 answer span（E 可以失败不能猜）"

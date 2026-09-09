@@ -30,7 +30,7 @@ def _standalone_payload():
     return {"semantic_units": [{"unit_id": "Q1", "original_question_type": "single_choice",
         "content": {"stem": {"question_label": "1"},
                     "options": [{"label": l} for l in "ABCD"],
-                    "answer": {"answer_zone": "answer_table", "question_number": "1"}}}]}
+                    "answer": {"answer_zone": "answer_table", "question_label": "1"}}}]}
 
 
 def _compile(lines, payload):
@@ -66,10 +66,10 @@ async def test_occurrence_and_dedup_differ_fp3():
     payload = {"semantic_units": [
         {"unit_id": "Q1", "original_question_type": "single_choice",
          "content": {"stem": {"question_label": "1"}, "options": [{"label": "A"}, {"label": "B"}],
-                     "answer": {"answer_zone": "answer_table", "question_number": "1"}}},
+                     "answer": {"answer_zone": "answer_table", "question_label": "1"}}},
         {"unit_id": "Q2", "original_question_type": "single_choice",
          "content": {"stem": {"question_label": "2"}, "options": [{"label": "A"}, {"label": "B"}],
-                     "answer": {"answer_zone": "answer_table", "question_number": "2"}}},
+                     "answer": {"answer_zone": "answer_table", "question_label": "2"}}},
     ]}
     snap = _compile(lines, payload)
     q1, q2 = snap.leaves[0], snap.leaves[1]
@@ -117,7 +117,7 @@ async def test_shared_material_compiled_once_fp2():
                     {"unit_id": "Q1", "question_label": "1", "content": {
                         "stem": {"question_label": "1"},
                         "options": [{"label": "A"}, {"label": "B"}],
-                        "answer": {"answer_zone": "answer_table", "question_number": "1"}}}
+                        "answer": {"answer_zone": "answer_table", "question_label": "1"}}}
                 ],
             }
         ]}
