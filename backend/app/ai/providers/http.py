@@ -27,7 +27,7 @@ class HTTPLLMProvider:
         self,
         *,
         name: str,
-        api_key: str,
+        api_key: str | None = None,
         base_url: str,
         model: str,
         timeout: float,
@@ -47,12 +47,18 @@ class HTTPLLMProvider:
     async def complete(self, prompt: str) -> str:
         resp = None
         last_transport_error: httpx.TransportError | None = None
+        # I-1-A：条件 Authorization 头——api_key 非空才发，空/None 完全不发（Ollama 无 key，
+        # 不伪造 Bearer）。I-1-A：trust_env=False——不读系统/环境代理，防 Windows 本地代理
+        # （如 127.0.0.1:55219）劫持 localhost 直连。
+        headers: dict[str, str] = {}
+        if self._api_key:
+            headers["Authorization"] = f"Bearer {self._api_key}"
         for _ in range(self._http_retry_count + 1):
             try:
-                async with httpx.AsyncClient(timeout=self._timeout) as client:
+                async with httpx.AsyncClient(timeout=self._timeout, trust_env=False) as client:
                     resp = await client.post(
                         f"{self._base_url}/chat/completions",
-                        headers={"Authorization": f"Bearer {self._api_key}"},
+                        headers=headers,
                         json={"model": self._model, "messages": [{"role": "user", "content": prompt}]},
                     )
             except httpx.TransportError as exc:

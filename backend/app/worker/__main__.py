@@ -11,10 +11,9 @@ import argparse
 import asyncio
 import uuid
 
-from app.ai.gateway import LLMGateway
+from app.ai.gateway import build_gateway
 from app.ai.live_guard import add_allow_live_arg, set_allow_live
 from app.ai.ocr.providers import NativeTextProvider
-from app.core.config import settings
 from app.db.session import async_session_maker
 from app.domains.task.executor import TaskExecutor
 from app.domains.task.service import TaskService
@@ -38,7 +37,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 async def _run(args: argparse.Namespace) -> None:
     set_allow_live(args.allow_live)
-    gateway = LLMGateway(settings.llm_gateway_mode, allow_live=args.allow_live)
+    gateway = build_gateway(allow_live=args.allow_live)
     executor = TaskExecutor(
         async_session_maker,
         llm_gateway=gateway,

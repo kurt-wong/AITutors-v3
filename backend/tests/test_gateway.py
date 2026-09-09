@@ -6,8 +6,10 @@ B-1（独立对抗审查）缺 counter/task_id → fail-closed。live allowed �
 
 import pytest
 
-from app.ai.gateway import LLMGateway
+from app.ai.gateway import LLMGateway, build_gateway
+from app.ai.providers.http import HTTPLLMProvider
 from app.ai.providers.mock import MockLLMProvider
+from app.core.config import settings
 from app.core.errors import GatewayDeniedError, GatewayDisabledError
 
 
@@ -155,3 +157,35 @@ async def test_live_denied_unregistered_provider_not_silently_primary() -> None:
     with pytest.raises(GatewayDeniedError):
         await g.complete("x", task_id="t1", invocation_counter=counter, provider="missing")
     assert calls == []  # primary 从未被静默调用（identity 漂移已封死）
+
+
+# ---- I-1-B：build_gateway 工厂接线（live 注入 HTTPLLMProvider；非 live 不注入） ----
+
+
+def test_build_gateway_live_injects_http_provider(monkeypatch) -> None:
+    """I-1-B：allow_live=True + mode=live → Factory 实际构造并注入 HTTPLLMProvider(Ollama)，
+    timeout/base_url/model 从 settings 显式注入。"""
+    monkeypatch.setattr(settings, "llm_gateway_mode", "live")
+    monkeypatch.setattr(settings, "ollama_base_url", "http://localhost:11434/v1")
+    monkeypatch.setattr(settings, "ollama_model", "qwen3.5:4b")
+    monkeypatch.setattr(settings, "llm_request_timeout_seconds", 30.0)
+    gw = build_gateway(allow_live=True, task_context="t", budget_ok=True)
+    assert isinstance(gw._live_provider, HTTPLLMProvider)
+    assert gw._live_provider.name == "ollama"
+    assert gw._live_provider._base_url == "http://localhost:11434/v1"
+    assert gw._live_provider._model == "qwen3.5:4b"
+    assert gw._live_provider._timeout == 30.0
+
+
+def test_build_gateway_mock_no_live_provider(monkeypatch) -> None:
+    """I-1-B：mode=mock → 不构造/注入 live provider。"""
+    monkeypatch.setattr(settings, "llm_gateway_mode", "mock")
+    gw = build_gateway(allow_live=True)
+    assert gw._live_provider is None
+
+
+def test_build_gateway_disabled_no_live_provider(monkeypatch) -> None:
+    """I-1-B：mode=disabled → 不构造/注入 live provider。"""
+    monkeypatch.setattr(settings, "llm_gateway_mode", "disabled")
+    gw = build_gateway(allow_live=False)
+    assert gw._live_provider is None

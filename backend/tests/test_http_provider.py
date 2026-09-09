@@ -259,3 +259,39 @@ async def test_http_retry_count_zero_success_single_attempt(monkeypatch) -> None
     out = await _provider(http_retry_count=0).complete("q")
     assert out == "ok"
     assert len(calls) == 1
+
+
+# ---- I-1-A：条件 Authorization 头 + trust_env=False ----
+
+
+async def test_conditional_auth_header_and_trust_env(monkeypatch) -> None:
+    """I-1-A：api_key 非空才发 Authorization 头；空/None 不发（Ollama 无 key 不伪造 Bearer）；
+    AsyncClient 用 trust_env=False（不读系统/环境代理，防 localhost 被代理劫持）。"""
+    captured: dict = {}
+
+    class _CapturingClient:
+        def __init__(self, *args, **kwargs) -> None:
+            captured["client_kwargs"] = kwargs
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args) -> bool:
+            return False
+
+        async def post(self, url, **kwargs):
+            captured["post_kwargs"] = kwargs
+            return _FakeResponse(status=200, content="ok")
+
+    monkeypatch.setattr(httpx, "AsyncClient", _CapturingClient)
+
+    # 非空 key → 有 Authorization 头 + trust_env=False
+    p = HTTPLLMProvider(name="x", api_key="k", base_url="http://localhost", model="m", timeout=1.0)
+    assert await p.complete("q") == "ok"
+    assert captured["post_kwargs"]["headers"].get("Authorization") == "Bearer k"
+    assert captured["client_kwargs"].get("trust_env") is False
+
+    # 空 key（None）→ 无 Authorization 头
+    p2 = HTTPLLMProvider(name="x", api_key=None, base_url="http://localhost", model="m", timeout=1.0)
+    assert await p2.complete("q") == "ok"
+    assert "Authorization" not in captured["post_kwargs"]["headers"]

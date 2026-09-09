@@ -8,6 +8,7 @@ Invocation 次数计，非 gateway.complete 层。mock/disabled 不计数。
 """
 
 from app.ai.live_guard import require_allow_live
+from app.ai.providers.http import HTTPLLMProvider
 from app.ai.providers.mock import MockLLMProvider
 from app.core.config import settings
 from app.core.errors import GatewayDeniedError, GatewayDisabledError
@@ -97,7 +98,32 @@ class LLMGateway:
         return self._live_provider
 
 
-def build_gateway() -> LLMGateway:
-    """从配置建 Gateway：disabled/mock 不构造 live provider；live 才需要凭证。"""
+def build_gateway(
+    *,
+    allow_live: bool = False,
+    task_context: object | None = None,
+    budget_ok: bool = False,
+) -> LLMGateway:
+    """从配置建 Gateway（I-1-B）：live 模式从 settings 构造 HTTPLLMProvider（Ollama）。
+
+    disabled/mock 不构造 live provider；live 才构造。timeout 由本 factory 显式从
+    settings.llm_request_timeout_seconds 注入（Provider 保持 infrastructure 组件、
+    不自行读全局 Settings）。Ollama 无 key → api_key=None → 条件头不发 Authorization。
+    """
     mode = settings.llm_gateway_mode
-    return LLMGateway(mode)
+    live_provider = None
+    if mode == "live":
+        live_provider = HTTPLLMProvider(
+            name="ollama",
+            api_key=None,
+            base_url=settings.ollama_base_url,
+            model=settings.ollama_model,
+            timeout=settings.llm_request_timeout_seconds,
+        )
+    return LLMGateway(
+        mode,
+        allow_live=allow_live,
+        task_context=task_context,
+        budget_ok=budget_ok,
+        live_provider=live_provider,
+    )
