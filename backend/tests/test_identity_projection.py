@@ -123,3 +123,36 @@ def test_confidence_absent_remains_backward_compatible() -> None:
     p2 = _payload(_unit(confidence=0.98))
     _annotation_identity_projection(p2)
     assert p2["semantic_units"][0]["confidence"] == 0.98
+
+
+def test_nested_confidence_is_not_silently_projected() -> None:
+    """锁定 projection 精确边界：嵌套 confidence 不被剥离（Identity Projection Rule）。
+
+    projection 只剔除 semantic_units[*].confidence（unit 顶层），不做递归剥离。
+    嵌套 confidence=float → BUG-V3-005 fail-fast；嵌套 confidence=str → 参与 identity。
+    此测试不是支持嵌套 confidence，而是防止未来误以为 confidence 应被全局删除。
+    """
+    # nested confidence=float → canonical_json fail-fast（BUG-V3-005 红线）
+    p_float = _payload(_unit())
+    p_float["semantic_units"][0]["content"]["stem"]["confidence"] = 0.99
+    projected = _annotation_identity_projection(p_float)
+    # projection 不剥嵌套 —— float 仍在 → hash 时 fail-fast
+    assert projected["semantic_units"][0]["content"]["stem"]["confidence"] == 0.99
+    with pytest.raises(ValueError, match="float forbidden"):
+        sha256_hex(projected)
+
+    # nested confidence=str → 参与 identity（不被剥离）
+    p_str_a = _payload(_unit())
+    p_str_a["semantic_units"][0]["content"]["stem"]["confidence"] = "high"
+    p_str_b = _payload(_unit())
+    p_str_b["semantic_units"][0]["content"]["stem"]["confidence"] = "low"
+    ha = sha256_hex(_annotation_identity_projection(p_str_a))
+    hb = sha256_hex(_annotation_identity_projection(p_str_b))
+    assert ha != hb  # 不同 nested confidence → 不同 identity（诚实行为）
+
+    # unit 顶层 confidence 仍被剥离（精确 boundary 不变）
+    p_top = _payload(_unit(confidence=0.98))
+    p_top["semantic_units"][0]["content"]["stem"]["confidence"] = "high"
+    projected_top = _annotation_identity_projection(p_top)
+    assert "confidence" not in projected_top["semantic_units"][0]  # top stripped
+    assert projected_top["semantic_units"][0]["content"]["stem"]["confidence"] == "high"  # nested kept

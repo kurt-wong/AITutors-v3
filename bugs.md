@@ -618,6 +618,132 @@
   `HTTPLLMProvider.__init__` 加 `if < 0: raise ValueError` 构造 fail-fast。+6 test（2 Settings
   validation + 2 构造 fail-fast + 2 retry=0 边界）；全量 350 passed。commit `7ace837`。
 
+### BUG-V3-037 — Live Long-Running Stage Lease Loss（Annotation 阶段持续 Heartbeat）
+- Status: Open
+- 登记：2026-09-09 13:49:47
+- 现象：I-1-D live smoke 实证——真实 Ollama 数据面闭环成功（`audit provider=ollama/
+  model=qwen3.5:4b/status=completed`、`budget settled used=1`、`annotation valid=1`），但
+  `TaskExecutor._process` 只在 stage 边界续租（`_heartbeat` 三处），annotation stage 内一次
+  真实 LLM 网络调用（~300s cold-load）期间无 heartbeat。`task_claim_lease_seconds=60` < 300s →
+  lease 在 LLM 调用中途过期 → 调用返回后边界 `_heartbeat` 抛 `LeaseConflict`（`lease_expires_at
+  > now()` 条件不满足）→ `_fail_task` 亦 `LeaseConflict` → 打日志 `"lease already lost"` → Task
+  卡 `running` 交 recover 置 `interrupted`。下游 Candidate/Gate/Question/Instance=0 为级联失败
+  （compile 未跑到），非独立缺陷。
+- 根因：`long-running external await exceeds Task Lease without lease renewal`——runtime
+  ownership layer 缺「长阻塞 stage 内持续续租」能力（`executor.py` 旧注释早已点名「持续
+  heartbeat 属 Phase 9+/live smoke」的 deferred 项）。
+- 处置：方案 2（用户裁决，不延长 lease）——新增 `TaskExecutor._lease_heartbeat`
+  （`@asynccontextmanager` 后台 renew loop，周期 = `resolved_lease_seconds/4`，严格 < lease），
+  `_process` 用 `async with` 包裹 `_annotation_stage` 调用。只做 liveness renewal（复用
+  `_heartbeat`，独立 session + commit，DB now() 单源），不改 Attempt/Gateway/Provider/Budget/
+  Prompt/Annotation Schema。异常语义（R5）：`LeaseConflict`（lease 真丢失）→ 停循环 + 边界
+  fail-loud；其它 `Exception`（瞬时 DB 故障）→ 下一 tick 重试；`CancelledError` → 静默退出。
+  `finally` 保证 loop cancel + await，无 orphan。不 cancel 在途 LLM 调用（避免与 BUG-V3-035
+  fallback/cancellation 契约交叉）。Compile stage（M1 确定性无 LLM）暂不接入；Cloud OCR 待 I-2。
+- 验收：① targeted（test_task_executor.py 18 passed）+ full regression 全绿；② live smoke
+  12 层 Hard Gate 全 PASS（Task succeeded + Candidate/Gate/Question/Instance 由 lease 存活而
+  跑通 + audit provider=ollama + budget settled + replay 零重复）；③ 新增 5 测试：长 annotation
+  保持 lease（lease=1s + LLM 2.5s → succeeded）、lease 被 recover 接管 → 精确 interrupted、
+  LLM 异常 → failed 且 heartbeat 清理、CancelledError 传播、`_lease_heartbeat` context 退出后
+  loop done()（无 orphan）。
+- **Implemented（2026-09-09 14:58）**：lease 修复完成并验证——`_lease_heartbeat` 原语已实装
+  （`executor.py`），targeted（test_task_executor.py）18 passed + 全量 pytest **426 passed**
+  （零回归）；live smoke 核心层 PASS（Task succeeded / outcome=succeeded / audit ollama
+  completed / budget settled / annotation valid / replay 零重复），Task 不再卡 running。**但
+  验收②「12 层 Hard Gate 全 PASS」未达成**：Candidate/Gate/Question/Instance 仍 = 0，根因非
+  lease，而是 BUG-V3-038（Resolver 字段漂移）+ smoke fixture `[Answer]` 英文表头，级联阻断
+  compile。lease 缺陷本体已关闭，全链路验收由 BUG-V3-038 承接。
+
+### BUG-V3-038 — Resolver answer/explanation 字段漂移（question_number vs question_label）
+- Status: Resolved
+- 登记：2026-09-09 14:58
+- 现象：live smoke 修复 lease 后 Task 成功跑到 compile，但 Candidate/Question/Instance = 0。
+  定位：真实 Qwen 输出的 answer 用 `question_label`（符合 Frozen Schema + I-0-1 prompt），但
+  Resolver `_answer_target` / `_explanation_target`（`reference.py`）读的是
+  `answer["question_number"]` → 读到 None → answer 判 `incomplete`（"answer needs
+  question_number"）→ 无 candidate。stem/options 的 `_stem_target` / `_option_target` 正确读
+  `question_label`，唯 answer/explanation 错。
+- 根因：跨层契约漂移。Frozen Schema（20 §4.5 line 169 + line 204-205「术语统一用
+  question_label，不用 question_number」）规定 content 角色（stem/options/answer/explanation）
+  用 `question_label`；`question_number` 只属 unit 顶层字段。Resolver 对 answer/explanation
+  误读了顶层字段名。
+- 佐证：mock fixture（`_single_units()` 等）也用 `question_number`，与 Resolver bug 一致，故
+  mock 测试「碰巧」通过——正是「Schema Source of Truth ≠ test fixture」要防的漂移。
+- 处置（用户裁决 2026-09-09）：① Resolver `_answer_target` / `_explanation_target` 改读
+  `question_label`，**禁止 alias fallback**（不写 `data.get("question_label") or
+  data.get("question_number")`）；`ResolveTarget.question_number` 数据类字段名保留（E 域内部
+  表示，重命名超范围）。② 9 个 mock fixture 文件 content-role 字段迁移
+  （`test_gate_service` / `test_ir` / `test_resolver` / `test_compiler` / `test_gate_policy` /
+  `test_gate_payload` / `test_admission` / `test_reference_shape` /
+  `test_resolver_header_grammar`）；unit 顶层 `question_number` 合法保留。③ 新增 strict
+  contract 回归锁 `test_frozen_contract_question_label_only_answer_explanation`：payload 仅带
+  `question_label`、全文无 `question_number` → Resolver 必须完整解析 stem/answer/explanation。
+  ④ `resolver.py:486` 诊断文案 `"answer needs question_number"` → `"answer needs
+  question_label"`。
+- 验收（2026-09-09 18:09 全部达成）：targeted（resolver/ir/compiler/gate/admission 等）
+  154 passed；全量 pytest **433 passed**；live smoke 12 层 Hard Gate **全 PASS**
+  （Task succeeded + Candidate + Gate approved + Question=1 + Instance=1 + audit ollama
+  completed + budget settled + replay 零重复）——答案 span 由 incomplete 恢复 exact。
+- **Resolved（2026-09-09 18:09:30）**：生产契约 bug 本体关闭。smoke fixture 中文表头 +
+  【详解】区属 harness correction（独立 commit），不计入本 BUG 根因。
+- 关联（非独立编号）：smoke fixture 第二阻塞——`_SMOKE_LINES` 用英文 `[Answer]`，但 frozen
+  `is_answer_header`（BUG-V3-031）只认中文（`答案`/`参考答案`/`【答案】`）。harness 修复 =
+  改 `【答案】` + `_make_pdf` 加 `fontname="china-s"`（PyMuPDF 中文渲染）。非生产 bug。第三
+  阻塞——模型声明 `explanation` 而源无【详解】区 → Resolver fail-loud 判 missing（行为正确）
+  → IR incomplete。harness 修复 = `_SMOKE_LINES` 补【详解】区（用户裁决 A）；同时 prompt
+  新增 explanation 源证据约束（用户裁决 B，独立 Prompt Contract 修复，不计入本 BUG）。
+
+### BUG-V3-039 — Diagnostic Metadata Leaks into Compile Identity
+- Status: Resolved
+- 登记：2026-09-09 18:09:30
+- 现象：BUG-V3-038 修复 + smoke fixture 补【详解】后，live smoke 仍 Task failed：
+  `error_type=validation_error`，
+  `error_detail=float forbidden in canonical identity input (BUG-V3-005)`。真实 Qwen 输出
+  unit 顶层 `confidence: 0.98`（float）→ `gate/service.py` 的 `sha256_hex(ann.payload)` 三处
+  （`_compile_input_domain` :190、`_input_identity` :206/:208）→ `hashing.canonical_json` →
+  `_reject_float` fail-fast → compile stage 抛 ValueError → Task failed，Candidate/Gate/
+  Question/Instance 全 0。
+- 根因：诊断元数据泄漏进 Compile identity 边界。Frozen Spec（20 §4.5:172 confidence 示例 /
+  §8.1:568 / P1-6:768）明确 confidence 是诊断元数据（annotation_meta），**不作 decision
+  触发**——因此不应进入 canonical identity。两层危害：① 真实 float 直接击穿 BUG-V3-005
+  fail-fast；② 即便规范化为 str，confidence 波动（0.98→0.97）也会改变
+  `annotation_payload_hash` → compile LE identity 漂移 → artifact 复用/幂等被诊断噪声破坏。
+- 佐证：`backend/tests` 全目录零 `confidence` 字段（Grep 确认）——mock fixture 与真实模型
+  输出再次不一致，与 BUG-V3-038 同类的 cross-layer drift，这次落在 identity 层。prompt 示例
+  本身写着 `"confidence": 0.98`，是模型照抄来源（已连续两次暴露「示例塑形小模型输出」模式：
+  explanation 凭空声明 + confidence float）。
+- 处置（用户裁决 2026-09-09，修法 C1）：① 建立**单一** identity projection 边界
+  `gate/service.py::_annotation_identity_projection`——仅剔除 `semantic_units[]` 各 unit 顶层
+  `confidence` 一个键，其余字段原样保留；不删 unknown fields、不过滤其它 float（BUG-V3-005
+  红线不动）；不 mutate 入参。三处 hash 输入全部复用同一 helper，避免「hash A 排除、hash B
+  忘排」。② prompt 示例删除 `"confidence": 0.98`（减噪，**不**新增「禁止输出 confidence」
+  规则——架构正确性不依赖 prompt 保证数据完美；若模型仍输出 confidence，identity 层已隔离）。
+  ③ 不在三处分别 `pop()`；不引入 annotation_meta 重构（未来 schema evolution 另议）。
+- 验收（2026-09-09 18:09 全部达成）：新增 5 类回归锁
+  （`tests/test_identity_projection.py`）——`confidence_float_does_not_break_compile_identity`
+  / `confidence_change_does_not_change_compile_identity`（核心：0.98→0.97 identity 不变）/
+  `semantic_change_still_changes_identity` / `other_float_still_fails_fast`（BUG-V3-005 反向
+  锁，防「confidence 不进 identity」演化成「identity 自动接受 float」）/
+  `confidence_absent_remains_backward_compatible`。targeted 59 passed；全量 **433 passed**；
+  live smoke 12 层 Hard Gate **全 PASS**。
+- **Resolved（2026-09-09 18:09:30）**：Phase I live data plane 四层阻断全部关闭（I-0-1
+  prompt contract → BUG-V3-037 lease → BUG-V3-038 field drift → BUG-V3-039 identity
+  leakage）。
+- Review scope 提示（非本 BUG 施工范围）：Post-Implementation Gate Review 应专项检查所有
+  identity-bearing production path 是否存在「测试 fixture 未覆盖、真实模型可能生成」的字段。
+- **Identity Projection Rule（Post-Implementation Gate Review 契约固化，2026-09-09）**：
+  ```
+  _annotation_identity_projection 仅剔除: semantic_units[*].confidence（unit 顶层）
+  不做递归 confidence 剥离。
+  不做 unknown-field 剥离。
+  不做通用 float 归一化。
+  嵌套 confidence=float → BUG-V3-005 fail-fast（红线不动）。
+  嵌套 confidence=str  → 参与 identity（精确 boundary 的诚实行为）。
+  其余字段按 canonical_json 原规则处理。
+  ```
+  反向锁：`test_nested_confidence_is_not_silently_projected`
+  （`tests/test_identity_projection.py`）。
+
 ## Resolved Bugs
 
 （暂无。）
