@@ -1115,3 +1115,21 @@ Date: 2026-09-05
 - **No blocking defects remain.**
 - **Git**：tag `v3-phase-i2-closed`；Closure 文档
   `Docs/V3_SPEC/Closure/PHASE_I2_REVISION_CLOSURE.md`。
+
+### 2026-09-09 22:30:00（Phase I-2C CLOSED — Resolver Diagnostic + 真实 PDF 失败模式确认）
+
+- **Status: Phase I-2C CLOSED**。Resolver 可观测性建立，真实失败模式确认。
+- **Completed**：
+  - BUG-V3-043 figures 注入修复（`5f8a3a8`）
+  - Resolver Diagnostic Layer（`diagnostic.py`，15 tests）
+  - 真实 PDF 诊断数据采集（`8267bfd`）
+- **核心发现**：85/85 unresolved 为 `marker_ambiguous`（非 `marker_not_found`）。
+  根因 = 题号/选项标签在数学 PDF 中出现 190+ 次，Resolver 单行 marker 匹配无法唯一确定。
+- **架构判断**：Resolver fail-loud 行为符合 V3 invariant（宁可拒绝确定，不允许错误定位）。
+  失败不是 Resolver bug，是 Source Provider Layer layout reconstruction 能力缺失。
+- **BUG 状态**：
+  - BUG-V3-043（figures 注入缺失）：Resolved
+  - BUG-V3-041（Mathematical Layout Fragmentation）：Deferred → Phase I-3
+- **Decision**：Resolver robustness enhancement deferred。下一阶段 = **Phase I-3 Source
+  Provider Layer Evaluation**（评估 native/OCR/hybrid provider 对数学试卷的结构恢复能力）。
+- **文档**：`Docs/V3_SPEC/Closure/PHASE_I2C_CLOSURE.md` + `PHASE_I2C_DIAGNOSTIC_REPORT.json`。

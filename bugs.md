@@ -762,7 +762,7 @@
   编码显示问题。
 
 ### BUG-V3-041 — Mathematical Layout Fragmentation (Resolver Bottleneck)
-- Status: Deferred
+- Status: Deferred → Phase I-3
 - 登记：2026-09-09 20:30:00
 - 现象：数学 PDF 中公式/表达式被 native extraction 物理拆散到多行，Resolver 无法建立语义 span。
 - 示例：
@@ -778,10 +778,22 @@
   这是 Mathematical Document Understanding 问题，非 OCR 问题。
 - 影响：Resolver 成为 Phase I-2 瓶颈（17 resolved / 85 unresolved）。Resolver 无法可靠重建
   semantic spans。
+- **Phase I-2C 诊断确认（2026-09-09）**：85/85 unresolved 为 `marker_ambiguous`（非
+  `marker_not_found`）。根因 = 题号/选项标签在数学 PDF 中出现 190+ 次，Resolver 单行 marker
+  匹配无法唯一确定。**这是 Source Provider Layer layout reconstruction 能力缺失，不是 Resolver
+  bug。** Resolver fail-loud 行为符合 V3 invariant（宁可拒绝确定，不允许错误定位）。
 - **裁决**：Not a Source layer defect。Source 保持 immutable factual extraction。
-  Future handling 归属 Resolver semantic reconstruction layer。
-- 目标阶段：Phase I-2C Resolver Robustness Validation。
-- 验收：Resolver 能正确处理布局碎片，或诚实报告 ambiguous/incomplete。
+  Future handling 归属 **Phase I-3 Source Provider Layer Evaluation**。
+- 验收：Phase I-3 评估 native/OCR/hybrid provider 对数学试卷的结构恢复能力。
+
+### BUG-V3-043 — GateService figures 注入缺失
+- Status: Resolved
+- 登记：2026-09-09
+- 现象：`GateService.run()` 创建 `SourceResolver` 时未传 `figures` 参数。
+- 影响：所有 image reference 恒返回 `ambiguous`，图片题无法进入 Compile。
+- 修复：加载 `source_figures` 并转换为 `SourceFigureView` 传入 Resolver。
+- 验证：52 passed（gate + resolver + dbflow），零回归。
+- **Resolved（2026-09-09）**：commit `5f8a3a8`。
 
 ### BUG-V3-042 — PUA False Positive in Source Quality Gate
 - Status: Resolved
