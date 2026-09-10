@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+@theme {
+  /* Colors — UI.md v1.1 */
+  --color-primary: #0066cc;
+  --color-primary-on-dark: #2997ff;
+  --color-canvas: #ffffff;
+  --color-canvas-parchment: #f5f5f7;
+  --color-surface-pearl: #fafafc;
+  --color-surface-tile: #272729;
+  --color-ink: #1d1d1f;
+  --color-ink-muted: #7a7a7a;
+  --color-body-muted: #cccccc;
+  --color-hairline: #e0e0e0;
+
+  /* Radius — UI.md §2.3 */
+  --radius-sm: 8px;
+  --radius-lg: 18px;
+  --radius-pill: 9999px;
+
+  /* Typography — UI.md §2.2 */
+  --font-display: "SF Pro Display", system-ui, -apple-system, BlinkMacSystemFont, Inter, sans-serif;
+  --font-text: "SF Pro Text", system-ui, -apple-system, BlinkMacSystemFont, Inter, sans-serif;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-text);
+  font-size: 17px;
+  font-weight: 400;
+  color: var(--color-ink);
+  background: var(--color-canvas);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+}
+
+#root {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
