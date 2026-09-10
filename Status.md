@@ -1133,3 +1133,38 @@ Date: 2026-09-05
 - **Decision**：Resolver robustness enhancement deferred。下一阶段 = **Phase I-3 Source
   Provider Layer Evaluation**（评估 native/OCR/hybrid provider 对数学试卷的结构恢复能力）。
 - **文档**：`Docs/V3_SPEC/Closure/PHASE_I2C_CLOSURE.md` + `PHASE_I2C_DIAGNOSTIC_REPORT.json`。
+
+### 2026-09-09 23:59:00（Phase I-3 CLOSED — Source Evidence Preservation Layer）
+
+- **Status: Phase I-3 CLOSED. Gate PASS**。Source Evidence Preservation Layer 实现正确，
+  架构基础闭环完成：`Source Provider → Source Evidence → Immutable Storage → Replay Verification`。
+- **Completed**：
+  - I-3-0: 评估文档冻结（`f15dfb2`）
+  - I-3-1: SourceSpan 定义 + NativeTextProvider span 提取（`a9c32f3`）
+  - I-3-2: 存储决策冻结——独立表 `document_source_spans`（`c42b8dc`）
+  - I-3-3: document_source_spans 表 + seal 持久化（`9645a81`）
+  - I-3-4: FK 违例修复（`6ec69df`）
+  - I-3-5: 对抗性审查（10 维度，9/10 PASS + 1 CRITICAL 已修复）
+  - I-3-6: Closure 文档 + 架构护栏（本 commit）
+- **核心交付**：`SourceSpan` frozen dataclass（seq/text/font/size/flags/bbox/origin/span_hash），
+  `NativeTextProvider` 从 PyMuPDF `get_text("dict")` 提取完整 span metadata，经 SealService
+  持久化到 `document_source_spans` 表。span_hash = SHA256(text+font+size+flags+bbox+origin)，
+  描述 layout evidence identity（非 semantic equality）。
+- **对抗性审查结果**：Data Integrity / Deterministic Extraction / Span Ordering / Layout Loss
+  Audit / Provider Round-Trip / Backward Compatibility / Migration Safety / V3SPEC Compliance /
+  No Resolver Changes = 9 PASS；Seal Persistence = FAIL→已修复（FK 违例）。
+- **Gate Criteria**：6/6 全部通过（零回归 / 确定性 / 零丢失 / round-trip / 无 Resolver 改动 /
+  无 provider 特判）。
+- **BUG 状态**：
+  - BUG-V3-041（Mathematical Layout Fragmentation）：Partially Addressed（Source 已保留
+    layout evidence，Resolver 消费待 Phase I-4）
+- **架构护栏冻结**：`63_ARCHITECTURE_COMPLEXITY_GUARDRAILS.md`——Source Layer 只保存
+  immutable evidence，不做 semantic interpretation；新增 Source 实体须过四项审查；
+  Resolver 修改前须完成 Evidence Utilization Gate。
+- **验证基线**：全量 pytest **454 passed**（1 预存失败 `test_h_seal_concurrency`）；
+  migration replay 双路径 PASS；test_source_span.py 19/19。
+- **下一阶段：Phase I-4 Resolver Evidence Utilization Evaluation**——验证 SourceSpan 是否
+  真的能降低 marker_ambiguous。**不直接修改 Resolver matching algorithm**。先测量收益，
+  再决定是否修改。
+- **文档**：`Docs/V3_SPEC/Closure/PHASE_I3_CLOSURE.md` +
+  `63_ARCHITECTURE_COMPLEXITY_GUARDRAILS.md`。
