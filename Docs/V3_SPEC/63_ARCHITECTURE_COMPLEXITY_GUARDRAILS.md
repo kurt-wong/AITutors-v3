@@ -218,7 +218,150 @@ Source
 
 ---
 
-## 10. Final Architectural Rule
+## 10. Phase I-4 Evidence Diagnostic Layer Constraints
+
+Status: Frozen Constraint
+Applies From: Phase I-4 Closure onward
+
+### 10.1 Primary Purpose
+
+Phase I-4 exists to evaluate whether preserved SourceSpan layout evidence provides measurable diagnostic value for existing Resolver ambiguity.
+
+The goal is:
+
+> Preserve evidence → inspect evidence → measure diagnostic value.
+
+The goal is NOT to create a second Resolver or a new evidence subsystem.
+
+### 10.2 Diagnostic Boundary
+
+Evidence Diagnostic Layer **MAY**:
+
+- read immutable Source evidence;
+- derive diagnostic features from evidence;
+- rank diagnostic candidates;
+- explain candidate differences;
+- report ambiguity reduction;
+- support controlled Before/After experiments.
+
+Evidence Diagnostic Layer **MUST NOT**:
+
+- mutate Source evidence;
+- rewrite Source text;
+- redefine Resolver matching semantics;
+- directly select the final resolution;
+- persist resolution decisions;
+- introduce automatic fallback resolution;
+- become an alternative authority for span selection.
+
+Core rule:
+
+> **Diagnostic ≠ Resolution. Ranking ≠ Decision. Evidence Score ≠ Semantic Truth.**
+
+### 10.3 Evidence Scoring Constraint
+
+Evidence-derived scores are **diagnostic heuristics only**.
+
+They are NOT:
+
+- calibrated probabilities;
+- semantic confidence;
+- learned model outputs;
+- correctness guarantees;
+- automatic resolution thresholds.
+
+Weight constants MUST be documented as experimental diagnostic heuristics.
+
+Changing weights during a fixed replay experiment is **prohibited**.
+
+### 10.4 I-4-2 Replay Experiment Freeze
+
+Before running the real-PDF replay, freeze:
+
+- PDF SHA256;
+- SourceVersion;
+- semantic annotation snapshot;
+- reference payload;
+- baseline Resolver output;
+- evidence scoring implementation;
+- weight constants;
+- thresholds.
+
+The replay experiment MUST NOT tune weights or thresholds to improve the observed result.
+
+Core rule:
+
+> **Measure first. Tune later only under a separately declared experiment.**
+
+### 10.5 Evaluation Metrics
+
+I-4-2 MUST distinguish:
+
+- ambiguity reduction;
+- candidate ranking;
+- unique evidence winner;
+- unresolved references;
+- invalid markers;
+- ties;
+- correctness improvement;
+- false improvement.
+
+Core rule:
+
+> **Ambiguity reduction ≠ Correctness improvement.**
+
+A candidate becoming uniquely ranked is not sufficient evidence that the candidate is correct.
+
+### 10.6 Defensive Input Boundary
+
+Empty or invalid markers MUST NOT match arbitrary Source lines.
+
+An empty marker MUST result in either:
+
+- zero candidates; or
+- an explicit invalid-marker diagnostic state.
+
+It MUST NOT silently match every line.
+
+### 10.7 No Premature Subsystem Expansion
+
+Phase I-4 MUST NOT introduce speculative components such as:
+
+- EvidenceRepository;
+- EvidenceSession;
+- EvidenceDecision;
+- EvidenceScoreHistory;
+- EvidenceRule engine;
+- EvidenceRuleVersioning;
+- EvidenceCalibration subsystem;
+- feedback loops;
+- background processing;
+- new persistent workflow entities.
+
+New abstractions require demonstrated evidence from I-4 replay results.
+
+Core rule:
+
+> **No new abstraction without a measured problem.**
+
+### 10.8 Closure Decision
+
+Phase I-4 closure MUST be based on measured replay evidence.
+
+Possible conclusions include:
+
+1. layout evidence provides measurable diagnostic value;
+2. layout evidence reduces ambiguity but does not improve correctness;
+3. layout evidence has limited value for current mathematical PDF failures;
+4. evidence is insufficient and another layer is required.
+
+Failure to reduce ambiguity is a valid experimental result.
+
+The implementation MUST NOT be expanded merely to force a positive outcome.
+
+---
+
+## 11. Final Architectural Rule
 
 > **Source 保存事实，Resolver 使用证据，Compiler 生成结构，Semantic Layer 负责理解。任何层不得替代下一层。**
 

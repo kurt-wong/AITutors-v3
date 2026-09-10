@@ -183,6 +183,30 @@ class TestAnalyzeEvidence:
         assert report.top_candidate is None
         assert report.unique_with_evidence is False
 
+    def test_empty_marker_returns_no_candidates(self):
+        """空 marker 不得匹配所有行（§10.6 防御边界）。"""
+        lines = (
+            _make_line("P1L001", "hello", seq=1),
+            _make_line("P1L002", "world", seq=2),
+            _make_line("P1L003", "3", seq=3),
+        )
+        spans = {
+            "P1L001": (_make_span("P1L001", "hello"),),
+            "P1L002": (_make_span("P1L002", "world"),),
+            "P1L003": (_make_span("P1L003", "3"),),
+        }
+        report = analyze_evidence("Q1.stem", "", lines, spans)
+        assert report.total_candidates == 0
+        assert report.top_candidate is None
+        assert report.unique_with_evidence is False
+
+    def test_whitespace_marker_returns_no_candidates(self):
+        """纯空白 marker 同样不得匹配任何行。"""
+        lines = (_make_line("P1L001", "hello"),)
+        spans = {"P1L001": (_make_span("P1L001", "hello"),)}
+        report = analyze_evidence("Q1.stem", "   ", lines, spans)
+        assert report.total_candidates == 0
+
     def test_normalized_match(self):
         """全角字符 normalized match。"""
         lines = (_make_line("P1L001", "１"),)  # 全角 1

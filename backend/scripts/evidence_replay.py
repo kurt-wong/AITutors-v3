@@ -64,11 +64,11 @@ async def load_data(source_version_id: uuid_mod.UUID):
         )
         db_figures = list(res.scalars().all())
 
-        # 读 annotation（找到该 source version 关联的最新 valid annotation）
+        # 读 annotation（SemanticAnnotation 无 created_at，用 status=valid 过滤）
         res = await session.execute(
             select(SemanticAnnotation)
             .where(SemanticAnnotation.source_version_id == source_version_id)
-            .order_by(SemanticAnnotation.created_at.desc())
+            .where(SemanticAnnotation.status == "valid")
         )
         annotation = res.scalars().first()
 
@@ -182,7 +182,7 @@ async def main():
     print(f"  Lines: {len(db_lines)}")
     print(f"  Spans: {len(db_spans)}")
     print(f"  Figures: {len(db_figures)}")
-    print(f"  Annotation: {annotation.id} (status={annotation.semantic_status})")
+    print(f"  Annotation: {annotation.id} (status={annotation.status})")
 
     lines, spans_by_line, figures = build_views(db_lines, db_spans, db_figures)
 

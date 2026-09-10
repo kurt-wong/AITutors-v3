@@ -16,7 +16,10 @@ from dataclasses import dataclass, field
 from app.domains.resolver.match_normalization import normalize_text
 from app.domains.resolver.span import SourceLineView
 
-# 评分权重常量（Phase I-4）。未来调整须通过 §6 Evidence Utilization Gate（Before/After 对比）。
+# 评分权重常量（Phase I-4）。
+# 性质：experimental diagnostic heuristics — 不是 calibrated probabilities、
+# 不是 semantic confidence、不是 learned model outputs（§10.3）。
+# 固定 replay 实验期间禁止调整（§10.4）。
 _WEIGHT_ISOLATED_SPAN = 0.3
 _WEIGHT_FEW_SPANS = 0.1
 _WEIGHT_SMALL_BBOX = 0.15
@@ -200,7 +203,13 @@ def _find_matching_lines(
     marker: str,
     lines: tuple[SourceLineView, ...],
 ) -> list[tuple[SourceLineView, str]]:
-    """找到所有包含 marker 的行，返回 (line, match_method) 列表。"""
+    """找到所有包含 marker 的行，返回 (line, match_method) 列表。
+
+    防御边界（63_ARCHITECTURE_COMPLEXITY_GUARDRAILS.md §10.6）：
+    空 marker 必须返回空列表，不得匹配所有行。
+    """
+    if not marker or not marker.strip():
+        return []
     results: list[tuple[SourceLineView, str]] = []
     marker_norm = normalize_text(marker)
     for line in lines:
