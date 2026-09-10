@@ -32,7 +32,7 @@ from app.domains.gate.payload import build as build_payload
 from app.domains.gate.policy import evaluate
 from app.domains.resolver import RESOLVER_VERSION
 from app.domains.resolver.resolver import SourceResolver
-from app.domains.resolver.span import SourceLineView
+from app.domains.resolver.span import SourceFigureView, SourceLineView
 from app.models.snapshot import AdmissionCandidate
 from app.repositories.base import RepositoryError
 from app.repositories.snapshot_repository import SnapshotRepository
@@ -108,8 +108,17 @@ class GateService:
             )
             for r in await self._source.get_lines_by_version(source_version_id)
         )
+        # BUG-V3-043：figures 必须传入 SourceResolver，否则 image reference 恒 ambiguous
+        figures = tuple(
+            SourceFigureView(
+                figure_id=f.figure_id, page_no=f.page_no, bbox=f.bbox,
+                placement=f.placement, source=f.source,
+                object_key=f.object_key, figure_hash=f.figure_hash,
+            )
+            for f in await self._source.get_figures_by_version(source_version_id)
+        )
         resolved_run = SourceResolver(
-            source_version_id=source_version_id, lines=lines
+            source_version_id=source_version_id, lines=lines, figures=figures
         ).resolve(ann.payload)
         ir = IRBuilder.build(resolved_run, ann.payload, source_version_id, annotation_id)
         compiled = Compiler(
