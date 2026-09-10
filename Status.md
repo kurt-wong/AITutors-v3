@@ -1084,3 +1084,34 @@ Date: 2026-09-05
   - `Docs/V3_PHASE_STATUS/Phase_I2_Revision_Closure.md`：完整 Closure 文档
   - `bugs.md`：BUG-V3-040/041/042 登记
   - 本文件：Phase I-2 Revision CLOSED
+
+### 2026-09-09 21:30:00（Phase I-2 Revision 文档冻结 + Git 收口）
+
+- **Status: Phase I-2 Revision CLOSED WITH NOTES**。
+- **已完成**：
+  - Real PDF import boundary validated
+  - SourceQualityGate implemented（纯函数，Seal 后 Annotation 前）
+  - Quality gate integrated after Seal stage
+  - Review Console supports source inspection
+  - Mathematical PDF validation completed
+- **验证 Pipeline**：
+  ```
+  Import → Document Created → Task Queued → Seal →
+  Source Quality Gate → Annotation → Review Console
+  ```
+- **已知限制**：
+  1. Mathematical PDF layout fragmentation（BUG-V3-041 Deferred → Phase I-2C）
+     - Formula symbols may be split into multiple source lines
+     - Resolver cannot reconstruct semantic structure automatically
+  2. Native PDF extraction ≠ semantic extraction
+     - Source layer preserves extracted facts only
+     - Resolver/compiler responsibility begins after source sealing
+- **关键认知**：Native extraction succeeded; semantic reconstruction remains incomplete。
+  这是 V3 架构设计成功的体现（Source ≠ Semantic 边界成立）。
+- **BUG 状态**：
+  - BUG-V3-040（PDF Encoding False Alarm）：Resolved
+  - BUG-V3-041（Mathematical Layout Fragmentation）：Deferred（Phase I-2C）
+  - BUG-V3-042（PUA False Positive）：Resolved（Co excluded from non_printable）
+- **No blocking defects remain.**
+- **Git**：tag `v3-phase-i2-closed`；Closure 文档
+  `Docs/V3_SPEC/Closure/PHASE_I2_REVISION_CLOSURE.md`。

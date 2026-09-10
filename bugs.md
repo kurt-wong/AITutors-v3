@@ -762,38 +762,41 @@
   编码显示问题。
 
 ### BUG-V3-041 — Mathematical Layout Fragmentation (Resolver Bottleneck)
-- Status: Open / Deferred
+- Status: Deferred
 - 登记：2026-09-09 20:30:00
-- 现象：数学 PDF 中公式/表达式被 native extraction 拆散到多行，Resolver 无法建立语义 span。
+- 现象：数学 PDF 中公式/表达式被 native extraction 物理拆散到多行，Resolver 无法建立语义 span。
 - 示例：
   ```
-  P1L014: '2. 已知角的终边经过点1'   # 期望：点(1/2, 2)
-  P1L015: '1'
-  P1L016: ','
-  P1L017: '2'
-  P1L018: '2'
+  原文：α = (1,2)
+
+  P1L014: "角的终边经过点1"
+  P1L015: "α"
+  P1L016: "1"
+  P1L017: "2"
   ```
-- 根因：PDF extraction 输出的是 text stream + font mapping + layout objects，数学公式被
-  物理拆分。这是 Mathematical Document Understanding 问题，非 OCR 问题。
-- 影响：Resolver 成为 Phase I-2 瓶颈（17 resolved / 85 unresolved）。
-- 处置：Phase I-2C Resolver Robustness Validation 专项处理。不做自动修复（错误修复比失败
-  更危险）。
+- 根因：PDF extraction 输出 text stream + font mapping + layout objects，数学公式被物理拆分。
+  这是 Mathematical Document Understanding 问题，非 OCR 问题。
+- 影响：Resolver 成为 Phase I-2 瓶颈（17 resolved / 85 unresolved）。Resolver 无法可靠重建
+  semantic spans。
+- **裁决**：Not a Source layer defect。Source 保持 immutable factual extraction。
+  Future handling 归属 Resolver semantic reconstruction layer。
+- 目标阶段：Phase I-2C Resolver Robustness Validation。
 - 验收：Resolver 能正确处理布局碎片，或诚实报告 ambiguous/incomplete。
 
 ### BUG-V3-042 — PUA False Positive in Source Quality Gate
-- Status: Open
+- Status: Resolved
 - 登记：2026-09-09 20:30:00
 - 现象：`_is_non_printable()` 将 Private Use Area（U+F000-U+F8FF, category "Co"）归类为
   不可打印。数学 PDF 用 PUA 编码符号（≥, ≤, →, 向量箭头）。
 - 风险：数学密集 PDF 的 PUA 比例 > 10% 时，会被错误标记为 `invalid`，阻断 pipeline。
-- 当前状态：本 PDF PUA 7% < 10% 阈值，未触发。
-- 修复：修改 invalid 判定条件为 **AND** 逻辑：
+- 修复：`_is_non_printable()` 排除 Co 类别（PUA 合法），保留 Cc/Cn 检测。
   ```python
-  if non_printable_ratio > _MAX_NON_PRINTABLE_RATIO and replacement_ratio > 0.01:
-      status = "invalid"
+  return cat in ("Cc", "Cn") or (cat == "Cf" and ch != "​")
   ```
-  PUA 单独存在 ≠ quality failure。需 combined with replacement chars 才判 invalid。
-- 验收：PUA 20% + replacement 0% → degraded（非 invalid）；PUA 20% + replacement 2% → invalid。
+- 验收：PUA alone 20% → valid；PUA 20% + replacement 3% → invalid；
+  replacement alone 10% → invalid；100% PUA → valid。
+- **Resolved（2026-09-09 21:00:00）**：15/15 quality tests PASSED。
+  Co excluded from non_printable；Cc/Cn still detected。commit `1c31fdf`。
 
 ## Resolved Bugs
 

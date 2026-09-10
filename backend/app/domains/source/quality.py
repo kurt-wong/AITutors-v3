@@ -19,8 +19,8 @@ from app.ai.ocr.result import OCRResult
 
 # 阈值（可调）：超过即判对应问题
 _REPLACEMENT_CHAR = "�"  # U+FFFD
-_MAX_REPLACEMENT_RATIO = 0.05  # 5% replacement char → invalid
-_MAX_NON_PRINTABLE_RATIO = 0.10  # 10% non-printable → invalid
+_MAX_REPLACEMENT_RATIO = 0.05  # >5% replacement char → invalid
+_MAX_NON_PRINTABLE_RATIO = 0.10  # >10% non-printable → invalid
 _MIN_CJK_RATIO = 0.01  # <1% CJK 且有大量文本 → 疑似 CID 乱码
 _MIN_CHARS_FOR_CJK_CHECK = 100  # 文本太少时不做 CJK 比例判断
 
