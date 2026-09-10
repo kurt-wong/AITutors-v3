@@ -31,6 +31,7 @@ from app.core.errors import LLMNetworkError, LLMProviderError, V3Error
 from app.core.hashing import sha256_hex
 from app.domains.annotation.service import AnnotationService
 from app.domains.gate.service import GateService
+from app.domains.source.quality import OCRRequiredError, SourceQualityError, SourceQualityGate
 from app.domains.source.seal import SealService
 from app.domains.task.service import TaskService
 from app.models.runtime import Task
@@ -118,7 +119,10 @@ def _classify_error(exc: BaseException) -> str:
 
     V3Error 携带其 error_type（provider_error/network_error/conflict/…）；ValueError 为
     parse/forbidden 校验失败（audit 已完成 → task 判 failed）→ validation_error。
+    SourceQualityError/OCRRequiredError 携带专用 error_type。
     """
+    if isinstance(exc, (SourceQualityError, OCRRequiredError)):
+        return exc.error_type
     if isinstance(exc, V3Error):
         return exc.error_type
     if isinstance(exc, ValueError):
@@ -181,6 +185,7 @@ class TaskExecutor:
         await self._heartbeat(task_id, worker_id, lease_token)
         version = await self._seal_stage(params)
         await self._heartbeat(task_id, worker_id, lease_token)
+        await self._quality_check_stage(version)
         async with self._lease_heartbeat(task_id, worker_id, lease_token):
             ann = await self._annotation_stage(task_id, version, params)
         await self._heartbeat(task_id, worker_id, lease_token)
@@ -213,7 +218,30 @@ class TaskExecutor:
             await s.commit()
             return version
 
-    # -- stage 2: Annotation（LLM stage 经 LLMExecutor；分配 attempt，Lock-2） ----
+    # -- stage 1.5: Quality Check（Seal 后、Annotation 前的文本质量门） -------------
+
+    async def _quality_check_stage(self, version: DocumentSourceVersion) -> None:
+        """检测 sealed 文本质量。invalid → SourceQualityError；ocr_required → OCRRequiredError。
+
+        quality report 落 source_meta（sealed version 可写 source_meta，status 字段不变）。
+        """
+        gate = SourceQualityGate()
+        report = gate.evaluate_text(version.body_text or "")
+
+        # 持久化 quality report 到 source_meta（供 Review Console 展示）
+        async with self._session_factory() as s:
+            sv = await s.get(DocumentSourceVersion, version.id)
+            if sv is not None:
+                meta = dict(sv.source_meta or {})
+                meta["quality"] = report.to_dict()
+                sv.source_meta = meta
+                await s.commit()
+
+        # fail-loud：invalid / ocr_required 不进 Annotation
+        if report.status == "invalid":
+            raise SourceQualityError(report)
+        if report.status == "ocr_required":
+            raise OCRRequiredError(report)
 
     async def _annotation_stage(
         self,

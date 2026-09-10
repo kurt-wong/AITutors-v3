@@ -1072,4 +1072,25 @@ Step 5 已于 commit `0917404` 落盘（含 Status/log/restart v1.10 收口）�
 - **Phase I Transport 接线**（本轮提交）：
   - I-1-A: `HTTPLLMProvider` 条件 Authorization + `trust_env=False`。
   - I-1-B: `build_gateway()` 工厂 + worker 改用工厂 + 3 新测试。
+
+### 2026-09-09 22:30 — Phase I-2C Closure（Resolver Diagnostic + 真实 PDF 失败模式确认）
+
+- **背景**：Phase I-2 Revision 关闭后，Resolver 在真实数学 PDF 上 17 resolved / 85 unresolved。
+  需要诊断失败原因，决定是否进入 Resolver robustness 改进。
+- **I-2C-1 BUG-V3-043 修复**（`5f8a3a8`）：`GateService.run()` 创建 `SourceResolver` 时未传
+  `figures` 参数 → 所有 image reference 恒 `ambiguous`。修复 = 加载 `source_figures` 转
+  `SourceFigureView` 传入。52 passed 零回归。
+- **I-2C-2 Diagnostic Layer**（`5f8a3a8` + `1192108`）：新增 `resolver/diagnostic.py`
+  （MatchAttempt / CandidateLine / UnresolvedDiagnostic / DiagnosticReport）。15 tests。
+  Pure functions, no IO, deterministic。
+- **真实 PDF 诊断**（`8267bfd`）：85/85 unresolved = `marker_ambiguous`（非 `marker_not_found`）。
+  根因 = 题号 "1" 出现 190 次、选项标签 "A" 在数学公式中大量出现。Resolver 单行 marker 匹配
+  无法唯一确定。
+- **架构判断**：Resolver fail-loud 符合 V3 invariant（宁可拒绝确定，不允许错误定位）。失败不是
+  Resolver bug，是 Source Provider Layer layout reconstruction 能力缺失。
+- **Decision**：Resolver robustness enhancement deferred。下一阶段 = Phase I-3 Source Provider
+  Layer Evaluation。
+- **BUG 状态**：BUG-V3-043 Resolved；BUG-V3-041 Deferred → Phase I-3。
+- **验证**：52 gate+resolver+dbflow passed；15 diagnostic passed；436 full suite passed
+  （预存 FK/isolation 问题不计）。
 - **Closure Gate 5/5 通过** → Phase I-1 CLOSED → Phase I-2 Real File E2E Next。

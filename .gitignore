@@ -33,3 +33,12 @@ Thumbs.db
 # Node（若未来引入前端）
 node_modules/
 dist/
+
+# Phase I fixtures / probes（不入 git）
+backend/scripts/_*.pdf
+backend/scripts/probe_*.py
+backend/tests/_audit_archive/
+backend/data/
+PHASE_I*_REVIEW.md
+PHASE_I_REPORT.md
+PHASE_I2C_DIAGNOSTIC_REPORT.json

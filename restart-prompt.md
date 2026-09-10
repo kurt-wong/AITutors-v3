@@ -1,37 +1,32 @@
 # AI Tutor V3 — RESTART PROMPT
 
-Version: v1.27
-Status: **Phase I-1 CLOSED** — Closure Gate 5/5 通过；heartbeat flaky 已修复（heartbeat-first）；
-Identity Gate Review PASS WITH DOCUMENTATION；全量 pytest 434 passed。下一步 = Phase I-2 Real File E2E
+Version: v1.28
+Status: **Phase I-2C CLOSED** — Resolver diagnostic layer 完成；真实 PDF 失败模式确认为
+marker_ambiguous（Source Provider layout 缺失，非 Resolver bug）；下一步 = Phase I-3 Source
+Provider Layer Evaluation
 Date: 2026-09-09
 
-## 0.0 当前结论（2026-09-09 20:15:00）
+## 0.0 当前结论（2026-09-09 22:30:00）
 
-- **A–G / H Phase 1–8 / Phase 9 维持 FINAL CLOSED**；Errata Final Closure（BUG-V3-001..036
-  全量收口）维持；BUG-011-E2 维持独立 Open 记录。
-- **Phase I-1 正式 CLOSED**：Closure Gate 5/5 全部通过。
-  - Gate 1 Commit Boundary: 8 commits 干净（4 frozen + heartbeat fix + identity review + transport + docs）
-  - Gate 2 Heartbeat Stability: 单测 ×20 全 PASS + heartbeat 组 ×20 全 PASS
-  - Gate 3 Full Suite: 433×3 → 434（含新增反向锁）
-  - Gate 4 Identity Review: PASS WITH DOCUMENTATION
-  - Gate 5 Regression: 126 targeted PASS
-- **BUG-V3-037 Heartbeat Flaky 修复**（`bfe4434`）：根因 = `_renew_loop` 先 sleep 再 heartbeat；
-  修复 = 循环倒置为先 heartbeat 再 sleep。
-- **Identity Projection Rule 契约固化**（`1f08882`）：仅剔 `semantic_units[*].confidence`
-  （unit 顶层）；不做递归剥离。反向锁 `test_nested_confidence_is_not_silently_projected`。
-- **Phase I Transport 接线**（本轮）：I-1-A 条件 Authorization + trust_env=False；
-  I-1-B `build_gateway()` 工厂 + worker 改用工厂。
-- **全量对抗性审查**：434 tests 全 PASS。SPEC 约束逐条验证通过。0 TODO/FIXME/HACK。
-- **项目状态**：V3 Core Architecture Closed → Phase I-1 CLOSED →
-  **Phase I-2 Real File E2E Next** → Productization Not Started
-- **红线（不变）**：HTTP retry（transport）≠ LLM retry（同 LE）≠ fallback（new config/新 LE）；
-  MAX_LLM_CALLS_PER_TASK 按真实 Provider Invocation 计数；非法 retry 配置 fail-fast；先冻结
-  Spec 再改代码；Schema Source of Truth = 20_Document_Pipeline.md（非 test fixture）；
-  BUG-V3-005 float 红线不动（confidence 不进 identity ≠ identity 自动接受 float）。
-- **下一步**：Phase I-2 Real File E2E Validation（Native PDF → Single Question → Multi-question →
-  Answer only → Answer+Explanation → Repeated Same File → Same Question Different Source →
-  Figure-containing → Scanned PDF）。
-- 重启后第一任务：读本文件 → Status.md 尾 → log.md 尾 → bugs.md → 进入 Phase I-2。
+- **A–G / H Phase 1–8 / Phase 9 维持 FINAL CLOSED**；Errata Final Closure 维持。
+- **Phase I-1 CLOSED**：Closure Gate 5/5 通过（heartbeat flaky 修复 + Identity Gate Review）。
+- **Phase I-2 Revision CLOSED**（tag `v3-phase-i2-closed`）：SourceQualityGate 架构层确立；
+  真实 PDF E2E 边界建立；BUG-V3-040/042 Resolved。
+- **Phase I-2C CLOSED**：
+  - BUG-V3-043 figures 注入修复（`5f8a3a8`）
+  - Resolver Diagnostic Layer（`diagnostic.py`，15 tests）
+  - 真实 PDF 诊断：**85/85 unresolved = marker_ambiguous**（题号/选项标签出现 190+ 次）
+  - 架构判断：Resolver fail-loud 符合 V3 invariant；失败归属 Source Provider Layer
+  - Decision：Resolver robustness enhancement deferred
+- **BUG 状态**：BUG-V3-041 Deferred → Phase I-3；BUG-V3-043 Resolved。
+- **项目状态**：V3 Core Architecture Closed → Phase I-1 CLOSED → Phase I-2 Revision CLOSED →
+  **Phase I-2C CLOSED** → Phase I-3 Source Provider Layer Evaluation Next
+- **红线（不变）**：HTTP retry ≠ LLM retry ≠ fallback；MAX_LLM_CALLS 按真实 Provider Invocation
+  计数；先冻结 Spec 再改代码；Schema Source of Truth = 20_Document_Pipeline.md；
+  BUG-V3-005 float 红线不动；Resolver 不猜（宁可拒绝确定，不允许错误定位）。
+- **下一步**：Phase I-3 Source Provider Layer Evaluation——评估 native PDF extraction、
+  OCR layout extraction、hybrid provider 对数学试卷的结构恢复能力。
+- 重启后第一任务：读本文件 → Status.md 尾 → log.md 尾 → bugs.md → 进入 Phase I-3。
 
 ## 0. 当前工作状态（2026-09-08 14:01）
 

@@ -9,14 +9,61 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import json
 import uuid
 
 from app.ai.gateway import build_gateway
 from app.ai.live_guard import add_allow_live_arg, set_allow_live
 from app.ai.ocr.providers import NativeTextProvider
+from app.ai.providers.mock import MockLLMProvider
 from app.db.session import async_session_maker
 from app.domains.task.executor import TaskExecutor
 from app.domains.task.service import TaskService
+
+# Phase I-2B mock annotation response（符合 20 §4.1-4.5 Frozen Contract）
+_MOCK_ANNOTATION = json.dumps(
+    {
+        "document_metadata_claims": {
+            "subject": "数学",
+            "grade": "高一",
+            "year": "2026",
+            "school": "北京北师大实验中学",
+        },
+        "sections": [],
+        "semantic_units": [
+            {
+                "unit_id": f"Q{i}",
+                "unit_type": "standalone_question",
+                "question_number": str(i),
+                "section_id": "SEC-1",
+                "original_question_type": "single_choice",
+                "content": {
+                    "stem": {"role": "stem", "question_label": str(i)},
+                    "options": [
+                        {"label": "A", "role": "option", "question_label": str(i)},
+                        {"label": "B", "role": "option", "question_label": str(i)},
+                        {"label": "C", "role": "option", "question_label": str(i)},
+                        {"label": "D", "role": "option", "question_label": str(i)},
+                    ],
+                    "answer": {
+                        "role": "answer",
+                        "question_label": str(i),
+                        "answer_zone": "answer_table",
+                    },
+                },
+            }
+            for i in range(1, 18)  # 17 questions in the test
+        ],
+    },
+    ensure_ascii=False,
+)
+
+
+class AnnotationMockProvider(MockLLMProvider):
+    """返回有效 annotation JSON 的 mock provider。"""
+
+    async def complete(self, prompt: str) -> str:
+        return _MOCK_ANNOTATION
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -38,6 +85,9 @@ def build_parser() -> argparse.ArgumentParser:
 async def _run(args: argparse.Namespace) -> None:
     set_allow_live(args.allow_live)
     gateway = build_gateway(allow_live=args.allow_live)
+    # Phase I-2B：mock 模式下使用返回有效 JSON 的 provider
+    if gateway.mode == "mock":
+        gateway._mock = AnnotationMockProvider()
     executor = TaskExecutor(
         async_session_maker,
         llm_gateway=gateway,
