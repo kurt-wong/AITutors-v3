@@ -73,7 +73,65 @@ Prerequisite: v3-phase-i2-closed
 
 ---
 
-## 5. 执行顺序
+## 5. 真实 PDF 诊断数据（2026-09-09）
+
+### 数据来源
+
+- PDF：2026北京北师大实验中学高一（下）阶段测试一数学（教师版）
+- Source version：`a40a31a7-3227-4493-9d73-d3c64bde187f`
+- Lines：2377 / Figures：11
+- Annotation：17 semantic units
+
+### 诊断结果
+
+| 指标 | 值 |
+|------|-----|
+| Resolved spans | 17 |
+| Unresolved refs | 85 |
+| Resolution rate | 17/102 = 16.7% |
+
+### Unresolved 分类分布
+
+| 分类 | 数量 | 占比 |
+|------|------|------|
+| `marker_ambiguous` | 85 | 100% |
+| `marker_not_found` | 0 | 0% |
+| `marker_fragmented` | 0 | 0% |
+| `grammar_mismatch` | 0 | 0% |
+
+### 按 Role 分布
+
+| Role | 数量 | 说明 |
+|------|------|------|
+| stem | 10 | 题干定位失败 |
+| option | 68 | 选项定位失败（主要） |
+| answer | 7 | 答案定位失败 |
+
+### 根因分析
+
+**所有 85 个 unresolved 都是 `marker_ambiguous`**——marker 文本在源文本中出现太多次，无法唯一确定。
+
+典型案例：
+- `Q1.stem` marker `"1"` → 190 exact hits（题号 "1" 在数学 PDF 中出现 190 次）
+- `Q1.option.A` marker `"A"` → 大量 hits（数学公式中的字母 A）
+- `Q1.answer` marker `"1"` → 在答案区也出现多次
+
+**这不是"找不到"，而是"无法唯一确定"**——Resolver 的单行 marker resolution 设计边界。
+
+### 结论
+
+Resolver 在数学 PDF 上的失败模式是 **marker ambiguity**，不是 **marker missing**。
+
+这意味着：
+1. Source 层提取正确（2377 lines，CJK 正常）
+2. Annotation 层输出正确（17 units，question_label/label 正确）
+3. Resolver 层的单行 marker 匹配无法处理数学 PDF 中大量重复的题号和选项标签
+
+**这是架构设计边界，不是 bug。** 数学 PDF 的 layout reconstruction 属于 Source Provider Layer 职责，不属于 Resolver。
+
+---
+
+## 6. 执行顺序
 
 ```
 I-2C-0: 文档冻结（本文件）
