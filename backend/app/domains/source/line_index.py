@@ -5,14 +5,17 @@
 - body_hash 是对「由 line index 按 seq 以 \\n join 重建的 body_text」的 raw UTF-8 SHA256
   （IS-4 确定性重建，事实层非规范化层）；不把 sha256_hex 误用于 raw 内容 hash。
 - line_hash/integrity_hash 用 canonical sha256_hex（复合语义）。
+
+Phase I-3：SealLine 增加 spans 字段（layout evidence），供 seal 持久化到
+document_source_spans 表。
 """
 
 from __future__ import annotations
 
 import hashlib
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
-from app.ai.ocr.result import OCRLine
+from app.ai.ocr.result import OCRLine, SourceSpan
 from app.core.hashing import sha256_hex
 
 
@@ -27,6 +30,7 @@ class SealLine:
     text: str
     block_type: str = "text"
     bbox: dict | None = None
+    spans: tuple[SourceSpan, ...] = field(default_factory=tuple)
 
 
 def build_line_index(ocr_lines: tuple[OCRLine, ...]) -> tuple[SealLine, ...]:
@@ -46,6 +50,7 @@ def build_line_index(ocr_lines: tuple[OCRLine, ...]) -> tuple[SealLine, ...]:
                 line_no_in_page=line_no,
                 text=ol.text,
                 bbox=ol.bbox,
+                spans=ol.spans,
             )
         )
     return tuple(built)

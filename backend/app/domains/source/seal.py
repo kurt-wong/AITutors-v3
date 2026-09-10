@@ -27,7 +27,7 @@ from app.domains.source.line_index import (
     rebuild_body_text,
     verify_body_rebuild,
 )
-from app.models.source import DocumentSourceLine, DocumentSourceVersion, SourceFigure
+from app.models.source import DocumentSourceLine, DocumentSourceSpan, DocumentSourceVersion, SourceFigure
 from app.repositories.source_repository import SourceRepository
 
 SEAL_CONTRACT_VERSION = "seal/v1"
@@ -162,6 +162,10 @@ class SealService:
             await self._repo.append_line(self._to_source_line(version.id, sl, provider))
         for sf in figures:
             await self._repo.append_figure(self._to_source_figure(version.id, sf))
+        # Phase I-3: 持久化 spans（layout evidence）
+        for sl in lines:
+            for span in sl.spans:
+                await self._repo.append_span(self._to_source_span(version.id, sl.line_ref, span))
         await self._repo.flush()
 
         await self._repo.seal_version(version.id)
@@ -208,4 +212,21 @@ class SealService:
             source=sf.source,
             object_key=sf.object_key,
             figure_hash=sf.figure_hash,
+        )
+
+    def _to_source_span(
+        self, source_version_id: uuid.UUID, line_ref: str, span
+    ) -> DocumentSourceSpan:
+        """SourceSpan → DocumentSourceSpan ORM（Phase I-3）。"""
+        return DocumentSourceSpan(
+            source_version_id=source_version_id,
+            line_ref=line_ref,
+            seq=span.seq,
+            text=span.text,
+            font=span.font,
+            size=span.size,
+            flags=span.flags,
+            bbox=span.bbox,
+            origin={"x": span.origin[0], "y": span.origin[1]} if span.origin else None,
+            span_hash=span.span_hash,
         )

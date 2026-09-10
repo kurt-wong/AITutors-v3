@@ -157,17 +157,18 @@ def test_from_empty_replay_reaches_head() -> None:
 
 
 def test_incremental_0003_to_0004_delta() -> None:
-    """层 2：A–G 时代增量库上 pre-0004 → 0004 恰新增 tasks/task_claims。"""
+    """层 2：A–G 时代增量库上 pre-0004 → head 恰新增 tasks/task_claims + document_source_spans。"""
     cfg = Config("alembic.ini")
     command.downgrade(cfg, "0003")
     try:
         before = asyncio.run(_list_tables(_MAIN_SQLA))
-        command.upgrade(cfg, "head")  # = 0004
+        command.upgrade(cfg, "head")
         after = asyncio.run(_list_tables(_MAIN_SQLA))
     finally:
         command.upgrade(cfg, "head")  # 无条件恢复到 head，防失败态污染后续测试
     delta = after - before
-    assert delta == {"tasks", "task_claims"}, f"0004 增量 delta 期望 +2，实得 {sorted(delta)}"
+    expected_delta = {"tasks", "task_claims", "document_source_spans"}
+    assert delta == expected_delta, f"增量 delta 期望 {sorted(expected_delta)}，实得 {sorted(delta)}"
 
 
 def test_incremental_0008_to_0009_adds_figure_unique() -> None:

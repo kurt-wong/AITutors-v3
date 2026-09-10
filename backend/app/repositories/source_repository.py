@@ -175,6 +175,13 @@ class SourceRepository(BaseRepository):
     async def update_figure(self, *_args: object, **_kwargs: object) -> None:
         raise AppendOnlyViolation("source_figures is append-only")
 
+    async def append_span(self, span) -> None:
+        """Phase I-3：追加 document_source_span（layout evidence）。"""
+        await self.add(span)
+
+    async def update_span(self, *_args: object, **_kwargs: object) -> None:
+        raise AppendOnlyViolation("document_source_spans is append-only")
+
     async def find_document_by_sha256(self, original_sha256: str) -> Document | None:
         """document 级幂等：原始文件 hash 定位既有主档（10 §4.1；DB 无 UNIQUE，service lookup）。"""
         res = await self._session.execute(

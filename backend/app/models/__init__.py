@@ -22,6 +22,7 @@ from app.models.source import (
     DocumentActiveSource,
     DocumentSourceLine,
     DocumentSourceSelectionEvent,
+    DocumentSourceSpan,
     DocumentSourceVersion,
     SourceFigure,
 )
@@ -30,6 +31,7 @@ __all__ = [
     "Document",
     "DocumentSourceVersion",
     "DocumentSourceLine",
+    "DocumentSourceSpan",
     "SourceFigure",
     "DocumentActiveSource",
     "DocumentSourceSelectionEvent",

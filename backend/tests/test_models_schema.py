@@ -7,10 +7,11 @@ from app.db.base import Base
 from app.db.session import engine
 
 EXPECTED_TABLES = {
-    # B 域（6）
+    # B 域（7）
     "documents",
     "document_source_versions",
     "document_source_lines",
+    "document_source_spans",  # Phase I-3
     "source_figures",
     "document_active_sources",
     "document_source_selection_events",
@@ -36,6 +37,7 @@ DECLARED_UNIQUES = {
     "documents": {"original_sha256"},  # BUG-V3-007 终裁：Source/Document Identity
     "document_source_versions": {"logical_execution_stage", "logical_execution_hash"},  # Seal LE Identity
     "document_source_lines": {"source_version_id", "line_ref"},
+    "document_source_spans": {"source_version_id", "line_ref", "seq"},  # Phase I-3
     "source_figures": {"source_version_id", "figure_id"},  # BUG-V3-011 终裁：Figure identity (version-scoped)
     "semantic_annotations": {"logical_execution_stage", "logical_execution_hash"},
     "admission_candidates": {"logical_execution_stage", "logical_execution_hash"},
@@ -88,7 +90,7 @@ async def test_db_tables_exact_19() -> None:
     tables, _, _ = await _snapshot()
     db_tables = await _content_tables(tables)
     assert db_tables == EXPECTED_TABLES
-    assert len(db_tables) == 19
+    assert len(db_tables) == 20  # Phase I-3: +document_source_spans
 
 
 async def test_orm_metadata_matches_db() -> None:
@@ -120,4 +122,4 @@ async def test_no_unauthorized_unique_constraints() -> None:
         for u in uniq[table]:
             assert u in declared_flat, f"未授权 UNIQUE {table}: {u}"
             seen.append(u)
-    assert len(seen) == 10, f"期望 10 条 UNIQUE 约束，实得 {len(seen)}"
+    assert len(seen) == 11, f"期望 11 条 UNIQUE 约束，实得 {len(seen)}"

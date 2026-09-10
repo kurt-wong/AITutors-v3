@@ -5,7 +5,9 @@ from datetime import datetime
 
 from sqlalchemy import (
     DateTime,
+    Float,
     ForeignKey,
+    Index,
     Integer,
     Numeric,
     String,
@@ -116,6 +118,38 @@ class SourceFigure(UUIDPrimaryKeyMixin, Base):
     source: Mapped[str] = mapped_column(String, nullable=False)
     object_key: Mapped[str] = mapped_column(String, nullable=False)
     figure_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+
+
+class DocumentSourceSpan(UUIDPrimaryKeyMixin, Base):
+    """document_source_spans（Phase I-3）。Source layout evidence。
+
+    span_hash = SHA256(text + font + size + flags + bbox + origin)，
+    描述 source evidence instance（layout evidence identity），
+    不表示 semantic equality。
+    """
+
+    __tablename__ = "document_source_spans"
+    __table_args__ = (
+        UniqueConstraint("source_version_id", "line_ref", "seq"),
+        Index("idx_source_spans_version_line", "source_version_id", "line_ref", "seq"),
+        Index("idx_source_spans_hash", "span_hash"),
+    )
+
+    source_version_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("document_source_versions.id"), nullable=False
+    )
+    line_ref: Mapped[str] = mapped_column(String, nullable=False)
+    seq: Mapped[int] = mapped_column(Integer, nullable=False)
+    text: Mapped[str] = mapped_column(Text, nullable=False)
+    font: Mapped[str | None] = mapped_column(String, nullable=True)
+    size: Mapped[float | None] = mapped_column(Float, nullable=True)
+    flags: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    bbox: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    origin: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    span_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=_utcnow
+    )
 
 
 class DocumentActiveSource(Base):
