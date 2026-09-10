@@ -274,24 +274,50 @@ def _extract_marker_for_reference(
 ) -> str:
     """从 annotation_payload 中提取对应的 marker 文本。
 
+    reference_id 格式：Q{N}.stem / Q{N}.option.{label} / Q{N}.answer / Q{N}.explanation
+    payload 中 stem/answer 用 question_label（数字），options 用 label（字母）。
+
     如果找不到，返回空字符串。
     """
     if not annotation_payload:
         return ""
 
-    # 遍历 semantic_units 查找匹配的 reference
+    # 解析 reference_id: "Q1.option.A" → unit="Q1", role="option", label="A"
+    parts = ref.reference_id.split(".")
+    if len(parts) < 2:
+        return ""
+    unit_id = parts[0]  # "Q1"
+    role = parts[1]     # "stem" / "option" / "answer" / "explanation"
+    label = parts[2] if len(parts) > 2 else None  # "A" for options
+
+    # 查找对应 unit
     for unit in annotation_payload.get("semantic_units", []):
+        if unit.get("unit_id") != unit_id:
+            continue
+
         content = unit.get("content", {})
-        for role_key, role_data in content.items():
-            if isinstance(role_data, dict):
-                # stem/option 等
-                if role_data.get("question_label") == ref.reference_id:
-                    return role_data.get("text", "")
-            elif isinstance(role_data, list):
-                # options/answers 等
-                for item in role_data:
-                    if isinstance(item, dict) and item.get("question_label") == ref.reference_id:
-                        return item.get("text", "")
+
+        if role == "stem":
+            stem = content.get("stem", {})
+            if isinstance(stem, dict):
+                return str(stem.get("question_label", ""))
+
+        elif role == "option" and label:
+            options = content.get("options", [])
+            if isinstance(options, list):
+                for opt in options:
+                    if isinstance(opt, dict) and opt.get("label") == label:
+                        return str(opt.get("label", ""))
+
+        elif role == "answer":
+            answer = content.get("answer", {})
+            if isinstance(answer, dict):
+                return str(answer.get("question_label", ""))
+
+        elif role == "explanation":
+            explanation = content.get("explanation", {})
+            if isinstance(explanation, dict):
+                return str(explanation.get("question_label", ""))
 
     return ""
 
