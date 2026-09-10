@@ -364,6 +364,8 @@ async def _purge_materialized(session, *, sv_id: str, doc_id: str) -> None:
     await session.execute(text(
         "DELETE FROM semantic_annotations WHERE source_version_id=:s"), {"s": sv_id})
     await session.execute(text(
+        "DELETE FROM document_source_spans WHERE source_version_id=:s"), {"s": sv_id})
+    await session.execute(text(
         "DELETE FROM document_source_lines WHERE source_version_id=:s"), {"s": sv_id})
     await session.execute(text(
         "DELETE FROM document_source_versions WHERE id=:s"), {"s": sv_id})

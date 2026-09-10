@@ -261,6 +261,10 @@ async def test_d2_cross_transaction_idempotency(session, pdf_bytes):
                 {"v": vid},
             )
             await sc.execute(
+                text("DELETE FROM document_source_spans WHERE source_version_id=:v"),
+                {"v": vid},
+            )
+            await sc.execute(
                 text("DELETE FROM document_source_lines WHERE source_version_id=:v"),
                 {"v": vid},
             )

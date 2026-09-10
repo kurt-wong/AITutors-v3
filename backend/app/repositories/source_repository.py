@@ -8,6 +8,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from app.models.source import (
     Document,
     DocumentSourceLine,
+    DocumentSourceSpan,
     DocumentSourceVersion,
     SourceFigure,
 )
@@ -222,6 +223,17 @@ class SourceRepository(BaseRepository):
             select(SourceFigure)
             .where(SourceFigure.source_version_id == version_id)
             .order_by(SourceFigure.figure_id)
+        )
+        return list(res.scalars().all())
+
+    async def get_spans_by_version(
+        self, version_id: uuid.UUID
+    ) -> list[DocumentSourceSpan]:
+        """Phase I-4：读某 sealed version 的全部 spans，按 (line_ref, seq) 排序。"""
+        res = await self._session.execute(
+            select(DocumentSourceSpan)
+            .where(DocumentSourceSpan.source_version_id == version_id)
+            .order_by(DocumentSourceSpan.line_ref, DocumentSourceSpan.seq)
         )
         return list(res.scalars().all())
 
