@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
-from app.ai.ocr.result import OCRFigure, OCRLine, OCRResult
+from app.ai.ocr.result import OCRFigure, OCRLine, OCRResult, SourceSpan, _make_span
 
 if TYPE_CHECKING:
     import fitz
@@ -27,6 +27,20 @@ def _bbox(seq: tuple[float, float, float, float] | None) -> dict | None:
     if seq is None:
         return None
     return {"x0": seq[0], "y0": seq[1], "x1": seq[2], "y1": seq[3]}
+
+
+def _bbox_from_tuple(seq) -> dict | None:
+    """fitz span bbox (可能 list/tuple) -> dict；None 则不强造。"""
+    if seq is None:
+        return None
+    return {"x0": seq[0], "y0": seq[1], "x1": seq[2], "y1": seq[3]}
+
+
+def _origin_from_tuple(seq) -> tuple[float, float] | None:
+    """fitz span origin (x, y) -> tuple；None 则不强造。"""
+    if seq is None:
+        return None
+    return (float(seq[0]), float(seq[1]))
 
 
 class NativeTextProvider:
@@ -49,7 +63,21 @@ class NativeTextProvider:
                     if block.get("type", -1) != 0:  # 0 = text block
                         continue
                     for line in block.get("lines", []):
-                        text = "".join(sp["text"] for sp in line.get("spans", [])).strip()
+                        raw_spans = line.get("spans", [])
+                        # Phase I-3: 提取 span layout metadata
+                        spans = tuple(
+                            _make_span(
+                                seq=i,
+                                text=sp.get("text", ""),
+                                font=sp.get("font"),
+                                size=sp.get("size"),
+                                flags=sp.get("flags"),
+                                bbox=_bbox_from_tuple(sp.get("bbox")),
+                                origin=_origin_from_tuple(sp.get("origin")),
+                            )
+                            for i, sp in enumerate(raw_spans)
+                        )
+                        text = "".join(sp.text for sp in spans).strip()
                         if not text:
                             continue
                         lines.append(
@@ -57,6 +85,7 @@ class NativeTextProvider:
                                 text=text,
                                 page_no=pno + 1,
                                 bbox=_bbox(line.get("bbox")),
+                                spans=spans,
                             )
                         )
             figures = self._extract_figures(doc)
