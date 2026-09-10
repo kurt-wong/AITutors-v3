@@ -34,7 +34,7 @@ from app.models.source import (
     DocumentSourceVersion,
     SourceFigure,
 )
-from app.models.annotation import SemanticAnnotation
+from app.models.snapshot import SemanticAnnotation
 
 
 async def load_data(source_version_id: uuid_mod.UUID):
@@ -124,7 +124,13 @@ def build_views(db_lines, db_spans, db_figures):
 
 
 def extract_marker_from_payload(reference_id: str, payload: dict) -> str | None:
-    """从 annotation payload 提取 marker 文本（与 diagnostic.py 逻辑一致）。"""
+    """从 annotation payload 提取 marker 文本。
+
+    注意：payload 结构为 unit["question_label"]（顶层），
+    与 diagnostic.py 的 _extract_marker_for_reference 不同
+    （后者读 unit["content"]["stem"]["question_label"] 嵌套结构）。
+    本函数匹配当前 Frozen Annotation Payload Contract（20 §4.1-4.5）。
+    """
     parts = reference_id.split(".")
     if len(parts) < 2:
         return None

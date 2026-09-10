@@ -16,6 +16,17 @@ from dataclasses import dataclass, field
 from app.domains.resolver.match_normalization import normalize_text
 from app.domains.resolver.span import SourceLineView
 
+# 评分权重常量（Phase I-4）。未来调整须通过 §6 Evidence Utilization Gate（Before/After 对比）。
+_WEIGHT_ISOLATED_SPAN = 0.3
+_WEIGHT_FEW_SPANS = 0.1
+_WEIGHT_SMALL_BBOX = 0.15
+_WEIGHT_BOLD = 0.1
+_WEIGHT_EXACT_TEXT_MATCH = 0.35
+_WEIGHT_STARTS_WITH_MARKER = 0.15
+_SMALL_BBOX_THRESHOLD = 500.0  # 经验阈值：面积 < 500 视为小 bbox
+_FEW_SPANS_THRESHOLD = 2  # span 数 ≤ 2 视为少
+_UNIQUE_GAP_THRESHOLD = 0.2  # top 与 second 分差 > 0.2 视为唯一
+
 
 @dataclass(frozen=True)
 class SpanEvidence:
@@ -87,18 +98,6 @@ class EvidenceReport:
     unique_with_evidence: bool  # evidence 是否能唯一确定
 
 
-def _compute_bbox_area(bbox: dict | None) -> float | None:
-    if not bbox:
-        return None
-    x0 = bbox.get("x0")
-    y0 = bbox.get("y0")
-    x1 = bbox.get("x1")
-    y1 = bbox.get("y1")
-    if None in (x0, y0, x1, y1):
-        return None
-    return abs(x1 - x0) * abs(y1 - y0)
-
-
 def _dominant_font(spans: tuple[SpanEvidence, ...]) -> str | None:
     """返回出现次数最多的 font。"""
     if not spans:
@@ -146,13 +145,13 @@ def score_candidate(
     # 因素 1: 孤立 span（行内只有 1 个 span）
     is_isolated = len(spans) == 1
     if is_isolated:
-        score += 0.3
+        score += _WEIGHT_ISOLATED_SPAN
         reasons.append("isolated_span")
 
     # 因素 2: span count 越少越好
     span_count = len(spans)
-    if span_count <= 2:
-        score += 0.1
+    if span_count <= _FEW_SPANS_THRESHOLD:
+        score += _WEIGHT_FEW_SPANS
         reasons.append("few_spans")
 
     # 因素 3: bbox 面积小
@@ -161,24 +160,24 @@ def score_candidate(
         areas = [s.bbox_area for s in spans if s.bbox_area is not None]
         if areas:
             bbox_area = min(areas)
-            if bbox_area < 500:  # 经验阈值
-                score += 0.15
+            if bbox_area < _SMALL_BBOX_THRESHOLD:
+                score += _WEIGHT_SMALL_BBOX
                 reasons.append("small_bbox")
 
     # 因素 4: 粗体
     is_bold = any(s.is_bold for s in spans)
     if is_bold:
-        score += 0.1
+        score += _WEIGHT_BOLD
         reasons.append("bold")
 
     # 因素 5: line text 精确等于 marker（或 marker 加标点）
     line_text_stripped = line.text.strip()
     marker_stripped = marker.strip()
     if line_text_stripped == marker_stripped:
-        score += 0.35
+        score += _WEIGHT_EXACT_TEXT_MATCH
         reasons.append("exact_text_match")
     elif line_text_stripped.startswith(marker_stripped):
-        score += 0.15
+        score += _WEIGHT_STARTS_WITH_MARKER
         reasons.append("starts_with_marker")
 
     return EvidenceCandidate(
@@ -250,7 +249,7 @@ def analyze_evidence(
         unique_with_evidence = True
     elif len(candidates) >= 2:
         gap = candidates[0].evidence_score - candidates[1].evidence_score
-        unique_with_evidence = gap > 0.2
+        unique_with_evidence = gap > _UNIQUE_GAP_THRESHOLD
 
     return EvidenceReport(
         reference_id=reference_id,
@@ -273,7 +272,7 @@ def format_evidence_report(report: EvidenceReport) -> dict:
             {
                 "line_ref": report.top_candidate.line_ref,
                 "line_seq": report.top_candidate.line_seq,
-                "line_text": report.top_candidate.line_text,
+                "line_text": report.top_candidate.line_text[:100],
                 "evidence_score": report.top_candidate.evidence_score,
                 "score_reasons": list(report.top_candidate.score_reasons),
                 "is_isolated": report.top_candidate.is_isolated,
