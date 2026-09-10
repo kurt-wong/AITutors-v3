@@ -185,6 +185,10 @@ async def test_b1_cross_transaction_idempotency(session, pdf_bytes):
             ).scalars().all()
             for rid in vids:
                 await sc.execute(
+                    text("DELETE FROM document_source_spans WHERE source_version_id=:x"),
+                    {"x": rid},
+                )
+                await sc.execute(
                     text("DELETE FROM source_figures WHERE source_version_id=:x"),
                     {"x": rid},
                 )
