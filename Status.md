@@ -1203,3 +1203,31 @@ Date: 2026-09-05
   修改 Resolver。
 - **文档**：`Docs/V3_SPEC/Closure/PHASE_I4_CLOSURE.md` + `64_PHASE_I4_EVIDENCE_EVALUATION.md`
   + `63_ARCHITECTURE_COMPLEXITY_GUARDRAILS.md` §10.9/§10.10。
+
+### 2026-09-10（Phase I-5-0 Scope Freeze — Preprocessed Source Integration）
+
+- **Status: Phase I-5 I-5-0 完成**。Phase I-5 定义为 **Preprocessed Source Integration
+  Feasibility Experiment**，不是 subsystem implementation。
+- **外部预处理管线**：PaddleOCR-VL → LLM semantic annotation → manifest。17 份试点文档，
+  12 份已人工审核（高一 9 科 + 高二 2 科）。集成验证：319 units，100% answer 覆盖，
+  42/42 Phase I-4 numeric marker 被 manifest structural role 正确分类，24/24 composite
+  material ⊆ questions 约束成立。
+- **核心架构边界（冻结）**：Markdown Source = Source Evidence（唯一正文事实）；
+  Manifest = Structural Annotation Evidence（语义解释，非事实）。Manifest 不得成为第二套
+  Source Truth。Manifest 只能引用 Source 中已存在的内容，不得复制正文。
+- **十二约束**：不修改 SourceResolver、不引入永久 Source 抽象、不修改 Source evidence
+  不变式、不将 manifest 视为 immutable source fact、测量真实 pipeline 结果（非标注可用性）、
+  使用已审核高一/高二文档、主要指标为端到端正确性提升、无证据不建子系统、保留无 manifest
+  的原始 Source 路径、需大量 domain 改动时暂停重审。
+- **Candidate Evidence 分类**：stem/options/answer/explanation/material/questions_lines →
+  Candidate Evidence；unit_id → Experimental Mapping Identifier；unit_type/question_numbers/
+  original_question_type → Candidate Semantic Evidence（≠ V3 canonical type，需 Adapter
+  mapping）；annotation_meta/model/source_file → Forbidden。
+- **Adapter 位置**：`experiments/phase_i5/`（实验执行）+ `backend/tests/phase_i5/`（集成
+  测试）。禁止进入 `backend/app/`。
+- **Decision Matrix**：A（集成可行）/ B（可行但低价值）/ C（边界冲突）/ D（复杂度失败）/
+  E（正确性失败→不接受）。不冻结数值阈值，I-5-1 根据实际 baseline 确定。
+- **Commit**：本次提交（65_PHASE_I5_SCOPE_FREEZE.md + 状态文档更新）。
+- **下一阶段**：I-5-1 Integration Boundary Analysis——分析 manifest 字段与 V3 contract
+  的对应关系，确定最小 Adapter 需求。No code until I-5-1 analysis is complete。
+- **文档**：`Docs/V3_SPEC/65_PHASE_I5_SCOPE_FREEZE.md`。

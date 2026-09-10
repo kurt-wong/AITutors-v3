@@ -1094,3 +1094,17 @@ Step 5 已于 commit `0917404` 落盘（含 Status/log/restart v1.10 收口）�
 - **验证**：52 gate+resolver+dbflow passed；15 diagnostic passed；436 full suite passed
   （预存 FK/isolation 问题不计）。
 - **Closure Gate 5/5 通过** → Phase I-1 CLOSED → Phase I-2 Real File E2E Next。
+
+### 2026-09-10（Phase I-5-0 Scope Freeze）
+
+- **背景**：Phase I-4 CLOSED（Valid Negative Result）后，用户引入外部预处理项目
+  （PaddleOCR-VL → LLM semantic annotation → manifest）。12 份已审核高一/高二文档
+  集成验证通过（319 units, 42/42 marker 消歧, 24/24 composite）。
+- **决策**：Phase I-5 定义为 Preprocessed Source Integration Feasibility Experiment。
+  I-5-0 只冻结边界与约束，不写 Adapter、不改 Resolver、不改 Domain、不改 Migration。
+- **核心边界**：Manifest = Structural Annotation Evidence（非 Source Truth）。正文只有一份
+  （Markdown Source），manifest 只能引用不能复制。
+- **产出**：`Docs/V3_SPEC/65_PHASE_I5_SCOPE_FREEZE.md`——12 条约束、Candidate Evidence
+  三层分类、Adapter 位置（experiments/phase_i5/）、Decision Matrix A-E、Measurement
+  Dimensions（不冻结数值阈值）。
+- **下一步**：I-5-1 Integration Boundary Analysis。No code until analysis complete。

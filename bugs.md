@@ -762,7 +762,7 @@
   编码显示问题。
 
 ### BUG-V3-041 — Mathematical Layout Fragmentation (Resolver Bottleneck)
-- Status: Deferred → Phase I-3
+- Status: Deferred → Phase I-5 (Preprocessed Source Integration)
 - 登记：2026-09-09 20:30:00
 - 现象：数学 PDF 中公式/表达式被 native extraction 物理拆散到多行，Resolver 无法建立语义 span。
 - 示例：
@@ -782,9 +782,19 @@
   `marker_not_found`）。根因 = 题号/选项标签在数学 PDF 中出现 190+ 次，Resolver 单行 marker
   匹配无法唯一确定。**这是 Source Provider Layer layout reconstruction 能力缺失，不是 Resolver
   bug。** Resolver fail-loud 行为符合 V3 invariant（宁可拒绝确定，不允许错误定位）。
+- **Phase I-4 实验确认（2026-09-10）**：SourceSpan layout evidence（font/size/flags/bbox/
+  origin）对 42 个 marker_ambiguous target 消歧率 = **0%**。根因确认为 semantic role
+  insufficiency，非 geometric deficiency。Layout evidence 描述"在哪里、长什么样"，无法回答
+  "是什么角色"。
+- **Phase I-5 方向（2026-09-10）**：外部预处理项目（PaddleOCR-VL → LLM annotation → manifest）
+  提供了 structural role 信息。12 份已审核文档集成验证：42/42 marker 被 manifest 正确分类。
+  Phase I-5 定义为 Preprocessed Source Integration Feasibility Experiment，先做边界冻结
+  （65_PHASE_I5_SCOPE_FREEZE.md），再做 Integration Boundary Analysis。
 - **裁决**：Not a Source layer defect。Source 保持 immutable factual extraction。
-  Future handling 归属 **Phase I-3 Source Provider Layer Evaluation**。
-- 验收：Phase I-3 评估 native/OCR/hybrid provider 对数学试卷的结构恢复能力。
+  根因不在 Resolver 也不在 layout evidence，而在 semantic role 信息缺失。解决方案方向 =
+  上游结构化输入（manifest），非 Resolver 增强。
+- 验收：Phase I-5 实验证明 manifest 集成能否在不破坏 V3 边界的前提下提升端到端
+  resolution/admission 正确性。
 
 ### BUG-V3-043 — GateService figures 注入缺失
 - Status: Resolved
