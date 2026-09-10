@@ -1168,3 +1168,38 @@ Date: 2026-09-05
   再决定是否修改。
 - **文档**：`Docs/V3_SPEC/Closure/PHASE_I3_CLOSURE.md` +
   `63_ARCHITECTURE_COMPLEXITY_GUARDRAILS.md`。
+
+### 2026-09-10（Phase I-4 CLOSED — Valid Negative Result）
+
+- **Status: Phase I-4 CLOSED**。Closure Type = **Valid Negative Result**（§10.8 Option 3）。
+  工程目标成功完成；span-level layout evidence 对当前数学 PDF marker ambiguity 无有效改善。
+- **实验闭环**：I-4-1（evidence read path + diagnostic layer，21 tests）→ I-4-2（真实数学
+  PDF replay，frozen input：11 页 / 2377 行 / 3641 spans / 19 题 / 51 targets，权重不调优）
+  → Before/After 测量 → 负结果冻结。
+- **核心测量结果**：
+  - Before: 42 marker_ambiguous / 9 resolved（17.6%）
+  - After: **0 unique with evidence** / 42 still ambiguous（**0% unique rate**）
+  - Tied top-2 scores: **34/42（81%）**
+  - 正确答案排名：P1L006（Q1 真正起点）排第 **123/190**（score 0.30），被孤立数字 span
+    （坐标值/分数分子，score 0.90）压倒
+- **根因**：数学 PDF 产生数千个孤立数字 span（坐标/分数/指数），其 layout evidence 与题号
+  完全相同。**Layout evidence 无法区分 semantic role**——这是 information insufficiency
+  problem，不是 algorithm deficiency。
+- **架构结论**：Phase I-4 的目标不是降低 unresolved，而是验证 SourceSpan evidence 是否具有
+  实际 diagnostic value。实验成功回答：**在当前 failure mode 下，没有**。这是一个
+  valid negative result。
+- **冻结负结果**（§10.10）：在出现新测量证据之前，禁止继续调 evidence scoring 权重、增加
+  span-level layout heuristic、为特定 marker 加规则、把 evidence.py 演化成第二个 Resolver、
+  建 Document Layout Engine。
+- **新增架构原则**（§10.9）：**Evidence Sufficiency Before Architecture Expansion**——在引入
+  新结构层前，必须先审计当前 immutable Source evidence 是否已包含所需信息。
+- **代码变更**：evidence.py 空 marker 防御边界（`if not marker: return []`）；权重常量文档
+  标注 experimental diagnostic heuristics；evidence_replay.py 修复 2 个字段错误；test_evidence.py
+  +2 空 marker 测试。全量 pytest **506 passed**（1 flaky seal concurrency）。
+- **Commit**：`759c5a3`（evidence 空 marker 修复 + I-4-2 replay + 评估文档 + 架构约束 §10）。
+- **下一方向**（NOT STARTED）：**Phase I-5 Context Sufficiency Investigation**——调查当前
+  Source evidence 中 line/page/document context 是否已足以区分 question marker 的 semantic role。
+  I-5 必须从 context audit 开始，不从代码开始。只有 I-5 证明 context 能解决 ambiguity，才值得
+  修改 Resolver。
+- **文档**：`Docs/V3_SPEC/Closure/PHASE_I4_CLOSURE.md` + `64_PHASE_I4_EVIDENCE_EVALUATION.md`
+  + `63_ARCHITECTURE_COMPLEXITY_GUARDRAILS.md` §10.9/§10.10。

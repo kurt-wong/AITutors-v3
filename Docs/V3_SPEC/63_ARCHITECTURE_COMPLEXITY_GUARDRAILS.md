@@ -359,6 +359,68 @@ Failure to reduce ambiguity is a valid experimental result.
 
 The implementation MUST NOT be expanded merely to force a positive outcome.
 
+### 10.9 Evidence Sufficiency Before Architecture Expansion
+
+Status: Frozen Constraint
+Derived From: Phase I-4-2 measured negative result
+Applies From: Phase I-4 Closure onward
+
+Before introducing a new structural layer, subsystem, model, or resolver strategy, the project MUST first determine whether the required information already exists in the current immutable Source evidence.
+
+Decision flow:
+
+```
+Existing Source Evidence
+        ↓
+Sufficiency Audit
+        ↓
+Sufficient?
+   ↙          ↘
+ YES          NO
+  ↓            ↓
+Reuse      Minimal New Layer
+existing
+evidence
+```
+
+PROHIBITED pattern:
+
+```
+Problem observed
+      ↓
+Directly introduce new subsystem / abstraction
+      ↓
+Post-hoc validation
+```
+
+### 10.10 Frozen Negative Result: Span-Level Layout Evidence Insufficient
+
+Status: Frozen Negative Result
+Evidence: Phase I-4-2 real PDF replay (`64_PHASE_I4_EVIDENCE_EVALUATION.md`)
+
+> For the evaluated mathematical PDF failure mode, span-level layout evidence
+> (font, size, flags, bbox, origin, span ordering) did not reduce marker
+> ambiguity or improve resolver correctness.
+>
+> - Ambiguity reduction: **0%** (42 → 42)
+> - Unique evidence winner: **0/42**
+> - Tied top-2 scores: **34/42 (81%)**
+> - Correctness improvement: **0%**
+
+Root cause: **semantic role insufficiency, not geometric deficiency.** Layout evidence can describe where a character is and what it looks like, but cannot determine what role it plays in the document. Distinguishing "question number 1" from "coordinate value 1" requires contextual understanding that span-level layout properties cannot provide.
+
+**Prohibited until new measured evidence emerges:**
+
+- Further tuning of evidence scoring weights
+- Adding new span-level layout heuristics
+- Adding special-case rules for specific marker values
+- Expanding `evidence.py` into a second Resolver
+- Building a Document Layout Engine based on this single PDF
+
+Core rule:
+
+> **No evidence of value → no further optimization.**
+
 ---
 
 ## 11. Final Architectural Rule
