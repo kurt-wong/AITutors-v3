@@ -1231,3 +1231,37 @@ Date: 2026-09-05
 - **下一阶段**：I-5-1 Integration Boundary Analysis——分析 manifest 字段与 V3 contract
   的对应关系，确定最小 Adapter 需求。No code until I-5-1 analysis is complete。
 - **文档**：`Docs/V3_SPEC/65_PHASE_I5_SCOPE_FREEZE.md`。
+
+### 2026-09-10（Phase I-5-1 Boundary Analysis + Step 0/0.5 盲测 + Question 结构定义）
+
+- **Status: Phase I-5-1 完成 + Step 0/0.5 盲测完成 + Question 结构定义（68 号）待进入 Step 4**。
+  A–G / H / Phase 9 / Errata 维持 FINAL CLOSED。
+- **I-5-1 Boundary Analysis**（`66_PHASE_I5_1_BOUNDARY_ANALYSIS.md`）：Manifest 字段逐字段
+  追踪到 V3 contract。Path B（直接构造 ResolvedSpan → IRBuilder → Compiler）实测可行
+  （21/21 ready，21 CompiledLeaf）。14 项测试：seq 映射 / ResolvedSpan 构造 / 错误拒绝 /
+  IRBuilder 消费 / Compiler 输出 = PASS；Resolver 简单用例全部 UNRESOLVED / option_tokens()
+  无法拆分同行多选项 = FAIL（确认 Phase I-4 结论）。
+- **Manifest Capability Check**：Composite = 原子单元（不拆子题，用户裁决）；共享答案表 =
+  manifest 未提取 per-question answer（需 LLM，预处理项目职责）；Options = 仅范围无逐选项
+  拆分（需预处理层增强）。
+- **架构方向讨论收敛**：LLM 负责理解（这是什么、在哪里），代码负责验证（引用是否合法）。
+  Resolver 从"搜索器"变为"校验器"。67 号文档（`67_ANNOTATION_RESOLVER_BOUNDARY_ADJUSTMENT.md`）
+  经两轮对抗性审查修订，方向冻结但实施暂停——需先完成 Step 0 验证。
+- **Step 0（非盲测）**：Claude 基于带行号源文本输出结构标注，45/45 = 100%（有数据污染，
+  仅 Proof of Capability）。
+- **Step 0.5（盲测，MIMO API mimo-x-pro-preview）**：
+  - Case A 数学（21 units）：84/84 = **100% exact**（stem/options/answer/explanation 全对）
+  - Case C 物理（24 units，共享答案表）：answer **24/24 = 100%**，explanation 24/24 = 100%，
+    options 20/20 = 100%，stem 19/24（5 partial 是 GT stem 定义不够精确）
+  - Case B 地理（19 units，composite 为主）：修正 prompt 后 19/19 units，explanation 19/19，
+    answer 18/19 = 94.7%；material 范围不完整（LLM 只取首行）
+  - **Composite grouping 对 prompt contract 具有明显响应性**（34→19 units），普遍性待验证
+- **Question 结构定义**（`68_QUESTION_STRUCTURE_DEFINITION.md`）：Question = 题库最小完整
+  使用单元；Composite = 一个 Question（非 parent+child）；判定 OR（显式 grouping / 共同
+  依赖）；stem = 题干语义区域（不含 options）。经对抗性审查修订（stem 必须存在 → 作答内容
+  必须存在；material 不限于 composite；Rule B 边界约束；answer reference 非 value）。
+- **新文件**：`66_PHASE_I5_1_BOUNDARY_ANALYSIS.md` / `67_ANNOTATION_RESOLVER_BOUNDARY_
+  ADJUSTMENT.md` / `68_QUESTION_STRUCTURE_DEFINITION.md` / `scripts/step0_blind_test.py` /
+  `scripts/geo_llm_output.json`。
+- **下一步**：Step 4（Manifest Expressiveness Check）——按 68 号 Question 模型检查 manifest
+  是否能完整表达全部结构关系。在此之前不修改 V3 正式代码。
