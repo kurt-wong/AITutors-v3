@@ -86,7 +86,7 @@ async def _content_tables(tables):
     return tables - {"alembic_version"} - _RUNTIME
 
 
-async def test_db_tables_exact_19() -> None:
+async def test_db_tables_exact_20() -> None:
     tables, _, _ = await _snapshot()
     db_tables = await _content_tables(tables)
     assert db_tables == EXPECTED_TABLES

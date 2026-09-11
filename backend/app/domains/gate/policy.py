@@ -178,7 +178,10 @@ def evaluate(
             provenance_reasons.append(
                 f"span {sid!r} ({role}) resolution={res} not byte-proven; requires manual review"
             )
-    if len(set(byte_proven_spans)) != len(byte_proven_spans):
+    # 重复 span 检查：覆盖所有被消费的 content span（含 contextual/fuzzy），
+    # 不仅 byte_proven_spans——任一 resolution 的 span 不得被多个 leaf 重复消费。
+    all_consumed = byte_proven_spans + [sid for _, sid, _ in unproven_spans]
+    if len(set(all_consumed)) != len(all_consumed):
         provenance_reasons.append("duplicate content span consumed across candidate leaves")
 
     # provenance 层 fail 仅当证据矛盾（text_hash mismatch）；resolution 非 exact/normalized
