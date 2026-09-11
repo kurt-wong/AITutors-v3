@@ -1461,3 +1461,66 @@ ChatGPT 独立执行了代码静态审查，双方经过多轮 meta-review 收�
 3. **Step 5**：补 Manifest Contract（answer_text + options）
 4. **Step 6**：设计 I-5-2 Adapter（Translator + Validator，非第二个 Resolver）
 5. **Step 7**：Path B Full Closure E2E（含 Provenance Golden Test + Replay 验证）
+
+---
+
+## 2026-09-11（Step 3 裁决：67 号 Conditional Acceptance）
+
+### 裁决结果
+
+**有条件接受（Conditional Acceptance）。**
+
+67 号核心架构方向获得原则性接受：**Source Pointer ≠ Source Content。**
+Resolver 从"搜索 Source"调整为"验证 Source Binding Claim"，架构原则上成立。
+本裁决不等同于立即修改 Frozen Spec 或发布 Errata。
+
+### 已接受的架构原则
+
+- `line_refs` = Source Binding Claim（非 Source Content / 非 Position Fact）
+- LLM = Semantic + Binding Proposal Authority
+- Resolver = Reference Integrity Authority
+- Source = Fact Authority
+- Admission = Persistence Authority
+- Adapter 不得成为第二个 Semantic Resolver
+
+### Authority 分层
+
+| 权限 | LLM | Resolver | Admission |
+|------|-----|----------|-----------|
+| 理解语义 / 提出 line_refs | ✓ | | |
+| 引用合法性 / Source 存在 / span integrity | | ✓ | |
+| 语义正确性最终确认 / 创建 Question | | | ✓ |
+
+### Errata Gate（四道门）
+
+| Gate | 内容 | 状态 |
+|------|------|------|
+| A — Identity Closure | B5-3 Identity 分层：Semantic Identity / Binding Claim / Resolved Evidence | **OPEN** |
+| B — Legacy vs Path B 对比 | 真实 corpus 对比（exact/normalized/contextual/fuzzy/ambiguous/missing/validated） | **OPEN** |
+| C — Safety Invariant Preservation | Source immutable / LLM 无 Admission Authority / invalid fail-closed / cross-source fail-closed / span integrity / replay identity | **OPEN** |
+| D — Adapter Boundary | Contract Translator，非 Semantic Resolver | **OPEN** |
+
+### 当前禁止事项（OQ-1 完成前）
+
+- 不修改 Frozen Spec §4.3 FORBIDDEN_FIELDS
+- 不发布 67 号 Errata
+- 不将 Path B 实验代码视为正式管线
+
+### 正式状态
+
+```
+67 号：CONDITIONALLY ACCEPTED
+Frozen Spec：UNCHANGED
+Errata：BLOCKED BY OQ-1 + Gate B/C
+Path B：VALIDATED EXPERIMENTAL PATH
+```
+
+### 下一步（按序执行）
+
+1. **OQ-1**：B5-3 Identity 分层分析（Gate A）
+2. **Gate B**：Legacy vs Path B 真实 corpus 对比
+3. **Gate C**：Safety Invariant Preservation 验证
+4. **OQ-3 → OQ-2**：物化层 / Standalone+Material 裁决
+5. **Errata Decision**（Gate A-D 全部通过后）
+6. **I-5-2 Adapter**（Gate D 约束）
+7. **Path B Full Closure E2E**

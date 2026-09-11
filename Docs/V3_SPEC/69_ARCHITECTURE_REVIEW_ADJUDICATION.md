@@ -281,19 +281,155 @@ Implementation Gate: C-2 的 Annotation Contract 设计裁决
 ```text
 Step B/B5/C 裁决（本文件）     ← 已完成
         ↓
+Step 3: 67 号 Contract Change 裁决  ← 已完成（2026-09-11，有条件接受）
+        ↓
 OQ-1: B5-3 Identity 分层分析
         ↓
-OQ-2: Standalone + Material Annotation Contract 设计
+Gate B: Legacy vs Path B 真实 corpus 对比
         ↓
-Step D: 67 Structural Claim ↔ Resolver Contract
+Gate C: Safety Invariant Preservation 验证
         ↓
-Step 4: Manifest Expressiveness Audit
-        ↓
-Errata Decision
+Errata Decision（Gate A-D 全部通过后）
         ↓
 Owner Decision
         ↓
-I-5-2 Adapter Contract
+I-5-2 Adapter Contract（Gate D 约束）
 ```
 
 **在此之前不修改 V3 正式代码。**
+
+---
+
+## 9. Step 3 裁决：67 号 Contract Change（2026-09-11）
+
+### 裁决结果
+
+**有条件接受（Conditional Acceptance）。**
+
+67 号提出的核心架构方向获得原则性接受：**Source Pointer ≠ Source Content。**
+
+允许 Semantic Annotation 提供 Source Binding Claim，由确定性代码对该 Claim 进行
+Reference Integrity Validation，Resolver 继续持有 Source Reference Integrity Authority。
+Resolver 从"搜索 Source"模式调整为"验证 Source Binding Claim"模式，架构原则上成立。
+
+本裁决**不等同于立即修改 Frozen Spec，也不等同于正式采纳 67 号 Contract Change**。
+
+### 一、已接受的架构原则
+
+1. `line_refs` 可以作为 **Source Binding Claim**。
+2. Source Binding Claim 不等于 Source Content。
+3. LLM 可以提出 Source Binding Selection。
+4. LLM 不获得 Source Content Authority。
+5. LLM 不获得 Reference Integrity Authority。
+6. Resolver 保留 Reference Integrity Authority。
+7. 最终 Source Content 必须来自 Sealed Source。
+8. Invalid / ambiguous / unverifiable binding 不得进入自动 Admission。
+9. Adapter 不得成为第二个 Semantic Resolver。
+
+### 二、Authority 分层（正式确认）
+
+| 权限 | LLM | Resolver/Validator | Admission |
+|------|-----|--------------------|-----------|
+| 理解题目语义 | **✓** | | |
+| 提出 line_refs | **✓** | | |
+| 判断引用是否合法 | | **✓** | |
+| 确认 Source 存在 | | **✓** | |
+| 计算/验证 span integrity | | **✓** | |
+| 语义正确性最终确认 | | | **✓** |
+| 创建 Question | | | **✓** |
+
+**LLM = Semantic + Binding Proposal Authority**
+**Resolver = Reference Integrity Authority**
+**Source = Fact Authority**
+**Admission = Persistence Authority**
+
+### 三、三层 Identity 模型（OQ-1 方向指引）
+
+```text
+┌──────────────────────┐
+│ Semantic Identity    │  "这是什么？"
+│ question_type/object │  → identity hash
+│ /task/method/...     │
+└──────────┬───────────┘
+           │
+┌──────────▼───────────┐
+│ Source Binding Claim │  "我认为它在哪里？"
+│ line_refs / spans    │  → claim, not truth
+└──────────┬───────────┘
+           │ validation
+┌──────────▼───────────┐
+│ Resolved Evidence    │  "代码验证后实际引用了什么？"
+│ Source Version + span│  → 进入 IR/Compiler/Gate/Admission
+└──────────────────────┘
+```
+
+核心问题：Semantic Annotation 的身份由什么决定？Source Binding Claim 的变化是否
+构成 Annotation 的语义变化？
+
+### 四、当前不得立即执行的事项
+
+在 OQ-1 完成之前：
+
+- 不修改 Frozen Spec §4.3 `FORBIDDEN_FIELDS`
+- 不正式删除 `line_refs` 禁止项
+- 不发布 67 号 Errata
+- 不宣称新 Resolver Contract 已正式生效
+- 不将 Path B 实验代码直接视为 Frozen V3 正式管线
+
+### 五、Errata Gate（四道门）
+
+#### Gate A — Identity Closure
+
+必须完成 B5-3 Identity Semantics 裁决，明确 Semantic Annotation Identity /
+Source Binding Claim / Resolved Evidence 三者之间的身份关系及 hash / dedup 规则。
+
+特别需要证明：
+- A1: 不同 `line_refs` + same semantic annotation → 不无意义地制造不同 Annotation identity
+- A2: 真正不同的 semantic content → different identity，不能因 line_refs 被剥离而错误合并
+- A3: ResolvedSpan 的 Source identity 不得被 Annotation identity 覆盖
+
+#### Gate B — Legacy / Path B 对比
+
+必须使用真实 Phase I-4 / I-5 corpus，对旧 Search Resolver 与 Path B Validator 进行
+可重复的对比实验，至少报告：exact / normalized / contextual / fuzzy / ambiguous /
+missing / validated / final usable references。
+
+不得仅以 `21/21 ready IR` 作为完整可行性证明。21/21 是局部 feasibility evidence，
+不是 corpus-level evidence。
+
+#### Gate C — Safety Invariant Preservation
+
+新 Contract 必须重新证明：
+- C1: Source immutable（Pointer 不能写 Source）
+- C2: LLM 无 Admission Authority（line_refs 只能进入 claim）
+- C3: Invalid pointer fail-closed（line_ref 不存在 → 拒绝）
+- C4: Cross-source pointer fail-closed（Source Version A 引用 B 的 line → 拒绝）
+- C5: Span integrity 可验证（不能仅"line 102 exists"就认为 resolved）
+- C6: Replay identity 不因非语义 pointer formatting 变化而破坏
+
+#### Gate D — Adapter Boundary
+
+I-5-2 Adapter 必须保持为 Contract Translator，不得引入：
+- 第二事实来源
+- 第二 Resolver
+- 隐式 fuzzy matching
+- 自主 Source 内容生成
+- 独立 semantic decision
+
+### 六、正式状态
+
+```text
+67 号：CONDITIONALLY ACCEPTED
+Frozen Spec：UNCHANGED
+Errata：BLOCKED BY OQ-1 + Gate B/C
+Path B：VALIDATED EXPERIMENTAL PATH
+```
+
+### 七、裁决依据
+
+- Step 0.5 盲测：Case A 100% / Case C 100% / Case B 94.7%（LLM 可产出高质量 line_refs）
+- Phase I-4：layout evidence 消歧率 0%（旧 Resolver 结构性失效）
+- I-5-1：21/21 ready IR（Path B 全链路技术可行）
+- 69 号 B5-3：Identity semantics OPEN，禁止提前关闭
+- 核心原则：不因旧 Spec 的 FORBIDDEN 就拒绝已被实验支持的架构方向；
+  不因 Path B 21/21 成功就跳过 OQ-1

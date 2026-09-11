@@ -1168,3 +1168,21 @@ Step 5 已于 commit `0917404` 落盘（含 Status/log/restart v1.10 收口）�
 - **产出**：restart-prompt.md v1.31 + Status.md 快照 + log.md 条目。
 - **下一步**：Step 3 裁决 67 号 → Step 4 裁决 OQ-3/OQ-2 → Step 5 补 Manifest Contract →
   Step 6 设计 Adapter → Step 7 Path B Full Closure E2E。
+
+### 2026-09-11（Step 3 裁决：67 号 Conditional Acceptance）
+
+- **裁决**：有条件接受。67 号核心方向（Source Pointer ≠ Source Content）原则性接受；
+  Resolver 从"搜索"调整为"验证 Source Binding Claim"架构上成立。
+  不立即修改 Frozen Spec，不发布 Errata。
+- **Authority 分层确认**：LLM = Semantic + Binding Proposal Authority；
+  Resolver = Reference Integrity Authority；Source = Fact Authority；
+  Admission = Persistence Authority。
+- **三层 Identity 模型**（OQ-1 方向）：Semantic Identity → Source Binding Claim →
+  Resolved Evidence。
+- **Errata Gate 四道门**：A（Identity Closure）/ B（Legacy vs Path B 对比）/
+  C（Safety Invariant Preservation）/ D（Adapter Boundary）。
+- **正式状态**：67 CONDITIONALLY ACCEPTED；Frozen Spec UNCHANGED；
+  Errata BLOCKED BY OQ-1 + Gate B/C；Path B VALIDATED EXPERIMENTAL PATH。
+- **产出**：69 号 §9 Step 3 裁决 + Status.md 快照 + log.md 条目 + restart-prompt v1.32。
+- **下一步**：OQ-1 Identity 分层分析 → Gate B corpus 对比 → Gate C 安全不变量验证 →
+  OQ-3/OQ-2 → Errata Decision → I-5-2 Adapter → Path B Full Closure E2E。

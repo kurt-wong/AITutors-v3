@@ -1,52 +1,48 @@
 # AI Tutor V3 — RESTART PROMPT
 
-Version: v1.31
-Status: **P0 Closure Pack 关闭** — 安全执行框架已证明；
-唯一剩余 P0 = Phase I-5 Path B Full Closure；
-下一步 = Step 3 裁决 67 号 → Step 4 裁决 OQ → Step 5-7 Path B 闭环
+Version: v1.32
+Status: **Step 3 裁决完成** — 67 号 Conditional Acceptance；
+Errata BLOCKED BY OQ-1 + Gate B/C；
+下一步 = OQ-1 Identity 分层 → Gate B 对比 → Gate C 安全不变量
 Date: 2026-09-11
 
-## 0.0 当前结论（2026-09-11 P0 Closure Pack 关闭）
+## 0.0 当前结论（2026-09-11 Step 3 裁决完成）
 
 - **A–G / H Phase 1–8 / Phase 9 / Errata 维持 FINAL CLOSED**。
 - **Phase I-3 CLOSED**：Source Evidence Preservation Layer。
 - **Phase I-4 CLOSED**：Valid Negative Result——layout evidence 消歧率 0%。
-- **Phase I-5 进行中**：I-5-0 → I-5-1 → Step 0/0.5 盲测 → 68 号 → Step B/B5/Step C 裁决（69 号）
-  → 全代码库对抗性审查 → **P0 Closure Pack 关闭（本轮）**。
+- **Phase I-5 进行中**：I-5-0 → I-5-1 → 盲测 → 68/69 号 → 全代码库对抗性审查 →
+  P0 Closure Pack 关闭 → **Step 3 裁决（本轮）**。
+- **Step 3 裁决（67 号 Contract Change）**：**有条件接受（Conditional Acceptance）**。
+  - 核心方向接受：Source Pointer ≠ Source Content；Resolver 从"搜索"→"验证"。
+  - Authority 分层：LLM = Semantic + Binding Proposal；Resolver = Reference Integrity；
+    Source = Fact；Admission = Persistence。
+  - Frozen Spec：UNCHANGED。Errata：BLOCKED BY OQ-1 + Gate B/C。
+  - 四道 Errata Gate：A（Identity Closure）/ B（Legacy vs Path B 对比）/
+    C（Safety Invariant Preservation）/ D（Adapter Boundary）。
 - **状态基线（2026-09-11）**：
   - Architecture Design: **PASS WITH RESERVATIONS**
   - Core Safety Model: **PASS**
-  - Local Invariants: **PASS / TEST-EVIDENCED**（510 测试，510 通过）
+  - Local Invariants: **PASS / TEST-EVIDENCED**（510/510）
   - Cross-Boundary Invariants: **PASS / TEST-EVIDENCED**
-  - Admission Atomicity: **PASS**（flush→exception→rollback→0 行）
-  - Admission Concurrency: **PASS — 10/10**（FOR UPDATE 串行化）
-  - Test Isolation: **PASS / TEST-EVIDENCED**（双层隔离：_env_file=None + monkeypatch.delenv）
-  - Resolver Algorithm Safety: **PASS**（不猜、确定性、fail-safe）
-  - Resolver Real-World Coverage: **FAIL**（16.7%——由 Phase I-5 Path B 解决，非加强 Resolver）
-  - Phase I-5 Path B → IR/Compiler: **PROVEN**（21/21 ready IR）
-  - Phase I-5 Path B → Gate/Admission: **NOT YET PROVEN**
-  - Manifest Expressiveness: **2 GAPS**（answer_text、options 预拆分）
-  - 67 Contract Change: **OPEN / P0 DECISION**（Source Pointer ≠ Source Content）
-  - OQ-1/OQ-2/OQ-3: **OPEN / P0 DECISION**
-  - Figure Integrity Semantics: **OPEN / P1**
+  - Admission Atomicity: **PASS**；Admission Concurrency: **PASS — 10/10**
+  - Test Isolation: **PASS / TEST-EVIDENCED**
+  - Resolver Algorithm Safety: **PASS**；Resolver Real-World Coverage: **FAIL — 16.7%**
+  - Path B → IR/Compiler: **PROVEN — 21/21**；→ Gate/Admission: **NOT YET PROVEN**
+  - 67 Contract Change: **CONDITIONALLY ACCEPTED**（Errata BLOCKED）
+  - OQ-1/OQ-2/OQ-3: **OPEN**
   - Full Production Pipeline: **NOT YET CLOSED**
-- **关键判断**：
-  - P0-2（Admission 原子性）/ P0-3（并发 Approval）/ P0-4（测试隔离）**已关闭**。
-  - **唯一剩余 P0 = Phase I-5 Path B Full Closure**。
-  - V3 安全执行框架已基本证明（Source Truth / Resolver / Gate / Admission / 并发 / 幂等 /
-    Replay / Task safety / Budget / Audit / Schema / Test isolation）。
-  - V3 真实试题数据生产闭环未证明（Manifest → Adapter → IR → Compiler → Gate → Admission）。
-  - **21/21 ready IR ≠ Full Closure**——Gate/Admission 未验证。
-  - **不再做大范围基础架构对抗审查**——注意力全部转向 Phase I-5。
 - **红线（不变）**：HTTP retry ≠ LLM retry ≠ fallback；先冻结 Spec 再改代码；
   Schema Source of Truth = 20_Document_Pipeline.md；Resolver 不猜；
   实验结果 ≠ 实施授权；提议修改 ≠ 违反 Frozen Spec。
 - **下一步（按序执行）**：
-  1. **Step 3**：裁决 67 号 Contract Change（Source Pointer ≠ Source Content）
-  2. **Step 4**：裁决 OQ-3（leaf Materialization）→ OQ-2（Standalone+Material Annotation）
-  3. **Step 5**：补 Manifest Contract（answer_text + options）
-  4. **Step 6**：设计 I-5-2 Adapter（Translator + Validator，非第二个 Resolver）
-  5. **Step 7**：Path B Full Closure E2E（含 Provenance Golden Test + Replay 验证）
+  1. **OQ-1**：B5-3 Identity 分层分析（Gate A）
+  2. **Gate B**：Legacy vs Path B 真实 corpus 对比
+  3. **Gate C**：Safety Invariant Preservation 验证
+  4. **OQ-3 → OQ-2**：物化层 / Standalone+Material 裁决
+  5. **Errata Decision**（Gate A-D 全部通过后）
+  6. **I-5-2 Adapter**（Gate D 约束：Contract Translator，非 Semantic Resolver）
+  7. **Path B Full Closure E2E**（含 Provenance Golden Test + Replay 验证）
 - 重启后第一任务：读本文件 → Status.md 尾 → log.md 尾 → bugs.md →
   按上述 Step 顺序执行。
 
