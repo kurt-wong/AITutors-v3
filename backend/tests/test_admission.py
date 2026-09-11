@@ -5,6 +5,7 @@
 P0-G-003（machine/human reject 证据链）；防双物化 no-op；terminal 拒迁；人工 approve 路径。
 """
 
+import asyncio
 import uuid
 
 import pytest
@@ -20,6 +21,7 @@ from app.models.snapshot import (
 )
 from app.models.source import DocumentSourceLine
 from app.repositories.base import AppendOnlyViolation, RepositoryError
+from app.repositories.content_repository import ContentRepository
 from app.repositories.snapshot_repository import SnapshotRepository
 from app.repositories.source_repository import SourceRepository
 
@@ -433,6 +435,105 @@ async def test_materialized_instance_inherits_candidate_le_provenance():
                 "instance LE provenance 应原样继承其物化 admission 的 candidate "
                 "(10 §6.2/§3)，而非 NULL/新生成")
             await s2.rollback()
+    finally:
+        if sv_id:
+            async with async_session_maker() as sc:
+                await _purge_materialized(sc, sv_id=sv_id, doc_id=doc_id)
+                await sc.commit()
+
+
+# ------------------------------------------------------------------ P0：原子性 + 并发
+
+async def test_materialize_failure_rolls_back_all_a_domain_rows():
+    """Admission 失败原子性（10 §5.2/§5.4）：物化中途异常 → 调用方不 COMMIT →
+    整体 ROLLBACK → A 域行数为 0，candidate 保持 pending_review。
+
+    monkeypatch create_role_content 抛异常（Question + Instance 已 flush），
+    验证 rollback 后 questions/question_instances/instance_role_contents/
+    unit_groups/admission_events 全为空。
+    """
+    sv_id = doc_id = None
+    cand_id = None
+    try:
+        async with async_session_maker() as s1:
+            sv, ann = await _seed(s1)
+            sv_id, doc_id = str(sv.id), str(sv.document_id)
+            cand = await _make_candidate(s1, sv, ann, _auto_gd())
+            cand_id = cand.id
+            await s1.commit()
+
+        # 注入失败：create_role_content 抛异常（Question + Instance 已 flush）
+        original_crc = ContentRepository.create_role_content
+
+        async def _boom(*args, **kwargs):
+            raise RuntimeError("injected materialize failure")
+
+        ContentRepository.create_role_content = _boom
+        try:
+            async with async_session_maker() as s2:
+                with pytest.raises(RuntimeError, match="injected materialize failure"):
+                    await AdmissionService(s2).approve(
+                        candidate_id=cand_id, provenance={"source": "auto_gate"})
+                await s2.rollback()  # 调用方不 COMMIT → 整体 ROLLBACK
+        finally:
+            ContentRepository.create_role_content = original_crc
+
+        # 验证 rollback 后 A 域全空
+        async with async_session_maker() as s3:
+            assert await _counts(s3, Question) == 0, "rollback 后 questions 应为 0"
+            assert await _counts(s3, QuestionInstance) == 0, "rollback 后 instances 应为 0"
+            assert await _counts(s3, InstanceRoleContent) == 0, "rollback 后 role_contents 应为 0"
+            assert await _counts(s3, UnitGroup) == 0, "rollback 后 unit_groups 应为 0"
+            assert await _counts(s3, AdmissionEvent) == 0, "rollback 后 admission_events 应为 0"
+            # candidate 仍 pending_review（无 "approved 但未物化" 中间态）
+            row = (await s3.execute(
+                text("SELECT decision_status FROM admission_candidates WHERE id=:i"),
+                {"i": str(cand_id)})).scalar_one()
+            assert row == "pending_review"
+    finally:
+        if sv_id:
+            async with async_session_maker() as sc:
+                await _purge_materialized(sc, sv_id=sv_id, doc_id=doc_id)
+                await sc.commit()
+
+
+async def test_concurrent_approve_single_materialization():
+    """并发 Approval：两个 DB Session 同时 approve 同一 Candidate → 恰 1 物化。
+
+    lock_candidate (FOR UPDATE) 串行化两个 session；后到者看到 approved → no-op。
+    验证：两调用均返回 approved，admission_events=1，question_instances=1。
+    """
+    sv_id = doc_id = None
+    try:
+        async with async_session_maker() as s1:
+            sv, ann = await _seed(s1)
+            sv_id, doc_id = str(sv.id), str(sv.document_id)
+            cand = await _make_candidate(s1, sv, ann, _auto_gd())
+            cand_id = str(cand.id)
+            await s1.commit()
+
+        async def _approve():
+            async with async_session_maker() as s:
+                result = await AdmissionService(s).approve(
+                    candidate_id=uuid.UUID(cand_id),
+                    provenance={"source": "auto_gate"})
+                await s.commit()
+                return result.decision_status
+
+        statuses = await asyncio.gather(_approve(), _approve())
+        assert all(st == "approved" for st in statuses), \
+            f"并发 approve 应均返回 approved，实为 {statuses}"
+
+        # 验证单次物化
+        async with async_session_maker() as s3:
+            n_ev = (await s3.execute(text(
+                "SELECT count(*) FROM admission_events WHERE candidate_id=:c"),
+                {"c": cand_id})).scalar()
+            n_i = (await s3.execute(text(
+                "SELECT count(*) FROM question_instances WHERE source_version_id=:s"),
+                {"s": sv_id})).scalar()
+            assert n_ev == 1, f"并发 approve 应恰 1 admission_event，实为 {n_ev}"
+            assert n_i == 1, f"并发 approve 应恰 1 instance，实为 {n_i}"
     finally:
         if sv_id:
             async with async_session_maker() as sc:
