@@ -1365,3 +1365,99 @@ ChatGPT 独立执行了代码静态审查，双方经过多轮 meta-review 收�
 5. Step 5：补 Manifest Contract（answer_text + options）
 6. Step 6：设计 I-5-2 Adapter
 7. Step 7：Path B Full Closure E2E
+
+---
+
+## 2026-09-11（P0 Closure Pack 关闭 + 对抗性审查通过）
+
+### 背景
+
+上轮对抗性审查（2026-09-10）发现 4 个 P0 + 3 个 P1。本轮按 Step 1→2 顺序修复，
+每轮修复后开启严格对抗性审查（每个结论必须有真实测试证据）。
+
+### Step 1：测试隔离修复
+
+| 问题 | 根因 | 修复 |
+|------|------|------|
+| test_config `.env` 泄漏 | `Settings()` 缺 `_env_file=None` | 添加 `_env_file=None` |
+| test_h_seal_concurrency DB 隔离 | count 无 WHERE + 无前置 cleanup | WHERE `original_sha256` + 前后双 cleanup |
+| test_question_dedup_concurrency DB 隔离 | 同上 | WHERE `dedup_key` + 前后双 cleanup |
+
+### Step 2：Admission 测试补全
+
+| 新测试 | 验证内容 |
+|--------|----------|
+| `test_materialize_failure_rolls_back_all_a_domain_rows` | 物化中途异常 → ROLLBACK → A 域 5 表全空 + candidate 仍 pending_review |
+| `test_concurrent_approve_single_materialization` | 两个 DB Session 并发 approve → FOR UPDATE 串行化 → 恰 1 物化 |
+
+### P1 修复
+
+| 问题 | 修复 |
+|------|------|
+| `test_db_tables_exact_19` 命名不一致 | 重命名为 `test_db_tables_exact_20` |
+| `policy.py` 重复 span 检查不完整 | 扩展到所有 resolution 类型（含 contextual/fuzzy） |
+| `test_minimal_required_ok` `.env` 泄漏 | `_env_file=None` + `monkeypatch.delenv`（LLM_GATEWAY_MODE, MIMO_API_KEY） |
+| `test_future_surface_defaults_and_not_required` 同上 | 同上 |
+
+### 对抗性审查结果（三轮）
+
+**第一轮（Step 1+2+P1）**：7 维度审查，全部 PASS。
+- test_config `_env_file=None` 有效阻止 `.env` 泄漏（真实对比验证）
+- test_h_seal_concurrency JOIN 查询正确可执行
+- 原子性测试有效：Question/Instance flush=True → rollback → 0 行
+- 并发测试可靠：10/10 passed，`lock_candidate` 确认使用 `FOR UPDATE`
+- policy.py 重复 span 检查扩展有效：exact/contextual 重复均检测到
+- P1 发现：`test_minimal_required_ok` 仍泄漏 `.env`（无 `_env_file=None`）
+
+**第二轮（test_minimal_required_ok 修复）**：6 维度审查，发现 P1。
+- `_env_file=None` 阻止 `.env` 文件有效
+- 新断言能捕获 `.env` 泄漏（旧断言不能）
+- P1 发现：`_env_file=None` 不阻止 OS 环境变量；两个测试均缺 `monkeypatch.delenv`
+
+**第三轮（monkeypatch.delenv 修复）**：7 维度审查，全部 PASS。
+- delenv 移除 OS 环境变量有效（`'live'`→`None`）
+- 空字符串边界正确处理
+- 全面污染（5 变量）下 6/6 passed
+- 真实 pytest 进程验证 monkeypatch scoping 有效
+- P2 观察：`MIMO_BASE_URL`/`MIMO_MODEL`/`OCR_GATEWAY_MODE` 可泄漏但当前未断言（不处理）
+
+### 最终状态基线
+
+| 维度 | 状态 |
+|------|------|
+| Architecture Design | PASS WITH RESERVATIONS |
+| Core Safety Model | PASS |
+| Local Invariants | PASS / TEST-EVIDENCED |
+| Cross-Boundary Invariants | PASS / TEST-EVIDENCED |
+| Admission Atomicity | PASS |
+| Admission Concurrency | PASS — 10/10 |
+| Test Isolation | PASS / TEST-EVIDENCED |
+| Resolver Algorithm Safety | PASS |
+| Resolver Real-World Coverage | FAIL — 16.7% |
+| Path B → IR | PROVEN — 21/21 |
+| Path B → Compiler | PROVEN — 21/21 |
+| Path B → Gate | NOT YET PROVEN |
+| Path B → Admission | NOT YET PROVEN |
+| Manifest Expressiveness | 2 GAPS |
+| 67 Contract Change | OPEN |
+| OQ-1 / OQ-2 / OQ-3 | OPEN |
+| Figure Integrity Semantics | OPEN / P1 |
+| Full Production Pipeline | NOT YET CLOSED |
+
+### 关键判断
+
+- **P0-2/P0-3/P0-4 已关闭**，不再是项目阻塞项。
+- **唯一剩余 P0 = Phase I-5 Path B Full Closure**。
+- **V3 安全执行框架已基本证明**（Source Truth / Resolver safety / Gate / Admission /
+  Concurrency / Idempotency / Replay / Task safety / Budget / Audit / Schema / Test isolation）。
+- **V3 真实试题数据生产闭环未证明**（Manifest → Adapter → IR → Compiler → Gate → Admission）。
+- **21/21 ready IR ≠ Full Closure**——只证明 Manifest→IR 路径成立，Gate/Admission 未验证。
+- **不再做大范围基础架构对抗审查**——注意力全部转向 Phase I-5。
+
+### 下一步（按序执行）
+
+1. **Step 3**：裁决 67 号 Contract Change（Source Pointer ≠ Source Content）
+2. **Step 4**：裁决 OQ-3（leaf Materialization）→ OQ-2（Standalone+Material Annotation）
+3. **Step 5**：补 Manifest Contract（answer_text + options）
+4. **Step 6**：设计 I-5-2 Adapter（Translator + Validator，非第二个 Resolver）
+5. **Step 7**：Path B Full Closure E2E（含 Provenance Golden Test + Replay 验证）

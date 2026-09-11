@@ -1,49 +1,52 @@
 # AI Tutor V3 — RESTART PROMPT
 
-Version: v1.30
-Status: **全代码库对抗性审查完成** — 架构 PASS WITH RESERVATIONS；
-核心安全模型 PASS；Resolver 覆盖率 FAIL（16.7%，由 Phase I-5 Path B 解决）；
-下一步 = Step 1 修测试隔离 → Step 2 补 Admission 测试 → Step 3 裁决 67 号
-Date: 2026-09-10
+Version: v1.31
+Status: **P0 Closure Pack 关闭** — 安全执行框架已证明；
+唯一剩余 P0 = Phase I-5 Path B Full Closure；
+下一步 = Step 3 裁决 67 号 → Step 4 裁决 OQ → Step 5-7 Path B 闭环
+Date: 2026-09-11
 
-## 0.0 当前结论（2026-09-10 对抗性审查收敛）
+## 0.0 当前结论（2026-09-11 P0 Closure Pack 关闭）
 
 - **A–G / H Phase 1–8 / Phase 9 / Errata 维持 FINAL CLOSED**。
 - **Phase I-3 CLOSED**：Source Evidence Preservation Layer。
 - **Phase I-4 CLOSED**：Valid Negative Result——layout evidence 消歧率 0%。
 - **Phase I-5 进行中**：I-5-0 → I-5-1 → Step 0/0.5 盲测 → 68 号 → Step B/B5/Step C 裁决（69 号）
-  → **全代码库对抗性审查完成（本轮）**。
-- **对抗性审查最终状态基线**：
+  → 全代码库对抗性审查 → **P0 Closure Pack 关闭（本轮）**。
+- **状态基线（2026-09-11）**：
   - Architecture Design: **PASS WITH RESERVATIONS**
   - Core Safety Model: **PASS**
-  - Local Invariants: **PASS / TEST-EVIDENCED**（508 测试，506 通过）
-  - Cross-Boundary Invariants: **PARTIAL**（Admission 原子性/并发测试缺失）
+  - Local Invariants: **PASS / TEST-EVIDENCED**（510 测试，510 通过）
+  - Cross-Boundary Invariants: **PASS / TEST-EVIDENCED**
+  - Admission Atomicity: **PASS**（flush→exception→rollback→0 行）
+  - Admission Concurrency: **PASS — 10/10**（FOR UPDATE 串行化）
+  - Test Isolation: **PASS / TEST-EVIDENCED**（双层隔离：_env_file=None + monkeypatch.delenv）
   - Resolver Algorithm Safety: **PASS**（不猜、确定性、fail-safe）
   - Resolver Real-World Coverage: **FAIL**（16.7%——由 Phase I-5 Path B 解决，非加强 Resolver）
   - Phase I-5 Path B → IR/Compiler: **PROVEN**（21/21 ready IR）
-  - Phase I-5 Full Closure: **NOT YET PROVEN**（Gate/Admission 未验证）
+  - Phase I-5 Path B → Gate/Admission: **NOT YET PROVEN**
   - Manifest Expressiveness: **2 GAPS**（answer_text、options 预拆分）
   - 67 Contract Change: **OPEN / P0 DECISION**（Source Pointer ≠ Source Content）
-  - OQ-2/OQ-3: **OPEN / P0 DECISION**
-  - Test Isolation: **FAIL**（.env 泄漏 + DB state 泄漏）
+  - OQ-1/OQ-2/OQ-3: **OPEN / P0 DECISION**
+  - Figure Integrity Semantics: **OPEN / P1**
   - Full Production Pipeline: **NOT YET CLOSED**
-- **审查发现的真实问题（需修复）**：
-  - P0: test_config `.env` 泄漏；test_h_seal_concurrency DB 隔离失败
-  - P0: Admission 失败原子性测试缺失；并发 Approval 测试缺失
-  - P1: Domain→Infrastructure 依赖（目录归位即可）；policy.py 重复 span 检查不完整
-  - P1: test_db_tables_exact_19 命名不一致（实际 20 表）
-  - OPEN: Figure placement 不进 integrity_hash（需先回 Frozen Spec 定义语义）
+- **关键判断**：
+  - P0-2（Admission 原子性）/ P0-3（并发 Approval）/ P0-4（测试隔离）**已关闭**。
+  - **唯一剩余 P0 = Phase I-5 Path B Full Closure**。
+  - V3 安全执行框架已基本证明（Source Truth / Resolver / Gate / Admission / 并发 / 幂等 /
+    Replay / Task safety / Budget / Audit / Schema / Test isolation）。
+  - V3 真实试题数据生产闭环未证明（Manifest → Adapter → IR → Compiler → Gate → Admission）。
+  - **21/21 ready IR ≠ Full Closure**——Gate/Admission 未验证。
+  - **不再做大范围基础架构对抗审查**——注意力全部转向 Phase I-5。
 - **红线（不变）**：HTTP retry ≠ LLM retry ≠ fallback；先冻结 Spec 再改代码；
   Schema Source of Truth = 20_Document_Pipeline.md；Resolver 不猜；
   实验结果 ≠ 实施授权；提议修改 ≠ 违反 Frozen Spec。
 - **下一步（按序执行）**：
-  1. **Step 1**：修测试隔离（.env + DB）→ 508/508 干净基线
-  2. **Step 2**：补 Admission 失败原子性 + 并发 Approval 测试
-  3. **Step 3**：裁决 67 号 Contract Change（Source Pointer ≠ Source Content）
-  4. **Step 4**：裁决 OQ-3（leaf Materialization）→ OQ-2（Standalone+Material Annotation）
-  5. **Step 5**：补 Manifest Contract（answer_text + options）
-  6. **Step 6**：设计 I-5-2 Adapter（Translator + Validator，非第二个 Resolver）
-  7. **Step 7**：Path B Full Closure E2E（含 Provenance Golden Test）
+  1. **Step 3**：裁决 67 号 Contract Change（Source Pointer ≠ Source Content）
+  2. **Step 4**：裁决 OQ-3（leaf Materialization）→ OQ-2（Standalone+Material Annotation）
+  3. **Step 5**：补 Manifest Contract（answer_text + options）
+  4. **Step 6**：设计 I-5-2 Adapter（Translator + Validator，非第二个 Resolver）
+  5. **Step 7**：Path B Full Closure E2E（含 Provenance Golden Test + Replay 验证）
 - 重启后第一任务：读本文件 → Status.md 尾 → log.md 尾 → bugs.md →
   按上述 Step 顺序执行。
 

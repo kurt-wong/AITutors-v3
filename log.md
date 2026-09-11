@@ -1147,3 +1147,24 @@ Step 5 已于 commit `0917404` 落盘（含 Status/log/restart v1.10 收口）�
 - **产出**：restart-prompt.md v1.30 + Status.md 快照 + log.md 条目。
 - **下一步**：Step 1 修测试隔离 → Step 2 补 Admission 测试 → Step 3 裁决 67 号 →
   Step 4 裁决 OQ-3/OQ-2 → Step 5 补 Manifest Contract → Step 6 设计 Adapter → Step 7 E2E。
+
+### 2026-09-11（P0 Closure Pack 关闭）
+
+- **Step 1 测试隔离修复**：test_config `_env_file=None`；test_h_seal_concurrency /
+  test_question_dedup_concurrency WHERE scoping + 前后双 cleanup。
+- **Step 2 Admission 测试补全**：原子性测试（flush→exception→rollback→0 行）+
+  并发 Approval 测试（FOR UPDATE 串行化，10/10 无 flakiness）。
+- **P1 修复**：test_db_tables_exact_19→20 rename；policy.py 重复 span 检查扩展到所有
+  resolution 类型；test_minimal_required_ok / test_future_surface 双层隔离
+  （`_env_file=None` + `monkeypatch.delenv`）。
+- **三轮对抗性审查**：每轮 6-7 维度，每项真实测试证据。第一轮发现 P1（`.env` 残留）；
+  第二轮发现 P1（OS 环境变量泄漏）；第三轮全部 PASS。
+- **全量回归**：510/510 passed（新增 2 个 Admission 测试）。
+- **状态升级**：Cross-Boundary Invariants → PASS / TEST-EVIDENCED；
+  Admission Atomicity → PASS；Admission Concurrency → PASS — 10/10；
+  Test Isolation → PASS / TEST-EVIDENCED。
+- **关键判断**：P0-2/P0-3/P0-4 已关闭；唯一剩余 P0 = Phase I-5 Path B Full Closure；
+  不再做大范围基础架构对抗审查。
+- **产出**：restart-prompt.md v1.31 + Status.md 快照 + log.md 条目。
+- **下一步**：Step 3 裁决 67 号 → Step 4 裁决 OQ-3/OQ-2 → Step 5 补 Manifest Contract →
+  Step 6 设计 Adapter → Step 7 Path B Full Closure E2E。
