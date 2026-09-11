@@ -1130,3 +1130,20 @@ Step 5 已于 commit `0917404` 落盘（含 Status/log/restart v1.10 收口）�
   层 leaf 独立性。
 - **下一步**：OQ-1 → OQ-2 → Step D → Step 4 → Errata Decision → I-5-2。
   **在此之前不修改 V3 正式代码。**
+
+### 2026-09-10（全代码库对抗性审查收敛）
+
+- **背景**：用户要求对全部代码开启严格对抗性审查，每个结论必须有真实测试证据。
+  Claude 执行 10 维度系统性审查，ChatGPT 独立静态审查，多轮 meta-review 收敛共识。
+- **审查规模**：508 测试运行，40+ 不变量验证，10 维度覆盖（架构/Source/Annotation/
+  Resolver/IR/Compiler/Gate/幂等/任务安全/Schema）。
+- **P0 发现**：test_config .env 泄漏；test_h_seal_concurrency DB 隔离失败；
+  Admission 失败原子性测试缺失；并发 Approval 测试缺失。
+- **P1 发现**：Domain→Infrastructure 依赖（目录归位）；policy.py 重复 span 检查不完整；
+  test_db_tables_exact_19 命名不一致。
+- **关键裁决**：Resolver 覆盖率问题由 Phase I-5 Path B + 67 号架构调整解决，非加强 Resolver；
+  Path B → IR/Compiler PROVEN，Full Closure NOT YET PROVEN；
+  67 号核心原则 = Source Pointer ≠ Source Content。
+- **产出**：restart-prompt.md v1.30 + Status.md 快照 + log.md 条目。
+- **下一步**：Step 1 修测试隔离 → Step 2 补 Admission 测试 → Step 3 裁决 67 号 →
+  Step 4 裁决 OQ-3/OQ-2 → Step 5 补 Manifest Contract → Step 6 设计 Adapter → Step 7 E2E。

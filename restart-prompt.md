@@ -1,33 +1,51 @@
 # AI Tutor V3 — RESTART PROMPT
 
-Version: v1.29
-Status: **Step B/B5/Step C 架构审查裁决完成** — 65/66/67/68 与 Frozen Spec 的影响分析、
-67 Identity/Authority 审查、68 兼容性验证全部裁决；OQ-1/OQ-2/OQ-3 待裁决；
-下一步 = OQ-1 Identity 分层分析
+Version: v1.30
+Status: **全代码库对抗性审查完成** — 架构 PASS WITH RESERVATIONS；
+核心安全模型 PASS；Resolver 覆盖率 FAIL（16.7%，由 Phase I-5 Path B 解决）；
+下一步 = Step 1 修测试隔离 → Step 2 补 Admission 测试 → Step 3 裁决 67 号
 Date: 2026-09-10
 
-## 0.0 当前结论（2026-09-10）
+## 0.0 当前结论（2026-09-10 对抗性审查收敛）
 
 - **A–G / H Phase 1–8 / Phase 9 / Errata 维持 FINAL CLOSED**。
-- **Phase I-3 CLOSED**：Source Evidence Preservation Layer（SourceSpan + document_source_spans）。
-- **Phase I-4 CLOSED**：Valid Negative Result——layout evidence 对数学 PDF marker 消歧率 0%。
-- **Phase I-5 进行中**：I-5-0 Scope Freeze → I-5-1 Boundary Analysis → Step 0/0.5 盲测 →
-  68 号 Question 结构定义 → **Step B/B5/Step C 架构审查裁决完成（69 号文档）**。
-- **Step B 裁决**：65=Evidence / 66=Analysis / 67=**Contract Change（必须 Errata）** / 68=Proposal。
-- **Step B.5 裁决**：B5-1 line_refs=Source Binding Claim；B5-2 Authority 转移确认；
-  B5-3 **OPEN**（Identity 分层）；B5-4 Resolver 定位确认。
-- **Step C 裁决**：C-1 Composite IR 兼容；C-2 Standalone+Material 表达力缺口；
-  C-3 Material=supporting content（NO CONFLICT）。
-- **Question 语义模型**：Composite=ONE Question；sub_question≠Question entity；
-  Material=supporting content（text/image/figure/table/chart/map/diagram/mixed）；
-  Standalone+Material 合法。
+- **Phase I-3 CLOSED**：Source Evidence Preservation Layer。
+- **Phase I-4 CLOSED**：Valid Negative Result——layout evidence 消歧率 0%。
+- **Phase I-5 进行中**：I-5-0 → I-5-1 → Step 0/0.5 盲测 → 68 号 → Step B/B5/Step C 裁决（69 号）
+  → **全代码库对抗性审查完成（本轮）**。
+- **对抗性审查最终状态基线**：
+  - Architecture Design: **PASS WITH RESERVATIONS**
+  - Core Safety Model: **PASS**
+  - Local Invariants: **PASS / TEST-EVIDENCED**（508 测试，506 通过）
+  - Cross-Boundary Invariants: **PARTIAL**（Admission 原子性/并发测试缺失）
+  - Resolver Algorithm Safety: **PASS**（不猜、确定性、fail-safe）
+  - Resolver Real-World Coverage: **FAIL**（16.7%——由 Phase I-5 Path B 解决，非加强 Resolver）
+  - Phase I-5 Path B → IR/Compiler: **PROVEN**（21/21 ready IR）
+  - Phase I-5 Full Closure: **NOT YET PROVEN**（Gate/Admission 未验证）
+  - Manifest Expressiveness: **2 GAPS**（answer_text、options 预拆分）
+  - 67 Contract Change: **OPEN / P0 DECISION**（Source Pointer ≠ Source Content）
+  - OQ-2/OQ-3: **OPEN / P0 DECISION**
+  - Test Isolation: **FAIL**（.env 泄漏 + DB state 泄漏）
+  - Full Production Pipeline: **NOT YET CLOSED**
+- **审查发现的真实问题（需修复）**：
+  - P0: test_config `.env` 泄漏；test_h_seal_concurrency DB 隔离失败
+  - P0: Admission 失败原子性测试缺失；并发 Approval 测试缺失
+  - P1: Domain→Infrastructure 依赖（目录归位即可）；policy.py 重复 span 检查不完整
+  - P1: test_db_tables_exact_19 命名不一致（实际 20 表）
+  - OPEN: Figure placement 不进 integrity_hash（需先回 Frozen Spec 定义语义）
 - **红线（不变）**：HTTP retry ≠ LLM retry ≠ fallback；先冻结 Spec 再改代码；
   Schema Source of Truth = 20_Document_Pipeline.md；Resolver 不猜；
   实验结果 ≠ 实施授权；提议修改 ≠ 违反 Frozen Spec。
-- **下一步**：OQ-1 Identity 分层分析 → OQ-2 Standalone+Material Contract →
-  Step D（67 Structural Claim ↔ Resolver Contract）→ Step 4 → Errata Decision → I-5-2。
-- 重启后第一任务：读本文件 → `Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md` →
-  Status.md 尾 → log.md 尾 → bugs.md → 进入 OQ-1。
+- **下一步（按序执行）**：
+  1. **Step 1**：修测试隔离（.env + DB）→ 508/508 干净基线
+  2. **Step 2**：补 Admission 失败原子性 + 并发 Approval 测试
+  3. **Step 3**：裁决 67 号 Contract Change（Source Pointer ≠ Source Content）
+  4. **Step 4**：裁决 OQ-3（leaf Materialization）→ OQ-2（Standalone+Material Annotation）
+  5. **Step 5**：补 Manifest Contract（answer_text + options）
+  6. **Step 6**：设计 I-5-2 Adapter（Translator + Validator，非第二个 Resolver）
+  7. **Step 7**：Path B Full Closure E2E（含 Provenance Golden Test）
+- 重启后第一任务：读本文件 → Status.md 尾 → log.md 尾 → bugs.md →
+  按上述 Step 顺序执行。
 
 ## 0. 当前工作状态（2026-09-08 14:01）
 

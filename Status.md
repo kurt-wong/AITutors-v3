@@ -1297,3 +1297,71 @@ Date: 2026-09-05
 - **下一步**：OQ-1 Identity 分层分析 → OQ-2 Standalone + Material Contract 设计 →
   Step D（67 Structural Claim ↔ Resolver Contract）→ Step 4 → Errata Decision →
   Owner Decision → I-5-2。**在此之前不修改 V3 正式代码。**
+
+---
+
+## 2026-09-10（全代码库对抗性审查收敛）
+
+### 背景
+
+用户要求基于 V3 核心冻结规范（00/10/20/30）对全部代码和结构开启严格对抗性审查，
+每个结论必须有真实测试作为证据。Claude 执行了 10 维度 40+ 不变量的系统性审查，
+ChatGPT 独立执行了代码静态审查，双方经过多轮 meta-review 收敛共识。
+
+### 审查方法
+
+- 10 个审查维度（架构边界/Source 不可变/Annotation/Resolver/IR/Compiler/Gate/幂等/任务安全/Schema）
+- 40+ 条具体不变量，每条对应冻结规范条款
+- 运行 508 个测试（506 通过，2 失败）
+- 逐维度验证：读取源代码 → 对照规范 → 运行测试 → 记录证据
+
+### 最终状态基线
+
+| 维度 | 状态 |
+|------|------|
+| Architecture Design | PASS WITH RESERVATIONS |
+| Core Safety Model | PASS |
+| Local Invariants | PASS / TEST-EVIDENCED |
+| Cross-Boundary Invariants | PARTIAL |
+| Resolver Algorithm Safety | PASS |
+| Resolver Real-World Coverage | FAIL (16.7%) |
+| Phase I-5 Path B → IR/Compiler | PROVEN (21/21) |
+| Phase I-5 Full Closure | NOT YET PROVEN |
+| Manifest Expressiveness | 2 GAPS |
+| 67 Contract Change | OPEN / P0 DECISION |
+| Test Isolation | FAIL |
+| Full Production Pipeline | NOT YET CLOSED |
+
+### 发现的真实问题
+
+**P0（必须修复）**：
+1. test_config `.env` 泄漏：`LLM_GATEWAY_MODE=live` 覆盖默认值，测试未隔离
+2. test_h_seal_concurrency DB 隔离失败：全量运行时统计全表 document 数
+3. Admission 失败原子性测试缺失：无"物化中途异常 → ROLLBACK → A 域行数为 0"测试
+4. 并发 Approval 测试缺失：无两个 DB Session 同时 approve 同一 Candidate 的测试
+
+**P1（应修复）**：
+5. Domain→Infrastructure 依赖：domains/ 下 7 个模块 import repositories/models/ai（目录归位即可）
+6. policy.py 重复 span 检查不完整：只检查 byte_proven_spans，不检查 contextual/fuzzy
+7. test_db_tables_exact_19 命名不一致：函数名 19，断言 20
+
+**OPEN（需先回 Frozen Spec）**：
+8. Figure placement 不进 integrity_hash：需先定义"修改一张图"的语义
+
+### 关键裁决
+
+- **Resolver 覆盖率问题的定性**：不是"Resolver 算法不够强"，是"Annotation→Resolver 架构边界设计有问题"。
+  解决路径 = Phase I-5 Path B + 67 号架构调整，而非加强 Resolver。
+- **Path B 状态**：→ IR/Compiler PROVEN，→ Gate/Admission NOT YET PROVEN，Full Closure NOT YET PROVEN。
+- **67 号核心原则**：Source Pointer ≠ Source Content；Source Pointer is an untrusted claim requiring Source-side validation。
+- **OQ 优先级**：OQ-3（leaf Materialization）> OQ-2（Standalone+Material）> OQ-1（Identity 分层）。
+
+### 下一步（按序执行）
+
+1. Step 1：修测试隔离（.env + DB）→ 508/508 干净基线
+2. Step 2：补 Admission 失败原子性 + 并发 Approval 测试
+3. Step 3：裁决 67 号 Contract Change
+4. Step 4：裁决 OQ-3 → OQ-2
+5. Step 5：补 Manifest Contract（answer_text + options）
+6. Step 6：设计 I-5-2 Adapter
+7. Step 7：Path B Full Closure E2E
