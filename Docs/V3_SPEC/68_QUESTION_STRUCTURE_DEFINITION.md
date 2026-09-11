@@ -1,9 +1,10 @@
 # Question 结构定义与 Composite 判定规则
 
-Status: Revised — 对抗性审查后修订
+Status: Adjudicated — 经 Step B/B5/C 对抗性审查裁决（见 69 号裁决记录）
 Date: 2026-09-10
 Predecessors: 65_PHASE_I5_SCOPE_FREEZE.md, 66_PHASE_I5_1_BOUNDARY_ANALYSIS.md, 67_ANNOTATION_RESOLVER_BOUNDARY_ADJUSTMENT.md
 Context: Step 0.5 盲测后，从 Question-first 第一性原理重新定义结构模型
+Adjudication: 69_ARCHITECTURE_REVIEW_ADJUDICATION.md
 
 ---
 
@@ -44,6 +45,37 @@ Question
 - **"缺少详解"不能作为 Question 不完整的依据。**
 - **"缺少标准答案"是教师版 Question 完整性的重大异常。**
 - Question 内部的"小问"是组成结构，**不是独立的 Question 实体**。
+
+### 1.5 Material 语义澄清（69 号裁决确认）
+
+> **Material 是 supporting content 的语义概念，不是"文字材料"。**
+
+Material 可以是：文字、图片、配图、表格、地图、数据图、实验装置图、流程图、或混合内容。
+
+Material 与 Figure 的关系是不同抽象层：
+
+```text
+Material → 语义 supporting content（这个 Question 依赖什么前置内容）
+Figure   → Source asset / content carrier（底层内容载体）
+```
+
+例如 Material M1 可以包含 text span + Figure F1 + Table T1。
+
+**Material 与 Question 类型是两个独立维度**：
+
+```text
+Standalone + Material  = 合法（如"阅读下面材料，回答第 1 题"）
+Standalone + no Material = 合法
+Composite + Material   = 合法
+Composite + no Material（仅共享图表/上下文）= 合法
+```
+
+**Material ≠ Composite**：Material 回答"这个 Question 依赖哪些 supporting content"；
+Composite 回答"这个 Question 内部是否存在多个结构化 answerable parts"。
+
+**注意**：Standalone + Material 在当前 Frozen Annotation schema（20 §4.5）中存在表达力缺口
+（standalone_question 定义中无 material/depends_on 字段）。这是 Contract Expressiveness Gap，
+不是业务模型冲突。详见 69 号裁决记录 C-2。
 
 ---
 

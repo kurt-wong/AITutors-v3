@@ -1265,3 +1265,35 @@ Date: 2026-09-05
   `scripts/geo_llm_output.json`。
 - **下一步**：Step 4（Manifest Expressiveness Check）——按 68 号 Question 模型检查 manifest
   是否能完整表达全部结构关系。在此之前不修改 V3 正式代码。
+
+### 2026-09-10（Step B/B5/Step C 架构审查裁决完成 — 69 号文档）
+
+- **Status: Step B / B5 / Step C 三轮对抗性审查完成，项目负责人裁决固化**。
+  A–G / H / Phase 9 / Errata 维持 FINAL CLOSED。65/66/67/68 不再是"未审查文档"。
+- **Step B Frozen Impact Matrix**（四层分类法 + 核心不变量比对）：
+  - 65 = Evidence（Path B 可行性；可行性 ≠ 架构优越性）
+  - 66 = Analysis（Manifest expressiveness；V3 语义模型原则上更强）
+  - 67 = Proposal + **Contract Change**（必须 Errata；20 §4.3/§3/§5 三条字面冲突确认）
+  - 68 = Proposal（核心语义与 Frozen IR 一致；三个待裁决点）
+- **Step B.5（67 Identity/Authority Review）**：
+  - B5-1 line_refs = **Source Binding Claim**（非 Source Fact / Position Fact）
+  - B5-2 **Source Binding Selection Authority** 从 Resolver 前移至 LLM（确定性层保留
+    Reference Integrity Authority）
+  - B5-3 **OPEN**——Annotation Identity / Logical Execution Identity / Source Binding
+    Identity 的关系需定义；A/B/C 三方案均不得预选
+  - B5-4 Frozen Resolver 优势 = ambiguity/missing 拒绝 + 确定性解析机会（非语义纠错）
+- **Step C（68 ↔ Frozen Data Model）**：
+  - C-1 Composite = ONE Question：**IR 层 PASS**；物化层语义张力需 Application 层裁决
+  - C-2 Standalone + Material：**Contract Expressiveness Gap**（20 §4.5 standalone 无
+    material 字段）；不是业务模型冲突
+  - C-3 Material ≠ text only：**NO CONFLICT / CLOSED**（Material = supporting content）
+- **Question 语义模型裁决确认**：Composite = ONE Question；sub_question ≠ Question entity；
+  Material = supporting content（text/image/figure/table/chart/map/diagram/mixed）；
+  Standalone + Material 合法；Composite 判定 = Explicit grouping OR shared dependency。
+- **新文件**：`69_ARCHITECTURE_REVIEW_ADJUDICATION.md`（裁决记录权威文件）+
+  `68` 更新（Material 语义澄清 §1.5 + Adjudicated 状态）。
+- **Open Questions**：OQ-1（B5-3 Identity 分层）/ OQ-2（Standalone + Material Annotation
+  Contract）/ OQ-3（物化层 leaf Question 独立性）。
+- **下一步**：OQ-1 Identity 分层分析 → OQ-2 Standalone + Material Contract 设计 →
+  Step D（67 Structural Claim ↔ Resolver Contract）→ Step 4 → Errata Decision →
+  Owner Decision → I-5-2。**在此之前不修改 V3 正式代码。**
