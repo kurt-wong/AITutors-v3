@@ -1,32 +1,33 @@
 # AI Tutor V3 — RESTART PROMPT
 
-Version: v1.28
-Status: **Phase I-2C CLOSED** — Resolver diagnostic layer 完成；真实 PDF 失败模式确认为
-marker_ambiguous（Source Provider layout 缺失，非 Resolver bug）；下一步 = Phase I-3 Source
-Provider Layer Evaluation
-Date: 2026-09-09
+Version: v1.29
+Status: **Step B/B5/Step C 架构审查裁决完成** — 65/66/67/68 与 Frozen Spec 的影响分析、
+67 Identity/Authority 审查、68 兼容性验证全部裁决；OQ-1/OQ-2/OQ-3 待裁决；
+下一步 = OQ-1 Identity 分层分析
+Date: 2026-09-10
 
-## 0.0 当前结论（2026-09-09 22:30:00）
+## 0.0 当前结论（2026-09-10）
 
-- **A–G / H Phase 1–8 / Phase 9 维持 FINAL CLOSED**；Errata Final Closure 维持。
-- **Phase I-1 CLOSED**：Closure Gate 5/5 通过（heartbeat flaky 修复 + Identity Gate Review）。
-- **Phase I-2 Revision CLOSED**（tag `v3-phase-i2-closed`）：SourceQualityGate 架构层确立；
-  真实 PDF E2E 边界建立；BUG-V3-040/042 Resolved。
-- **Phase I-2C CLOSED**：
-  - BUG-V3-043 figures 注入修复（`5f8a3a8`）
-  - Resolver Diagnostic Layer（`diagnostic.py`，15 tests）
-  - 真实 PDF 诊断：**85/85 unresolved = marker_ambiguous**（题号/选项标签出现 190+ 次）
-  - 架构判断：Resolver fail-loud 符合 V3 invariant；失败归属 Source Provider Layer
-  - Decision：Resolver robustness enhancement deferred
-- **BUG 状态**：BUG-V3-041 Deferred → Phase I-3；BUG-V3-043 Resolved。
-- **项目状态**：V3 Core Architecture Closed → Phase I-1 CLOSED → Phase I-2 Revision CLOSED →
-  **Phase I-2C CLOSED** → Phase I-3 Source Provider Layer Evaluation Next
-- **红线（不变）**：HTTP retry ≠ LLM retry ≠ fallback；MAX_LLM_CALLS 按真实 Provider Invocation
-  计数；先冻结 Spec 再改代码；Schema Source of Truth = 20_Document_Pipeline.md；
-  BUG-V3-005 float 红线不动；Resolver 不猜（宁可拒绝确定，不允许错误定位）。
-- **下一步**：Phase I-3 Source Provider Layer Evaluation——评估 native PDF extraction、
-  OCR layout extraction、hybrid provider 对数学试卷的结构恢复能力。
-- 重启后第一任务：读本文件 → Status.md 尾 → log.md 尾 → bugs.md → 进入 Phase I-3。
+- **A–G / H Phase 1–8 / Phase 9 / Errata 维持 FINAL CLOSED**。
+- **Phase I-3 CLOSED**：Source Evidence Preservation Layer（SourceSpan + document_source_spans）。
+- **Phase I-4 CLOSED**：Valid Negative Result——layout evidence 对数学 PDF marker 消歧率 0%。
+- **Phase I-5 进行中**：I-5-0 Scope Freeze → I-5-1 Boundary Analysis → Step 0/0.5 盲测 →
+  68 号 Question 结构定义 → **Step B/B5/Step C 架构审查裁决完成（69 号文档）**。
+- **Step B 裁决**：65=Evidence / 66=Analysis / 67=**Contract Change（必须 Errata）** / 68=Proposal。
+- **Step B.5 裁决**：B5-1 line_refs=Source Binding Claim；B5-2 Authority 转移确认；
+  B5-3 **OPEN**（Identity 分层）；B5-4 Resolver 定位确认。
+- **Step C 裁决**：C-1 Composite IR 兼容；C-2 Standalone+Material 表达力缺口；
+  C-3 Material=supporting content（NO CONFLICT）。
+- **Question 语义模型**：Composite=ONE Question；sub_question≠Question entity；
+  Material=supporting content（text/image/figure/table/chart/map/diagram/mixed）；
+  Standalone+Material 合法。
+- **红线（不变）**：HTTP retry ≠ LLM retry ≠ fallback；先冻结 Spec 再改代码；
+  Schema Source of Truth = 20_Document_Pipeline.md；Resolver 不猜；
+  实验结果 ≠ 实施授权；提议修改 ≠ 违反 Frozen Spec。
+- **下一步**：OQ-1 Identity 分层分析 → OQ-2 Standalone+Material Contract →
+  Step D（67 Structural Claim ↔ Resolver Contract）→ Step 4 → Errata Decision → I-5-2。
+- 重启后第一任务：读本文件 → `Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md` →
+  Status.md 尾 → log.md 尾 → bugs.md → 进入 OQ-1。
 
 ## 0. 当前工作状态（2026-09-08 14:01）
 

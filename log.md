@@ -1108,3 +1108,25 @@ Step 5 已于 commit `0917404` 落盘（含 Status/log/restart v1.10 收口）�
   三层分类、Adapter 位置（experiments/phase_i5/）、Decision Matrix A-E、Measurement
   Dimensions（不冻结数值阈值）。
 - **下一步**：I-5-1 Integration Boundary Analysis。No code until analysis complete。
+
+### 2026-09-10（Step B/B5/Step C 架构审查裁决）
+
+- **背景**：I-5-1 Boundary Analysis（66 号）+ Step 0/0.5 盲测 + 67/68 号文档完成后，
+  用户要求从第一性原理对 65/66/67/68 与 Frozen Spec 的关系做完整对抗性审查。
+- **Step B Frozen Impact Matrix**：逐条款追溯 00/10/20 原文，四层分类法（实验观察/
+  规范解释/设计扩展/契约变更）。65=Evidence / 66=Analysis / 67=Contract Change / 68=Proposal。
+- **Step B.5（67 Identity/Authority）**：line_refs=Source Binding Claim；
+  Source Binding Selection Authority 转移确认；Identity semantics **OPEN**（A/B/C 不预选）；
+  Frozen Resolver 优势=ambiguity 拒绝（非语义纠错）。
+- **Step C（68 ↔ Frozen Data Model）**：C-1 Composite IR 兼容（物化层张力需 Application
+  层裁决）；C-2 Standalone+Material = Contract Expressiveness Gap（20 §4.5 无字段）；
+  C-3 Material=supporting content（NO CONFLICT）。
+- **Question 语义模型裁决**：Composite=ONE Question；sub_question≠Question entity；
+  Material=supporting content（text/image/figure/table/chart/map/diagram/mixed）；
+  Standalone+Material 合法；Composite 判定=Explicit grouping OR shared dependency。
+- **产出**：`69_ARCHITECTURE_REVIEW_ADJUDICATION.md`（裁决权威记录）+ 68 号 Material
+  澄清（§1.5）+ Status.md 快照 + restart-prompt.md v1.29。
+- **Open Questions**：OQ-1 Identity 分层 / OQ-2 Standalone+Material Contract / OQ-3 物化
+  层 leaf 独立性。
+- **下一步**：OQ-1 → OQ-2 → Step D → Step 4 → Errata Decision → I-5-2。
+  **在此之前不修改 V3 正式代码。**
