@@ -18,6 +18,11 @@ _CLEANUP = ("question_instances", "questions")
 
 @pytest.fixture(autouse=True)
 async def _cleanup():
+    # 测试前也清理：防其它测试文件残留数据污染本文件的 count 断言
+    async with async_session_maker() as s:
+        for t in _CLEANUP:
+            await s.execute(text(f"DELETE FROM {t}"))
+        await s.commit()
     yield
     async with async_session_maker() as s:
         for t in _CLEANUP:
@@ -40,7 +45,9 @@ async def test_concurrent_create_question_single_row():
     ids = await asyncio.gather(_create(), _create())
     assert len(set(ids)) == 1, f"并发 create_question 应收敛到同一 Question，实为 {ids}"
     async with async_session_maker() as s:
-        n = (await s.execute(text("SELECT count(*) FROM questions"))).scalar()
+        n = (await s.execute(
+            text("SELECT count(*) FROM questions WHERE dedup_key=:k"), {"k": _DEDUP}
+        )).scalar()
     assert n == 1, f"并发应恰 1 Question，实为 {n}"
 
 
@@ -50,5 +57,7 @@ async def test_serial_recreate_returns_existing_question():
     q2 = await _create()
     assert q1 == q2
     async with async_session_maker() as s:
-        n = (await s.execute(text("SELECT count(*) FROM questions"))).scalar()
+        n = (await s.execute(
+            text("SELECT count(*) FROM questions WHERE dedup_key=:k"), {"k": _DEDUP}
+        )).scalar()
     assert n == 1

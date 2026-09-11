@@ -20,15 +20,30 @@ def test_missing_app_env_rejects_startup(monkeypatch) -> None:
         Settings(database_url="postgresql+asyncpg://u:p@h/d", _env_file=None)
 
 
-def test_minimal_required_ok() -> None:
-    s = Settings(database_url="postgresql+asyncpg://u:p@h/d", app_env="development")
+def test_minimal_required_ok(monkeypatch) -> None:
+    """最小必需配置可初始化；_env_file=None + delenv 双层隔离（.env 文件 + OS 环境变量）。"""
+    monkeypatch.delenv("LLM_GATEWAY_MODE", raising=False)
+    monkeypatch.delenv("MIMO_API_KEY", raising=False)
+    s = Settings(
+        database_url="postgresql+asyncpg://u:p@h/d",
+        app_env="development",
+        _env_file=None,
+    )
     assert s.database_url == "postgresql+asyncpg://u:p@h/d"
     assert s.app_env == "development"
+    assert s.llm_gateway_mode == "disabled"
+    assert s.mimo_api_key is None
 
 
-def test_future_surface_defaults_and_not_required() -> None:
+def test_future_surface_defaults_and_not_required(monkeypatch) -> None:
     """段 A 无 admin endpoint → ADMIN_API_KEY 非 required；LLM_GATEWAY_MODE 默认 disabled。"""
-    s = Settings(database_url="postgresql+asyncpg://u:p@h/d", app_env="development")
+    monkeypatch.delenv("LLM_GATEWAY_MODE", raising=False)
+    monkeypatch.delenv("MIMO_API_KEY", raising=False)
+    s = Settings(
+        database_url="postgresql+asyncpg://u:p@h/d",
+        app_env="development",
+        _env_file=None,
+    )
     assert s.llm_gateway_mode == "disabled"
     assert s.paddleocr_vl_token is None
     assert s.admin_api_key is None

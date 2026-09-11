@@ -6,6 +6,7 @@ canonical identity），不再产生重复行（修复前真 DB 探针 FAIL：2 
 """
 
 import asyncio
+import hashlib
 
 import pytest
 from sqlalchemy import text
@@ -15,6 +16,7 @@ from app.db.session import async_session_maker
 from app.domains.source.seal import SealService
 
 _FILE = b"same-pdf-content"
+_SHA = hashlib.sha256(_FILE).hexdigest()
 _CLEANUP = (
     "document_source_lines", "document_source_versions", "documents",
 )
@@ -42,6 +44,12 @@ async def _seal():
 
 @pytest.fixture(autouse=True)
 async def _cleanup():
+    # 测试前也清理：防其它测试文件残留数据污染本文件的 count 断言
+    # （全量运行时 test_task_executor 等也会写 documents 表）。
+    async with async_session_maker() as s:
+        for t in _CLEANUP:
+            await s.execute(text(f"DELETE FROM {t}"))
+        await s.commit()
     yield
     async with async_session_maker() as s:
         for t in _CLEANUP:
@@ -53,9 +61,20 @@ async def test_concurrent_seal_single_document_version():
     ids = await asyncio.gather(_seal(), _seal())
     assert len(set(ids)) == 1, f"并发 seal 应收敛到同一 version，实为 {ids}"
     async with async_session_maker() as s:
-        n_doc = (await s.execute(text("SELECT count(*) FROM documents"))).scalar()
-        n_ver = (await s.execute(text("SELECT count(*) FROM document_source_versions"))).scalar()
-        n_lines = (await s.execute(text("SELECT count(*) FROM document_source_lines"))).scalar()
+        n_doc = (await s.execute(
+            text("SELECT count(*) FROM documents WHERE original_sha256=:sha"), {"sha": _SHA}
+        )).scalar()
+        n_ver = (await s.execute(
+            text("SELECT count(*) FROM document_source_versions v "
+                 "JOIN documents d ON v.document_id=d.id WHERE d.original_sha256=:sha"),
+            {"sha": _SHA},
+        )).scalar()
+        n_lines = (await s.execute(
+            text("SELECT count(*) FROM document_source_lines l "
+                 "JOIN document_source_versions v ON l.source_version_id=v.id "
+                 "JOIN documents d ON v.document_id=d.id WHERE d.original_sha256=:sha"),
+            {"sha": _SHA},
+        )).scalar()
     assert n_doc == 1, f"并发 seal 应恰 1 document，实为 {n_doc}"
     assert n_ver == 1, f"并发 seal 应恰 1 version，实为 {n_ver}"
     assert n_lines == 2, f"并发 seal 应恰 2 line（无重复 append），实为 {n_lines}"
@@ -76,7 +95,13 @@ async def test_cross_role_multiple_versions_allowed():
     cloud_id = await seal_role("ocr_ppsv3", "ppsv3")
     assert native_id != cloud_id, "跨 role/provider 应产生不同 version"
     async with async_session_maker() as s:
-        n_doc = (await s.execute(text("SELECT count(*) FROM documents"))).scalar()
-        n_ver = (await s.execute(text("SELECT count(*) FROM document_source_versions"))).scalar()
+        n_doc = (await s.execute(
+            text("SELECT count(*) FROM documents WHERE original_sha256=:sha"), {"sha": _SHA}
+        )).scalar()
+        n_ver = (await s.execute(
+            text("SELECT count(*) FROM document_source_versions v "
+                 "JOIN documents d ON v.document_id=d.id WHERE d.original_sha256=:sha"),
+            {"sha": _SHA},
+        )).scalar()
     assert n_doc == 1, f"同 original_sha256 应恰 1 document，实为 {n_doc}"
     assert n_ver == 2, f"跨 role/provider 应 2 version，实为 {n_ver}"
