@@ -1,0 +1,196 @@
+```json
+{
+  "units": [
+    {
+      "unit_id": "Q1",
+      "question_number": "1-2",
+      "unit_type": "composite_question",
+      "material_lines": ["P1L017", "P1L017"],
+      "stem_lines": ["P1L019", "P1L023"],
+      "options_lines": ["P1L021", "P1L025"],
+      "answer_lines": ["P1L525", "P1L525"],
+      "explanation_lines": null
+    },
+    {
+      "unit_id": "Q2",
+      "question_number": "3",
+      "unit_type": "standalone_question",
+      "material_lines": ["P1L027", "P1L027"],
+      "stem_lines": ["P1L029", "P1L029"],
+      "options_lines": ["P1L031", "P1L037"],
+      "answer_lines": ["P1L525", "P1L525"],
+      "explanation_lines": null
+    },
+    {
+      "unit_id": "Q3",
+      "question_number": "4",
+      "unit_type": "standalone_question",
+      "material_lines": ["P1L041", "P1L041"],
+      "stem_lines": ["P1L043", "P1L043"],
+      "options_lines": ["P1L045", "P1L051"],
+      "answer_lines": ["P1L525", "P1L525"],
+      "explanation_lines": null
+    },
+    {
+      "unit_id": "Q4",
+      "question_number": "5-6",
+      "unit_type": "composite_question",
+      "material_lines": ["P1L059", "P1L059"],
+      "stem_lines": ["P1L061", "P1L071"],
+      "options_lines": ["P1L063", "P1L091"],
+      "answer_lines": ["P1L525", "P1L525"],
+      "explanation_lines": null
+    },
+    {
+      "unit_id": "Q5",
+      "question_number": "7",
+      "unit_type": "standalone_question",
+      "material_lines": ["P1L093", "P1L093"],
+      "stem_lines": ["P1L095", "P1L095"],
+      "options_lines": ["P1L097", "P1L097"],
+      "answer_lines": ["P1L525", "P1L525"],
+      "explanation_lines": null
+    },
+    {
+      "unit_id": "Q6",
+      "question_number": "8-10",
+      "unit_type": "composite_question",
+      "material_lines": ["P1L105", "P1L105"],
+      "stem_lines": ["P1L107", "P1L129"],
+      "options_lines": ["P1L109", "P1L137"],
+      "answer_lines": ["P1L525", "P1L525"],
+      "explanation_lines": null
+    },
+    {
+      "unit_id": "Q7",
+      "question_number": "11-12",
+      "unit_type": "composite_question",
+      "material_lines": ["P1L145", "P1L145"],
+      "stem_lines": ["P1L147", "P1L159"],
+      "options_lines": ["P1L149", "P1L167"],
+      "answer_lines": ["P1L527", "P1L527"],
+      "explanation_lines": null
+    },
+    {
+      "unit_id": "Q8",
+      "question_number": "13-14",
+      "unit_type": "composite_question",
+      "material_lines": ["P1L177", "P1L177"],
+      "stem_lines": ["P1L179", "P1L191"],
+      "options_lines": ["P1L181", "P1L193"],
+      "answer_lines": ["P1L527", "P1L527"],
+      "explanation_lines": null
+    },
+    {
+      "unit_id": "Q9",
+      "question_number": "15-16",
+      "unit_type": "composite_question",
+      "material_lines": ["P1L195", "P1L203"],
+      "stem_lines": ["P1L205", "P1L209"],
+      "options_lines": ["P1L207", "P1L217"],
+      "answer_lines": ["P1L527", "P1L527"],
+      "explanation_lines": null
+    },
+    {
+      "unit_id": "Q10",
+      "question_number": "17-18",
+      "unit_type": "composite_question",
+      "material_lines": ["P1L219", "P1L219"],
+      "stem_lines": ["P1L235", "P1L245"],
+      "options_lines": ["P1L237", "P1L249"],
+      "answer_lines": ["P1L527", "P1L527"],
+      "explanation_lines": null
+    },
+    {
+      "unit_id": "Q11",
+      "question_number": "19-21",
+      "unit_type": "composite_question",
+      "material_lines": ["P1L251", "P1L251"],
+      "stem_lines": ["P1L265", "P1L285"],
+      "options_lines": ["P1L267", "P1L289"],
+      "answer_lines": ["P1L527", "P1L529"],
+      "explanation_lines": null
+    },
+    {
+      "unit_id": "Q12",
+      "question_number": "22-23",
+      "unit_type": "composite_question",
+      "material_lines": ["P1L291", "P1L291"],
+      "stem_lines": ["P1L299", "P1L307"],
+      "options_lines": ["P1L303", "P1L309"],
+      "answer_lines": ["P1L529", "P1L529"],
+      "explanation_lines": null
+    },
+    {
+      "unit_id": "Q13",
+      "question_number": "24-25",
+      "unit_type": "composite_question",
+      "material_lines": ["P1L311", "P1L311"],
+      "stem_lines": ["P1L319", "P1L329"],
+      "options_lines": ["P1L321", "P1L333"],
+      "answer_lines": ["P1L529", "P1L529"],
+      "explanation_lines": null
+    },
+    {
+      "unit_id": "Q14",
+      "question_number": "26-28",
+      "unit_type": "composite_question",
+      "material_lines": ["P1L335", "P1L335"],
+      "stem_lines": ["P1L337", "P1L357"],
+      "options_lines": ["P1L339", "P1L373"],
+      "answer_lines": ["P1L529", "P1L529"],
+      "explanation_lines": null
+    },
+    {
+      "unit_id": "Q15",
+      "question_number": "29-30",
+      "unit_type": "composite_question",
+      "material_lines": ["P1L375", "P1L375"],
+      "stem_lines": ["P1L383", "P1L387"],
+      "options_lines": ["P1L385", "P1L389"],
+      "answer_lines": ["P1L529", "P1L529"],
+      "explanation_lines": null
+    },
+    {
+      "unit_id": "Q16",
+      "question_number": "31",
+      "unit_type": "standalone_question",
+      "material_lines": ["P1L397", "P1L414"],
+      "stem_lines": ["P1L407", "P1L409"],
+      "options_lines": null,
+      "answer_lines": ["P1L533", "P1L537"],
+      "explanation_lines": null
+    },
+    {
+      "unit_id": "Q17",
+      "question_number": "32",
+      "unit_type": "standalone_question",
+      "material_lines": ["P1L417", "P1L431"],
+      "stem_lines": ["P1L433", "P1L447"],
+      "options_lines": ["P1L435", "P1L441"],
+      "answer_lines": ["P1L539", "P1L549"],
+      "explanation_lines": null
+    },
+    {
+      "unit_id": "Q18",
+      "question_number": "33",
+      "unit_type": "standalone_question",
+      "material_lines": ["P1L449", "P1L454"],
+      "stem_lines": ["P1L457", "P1L479"],
+      "options_lines": ["P1L463", "P1L475"],
+      "answer_lines": ["P1L551", "P1L561"],
+      "explanation_lines": null
+    },
+    {
+      "unit_id": "Q19",
+      "question_number": "34",
+      "unit_type": "standalone_question",
+      "material_lines": ["P1L481", "P1L511"],
+      "stem_lines": ["P1L491", "P1L513"],
+      "options_lines": null,
+      "answer_lines": ["P1L563", "P1L581"],
+      "explanation_lines": null
+    }
+  ]
+}
+```
