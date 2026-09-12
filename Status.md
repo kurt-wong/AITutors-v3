@@ -1739,23 +1739,28 @@ answer_lines 指向答案表标记或题目编号。
 ### Gate 状态
 
 ```text
-Gate B1: CONDITIONAL PASS
-Gate B2-A (stem + explanation): 允许开始
-Gate B2-B (option + answer): BLOCKED BY contract 裁决
+Gate B1: CONDITIONAL PASS — Region Binding Contract 基本成立
+Structured Evidence Binding: CONTRACT ADJUDICATED, IMPLEMENTATION NOT YET ESTABLISHED
+Gate B2-A (stem + explanation): READY
+Gate B2-B (option + answer): WAIT FOR MANIFEST CONTRACT UPDATE
 ```
 
-### 进入 B2 前必须裁决的 Contract 问题
+### Contract Adjudication 裁决（2026-09-11）
 
-- Q1: `options_lines` 是 region 还是 per-option spans？
-- Q2: `answer_lines` 对共享答案表是 source region 还是 per-question evidence？
-- Q3: 语法填空是否允许多个非连续 spans？
-- Q4: HTML table answer 的绑定粒度？
+**统一原则：Source Region 与 Question Evidence 必须分层。**
+
+| 问题 | 裁决 | 核心 |
+|------|------|------|
+| Q1 `options_lines` | **A — Region** | 逐行拆分是 harness bug，不是 manifest 错误 |
+| Q2 共享答案表 | **B — Per-question evidence** | Source region ≠ Question answer evidence |
+| Q3 语法填空 | **B — Single span** | 行内多答案需 subspan/offset，不是多 span |
+| Q4 HTML table | **B — Cell/row** | Region 是上层，evidence 需精确 |
 
 ### 下一步（按序执行）
 
-1. **Contract Adjudication**：项目负责人裁决 Q1-Q4
-2. **Gate B2-A**：stem + explanation 的 Legacy vs Path B 同口径对比
-3. **Gate B2-B**：option + answer（contract 裁决后）
+1. **Gate B2-A**：stem + explanation 的 Legacy vs Path B 同口径对比（READY）
+2. **B1-B Evidence Binding 实验**：验证 Q1-Q4 语义能否在真实 corpus 上稳定表达
+3. **Gate B2-B**：option + answer（manifest contract 更新后）
 4. **Gate C**：Safety Invariant Preservation 验证
 5. **OQ-3 → OQ-2**：物化层 / Standalone+Material 裁决
 6. **Errata Decision**（Gate B/C/D 通过后）

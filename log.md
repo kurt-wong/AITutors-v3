@@ -1276,3 +1276,23 @@ Step 5 已于 commit `0917404` 落盘（含 Status/log/restart v1.10 收口）�
   Status.md 快照 + log.md 条目 + restart-prompt v1.36。
 - **下一步**：Contract Adjudication（Q1-Q4）→ Gate B2-A → Gate B2-B →
   Gate C → OQ-3/OQ-2 → Errata Decision。
+
+### 2026-09-11（Contract Adjudication 完成：Q1-Q4 裁决）
+
+- **裁决**：
+  - Q1 = A：`options_lines` 是 Options Region，逐行拆分是 harness bug
+  - Q2 = B：共享答案表需 per-question evidence，Source region ≠ Question answer evidence
+  - Q3 = B：`answer_lines` 保持单一 Source Region，行内多答案需 subspan/offset
+  - Q4 = B：HTML table answer 绑定到 cell/row，整个 table 是上层 Region
+- **统一原则**：Source Region 与 Question Evidence 必须分层。
+  ```text
+  Source Region → Structural/Evidence Binding → ResolvedSpan
+  ```
+- **Region Binding 基本成立**（stem 97.3% / explanation 96.7%）。
+- **Structured Evidence Binding**：CONTRACT ADJUDICATED, IMPLEMENTATION NOT YET ESTABLISHED。
+- **不修改生产 V3**——先实验验证语义能否在真实 corpus 上稳定表达。
+- **Gate 状态**：B2-A READY（stem+explanation）；B2-B WAIT FOR MANIFEST CONTRACT UPDATE。
+- **产出**：69 号 §10 更新（Contract Adjudication 裁决 + 统一原则）+
+  Status.md 快照 + log.md 条目 + restart-prompt v1.37。
+- **下一步**：Gate B2-A → B1-B Evidence Binding 实验 → Gate B2-B →
+  Gate C → OQ-3/OQ-2 → Errata Decision。

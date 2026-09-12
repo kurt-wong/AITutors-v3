@@ -1,9 +1,10 @@
 # AI Tutor V3 — RESTART PROMPT
 
-Version: v1.36
-Status: **Gate B1 CONDITIONAL PASS** — stem 97.3% / explanation 96.7%；
-option/answer 需 contract 语义裁决；Gate B2-A 允许开始（stem+explanation）；
-下一步 = Contract Adjudication（Q1-Q4）→ Gate B2-A
+Version: v1.37
+Status: **Contract Adjudication 完成** — Q1=A(options region) / Q2=B(per-question evidence) /
+Q3=B(single span+subspan) / Q4=B(cell/row)；
+统一原则：Source Region 与 Question Evidence 必须分层；
+Gate B2-A READY（stem+explanation）；下一步 = Gate B2-A
 Date: 2026-09-11
 
 ## 0.0 当前结论（2026-09-11 Gate A 关闭）
@@ -40,17 +41,21 @@ Date: 2026-09-11
   - 剩余问题：option region 语义（逐行拆分产生空 target）+ answer 共享答案表 contract
   - **Gate B2-A 允许开始**（stem + explanation）；B2-B BLOCKED BY contract 裁决
   - **禁止继续放宽 validator 提升数字**——那是 metric optimization
+- **Contract Adjudication（2026-09-11 完成）**：
+  - Q1 = A：`options_lines` 是 Options Region，逐行拆分是 harness bug
+  - Q2 = B：共享答案表需 per-question evidence，Source region ≠ Question answer evidence
+  - Q3 = B：`answer_lines` 保持单一 Source Region，行内多答案需 subspan/offset
+  - Q4 = B：HTML table answer 绑定到 cell/row，整个 table 是上层 Region
+  - **统一原则：Source Region 与 Question Evidence 必须分层**
+  - Region Binding 基本成立；Structured Evidence Binding 需 manifest schema 增强
+  - **不修改生产 V3**——先实验验证语义能否在真实 corpus 上稳定表达
 - **红线（不变）**：HTTP retry ≠ LLM retry ≠ fallback；先冻结 Spec 再改代码；
   Schema Source of Truth = 20_Document_Pipeline.md；Resolver 不猜；
   实验结果 ≠ 实施授权；提议修改 ≠ 违反 Frozen Spec。
 - **下一步（按序执行）**：
-  1. **Contract Adjudication**：项目负责人裁决 Q1-Q4
-     - Q1: `options_lines` 是 region 还是 per-option spans？
-     - Q2: `answer_lines` 对共享答案表是 source region 还是 per-question evidence？
-     - Q3: 语法填空是否允许多个非连续 spans？
-     - Q4: HTML table answer 的绑定粒度？
-  2. **Gate B2-A**：stem + explanation 的 Legacy vs Path B 同口径对比
-  3. **Gate B2-B**：option + answer（contract 裁决后）
+  1. **Gate B2-A**：stem + explanation 的 Legacy vs Path B 同口径对比（READY）
+  2. **B1-B Evidence Binding 实验**：验证 Q1-Q4 语义能否在真实 corpus 上稳定表达
+  3. **Gate B2-B**：option + answer（manifest contract 更新后）
   4. **Gate C**：Safety Invariant Preservation 验证
   5. **OQ-3 → OQ-2**：物化层 / Standalone+Material 裁决
   6. **Errata Decision**（Gate B/C/D 通过后）

@@ -660,17 +660,105 @@ Errata: BLOCKED BY Gate B/C
 | Manifest binding contract | PARTIALLY RESOLVED |
 | Production code change | 暂缓 |
 
-### 进入 B2 前必须完成的 Contract Adjudication
+### Contract Adjudication 裁决结果（2026-09-11）
 
-四个问题必须由项目负责人裁决，不得由 Claude 猜测：
+**统一原则：Source Region 与 Question Evidence 必须分层。**
 
-**Q1**: `options_lines: [start,end]` 表示整个 options region，还是所有 option 的逐项 spans？
+```text
+Source Region          "相关内容在哪里"
+    ↓
+Structural / Evidence Binding   "Question 的具体 evidence 是什么"
+    ↓
+ResolvedSpan
+```
 
-**Q2**: `answer_lines: [start,end]` 对共享答案表，表示整张 answer source region，还是当前 Question 的独立 answer evidence？
+#### Q1: `options_lines` = A — Region
 
-**Q3**: 语法填空答案（`61 arrived 62 before`）是否允许多个非连续 Source spans？
+`options_lines: [11,17]` 表示该 Question 的 options 所在 Source Region，
+不是 line 11 = option A、line 12 = option B……
 
-**Q4**: HTML table 作为 answer 时，绑定粒度是 cell、row 还是整个 table？
+逐行拆分是 **B1 harness interpretation bug**，不应作为 manifest quality failure。
+
+Region Binding 与 Per-option Structure 是两个层次：
+```text
+Binding Claim → options region [11,17] → Resolver 验证 region
+    → Structural parsing → A/B/C/D individual spans
+```
+
+未来若需要 per-option ResolvedSpan，应扩展 manifest schema 显式表达，
+**不要让 Resolver 通过猜哪一行是 A/B/C/D 来补全 manifest**——那会退化成 Legacy Search。
+
+#### Q2: 共享答案表 = B — Per-question evidence
+
+共享答案表 `1-5: BBACB; 6-10: DBBBA` 只能说明答案存在于该行，
+不能证明 Q1 → B、Q2 → B……
+
+**Source region ≠ Question answer evidence。**
+
+最终模型应为：
+```text
+Q1.answer
+    source_region: [314,314]
+    evidence: "B"  (或 subspan/offset/token locator)
+```
+
+Question-level answer evidence 必须能从共享 Source Region 中确定性定位，
+不能要求 Resolver 自己猜。
+
+#### Q3: 语法填空 = B — Single span
+
+`answer_lines` 保持单一连续 Source Region `[start, end]`。
+同一行内多个答案（`61 arrived 62 before`）属于 subspan 问题，不是多 span 问题。
+
+未来若需 Question-level 精确答案绑定，应增加 line 内部的 deterministic
+subspan/offset 能力，而不是把 `answer_lines` 变成任意多个 spans。
+
+#### Q4: HTML table = B — Cell/row
+
+整个 table 可作为上层 Source Region，但不能天然等价于 Question 的 answer evidence。
+Answer evidence 应绑定到最小语义充分的结构单元（cell/row）。
+
+不能让 LLM 直接输出 `cell = row 3, col 2` 然后代码无条件相信——
+正确流程是 LLM 提出 Source Binding Claim → Resolver 验证 cell/row 确实存在。
+
+未来 Binding Contract 可能需要 `line_refs + structured sublocator`，
+而不是无限扩张 `line_refs` 本身。
+
+#### Contract Adjudication 正式记录
+
+```text
+Q1 = A
+  options_lines denotes an options Source Region. Per-option spans are a
+  downstream structural representation and must not be inferred by treating
+  every physical line as an option.
+
+Q2 = B
+  Shared answer tables require question-specific answer evidence. A shared
+  answer Source Region alone is insufficient as the final Question-level binding.
+
+Q3 = B
+  answer_lines remains a single contiguous Source Region. Multiple answers
+  within a line or region require deterministic subspan/offset semantics
+  rather than multiple independent line spans.
+
+Q4 = B
+  HTML-table answers should bind to the smallest semantically sufficient
+  structural evidence, such as a cell or row. The containing table may serve
+  as the Source Region.
+```
+
+#### Gate 状态更新（Contract Adjudication 后）
+
+```text
+Gate B1: CONDITIONAL PASS — Region Binding Contract 基本成立
+Structured Evidence Binding: CONTRACT ADJUDICATED, IMPLEMENTATION NOT YET ESTABLISHED
+Gate B2-A (stem/explanation): READY
+Gate B2-B (option/answer): WAIT FOR MANIFEST CONTRACT UPDATE / STRUCTURAL EXPERIMENT
+```
+
+**这些裁决不意味着现在修改生产 V3。** 先作为 Phase I-5 的 Contract Adjudication
+记录；然后用实验 harness 验证这些语义能否在真实 corpus 上稳定表达；
+只有实验闭环后，才决定是否形成 Doc 67 Errata 和生产实现。
 
 ### 禁止事项（正式声明）
 
@@ -682,9 +770,9 @@ Frozen contract → validator → 发现真实 mismatch → 判断是 validator 
 
 ### 下一步（按序执行）
 
-1. **Contract Adjudication**：项目负责人裁决 Q1-Q4（options_lines / answer_lines 语义）
-2. **Gate B2-A**：stem + explanation 的 Legacy vs Path B 同口径对比
-3. **Gate B2-B**：option + answer（contract 裁决后）
+1. **Gate B2-A**：stem + explanation 的 Legacy vs Path B 同口径对比（READY）
+2. **B1-B Evidence Binding 实验**：验证 Q1-Q4 语义能否在真实 corpus 上稳定表达
+3. **Gate B2-B**：option + answer（manifest contract 更新后）
 4. **Gate C**：Safety Invariant Preservation 验证
 5. **OQ-3 → OQ-2**：物化层 / Standalone+Material 裁决
 6. **Errata Decision**（Gate B/C/D 通过后）
@@ -695,7 +783,6 @@ Frozen contract → validator → 发现真实 mismatch → 判断是 validator 
 > Legacy Resolver 的失败模式具有重复性（~18% 两次独立实验一致），
 > 这证明"Legacy Search 在真实 OCR 数据上存在系统性困难"（TEST-EVIDENCED），
 > 不能单独证明"LLM line_refs + Validator 一定是正确的最终架构"。
-> 真正需要证明的是：在 Source 事实不变、target 定义一致、binding claim 独立可信的条件下，
-> Path B 是否显著优于 Legacy Resolver。
 > Stem/explanation 已达 97.3%/96.7% role validity，manifest binding claim 基本可用。
-> Option/answer 的 contract 语义未决，不得以放宽 validator 的方式提升数字。
+> Contract Adjudication 已完成：Source Region 与 Question Evidence 必须分层。
+> Region Binding 基本成立；Structured Evidence Binding 需要 manifest schema 增强。
