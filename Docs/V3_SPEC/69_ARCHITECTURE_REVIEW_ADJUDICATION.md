@@ -79,27 +79,41 @@ Deterministic Validator → Reference Integrity Authority
 Gate                    → Admission Authority
 ```
 
-### B5-3: Identity semantics — OPEN（禁止提前关闭）
+### B5-3: Identity semantics — CLOSED / PASS / TEST-EVIDENCED（2026-09-11）
 
-**不能直接从 P6 推导 "line_refs 必须/不必进入 identity hash"。**
+**裁决（70 号 OQ-1 分析 + 直接测试证据）**：
 
-P6 的 `logical_execution_key` 标识"要执行什么逻辑任务"，不是"执行产生了什么结果"。
-`input_hash` 是输入侧身份，不是输出侧。
-
-需要定义并分析以下 Identity 层之间的关系（1:1 / 1:N / N:1）：
+三层 Identity 模型正式确认：
 
 ```text
-Task Identity
-Logical Execution Identity
-Annotation Identity
-Binding Claim Identity
-Resolved Result Identity
-IR Identity
-Compile Identity
-Candidate Identity
+Semantic Identity    = annotation_payload_hash（剔除 confidence + line_refs）
+                       → 决定 "这是什么题"
+                       → 进入 LE hash（幂等锚点）
+
+Source Binding Claim = line_refs in payload（完整存储，不进 Semantic Identity）
+                       → 决定 "LLM 认为在哪里"
+                       → 进入 resolver_input_hash（供 Resolver 验证）
+
+Resolved Evidence    = compiler_input_hash / occurrence_key（基于 resolved span）
+                       → 决定 "实际引用了什么"
+                       → 进入 Candidate / Instance
 ```
 
-核心问题：**同一 logical execution 下，如果 Source Binding Claim 不同，如何保证不产生两个不同的持久化结果？**
+**核心结论**：Semantic Identity 与 Source Binding Claim 必须分离。
+line_refs 属于 Source Binding Claim，不属于 Semantic Identity。
+
+**测试证据**（`test_identity_projection.py`，4 个新增测试）：
+- `test_line_refs_change_does_not_change_semantic_identity`（A1）
+- `test_line_refs_change_changes_resolver_input_hash`（A1 补充）
+- `test_semantic_change_with_same_line_refs_still_changes_identity`（A2）
+- `test_line_refs_absent_backward_compatible`
+
+**代码实现**：
+- `_annotation_identity_projection`：剔除 `{confidence, line_refs}`
+- `_confidence_only_projection`：仅剔除 `{confidence}`（供 resolver_input_hash）
+- call-site audit 确认：仅 `service.py` 内 2 处调用，无隐藏依赖
+
+**全量回归**：514/514 passed。
 
 ### B5-4: Resolver 定位 — ACCEPT
 
@@ -270,7 +284,7 @@ Implementation Gate: C-2 的 Annotation Contract 设计裁决
 
 | # | 问题 | 分类 | 阻塞什么 |
 |---|------|------|---------|
-| OQ-1 | B5-3 Identity 分层：Annotation Identity / Binding Claim Identity / Logical Execution Identity 的关系 | Architecture | 67 的 Errata |
+| OQ-1 | B5-3 Identity 分层 | Architecture | **CLOSED（2026-09-11，70 号）** |
 | OQ-2 | Standalone + Material 的 Annotation Contract 表达 | Contract Expressiveness | 68 的 material 支持 |
 | OQ-3 | 物化层 leaf Question 独立性：是否需要 Application 层约束 | Application Rule | C-1 物化策略 |
 
@@ -378,15 +392,16 @@ Resolver 从"搜索 Source"模式调整为"验证 Source Binding Claim"模式，
 
 ### 五、Errata Gate（四道门）
 
-#### Gate A — Identity Closure
+#### Gate A — Identity Closure — **PASS / TEST-EVIDENCED（2026-09-11）**
 
-必须完成 B5-3 Identity Semantics 裁决，明确 Semantic Annotation Identity /
-Source Binding Claim / Resolved Evidence 三者之间的身份关系及 hash / dedup 规则。
+B5-3 Identity Semantics 裁决已完成（70 号），Semantic Annotation Identity /
+Source Binding Claim / Resolved Evidence 三者身份关系已定义并测试验证。
 
-特别需要证明：
-- A1: 不同 `line_refs` + same semantic annotation → 不无意义地制造不同 Annotation identity
-- A2: 真正不同的 semantic content → different identity，不能因 line_refs 被剥离而错误合并
-- A3: ResolvedSpan 的 Source identity 不得被 Annotation identity 覆盖
+- A1: ✓ 不同 line_refs + same semantic → Semantic Identity 不变（直接测试）
+- A2: ✓ 不同语义 → 不同 identity，剥离 line_refs 不降低区分能力（直接测试）
+- A3: ✓ ResolvedSpan Source identity 独立于 Annotation identity（代码证明）
+- call-site audit: ✓ `_annotation_identity_projection` 仅 2 处调用，无隐藏依赖
+- 全量回归: 514/514 passed
 
 #### Gate B — Legacy / Path B 对比
 
@@ -419,9 +434,9 @@ I-5-2 Adapter 必须保持为 Contract Translator，不得引入：
 ### 六、正式状态
 
 ```text
-67 号：CONDITIONALLY ACCEPTED
+67 号：CONDITIONALLY ACCEPTED（Gate A PASS；Pending Gate B/C）
 Frozen Spec：UNCHANGED
-Errata：BLOCKED BY OQ-1 + Gate B/C
+Errata：BLOCKED BY Gate B/C（Gate A 已解除）
 Path B：VALIDATED EXPERIMENTAL PATH
 ```
 

@@ -1509,9 +1509,9 @@ Resolver 从"搜索 Source"调整为"验证 Source Binding Claim"，架构原则
 ### 正式状态
 
 ```
-67 号：CONDITIONALLY ACCEPTED
+67 号：CONDITIONALLY ACCEPTED（Gate A PASS；Pending Gate B/C）
 Frozen Spec：UNCHANGED
-Errata：BLOCKED BY OQ-1 + Gate B/C
+Errata：BLOCKED BY Gate B/C（Gate A 已解除）
 Path B：VALIDATED EXPERIMENTAL PATH
 ```
 
@@ -1524,3 +1524,60 @@ Path B：VALIDATED EXPERIMENTAL PATH
 5. **Errata Decision**（Gate A-D 全部通过后）
 6. **I-5-2 Adapter**（Gate D 约束）
 7. **Path B Full Closure E2E**
+
+---
+
+## 2026-09-11（Gate A 关闭：OQ-1 Identity 分层 PASS / TEST-EVIDENCED）
+
+### 裁决
+
+**Gate A：PASS / TEST-EVIDENCED。B5-3 Identity Semantics：OPEN → CLOSED。**
+
+### 三层 Identity 模型（正式确认）
+
+| 层 | 回答 | hash 载体 | 进入 LE hash? |
+|----|------|----------|--------------|
+| Semantic Identity | "这是什么？" | `annotation_payload_hash`（剔除 confidence + line_refs） | ✓ |
+| Source Binding Claim | "我认为它在哪里？" | `resolver_input_hash`（含 line_refs） | ✗ |
+| Resolved Evidence | "实际引用了什么？" | `compiler_input_hash` / `occurrence_key` | ✗ |
+
+**核心结论**：line_refs 属于 Source Binding Claim，不属于 Semantic Identity。
+
+### Gate A 关闭证据
+
+| 条件 | 证据 |
+|------|------|
+| A1: 不同 line_refs 不分裂 Semantic Identity | `test_line_refs_change_does_not_change_semantic_identity` |
+| A1 补充: 不同 line_refs → resolver_input_hash 不同 | `test_line_refs_change_changes_resolver_input_hash` |
+| A2: 不同语义 → 不同 identity | `test_semantic_change_with_same_line_refs_still_changes_identity` |
+| 向后兼容 | `test_line_refs_absent_backward_compatible` |
+| call-site audit | `_annotation_identity_projection` 仅 2 处调用，无隐藏依赖 |
+| 全量回归 | 514/514 passed |
+
+### 代码修改
+
+| 文件 | 修改 |
+|------|------|
+| `service.py` `_annotation_identity_projection` | 剔除键 `{confidence}` → `{confidence, line_refs}` |
+| `service.py` `_confidence_only_projection` | 新增：仅剔除 `confidence`，供 `resolver_input_hash` |
+| `service.py` `_input_identity` | `resolver_input_hash` 改用 `_confidence_only_projection` |
+| `test_identity_projection.py` | 新增 4 个 A1/A2 测试 |
+
+### 67 号状态更新
+
+```
+Gate A: PASS / TEST-EVIDENCED
+Gate B: OPEN（Legacy vs Path B corpus 对比）
+Gate C: OPEN（Safety Invariant Preservation）
+Gate D: OPEN（Adapter Boundary）
+Errata: BLOCKED BY Gate B/C
+```
+
+### 下一步（按序执行）
+
+1. **Gate B**：Legacy vs Path B 真实 corpus 对比
+2. **Gate C**：Safety Invariant Preservation 验证
+3. **OQ-3 → OQ-2**：物化层 / Standalone+Material 裁决
+4. **Errata Decision**（Gate B/C/D 通过后）
+5. **I-5-2 Adapter**（Gate D 约束）
+6. **Path B Full Closure E2E**

@@ -1186,3 +1186,21 @@ Step 5 已于 commit `0917404` 落盘（含 Status/log/restart v1.10 收口）�
 - **产出**：69 号 §9 Step 3 裁决 + Status.md 快照 + log.md 条目 + restart-prompt v1.32。
 - **下一步**：OQ-1 Identity 分层分析 → Gate B corpus 对比 → Gate C 安全不变量验证 →
   OQ-3/OQ-2 → Errata Decision → I-5-2 Adapter → Path B Full Closure E2E。
+
+### 2026-09-11（Gate A 关闭：OQ-1 Identity 分层 PASS / TEST-EVIDENCED）
+
+- **裁决**：Gate A PASS / TEST-EVIDENCED。B5-3 Identity Semantics OPEN → CLOSED。
+- **三层 Identity 模型**：Semantic Identity（剔除 confidence + line_refs）/
+  Source Binding Claim（含 line_refs，进 resolver_input_hash）/
+  Resolved Evidence（基于 resolved span）。
+- **核心结论**：line_refs 属于 Source Binding Claim，不属于 Semantic Identity。
+- **代码修改**：`_annotation_identity_projection` 剔除键扩展为 `{confidence, line_refs}`；
+  新增 `_confidence_only_projection`（仅剔除 confidence）供 `resolver_input_hash`；
+  `_input_identity` 分离两个投影边界。
+- **测试证据**：4 个新增 A1/A2 测试（test_identity_projection.py）；
+  call-site audit 确认无隐藏依赖；全量回归 514/514 passed。
+- **67 号状态**：Gate A PASS；Errata BLOCKED BY Gate B/C。
+- **产出**：70 号 OQ-1 分析（Adjudicated/CLOSED）+ 69 号 B5-3/Gate A 更新 +
+  Status.md 快照 + log.md 条目 + restart-prompt v1.33。
+- **下一步**：Gate B corpus 对比 → Gate C 安全不变量验证 → OQ-3/OQ-2 →
+  Errata Decision → I-5-2 Adapter → Path B Full Closure E2E。

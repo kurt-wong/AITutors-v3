@@ -1,48 +1,46 @@
 # AI Tutor V3 — RESTART PROMPT
 
-Version: v1.32
-Status: **Step 3 裁决完成** — 67 号 Conditional Acceptance；
-Errata BLOCKED BY OQ-1 + Gate B/C；
-下一步 = OQ-1 Identity 分层 → Gate B 对比 → Gate C 安全不变量
+Version: v1.33
+Status: **Gate A 关闭** — OQ-1 Identity 分层 PASS / TEST-EVIDENCED；
+B5-3 CLOSED；67 Errata BLOCKED BY Gate B/C；
+下一步 = Gate B 对比 → Gate C 安全不变量
 Date: 2026-09-11
 
-## 0.0 当前结论（2026-09-11 Step 3 裁决完成）
+## 0.0 当前结论（2026-09-11 Gate A 关闭）
 
 - **A–G / H Phase 1–8 / Phase 9 / Errata 维持 FINAL CLOSED**。
 - **Phase I-3 CLOSED**：Source Evidence Preservation Layer。
 - **Phase I-4 CLOSED**：Valid Negative Result——layout evidence 消歧率 0%。
-- **Phase I-5 进行中**：I-5-0 → I-5-1 → 盲测 → 68/69 号 → 全代码库对抗性审查 →
-  P0 Closure Pack 关闭 → **Step 3 裁决（本轮）**。
-- **Step 3 裁决（67 号 Contract Change）**：**有条件接受（Conditional Acceptance）**。
-  - 核心方向接受：Source Pointer ≠ Source Content；Resolver 从"搜索"→"验证"。
-  - Authority 分层：LLM = Semantic + Binding Proposal；Resolver = Reference Integrity；
-    Source = Fact；Admission = Persistence。
-  - Frozen Spec：UNCHANGED。Errata：BLOCKED BY OQ-1 + Gate B/C。
-  - 四道 Errata Gate：A（Identity Closure）/ B（Legacy vs Path B 对比）/
-    C（Safety Invariant Preservation）/ D（Adapter Boundary）。
+- **Phase I-5 进行中**：I-5-0 → I-5-1 → 盲测 → 68/69 号 → 对抗性审查 →
+  P0 Closure Pack → Step 3 裁决 → **Gate A 关闭（本轮）**。
+- **Gate A（Identity Closure）**：**PASS / TEST-EVIDENCED**。
+  - 三层 Identity 模型：Semantic Identity / Source Binding Claim / Resolved Evidence。
+  - 核心结论：line_refs 属于 Source Binding Claim，不属于 Semantic Identity。
+  - `_annotation_identity_projection` 剔除 `{confidence, line_refs}`；
+    `_confidence_only_projection` 仅剔除 `{confidence}`（供 resolver_input_hash）。
+  - 4 个新增 A1/A2 测试 + call-site audit + 514/514 regression。
 - **状态基线（2026-09-11）**：
   - Architecture Design: **PASS WITH RESERVATIONS**
   - Core Safety Model: **PASS**
-  - Local Invariants: **PASS / TEST-EVIDENCED**（510/510）
+  - Local Invariants: **PASS / TEST-EVIDENCED**（514/514）
   - Cross-Boundary Invariants: **PASS / TEST-EVIDENCED**
   - Admission Atomicity: **PASS**；Admission Concurrency: **PASS — 10/10**
   - Test Isolation: **PASS / TEST-EVIDENCED**
   - Resolver Algorithm Safety: **PASS**；Resolver Real-World Coverage: **FAIL — 16.7%**
   - Path B → IR/Compiler: **PROVEN — 21/21**；→ Gate/Admission: **NOT YET PROVEN**
-  - 67 Contract Change: **CONDITIONALLY ACCEPTED**（Errata BLOCKED）
-  - OQ-1/OQ-2/OQ-3: **OPEN**
+  - 67 Contract Change: **CONDITIONALLY ACCEPTED**（Gate A PASS；Errata BLOCKED BY Gate B/C）
+  - OQ-1: **CLOSED**；OQ-2/OQ-3: **OPEN**
   - Full Production Pipeline: **NOT YET CLOSED**
 - **红线（不变）**：HTTP retry ≠ LLM retry ≠ fallback；先冻结 Spec 再改代码；
   Schema Source of Truth = 20_Document_Pipeline.md；Resolver 不猜；
   实验结果 ≠ 实施授权；提议修改 ≠ 违反 Frozen Spec。
 - **下一步（按序执行）**：
-  1. **OQ-1**：B5-3 Identity 分层分析（Gate A）
-  2. **Gate B**：Legacy vs Path B 真实 corpus 对比
-  3. **Gate C**：Safety Invariant Preservation 验证
-  4. **OQ-3 → OQ-2**：物化层 / Standalone+Material 裁决
-  5. **Errata Decision**（Gate A-D 全部通过后）
-  6. **I-5-2 Adapter**（Gate D 约束：Contract Translator，非 Semantic Resolver）
-  7. **Path B Full Closure E2E**（含 Provenance Golden Test + Replay 验证）
+  1. **Gate B**：Legacy vs Path B 真实 corpus 对比
+  2. **Gate C**：Safety Invariant Preservation 验证
+  3. **OQ-3 → OQ-2**：物化层 / Standalone+Material 裁决
+  4. **Errata Decision**（Gate B/C/D 通过后）
+  5. **I-5-2 Adapter**（Gate D 约束：Contract Translator，非 Semantic Resolver）
+  6. **Path B Full Closure E2E**（含 Provenance Golden Test + Replay 验证）
 - 重启后第一任务：读本文件 → Status.md 尾 → log.md 尾 → bugs.md →
   按上述 Step 顺序执行。
 
