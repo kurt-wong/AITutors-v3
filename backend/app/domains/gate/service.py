@@ -26,6 +26,7 @@ from app.domains.annotation import ANNO_SCHEMA_VERSION, ANN_PROMPT_VERSION
 from app.domains.compile import COMPILER_VERSION, IR_SCHEMA_VERSION
 from app.domains.compile.compiler import Compiler
 from app.domains.compile.ir import IRBuilder
+from app.domains.evidence import EvidencePromotionService, ProposerIdentity
 from app.domains.gate import GATE_POLICY_VERSION
 from app.domains.gate.admission import AdmissionService
 from app.domains.gate.payload import build as build_payload
@@ -102,6 +103,17 @@ class GateService:
         self._snap = SnapshotRepository(session)
         self._source = SourceRepository(session)
         self._admission = AdmissionService(session)
+        # Evidence Promotion Contract Phase 1 (75_EVIDENCE_PROMOTION_CONTRACT.md)
+        self._evidence = EvidencePromotionService()
+
+    @property
+    def evidence_promotion(self) -> EvidencePromotionService:
+        """Evidence Promotion Contract Phase 1: access ValidationEvents and EvidenceReferences.
+
+        R4: Only ValidationEvent produces Evidence Authority.
+        Callers can inspect validation_events and evidence_references after run().
+        """
+        return self._evidence
 
     async def run(
         self,
@@ -143,6 +155,16 @@ class GateService:
         resolved_run = SourceResolver(
             source_version_id=source_version_id, lines=lines, figures=figures
         ).resolve(ann.payload)
+
+        # Evidence Promotion Contract Phase 1: create EvidenceReferences from ResolvedRun.
+        # Bridge: Source Binding (ResolvedSpan) → Evidence Lifecycle (Proposal).
+        # Does NOT change existing pipeline flow — additive only.
+        proposer = ProposerIdentity(
+            producer_type="native_parser",
+            pipeline_version=RESOLVER_VERSION,
+        )
+        self._evidence.create_references(resolved_run, proposer)
+
         ir = IRBuilder.build(resolved_run, ann.payload, source_version_id, annotation_id)
         compiled = Compiler(
             {s.span_id: s for s in resolved_run.resolved_spans},
@@ -158,6 +180,11 @@ class GateService:
             gate = evaluate(
                 root=root, ir=ir, compiled=compiled, resolved_run=resolved_run
             )
+
+            # Evidence Promotion Contract Phase 1: record ValidationEvent.
+            # R4: Only ValidationEvent produces Evidence Authority.
+            self._evidence.record_validation(root.unit_id, gate)
+
             payload = build_payload(
                 root=root, ir=ir, compiled=compiled, resolved_run=resolved_run
             )
