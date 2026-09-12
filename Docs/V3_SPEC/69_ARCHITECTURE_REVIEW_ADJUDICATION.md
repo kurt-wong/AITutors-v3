@@ -1039,7 +1039,91 @@ B2-B3-C  Domain-dependent          DEFERRED（F2/F4/F9 → Domain Contract）
 
 > `detect_answer_type` 在"答案字母 + 解释文本"场景下存在 classification boundary defect，导致 MC targets 被污染进 fill-in evaluation set。Classification defect ≠ Fill-in binding defect。未来 preprocessing 进入生产级 pipeline 时处理。
 
-#### Gate B 当前状态（B2-B3 关闭后）
+### Gate B2-B4 实验结果与裁决（2026-09-11）
+
+**Gate B2-B4-A = CLOSED — HTML Target Classification / Contract Freeze**
+
+602 个 HTML answer targets 分类结果：
+
+| Class | 数量 | 占比 | 说明 |
+|-------|------|------|------|
+| H3_table_with_mc | 426 | 70.8% | HTML 表格含 MC 答案 |
+| H4_complex_structure | 49 | 8.1% | colspan/rowspan |
+| H2_multi_table | 39 | 6.5% | 多 table |
+| H3_table_with_qn | 30 | 5.0% | 表格含题号 |
+| H6_html_with_image | 29 | 4.8% | HTML+图片 |
+| H5_mixed_content | 17 | 2.8% | HTML+text 混合 |
+| H1_simple_table | 12 | 2.0% | 简单表格 |
+
+**关键发现**：H3_table_with_mc 占 70.8%，与 B2-B2 的 MC answer extraction 同构，只是载体从纯文本变成 HTML table。
+
+学科分布：
+- H3_table_with_mc: 生物 125 > 化学 89 > 政治 71
+- H4_complex_structure: 化学 22 > 数学 16 > 英语 7
+- H2_multi_table: 化学 16 > 数学 12 > 生物 4
+
+冻结文件：`Docs/V3_SPEC/gate_b2b4_frozen_testset.json`
+
+---
+
+**Gate B2-B4-B = CLOSED — PASS / TEST-EVIDENCED / DETERMINISTIC**
+
+Scope：507 个 Direct targets（H3_table_with_mc 426 + H3_table_with_qn 30 + H2_multi_table 39 + H1_simple_table 12）
+Excluded：95 个（H4/H5/H6 → B2-B4-C）
+
+Positive Cases（507 个 Direct HTML targets）：
+
+| Check | 结果 | 状态 |
+|-------|------|------|
+| question_id_valid | 507/507 (100%) | PASS |
+| source_version_valid | 507/507 (100%) | PASS |
+| region_valid | 507/507 (100%) | PASS |
+| region_nonempty | 507/507 (100%) | PASS |
+| region_in_scope | 507/507 (100%) | PASS |
+| evidence_hash_valid | 507/507 (100%) | PASS |
+| has_html_content | 507/507 (100%) | PASS |
+| resolved_span_constructed | 507/507 (100%) | PASS |
+| binding_stable | 507/507 (100%) | PASS |
+| **fallback_used** | **0** | **PASS** |
+
+By Class：
+
+| Class | 结果 |
+|-------|------|
+| H1_simple_table | 12/12 (100%) |
+| H2_multi_table | 39/39 (100%) |
+| H3_table_with_mc | 426/426 (100%) |
+| H3_table_with_qn | 30/30 (100%) |
+
+Determinism：3 次重复 × 10 样本 = 10/10 完全一致
+
+Negative Cases（必须 fail-closed）：
+
+| 测试 | 结果 |
+|------|------|
+| N1_invalid_range | PASS |
+| N2_out_of_range | PASS |
+| N3_empty_region | PASS |
+| N4_wrong_question_id | PASS |
+| N5_tampered_hash | PASS |
+| N6_missing_source | PASS |
+| N7_no_html_content | PASS |
+
+**7/7 fail-closed**
+
+**B2-B4-B 核心结论**：
+
+> 507 个 Direct HTML targets 的 preprocessing evidence 可以被 V3 完全机械地验证并形成稳定 ResolvedSpan。零搜索、零 fallback、零 HTML 解析。非法 evidence 全部 fail-closed。
+
+**B2-B4 分层状态**：
+
+```text
+B2-B4-A  HTML Target Classification   CLOSED
+B2-B4-B  Deterministic HTML Binding   CLOSED — PASS
+B2-B4-C  Domain/Material-dependent    DEFERRED（H4/H5/H6）
+```
+
+#### Gate B 当前状态（B2-B4 关闭后）
 
 ```text
 Gate A: PASS / TEST-EVIDENCED
@@ -1054,7 +1138,7 @@ Gate B2-B2: CLOSED — PASS / TEST-EVIDENCED / SCOPE-BOUNDED
   Scope: Structured Multiple-Choice Answer Extraction
   MC answer extraction: 99.8% (1176/1178)
   Fill-in: 65% → RECLASSIFIED (see B2-B3-A)
-  HTML: 0% (→ B2-B4)
+  HTML: 0% → RECLASSIFIED (see B2-B4-A)
   Sub-question: OUT OF SCOPE (Domain Contract first)
   Unknown: 125 TRIAGE REQUIRED
 Gate B2-B3-A: CLOSED — Target Classification Audit
@@ -1062,7 +1146,11 @@ Gate B2-B3-A: CLOSED — Target Classification Audit
 Gate B2-B3-B: CLOSED — PASS / TEST-EVIDENCED / DETERMINISTIC
   Positive: 34/34 resolved, Fallback: 0, Determinism: 10/10, Negative: 6/6 fail-closed
 Gate B2-B3-C: DEFERRED — Domain Contract dependency (F2/F4/F9)
-Gate B2-B4: OPEN — HTML Table
+Gate B2-B4-A: CLOSED — HTML Target Classification
+  Total: 602 → Direct: 507, Excluded: 95
+Gate B2-B4-B: CLOSED — PASS / TEST-EVIDENCED / DETERMINISTIC
+  Positive: 507/507 resolved, Fallback: 0, Determinism: 10/10, Negative: 7/7 fail-closed
+Gate B2-B4-C: DEFERRED — Domain/Material dependency (H4/H5/H6)
 Gate B2-B5: OPEN — Subjective/Sub-question (Domain Contract first)
 Gate C: OPEN
 Gate D: OPEN
