@@ -1,8 +1,8 @@
 # B2-B5-D: End-to-End Projection Safety Validation Report
 
-**Version**: 3.2.0
+**Version**: 3.3.0
 **Date**: 2026-09-13
-**Status**: B2-B5-D COMPLETED | Gate C BLOCKED (C-1 五层 Evidence Contract + C-2 full E2E)
+**Status**: B2-B5-D COMPLETED | Gate C BLOCKED (C-1 Evidence Promotion Contract design freeze + C-2 full E2E)
 **架构审查**: 经四次裁决，修正 preprocessing 依赖 + Evidence Admission Boundary + structural_regions + Proposal→Claim 分离
 
 ---
@@ -364,30 +364,50 @@ gate_c_invalid_binding_corpus.json (157 targets)
 
 ### 8.2 未完成项
 
-**C-1: V3 Evidence Contract 边界明确化**
+**C-1: V3 Evidence Promotion Contract** (先冻结设计, 再写代码)
 
-V3 需要显式建模五层证据生命周期:
+生命周期:
 ```
-Raw Source
-    → Source Fragment
-    → Evidence Proposal
-    → Evidence Claim
-    → Evidence Validation
-    → Validated Evidence
+Raw Source (不可引用)
+    → Source Fragment (可定位, 不可解释)
+    → Evidence Proposal (可提出, 不可消费)
+    → Evidence Claim (声明用途, 等待验证)
+    → Validated Evidence (唯一允许进入 IR)
+    → Semantic IR
 ```
+
+状态机:
+```
+PROPOSED → CLAIMED → VALIDATED → IR
+              ↓           ↓
+         REJECTED   INVALIDATED
+
+禁止: CLAIMED → IR (未验证不得进入)
+禁止: PROPOSED → IR (未声明不得进入)
+```
+
 每层职责:
 | 层 | 负责 | 不负责 | 权限 |
 |----|------|--------|------|
-| Source Fragment | 原始位置、hash、版本 | 不解释含义 | 只读 |
+| Source Fragment | 原始位置、hash、版本 | 不解释含义 | 只读事实 |
 | Evidence Proposal | 模块提出"这里可能是答案" | 无证据身份 | 任何模块可提 |
-| Evidence Claim | V3 contract 接受 proposal 并赋予证据身份 | 不证明正确 | 受控升级动作 |
-| Evidence Validation | 检查 claim 与 source contract 一致 | 不重新理解文本 | 确定性 |
+| Evidence Claim | 赋予证据身份, 等待验证 | 不证明正确 | 受控升级动作 |
+| Evidence Validation | 检查 claim 与 contract 一致 | 不重新理解文本 | 确定性, append-only event |
 | Validated Evidence | 可进入 Semantic IR | 不补救前面错误 | 只读 |
 
-**Evidence Proposal vs Evidence Claim 的区别**:
-- Proposal: OCR/LLM/parser 说 "candidate_answer_span=line 521, confidence=0.93"
-- Claim: V3 contract 接受这个 proposal，赋予它证据身份
-- 没有这个区分 → 自声明自验证 → 重新打开漏洞
+Proposal 来源信任等级:
+| 来源 | 可信等级 |
+|------|----------|
+| Native parser | 低 |
+| OCR detector | 低 |
+| LLM annotation | 低 |
+| Frozen rule (header grammar) | 高 |
+| Human review | 高 |
+
+实现风险 (C-1 设计时必须防止):
+1. **字段堆积假安全**: 不要设计 {validated: true} 可修改字段。Validation 必须产生 append-only ValidationEvent。
+2. **Validation 不做 NLP**: 只负责 hash/span/role consistency/contract, 不判断答案内容真假。
+3. **Claim 来源分级**: 不是所有 Claim 平权, 来源信任等级影响 Validation 严格度。
 
 **C-2: 完整 157 invalid corpus 真实 pipeline E2E**
 
@@ -418,9 +438,11 @@ Raw Source
 - [x] Structural consistency check 实现 (region map + span overlap)
 - [x] 49 EXPLANATION_REGION targets fail-closed 验证
 - [x] Unclosed Evidence Admission Boundary documented
-- [x] Evidence Promotion Negative Tests (C-3) — 5 attacks 全部 fail-closed
-- [ ] V3 Source Evidence Binding Contract 明确化 (C-1: 四层证据生命周期)
-- [ ] 完整 157 targets 真实 pipeline E2E (C-2)
+- [x] Evidence Promotion Negative Tests (C-3) — 7 attacks 全部 fail-closed
+- [x] 四条冻结架构原则确立
+- [ ] C-1: V3 Evidence Promotion Contract 设计冻结 (状态机 + 信任分级 + 防实现风险)
+- [ ] C-1: Contract 代码实现
+- [ ] C-2: 完整 157 targets 真实 pipeline E2E
 
 ---
 
@@ -517,6 +539,6 @@ preprocessing 是可替换的上游实现, 不能反过来成为 V3 架构成立
 
 ---
 
-**报告版本**: 3.2.0 (四次架构审查修正)
+**报告版本**: 3.3.0 (五次架构审查修正)
 **核心修正**: Evidence Proposal→Claim 分离 + 四条冻结原则 + 2 个新 C-3 攻击
-**下一步**: C-1 五层 Evidence Contract 建模 → 157 E2E → Gate C Closure
+**下一步**: C-1 设计冻结 (状态机+信任分级+防风险) → C-1 实现 → C-2 157 E2E → Gate C Closure
