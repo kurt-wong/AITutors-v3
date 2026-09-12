@@ -807,23 +807,180 @@ Capability Evidence 记录，不作为 Strategy Comparison 指标。
 - ❌ 不证明 Path B 的语义正确率为 97.3%（需独立抽样验证）
 - ❌ 不证明 Path B 在所有 Question Roles 上优于 Legacy
 
-#### 关闭 B2-A 前需完成的三项补强
+#### 三项补强结果（2026-09-11）
 
-1. **审计 15 个 Legacy-success / Path-B-failure cases**——逐个分类
-   （manifest 错误 / validator 误杀 / binding conflict / 粒度差异）
-2. **独立抽样验证 Path B 成功结果**——从 1820 个成功 stem 随机抽 100-200 个，
-   独立确认 line_ref 指向的确实是该题题干
-3. **正式报告中把 explanation 从 comparative metric 中排除**
+**补强 1：审计 15 个 Legacy-only cases — 完成**
 
-### Gate B 当前状态（B2-A 后更新）
+15/15 全部为 Validator False Negative，manifest line_refs 全部正确：
+- 数学公式题（stem 以 `=` 开头）→ validator 要求题号前缀，误杀
+- 章节编号题（`10.6.3.2 ...`）→ `10` 提取为题号，`6` 不匹配 `.`，误杀
+- 无题号正文段（chemistry）→ 无题号，误杀
+- 特殊题号格式（`1-1` / `1.10.1` / `1、` / `9.` ）→ 题号提取正则不覆盖，误杀
+
+**补强 2：独立抽样验证 Path B 成功结果 — 完成**
+
+从 1820 个成功 stem 随机抽 100 个，独立确认 line_ref 指向的确实是该题题干：
+- 初始验证器结果：96/100 (96.0%)
+- 对 4 个失败样本逐案审计：3 个为验证逻辑 False Negative（合法 stem 被误判），1 个为真实 Manifest Binding Error（stem_lines 指向答案内容）
+- **人工复核后实际 Binding 错误率：1/100 = 1.0%**
+- 区分两个概念：96% 是验证器表现；~99% 是人工复核后 Manifest Binding 实际表现
+
+**补强 3：排除 explanation — 完成**
+
+正式结论仅基于 stem。Explanation 作为 Capability Evidence 记录，不作为 Strategy Comparison 指标。
+
+#### Gate B2-A 正式关闭（2026-09-11）
+
+**Gate B2-A = PASS / STRONGLY TEST-EVIDENCED / CLOSED**
+
+> 在 79 cases、1870 个共同 stem targets 上，Legacy Resolver 的 Search Resolution Rate
+> 为 44.3%（829/1870），Path B 的 Binding Validation Rate 为 97.3%（1820/1870）。
+>
+> Agreement Analysis 显示 1857 个 Legacy unresolved target 被 Path B validated。
+> 对 15 个 Legacy-resolved / Path-B-not-validated 案例逐案审计后，
+> 15/15 均为 Validator False Negative，Manifest line_refs 正确。
+>
+> 对 Path B 成功结果进行 100 个独立抽样审计，初始验证器结果为 96/100；
+> 对 4 个失败案例逐案复核后，3 个属于验证逻辑 False Negative，
+> 仅 1 个属于真实 Manifest Binding Error（1.0%）。
+>
+> 因此，实验结果充分支持以下结论：
+>
+> **在可信 Source Binding Claim 存在的前提下，将 Resolver 的职责从 Source Search
+> 转变为 Binding Validation，可以显著提高 stem Source Binding 的实际可用性。**
+>
+> Explanation 不纳入策略对比，因为 Legacy Resolver 当前不具备 explanation
+> Search Capability。
+>
+> **Gate B2-A：CLOSED。**
+
+### Gate B2-B1 实验结果与裁决（2026-09-11）
+
+**Gate B2-B1 = CLOSED — PASS / TEST-EVIDENCED / SCOPE-BOUNDED**
+
+#### 实验设计
+
+- 79 cases / 1166 option regions
+- B2-B1 不再逐行拆分 region（B1 的 interpretation bug），而是把整个 region 作为输入
+- 结构解析器从 region 中恢复 per-option structure（label + text）
+- 三层验证：Region Binding → Structure Extraction → Label Sequence
+
+#### 已证明
+
+1. **自动结构提取**：1069 个非 HTML option regions 中 1065 个成功恢复 option structure
+   - 自动 extraction rate = **99.6%**
+2. **结构一致性**：收紧 label sequence（gap 检测 + first=A + count 范围）后 1054/1069
+   - pass rate = **98.6%**
+3. **独立源文本对抗抽样**：50 个随机抽样，49 个通过
+   - 观察通过率 = **98.0%**
+   - 唯一失败（政治 Q19）为 Manifest Region Semantics Edge Case——region 包含选项组合定义文本（①②③④）+ 答案组合行（A.①②③），解析器正确提取 A/B/C/D，覆盖率计算 artifact
+
+#### 未证明
+
+1. **每个 option 的 label-text assignment 完全正确**——结构性恢复有强证据，但逐 option 全量分配正确性未证明
+2. **50 个对抗样本的统计结果可外推为总体准确率**——样本量 50，无置信区间
+3. **mixed HTML regions 的完整解析能力**——50 个 mixed region 仅抽样 10 个
+4. **pure HTML table 的结构化解析能力**——47 个纯 HTML region 属 B2-B4
+
+#### 失败分类
+
+| 类型 | 数量 | 归属 |
+|------|------|------|
+| Pure HTML table/image | 47 | B2-B4 范畴 |
+| Mixed HTML + text | 50 | 约半数可解析，待 B2-B4 |
+| Manifest region 不完整 | 4 | 数据问题 |
+| OCR 重复行 artifact | 3 | 数据问题 |
+| 纯 LaTeX / 特殊结构 | 2 | 边缘 case |
+| Region semantics edge case | 1 | Manifest Region Contract Issue |
+
+#### 政治 Q19 记录
+
+`options_lines` 的 region boundary 可合法包含"选项结构之外但与选项题有关的辅助文本"（选项组合定义层）。这进一步支持 Q1 裁决：**options_lines 本质是 Source Region，而非已等价于 per-option span 的精确结构。** Parser 的职责是从 region 恢复 option structures，不是假设 region 内每行都是 option。记录为 **Region Semantics Edge Case**，非 parser failure。
+
+### Gate B2-B2 实验结果与裁决（2026-09-11）
+
+**Gate B2-B2 = CLOSED — PASS / TEST-EVIDENCED / SCOPE-BOUNDED**
+**Scope: Structured Multiple-Choice Answer Extraction**
+
+#### 实验设计
+
+- 79 cases / 2282 answer targets / 1573 unique regions / 120 shared regions（服务 829 units）
+- 验证：给定 answer_lines Region + 题号，能否确定性提取本题答案
+- Q2 裁决验证：共享答案表 Source Region → Per-question Answer 的确定性定位
+
+#### 核心结果
+
+| 范围 | 总数 | 成功 | 成功率 |
+|------|------|------|--------|
+| **选择题答案** | **1178** | **1176** | **99.8%** |
+| 填空题答案 | 106 | 69 | 65% (Capability Evidence) |
+| HTML table | 602 | 0 | B2-B4 |
+| 主观题子问题 | 271 | 0 | OUT OF SCOPE |
+| Unknown | 125 | 0 | TRIAGE REQUIRED |
+
+#### 选择题答案类型分解
+
+| 答案结构 | 总数 | 成功 | 成功率 |
+|----------|------|------|--------|
+| 【答案】标记 | 573 | 573 | 100% |
+| 故选 | 207 | 207 | 100% |
+| Range Table (1-5: BBACB) | 137 | 137 | 100% |
+| 故答案为 | 117 | 117 | 100% |
+| ☑答案 checkbox | 93 | 93 | 100% |
+| 连写编号 (1.C2.C3.A) | 42 | 41 | 98% |
+| 编号答案 (1. B) | 9 | 8 | 89% |
+
+#### 关键修复记录
+
+1. **题号提取**：支持 `U6-7`（unit range）、`U51`/`N1`（section 编号）、转义点号 `\.`
+2. **Range table 格式**：支持 `----`（多连字符）
+3. **连写格式**：`1\. C2\. C3\. A4\. B` 和 `1C, 2D, 3B`
+4. **新增类型**：`☑答案 X`、`故选：X`、`故答案为：X`
+
+#### 正式边界（必须保留）
+
+1. **99.8% 是 scoped metric**——仅适用于结构化选择题答案类型，不代表全部 answer targets 的总体提取率
+2. **填空题 65% 是 Capability Evidence**——证明 parser 能处理部分填空，但策略未闭环，进入 B2-B3
+3. **主观题 271 个不属于 parser 失败**——是尚未定义提取策略的问题，需先确认 V3 Question/Task/Answer 语义模型（B2-B5）
+4. **HTML 602 个归 B2-B4**——Source Region 内部二维/嵌套结构，line span 不足以表达最终 answer binding
+5. **125 个 Unknown 需分类审计**——不再为提高百分比继续无目标增加格式规则
+
+#### 架构分界线（正式确认）
+
+```text
+第一层：Source Binding —— Path B 已解决
+  "这个 Question 在 Source 的哪里？"
+  Manifest Claim + Validator
+
+第二层：In-region Structure Resolution —— B2-B 系列解决
+  "已知区域在哪，区域里哪部分属于当前题？"
+  选择题：index lookup（B2-B2 已证明）
+  HTML：row/cell lookup（B2-B4）
+  填空：token sequence binding（B2-B3）
+  主观题：task structure → answer structure（B2-B5，Domain Contract first）
+```
+
+#### Gate B 当前状态（B2-B2 关闭后）
 
 ```text
 Gate A: PASS / TEST-EVIDENCED
 Gate B1: CONDITIONAL PASS — Region Binding Contract 基本成立
-Gate B2-A: PASS / TEST-EVIDENCED（stem only；待三项补强后正式关闭）
+Gate B2-A: PASS / STRONGLY TEST-EVIDENCED / CLOSED
   Stem: Legacy 44.3% vs Path B 97.3%
-  Explanation: Capability Evidence（不纳入对比）
-Gate B2-B: NEXT — 结构化内容定位（option/answer table/fill-in/HTML table）
+Gate B2-B1: CLOSED — PASS / TEST-EVIDENCED / SCOPE-BOUNDED
+  Non-HTML extraction: 99.6% (1065/1069)
+  Adversarial sampling: 98.0% (49/50)
+  Tightened label sequence: 98.6% (1054/1069)
+Gate B2-B2: CLOSED — PASS / TEST-EVIDENCED / SCOPE-BOUNDED
+  Scope: Structured Multiple-Choice Answer Extraction
+  MC answer extraction: 99.8% (1176/1178)
+  Fill-in: 65% (Capability Evidence, → B2-B3)
+  HTML: 0% (→ B2-B4)
+  Sub-question: OUT OF SCOPE (Domain Contract first)
+  Unknown: 125 TRIAGE REQUIRED
+Gate B2-B3: OPEN — Fill-in Answer Binding
+Gate B2-B4: OPEN — HTML Table
+Gate B2-B5: OPEN — Subjective/Sub-question (Domain Contract first)
 Gate C: OPEN
 Gate D: OPEN
 Errata: BLOCKED BY Gate B/C

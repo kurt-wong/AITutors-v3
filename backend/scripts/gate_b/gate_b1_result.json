@@ -1,0 +1,39 @@
+{
+  "total_targets": 10343,
+  "range_valid": 10343,
+  "content_valid": 8168,
+  "role_valid": 6544,
+  "range_valid_rate": 1.0,
+  "content_valid_rate": 0.7897128492700377,
+  "role_valid_rate": 0.6326984433916658,
+  "by_role": {
+    "stem": {
+      "total": 1870,
+      "range_valid": 1870,
+      "content_valid": 1870,
+      "role_valid": 1820
+    },
+    "option": {
+      "total": 5311,
+      "range_valid": 5311,
+      "content_valid": 3138,
+      "role_valid": 2753
+    },
+    "answer": {
+      "total": 2282,
+      "range_valid": 2282,
+      "content_valid": 2280,
+      "role_valid": 1120
+    },
+    "explanation": {
+      "total": 880,
+      "range_valid": 880,
+      "content_valid": 880,
+      "role_valid": 851
+    }
+  },
+  "failure_reasons": {
+    "content_empty": 2175,
+    "role_mismatch": 1624
+  }
+}

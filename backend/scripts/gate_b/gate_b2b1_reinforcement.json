@@ -1,0 +1,30 @@
+{
+  "reinforcement_1": {
+    "successful_parses": 1065,
+    "total_non_html": 1069,
+    "sample_size": 100,
+    "verified": 99,
+    "verified_rate": 0.99,
+    "failure_reasons": {
+      "labels": 1
+    }
+  },
+  "reinforcement_2": {
+    "total_html": 97,
+    "pure_html": 47,
+    "mixed": 50,
+    "wrapper": 0
+  },
+  "reinforcement_3": {
+    "total_non_html": 1069,
+    "tightened_pass": 1054,
+    "tightened_pass_rate": 0.9859681945743686,
+    "failure_reasons": {
+      "gap_at_1": 6,
+      "first_not_A": 4,
+      "count_out_of_range": 2,
+      "gap_at_4": 1,
+      "no_options": 2
+    }
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "total_option_regions": 1166,
+  "region_valid": 1166,
+  "region_non_empty": 1166,
+  "structure_extracted": 1065,
+  "label_sequence_valid": 1061,
+  "region_valid_rate": 1.0,
+  "structure_extracted_rate": 0.9133790737564322,
+  "label_sequence_valid_rate": 0.9099485420240138,
+  "by_subject": {
+    "生物": {
+      "total": 274,
+      "structure_ok": 263,
+      "label_ok": 262
+    },
+    "英语": {
+      "total": 54,
+      "structure_ok": 53,
+      "label_ok": 53
+    },
+    "化学": {
+      "total": 229,
+      "structure_ok": 152,
+      "label_ok": 149
+    },
+    "历史": {
+      "total": 209,
+      "structure_ok": 206,
+      "label_ok": 206
+    },
+    "政治": {
+      "total": 127,
+      "structure_ok": 126,
+      "label_ok": 126
+    },
+    "数学": {
+      "total": 189,
+      "structure_ok": 185,
+      "label_ok": 185
+    },
+    "物理": {
+      "total": 68,
+      "structure_ok": 66,
+      "label_ok": 66
+    },
+    "语文": {
+      "total": 12,
+      "structure_ok": 12,
+      "label_ok": 12
+    },
+    "地理": {
+      "total": 4,
+      "structure_ok": 2,
+      "label_ok": 2
+    }
+  },
+  "option_count_distribution": {
+    "4": 1030,
+    "3": 27,
+    "2": 4,
+    "5": 3,
+    "6": 1
+  },
+  "failure_reasons": {
+    "html_table_or_image": 97,
+    "structure_extraction_failed": 4
+  }
+}

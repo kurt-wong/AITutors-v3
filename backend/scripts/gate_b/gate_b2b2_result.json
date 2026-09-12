@@ -1,0 +1,80 @@
+{
+  "total_answer_targets": 2282,
+  "unique_regions": 1573,
+  "shared_regions": 120,
+  "region_valid": 2282,
+  "region_non_empty": 2280,
+  "type_detected": 2157,
+  "extraction_success": 1245,
+  "answer_valid": 1245,
+  "extraction_rate": 0.5455740578439965,
+  "valid_rate": 0.5455740578439965,
+  "by_type": {
+    "range_table": {
+      "total": 137,
+      "extracted": 137,
+      "valid": 137
+    },
+    "sub_question": {
+      "total": 271,
+      "extracted": 0,
+      "valid": 0
+    },
+    "fill_in": {
+      "total": 70,
+      "extracted": 42,
+      "valid": 42
+    },
+    "concat_fill_in": {
+      "total": 36,
+      "extracted": 27,
+      "valid": 27
+    },
+    "html": {
+      "total": 602,
+      "extracted": 0,
+      "valid": 0
+    },
+    "unknown": {
+      "total": 125,
+      "extracted": 0,
+      "valid": 0
+    },
+    "marked": {
+      "total": 573,
+      "extracted": 573,
+      "valid": 573
+    },
+    "gu_xuan": {
+      "total": 207,
+      "extracted": 207,
+      "valid": 207
+    },
+    "gu_da_an": {
+      "total": 117,
+      "extracted": 117,
+      "valid": 117
+    },
+    "concat_numbered": {
+      "total": 42,
+      "extracted": 41,
+      "valid": 41
+    },
+    "numbered": {
+      "total": 9,
+      "extracted": 8,
+      "valid": 8
+    },
+    "checkbox": {
+      "total": 93,
+      "extracted": 93,
+      "valid": 93
+    }
+  },
+  "shared_extraction_rate": 0.30156815440289503,
+  "non_shared_extraction_rate": 0.6847900894700619,
+  "failure_reasons": {
+    "extraction_failed": 1035,
+    "region_empty": 2
+  }
+}

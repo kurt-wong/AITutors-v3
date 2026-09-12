@@ -1,0 +1,1747 @@
+{
+  "comparison": {
+    "corpus": {
+      "total_cases": 67,
+      "legacy_errors": 0,
+      "path_b_errors": 0
+    },
+    "legacy": {
+      "total_targets": 7631,
+      "resolved": 1377,
+      "unresolved": 6254,
+      "resolution_rate": 0.18044817193028437,
+      "by_status": {
+        "exact": 1377
+      }
+    },
+    "path_b": {
+      "total_units": 1885,
+      "total_spans": 8089,
+      "valid_spans": 8089,
+      "invalid_refs": 0,
+      "total_refs": 5007,
+      "validation_rate": 1.0,
+      "by_role": {
+        "stem": 1556,
+        "option": 4050,
+        "answer": 1874,
+        "explanation": 609
+      }
+    }
+  },
+  "legacy_per_case": [
+    {
+      "strategy": "legacy",
+      "case_id": "2019北京101中学高二（下）期中生物含答案(1)",
+      "error": null,
+      "total_targets": 102,
+      "resolved": 44,
+      "unresolved": 58,
+      "by_status": {
+        "exact": 44
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2018北京昌平临川学校高二（下）期中英语（教师版）(1)",
+      "error": null,
+      "total_targets": 58,
+      "resolved": 2,
+      "unresolved": 56,
+      "by_status": {
+        "exact": 2
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2018北京春季高中会考化学（教师版）(1)",
+      "error": null,
+      "total_targets": 174,
+      "resolved": 52,
+      "unresolved": 122,
+      "by_status": {
+        "exact": 52
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2018北京夏季高中会考历史（教师版）(1)",
+      "error": null,
+      "total_targets": 306,
+      "resolved": 0,
+      "unresolved": 306,
+      "by_status": {}
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2018北京春季高中会考地理（教师版）(1)",
+      "error": null,
+      "total_targets": 50,
+      "resolved": 11,
+      "unresolved": 39,
+      "by_status": {
+        "exact": 11
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2018北京夏季高中会考政治（教师版）(1)",
+      "error": null,
+      "total_targets": 172,
+      "resolved": 85,
+      "unresolved": 87,
+      "by_status": {
+        "exact": 85
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2018北京春季高中会考数学（教师版）(1)",
+      "error": null,
+      "total_targets": 160,
+      "resolved": 6,
+      "unresolved": 154,
+      "by_status": {
+        "exact": 6
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2018北京春季高中会考物理（教师版）(1)",
+      "error": null,
+      "total_targets": 84,
+      "resolved": 20,
+      "unresolved": 64,
+      "by_status": {
+        "exact": 20
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2018北京春季高中会考生物（教师版）(1)",
+      "error": null,
+      "total_targets": 256,
+      "resolved": 75,
+      "unresolved": 181,
+      "by_status": {
+        "exact": 75
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2018北京春季高中会考英语（教师版）(1)",
+      "error": null,
+      "total_targets": 36,
+      "resolved": 4,
+      "unresolved": 32,
+      "by_status": {
+        "exact": 4
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2018北京春季高中会考语文（教师版）(1)",
+      "error": null,
+      "total_targets": 28,
+      "resolved": 10,
+      "unresolved": 18,
+      "by_status": {
+        "exact": 10
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "19_2023重庆市巴蜀中学高考适应性月考卷（九）化学答案",
+      "error": null,
+      "total_targets": 36,
+      "resolved": 16,
+      "unresolved": 20,
+      "by_status": {
+        "exact": 16
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "14_2023届黑龙江省校哈尔滨市第三中学校高三第二次高考模拟考试 理科综合答案",
+      "error": null,
+      "total_targets": 70,
+      "resolved": 27,
+      "unresolved": 43,
+      "by_status": {
+        "exact": 27
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2015-2021北京高中英语期中汇编：代词（教师版）(1)",
+      "error": null,
+      "total_targets": 72,
+      "resolved": 0,
+      "unresolved": 72,
+      "by_status": {}
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2020北京高中合格考化学（第一次）（教师版）(1)",
+      "error": null,
+      "total_targets": 168,
+      "resolved": 2,
+      "unresolved": 166,
+      "by_status": {
+        "exact": 2
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2021北京高中合格考历史（第一次）（教师版）(1)",
+      "error": null,
+      "total_targets": 244,
+      "resolved": 172,
+      "unresolved": 72,
+      "by_status": {
+        "exact": 172
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2017-2019北京高中地理合格考试汇编：人口（教师版）(1)",
+      "error": null,
+      "total_targets": 18,
+      "resolved": 1,
+      "unresolved": 17,
+      "by_status": {
+        "exact": 1
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2021北京高中合格考政治（第一次）（教师版）(1)",
+      "error": null,
+      "total_targets": 154,
+      "resolved": 98,
+      "unresolved": 56,
+      "by_status": {
+        "exact": 98
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2021北京高中合格考数学（第二次）（教师版）(1)",
+      "error": null,
+      "total_targets": 136,
+      "resolved": 0,
+      "unresolved": 136,
+      "by_status": {}
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2021北京高中合格考物理（第二次）（教师版）(1)",
+      "error": null,
+      "total_targets": 30,
+      "resolved": 7,
+      "unresolved": 23,
+      "by_status": {
+        "exact": 7
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2020北京高中合格考生物（第二次）（教师版）(1)",
+      "error": null,
+      "total_targets": 228,
+      "resolved": 94,
+      "unresolved": 134,
+      "by_status": {
+        "exact": 94
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2021北京高中合格考语文（第二次）（教师版）(1)",
+      "error": null,
+      "total_targets": 26,
+      "resolved": 0,
+      "unresolved": 26,
+      "by_status": {}
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "12_T8联盟2023年普通高中学业水平选择性考试压轴卷（华师一附中命题）化学答案",
+      "error": null,
+      "total_targets": 38,
+      "resolved": 0,
+      "unresolved": 38,
+      "by_status": {}
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2021北京高考压轴卷历史（教师版）(1)",
+      "error": null,
+      "total_targets": 100,
+      "resolved": 27,
+      "unresolved": 73,
+      "by_status": {
+        "exact": 27
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2020北京大学强基计划数学（教师版）(1)",
+      "error": null,
+      "total_targets": 120,
+      "resolved": 0,
+      "unresolved": 120,
+      "by_status": {}
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2019北京清华大学领军计划物理（教师版）(1)",
+      "error": null,
+      "total_targets": 38,
+      "resolved": 3,
+      "unresolved": 35,
+      "by_status": {
+        "exact": 3
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2022北京首都师大附中高一12月月考化学（教师版）(1)",
+      "error": null,
+      "total_targets": 100,
+      "resolved": 1,
+      "unresolved": 99,
+      "by_status": {
+        "exact": 1
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2020北京平谷高一（上）期末历史含答案",
+      "error": null,
+      "total_targets": 303,
+      "resolved": 0,
+      "unresolved": 303,
+      "by_status": {}
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2022北京东城高一（上）期末地理（教师版）",
+      "error": null,
+      "total_targets": 32,
+      "resolved": 1,
+      "unresolved": 31,
+      "by_status": {
+        "exact": 1
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2021北京师大二附中高一（上）期中数学（教师版）",
+      "error": null,
+      "total_targets": 82,
+      "resolved": 0,
+      "unresolved": 82,
+      "by_status": {}
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2018北京十四中高一（下）期中物理（教师版）(1)",
+      "error": null,
+      "total_targets": 126,
+      "resolved": 8,
+      "unresolved": 118,
+      "by_status": {
+        "exact": 8
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2021北京四中高一（上）期中生物（教师版）",
+      "error": null,
+      "total_targets": 190,
+      "resolved": 0,
+      "unresolved": 190,
+      "by_status": {}
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2019北京三十五中新高一分班考试英语含答案(1)",
+      "error": null,
+      "total_targets": 162,
+      "resolved": 84,
+      "unresolved": 78,
+      "by_status": {
+        "exact": 84
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2022北京首都师大附中高一12月月考语文（教师版）(1)",
+      "error": null,
+      "total_targets": 38,
+      "resolved": 0,
+      "unresolved": 38,
+      "by_status": {}
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2017-2019北京高三化学上学期期末汇编：化学实验（教师版）(1)",
+      "error": null,
+      "total_targets": 238,
+      "resolved": 0,
+      "unresolved": 238,
+      "by_status": {}
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2021北京四中高三（上）期中化学（教师版）(1)",
+      "error": null,
+      "total_targets": 94,
+      "resolved": 8,
+      "unresolved": 86,
+      "by_status": {
+        "exact": 8
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2022北京丰台高三一模历史（教师版）(1)",
+      "error": null,
+      "total_targets": 100,
+      "resolved": 5,
+      "unresolved": 95,
+      "by_status": {
+        "exact": 5
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2021北京东城高三二模地理（教师版）(1)",
+      "error": null,
+      "total_targets": 24,
+      "resolved": 5,
+      "unresolved": 19,
+      "by_status": {
+        "exact": 5
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2021北京房山高三二模政治（教师版）(1)",
+      "error": null,
+      "total_targets": 100,
+      "resolved": 74,
+      "unresolved": 26,
+      "by_status": {
+        "exact": 74
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2017-2019北京高三数学上学期期中汇编：立体几何（教师版）(1)",
+      "error": null,
+      "total_targets": 46,
+      "resolved": 0,
+      "unresolved": 46,
+      "by_status": {}
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2017-2019北京高三数学上学期期末汇编：立体几何（教师版）(1)",
+      "error": null,
+      "total_targets": 236,
+      "resolved": 157,
+      "unresolved": 79,
+      "by_status": {
+        "exact": 157
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2022北京首都师大附中高三9月月考物理（教师版）(1)",
+      "error": null,
+      "total_targets": 76,
+      "resolved": 0,
+      "unresolved": 76,
+      "by_status": {}
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2021北京顺义高三（上）期末（一模）生物（教师版）(1)",
+      "error": null,
+      "total_targets": 102,
+      "resolved": 18,
+      "unresolved": 84,
+      "by_status": {
+        "exact": 18
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2020北京大兴高三（上）期末英语（教师版）(1)",
+      "error": null,
+      "total_targets": 22,
+      "resolved": 5,
+      "unresolved": 17,
+      "by_status": {
+        "exact": 5
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2012-2021高考真题数学汇编：空间向量与立体几何（2）（教师版）(1)",
+      "error": null,
+      "total_targets": 140,
+      "resolved": 0,
+      "unresolved": 140,
+      "by_status": {}
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2012-2021高考真题生物汇编：基因工程（1）（教师版）(1)",
+      "error": null,
+      "total_targets": 168,
+      "resolved": 0,
+      "unresolved": 168,
+      "by_status": {}
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2021北京丰台高一（上）期末生物（教师版）",
+      "error": null,
+      "total_targets": 226,
+      "resolved": 7,
+      "unresolved": 219,
+      "by_status": {
+        "exact": 7
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2020北京海淀高三（上）期末语文含答案(1)",
+      "error": null,
+      "total_targets": 20,
+      "resolved": 6,
+      "unresolved": 14,
+      "by_status": {
+        "exact": 6
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2019北京101中学高二（下）期中生物含答案(1)",
+      "error": null,
+      "total_targets": 102,
+      "resolved": 44,
+      "unresolved": 58,
+      "by_status": {
+        "exact": 44
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2018北京昌平临川学校高二（下）期中英语（教师版）(1)",
+      "error": null,
+      "total_targets": 58,
+      "resolved": 2,
+      "unresolved": 56,
+      "by_status": {
+        "exact": 2
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2012-2021高考真题数学汇编：空间向量与立体几何（1）（教师版）(1)",
+      "error": null,
+      "total_targets": 160,
+      "resolved": 0,
+      "unresolved": 160,
+      "by_status": {}
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2012-2021高考真题数学汇编：统计与概率（分布列）（3）（教师版）(1)",
+      "error": null,
+      "total_targets": 90,
+      "resolved": 0,
+      "unresolved": 90,
+      "by_status": {}
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2021北京四中高一（上）期中生物（教师版）",
+      "error": null,
+      "total_targets": 190,
+      "resolved": 0,
+      "unresolved": 190,
+      "by_status": {}
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2021北京三十一中高一（下）期中化学（教师版）(1)",
+      "error": null,
+      "total_targets": 292,
+      "resolved": 19,
+      "unresolved": 273,
+      "by_status": {
+        "exact": 19
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2019北京人大附中高一（上）期中地理含答案",
+      "error": null,
+      "total_targets": 50,
+      "resolved": 18,
+      "unresolved": 32,
+      "by_status": {
+        "exact": 18
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2018北京师大附中高一（下）期中政治含答案(1)",
+      "error": null,
+      "total_targets": 182,
+      "resolved": 2,
+      "unresolved": 180,
+      "by_status": {
+        "exact": 2
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2021北京顺义一中高一（下）期中数学（教师版）(1)",
+      "error": null,
+      "total_targets": 82,
+      "resolved": 0,
+      "unresolved": 82,
+      "by_status": {}
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2018北京市西城区高一（下）期末生物含答案(1)",
+      "error": null,
+      "total_targets": 216,
+      "resolved": 0,
+      "unresolved": 216,
+      "by_status": {}
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2020北京东城高一（上）期末英语（教师版）",
+      "error": null,
+      "total_targets": 78,
+      "resolved": 9,
+      "unresolved": 69,
+      "by_status": {
+        "exact": 9
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2020北京平谷五中高一（下）4月月考语文含答案(1)",
+      "error": null,
+      "total_targets": 20,
+      "resolved": 1,
+      "unresolved": 19,
+      "by_status": {
+        "exact": 1
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2020北京石景山高一（上）期末语文含答案",
+      "error": null,
+      "total_targets": 32,
+      "resolved": 4,
+      "unresolved": 28,
+      "by_status": {
+        "exact": 4
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2019北京交大附中高三（上）12月月考化学含答案(1)",
+      "error": null,
+      "total_targets": 94,
+      "resolved": 22,
+      "unresolved": 72,
+      "by_status": {
+        "exact": 22
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2021北京八十中高三考前练习数学（教师版）(1)",
+      "error": null,
+      "total_targets": 82,
+      "resolved": 7,
+      "unresolved": 75,
+      "by_status": {
+        "exact": 7
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2021北京石景山高三一模物理（教师版）(1)",
+      "error": null,
+      "total_targets": 96,
+      "resolved": 75,
+      "unresolved": 21,
+      "by_status": {
+        "exact": 75
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2020北京西城高三（上）期末生物含答案(1)",
+      "error": null,
+      "total_targets": 102,
+      "resolved": 29,
+      "unresolved": 73,
+      "by_status": {
+        "exact": 29
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2018北京五十六中高二（下）期中数学（理）（教师版）(1)",
+      "error": null,
+      "total_targets": 72,
+      "resolved": 10,
+      "unresolved": 62,
+      "by_status": {
+        "exact": 10
+      }
+    },
+    {
+      "strategy": "legacy",
+      "case_id": "2019北京四中高二（下）期末物理（教师版）(1)",
+      "error": null,
+      "total_targets": 104,
+      "resolved": 0,
+      "unresolved": 104,
+      "by_status": {}
+    }
+  ],
+  "path_b_per_case": [
+    {
+      "strategy": "path_b",
+      "case_id": "2019北京101中学高二（下）期中生物含答案(1)",
+      "error": null,
+      "total_units": 21,
+      "total_spans": 145,
+      "valid_spans": 145,
+      "invalid_refs": 0,
+      "total_refs": 57,
+      "by_role": {
+        "stem": 21,
+        "option": 103,
+        "answer": 21
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2018北京昌平临川学校高二（下）期中英语（教师版）(1)",
+      "error": null,
+      "total_units": 19,
+      "total_spans": 31,
+      "valid_spans": 31,
+      "invalid_refs": 0,
+      "total_refs": 31,
+      "by_role": {
+        "stem": 7,
+        "option": 5,
+        "answer": 19
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2018北京春季高中会考化学（教师版）(1)",
+      "error": null,
+      "total_units": 40,
+      "total_spans": 157,
+      "valid_spans": 157,
+      "invalid_refs": 0,
+      "total_refs": 99,
+      "by_role": {
+        "stem": 40,
+        "option": 83,
+        "answer": 34
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2018北京夏季高中会考历史（教师版）(1)",
+      "error": null,
+      "total_units": 53,
+      "total_spans": 454,
+      "valid_spans": 454,
+      "invalid_refs": 0,
+      "total_refs": 206,
+      "by_role": {
+        "stem": 50,
+        "option": 298,
+        "answer": 53,
+        "explanation": 53
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2018北京春季高中会考地理（教师版）(1)",
+      "error": null,
+      "total_units": 25,
+      "total_spans": 25,
+      "valid_spans": 25,
+      "invalid_refs": 0,
+      "total_refs": 25,
+      "by_role": {
+        "answer": 25
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2018北京夏季高中会考政治（教师版）(1)",
+      "error": null,
+      "total_units": 36,
+      "total_spans": 153,
+      "valid_spans": 153,
+      "invalid_refs": 0,
+      "total_refs": 95,
+      "by_role": {
+        "stem": 34,
+        "option": 83,
+        "answer": 36
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2018北京春季高中会考数学（教师版）(1)",
+      "error": null,
+      "total_units": 30,
+      "total_spans": 87,
+      "valid_spans": 87,
+      "invalid_refs": 0,
+      "total_refs": 85,
+      "by_role": {
+        "stem": 30,
+        "option": 27,
+        "answer": 30
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2018北京春季高中会考物理（教师版）(1)",
+      "error": null,
+      "total_units": 22,
+      "total_spans": 83,
+      "valid_spans": 83,
+      "invalid_refs": 0,
+      "total_refs": 51,
+      "by_role": {
+        "stem": 19,
+        "option": 42,
+        "answer": 22
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2018北京春季高中会考生物（教师版）(1)",
+      "error": null,
+      "total_units": 50,
+      "total_spans": 283,
+      "valid_spans": 283,
+      "invalid_refs": 0,
+      "total_refs": 139,
+      "by_role": {
+        "stem": 50,
+        "option": 183,
+        "answer": 50
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2018北京春季高中会考英语（教师版）(1)",
+      "error": null,
+      "total_units": 18,
+      "total_spans": 19,
+      "valid_spans": 19,
+      "invalid_refs": 0,
+      "total_refs": 19,
+      "by_role": {
+        "answer": 18,
+        "stem": 1
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2018北京春季高中会考语文（教师版）(1)",
+      "error": null,
+      "total_units": 10,
+      "total_spans": 30,
+      "valid_spans": 30,
+      "invalid_refs": 0,
+      "total_refs": 18,
+      "by_role": {
+        "answer": 10,
+        "stem": 6,
+        "option": 14
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "19_2023重庆市巴蜀中学高考适应性月考卷（九）化学答案",
+      "error": null,
+      "total_units": 18,
+      "total_spans": 40,
+      "valid_spans": 40,
+      "invalid_refs": 0,
+      "total_refs": 40,
+      "by_role": {
+        "answer": 18,
+        "explanation": 18,
+        "stem": 4
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "14_2023届黑龙江省校哈尔滨市第三中学校高三第二次高考模拟考试 理科综合答案",
+      "error": null,
+      "total_units": 35,
+      "total_spans": 38,
+      "valid_spans": 38,
+      "invalid_refs": 0,
+      "total_refs": 38,
+      "by_role": {
+        "answer": 35,
+        "explanation": 3
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2015-2021北京高中英语期中汇编：代词（教师版）(1)",
+      "error": null,
+      "total_units": 12,
+      "total_spans": 52,
+      "valid_spans": 52,
+      "invalid_refs": 0,
+      "total_refs": 48,
+      "by_role": {
+        "stem": 12,
+        "option": 16,
+        "answer": 12,
+        "explanation": 12
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2020北京高中合格考化学（第一次）（教师版）(1)",
+      "error": null,
+      "total_units": 34,
+      "total_spans": 184,
+      "valid_spans": 184,
+      "invalid_refs": 0,
+      "total_refs": 120,
+      "by_role": {
+        "stem": 33,
+        "option": 89,
+        "answer": 34,
+        "explanation": 28
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2021北京高中合格考历史（第一次）（教师版）(1)",
+      "error": null,
+      "total_units": 42,
+      "total_spans": 221,
+      "valid_spans": 221,
+      "invalid_refs": 0,
+      "total_refs": 122,
+      "by_role": {
+        "stem": 40,
+        "option": 139,
+        "answer": 42
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2017-2019北京高中地理合格考试汇编：人口（教师版）(1)",
+      "error": null,
+      "total_units": 7,
+      "total_spans": 18,
+      "valid_spans": 18,
+      "invalid_refs": 0,
+      "total_refs": 16,
+      "by_role": {
+        "answer": 7,
+        "explanation": 7,
+        "stem": 1,
+        "option": 3
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2021北京高中合格考政治（第一次）（教师版）(1)",
+      "error": null,
+      "total_units": 31,
+      "total_spans": 177,
+      "valid_spans": 177,
+      "invalid_refs": 0,
+      "total_refs": 81,
+      "by_role": {
+        "answer": 31,
+        "stem": 27,
+        "option": 119
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2021北京高中合格考数学（第二次）（教师版）(1)",
+      "error": null,
+      "total_units": 28,
+      "total_spans": 94,
+      "valid_spans": 94,
+      "invalid_refs": 0,
+      "total_refs": 76,
+      "by_role": {
+        "stem": 28,
+        "option": 38,
+        "answer": 28
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2021北京高中合格考物理（第二次）（教师版）(1)",
+      "error": null,
+      "total_units": 15,
+      "total_spans": 23,
+      "valid_spans": 23,
+      "invalid_refs": 0,
+      "total_refs": 23,
+      "by_role": {
+        "answer": 15,
+        "stem": 8
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2020北京高中合格考生物（第二次）（教师版）(1)",
+      "error": null,
+      "total_units": 44,
+      "total_spans": 228,
+      "valid_spans": 228,
+      "invalid_refs": 0,
+      "total_refs": 122,
+      "by_role": {
+        "stem": 43,
+        "option": 141,
+        "answer": 44
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2021北京高中合格考语文（第二次）（教师版）(1)",
+      "error": null,
+      "total_units": 9,
+      "total_spans": 37,
+      "valid_spans": 37,
+      "invalid_refs": 0,
+      "total_refs": 25,
+      "by_role": {
+        "stem": 5,
+        "answer": 9,
+        "explanation": 9,
+        "option": 14
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "12_T8联盟2023年普通高中学业水平选择性考试压轴卷（华师一附中命题）化学答案",
+      "error": null,
+      "total_units": 19,
+      "total_spans": 57,
+      "valid_spans": 57,
+      "invalid_refs": 0,
+      "total_refs": 57,
+      "by_role": {
+        "stem": 19,
+        "answer": 19,
+        "explanation": 19
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2021北京高考压轴卷历史（教师版）(1)",
+      "error": null,
+      "total_units": 20,
+      "total_spans": 111,
+      "valid_spans": 111,
+      "invalid_refs": 0,
+      "total_refs": 55,
+      "by_role": {
+        "stem": 15,
+        "option": 71,
+        "answer": 20,
+        "explanation": 5
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2020北京大学强基计划数学（教师版）(1)",
+      "error": null,
+      "total_units": 20,
+      "total_spans": 86,
+      "valid_spans": 86,
+      "invalid_refs": 0,
+      "total_refs": 80,
+      "by_role": {
+        "stem": 20,
+        "option": 26,
+        "answer": 20,
+        "explanation": 20
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2019北京清华大学领军计划物理（教师版）(1)",
+      "error": null,
+      "total_units": 19,
+      "total_spans": 51,
+      "valid_spans": 51,
+      "invalid_refs": 0,
+      "total_refs": 51,
+      "by_role": {
+        "stem": 19,
+        "answer": 19,
+        "explanation": 13
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2022北京首都师大附中高一12月月考化学（教师版）(1)",
+      "error": null,
+      "total_units": 20,
+      "total_spans": 144,
+      "valid_spans": 144,
+      "invalid_refs": 0,
+      "total_refs": 74,
+      "by_role": {
+        "stem": 20,
+        "option": 85,
+        "answer": 20,
+        "explanation": 19
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2020北京平谷高一（上）期末历史含答案",
+      "error": null,
+      "total_units": 54,
+      "total_spans": 350,
+      "valid_spans": 350,
+      "invalid_refs": 0,
+      "total_refs": 203,
+      "by_role": {
+        "stem": 50,
+        "option": 197,
+        "answer": 49,
+        "explanation": 54
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2022北京东城高一（上）期末地理（教师版）",
+      "error": null,
+      "total_units": 16,
+      "total_spans": 32,
+      "valid_spans": 32,
+      "invalid_refs": 0,
+      "total_refs": 32,
+      "by_role": {
+        "answer": 16,
+        "explanation": 16
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2021北京师大二附中高一（上）期中数学（教师版）",
+      "error": null,
+      "total_units": 21,
+      "total_spans": 76,
+      "valid_spans": 76,
+      "invalid_refs": 0,
+      "total_refs": 52,
+      "by_role": {
+        "stem": 21,
+        "option": 34,
+        "answer": 21
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2018北京十四中高一（下）期中物理（教师版）(1)",
+      "error": null,
+      "total_units": 23,
+      "total_spans": 144,
+      "valid_spans": 144,
+      "invalid_refs": 0,
+      "total_refs": 66,
+      "by_role": {
+        "stem": 23,
+        "option": 98,
+        "answer": 23
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2021北京四中高一（上）期中生物（教师版）",
+      "error": null,
+      "total_units": 35,
+      "total_spans": 300,
+      "valid_spans": 300,
+      "invalid_refs": 0,
+      "total_refs": 135,
+      "by_role": {
+        "stem": 35,
+        "option": 195,
+        "answer": 35,
+        "explanation": 35
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2019北京三十五中新高一分班考试英语含答案(1)",
+      "error": null,
+      "total_units": 39,
+      "total_spans": 99,
+      "valid_spans": 99,
+      "invalid_refs": 0,
+      "total_refs": 87,
+      "by_role": {
+        "answer": 39,
+        "stem": 27,
+        "option": 33
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2022北京首都师大附中高一12月月考语文（教师版）(1)",
+      "error": null,
+      "total_units": 9,
+      "total_spans": 57,
+      "valid_spans": 57,
+      "invalid_refs": 0,
+      "total_refs": 29,
+      "by_role": {
+        "stem": 6,
+        "option": 33,
+        "answer": 9,
+        "explanation": 9
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2017-2019北京高三化学上学期期末汇编：化学实验（教师版）(1)",
+      "error": null,
+      "total_units": 89,
+      "total_spans": 250,
+      "valid_spans": 250,
+      "invalid_refs": 0,
+      "total_refs": 193,
+      "by_role": {
+        "stem": 89,
+        "option": 72,
+        "answer": 89
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2021北京四中高三（上）期中化学（教师版）(1)",
+      "error": null,
+      "total_units": 19,
+      "total_spans": 139,
+      "valid_spans": 139,
+      "invalid_refs": 0,
+      "total_refs": 52,
+      "by_role": {
+        "stem": 19,
+        "option": 101,
+        "answer": 19
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2022北京丰台高三一模历史（教师版）(1)",
+      "error": null,
+      "total_units": 20,
+      "total_spans": 102,
+      "valid_spans": 102,
+      "invalid_refs": 0,
+      "total_refs": 70,
+      "by_role": {
+        "stem": 15,
+        "option": 47,
+        "answer": 20,
+        "explanation": 20
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2021北京东城高三二模地理（教师版）(1)",
+      "error": null,
+      "total_units": 12,
+      "total_spans": 17,
+      "valid_spans": 17,
+      "invalid_refs": 0,
+      "total_refs": 17,
+      "by_role": {
+        "answer": 12,
+        "stem": 5
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2021北京房山高三二模政治（教师版）(1)",
+      "error": null,
+      "total_units": 20,
+      "total_spans": 61,
+      "valid_spans": 61,
+      "invalid_refs": 0,
+      "total_refs": 55,
+      "by_role": {
+        "stem": 20,
+        "option": 21,
+        "answer": 20
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2017-2019北京高三数学上学期期中汇编：立体几何（教师版）(1)",
+      "error": null,
+      "total_units": 17,
+      "total_spans": 54,
+      "valid_spans": 54,
+      "invalid_refs": 0,
+      "total_refs": 54,
+      "by_role": {
+        "stem": 17,
+        "option": 3,
+        "answer": 17,
+        "explanation": 17
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2017-2019北京高三数学上学期期末汇编：立体几何（教师版）(1)",
+      "error": null,
+      "total_units": 74,
+      "total_spans": 244,
+      "valid_spans": 244,
+      "invalid_refs": 0,
+      "total_refs": 244,
+      "by_role": {
+        "stem": 74,
+        "option": 22,
+        "answer": 74,
+        "explanation": 74
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2022北京首都师大附中高三9月月考物理（教师版）(1)",
+      "error": null,
+      "total_units": 18,
+      "total_spans": 101,
+      "valid_spans": 101,
+      "invalid_refs": 0,
+      "total_refs": 62,
+      "by_role": {
+        "stem": 16,
+        "option": 49,
+        "answer": 18,
+        "explanation": 18
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2021北京顺义高三（上）期末（一模）生物（教师版）(1)",
+      "error": null,
+      "total_units": 21,
+      "total_spans": 164,
+      "valid_spans": 164,
+      "invalid_refs": 0,
+      "total_refs": 72,
+      "by_role": {
+        "stem": 15,
+        "option": 107,
+        "answer": 21,
+        "explanation": 21
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2020北京大兴高三（上）期末英语（教师版）(1)",
+      "error": null,
+      "total_units": 11,
+      "total_spans": 16,
+      "valid_spans": 16,
+      "invalid_refs": 0,
+      "total_refs": 16,
+      "by_role": {
+        "stem": 5,
+        "answer": 11
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2012-2021高考真题数学汇编：空间向量与立体几何（2）（教师版）(1)",
+      "error": null,
+      "total_units": 60,
+      "total_spans": 125,
+      "valid_spans": 125,
+      "invalid_refs": 0,
+      "total_refs": 125,
+      "by_role": {
+        "stem": 60,
+        "option": 5,
+        "answer": 60
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2012-2021高考真题生物汇编：基因工程（1）（教师版）(1)",
+      "error": null,
+      "total_units": 60,
+      "total_spans": 145,
+      "valid_spans": 145,
+      "invalid_refs": 0,
+      "total_refs": 84,
+      "by_role": {
+        "stem": 12,
+        "option": 73,
+        "answer": 60
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2021北京丰台高一（上）期末生物（教师版）",
+      "error": null,
+      "total_units": 43,
+      "total_spans": 272,
+      "valid_spans": 272,
+      "invalid_refs": 0,
+      "total_refs": 121,
+      "by_role": {
+        "stem": 43,
+        "option": 186,
+        "answer": 43
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2020北京海淀高三（上）期末语文含答案(1)",
+      "error": null,
+      "total_units": 10,
+      "total_spans": 16,
+      "valid_spans": 16,
+      "invalid_refs": 0,
+      "total_refs": 16,
+      "by_role": {
+        "answer": 10,
+        "stem": 6
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2019北京101中学高二（下）期中生物含答案(1)",
+      "error": null,
+      "total_units": 21,
+      "total_spans": 145,
+      "valid_spans": 145,
+      "invalid_refs": 0,
+      "total_refs": 57,
+      "by_role": {
+        "stem": 21,
+        "option": 103,
+        "answer": 21
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2018北京昌平临川学校高二（下）期中英语（教师版）(1)",
+      "error": null,
+      "total_units": 19,
+      "total_spans": 31,
+      "valid_spans": 31,
+      "invalid_refs": 0,
+      "total_refs": 31,
+      "by_role": {
+        "stem": 7,
+        "option": 5,
+        "answer": 19
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2012-2021高考真题数学汇编：空间向量与立体几何（1）（教师版）(1)",
+      "error": null,
+      "total_units": 60,
+      "total_spans": 136,
+      "valid_spans": 136,
+      "invalid_refs": 0,
+      "total_refs": 130,
+      "by_role": {
+        "stem": 60,
+        "option": 16,
+        "answer": 60
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2012-2021高考真题数学汇编：统计与概率（分布列）（3）（教师版）(1)",
+      "error": null,
+      "total_units": 45,
+      "total_spans": 135,
+      "valid_spans": 135,
+      "invalid_refs": 0,
+      "total_refs": 135,
+      "by_role": {
+        "stem": 45,
+        "answer": 45,
+        "explanation": 45
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2021北京四中高一（上）期中生物（教师版）",
+      "error": null,
+      "total_units": 35,
+      "total_spans": 293,
+      "valid_spans": 293,
+      "invalid_refs": 0,
+      "total_refs": 131,
+      "by_role": {
+        "stem": 31,
+        "option": 192,
+        "answer": 35,
+        "explanation": 35
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2021北京三十一中高一（下）期中化学（教师版）(1)",
+      "error": null,
+      "total_units": 56,
+      "total_spans": 244,
+      "valid_spans": 244,
+      "invalid_refs": 0,
+      "total_refs": 148,
+      "by_role": {
+        "stem": 47,
+        "option": 141,
+        "answer": 56
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2019北京人大附中高一（上）期中地理含答案",
+      "error": null,
+      "total_units": 19,
+      "total_spans": 43,
+      "valid_spans": 43,
+      "invalid_refs": 0,
+      "total_refs": 25,
+      "by_role": {
+        "answer": 19,
+        "stem": 3,
+        "option": 21
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2018北京师大附中高一（下）期中政治含答案(1)",
+      "error": null,
+      "total_units": 35,
+      "total_spans": 158,
+      "valid_spans": 158,
+      "invalid_refs": 0,
+      "total_refs": 97,
+      "by_role": {
+        "stem": 34,
+        "option": 89,
+        "answer": 35
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2021北京顺义一中高一（下）期中数学（教师版）(1)",
+      "error": null,
+      "total_units": 21,
+      "total_spans": 101,
+      "valid_spans": 101,
+      "invalid_refs": 0,
+      "total_refs": 73,
+      "by_role": {
+        "stem": 21,
+        "option": 38,
+        "answer": 21,
+        "explanation": 21
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2018北京市西城区高一（下）期末生物含答案(1)",
+      "error": null,
+      "total_units": 42,
+      "total_spans": 218,
+      "valid_spans": 218,
+      "invalid_refs": 0,
+      "total_refs": 116,
+      "by_role": {
+        "stem": 41,
+        "option": 135,
+        "answer": 42
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2020北京东城高一（上）期末英语（教师版）",
+      "error": null,
+      "total_units": 19,
+      "total_spans": 61,
+      "valid_spans": 61,
+      "invalid_refs": 0,
+      "total_refs": 59,
+      "by_role": {
+        "stem": 11,
+        "option": 12,
+        "answer": 19,
+        "explanation": 19
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2020北京平谷五中高一（下）4月月考语文含答案(1)",
+      "error": null,
+      "total_units": 10,
+      "total_spans": 26,
+      "valid_spans": 26,
+      "invalid_refs": 0,
+      "total_refs": 26,
+      "by_role": {
+        "answer": 10,
+        "explanation": 10,
+        "stem": 6
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2020北京石景山高一（上）期末语文含答案",
+      "error": null,
+      "total_units": 10,
+      "total_spans": 42,
+      "valid_spans": 42,
+      "invalid_refs": 0,
+      "total_refs": 27,
+      "by_role": {
+        "stem": 5,
+        "option": 18,
+        "answer": 10,
+        "explanation": 9
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2019北京交大附中高三（上）12月月考化学含答案(1)",
+      "error": null,
+      "total_units": 19,
+      "total_spans": 113,
+      "valid_spans": 113,
+      "invalid_refs": 0,
+      "total_refs": 47,
+      "by_role": {
+        "stem": 14,
+        "option": 80,
+        "answer": 19
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2021北京八十中高三考前练习数学（教师版）(1)",
+      "error": null,
+      "total_units": 21,
+      "total_spans": 64,
+      "valid_spans": 64,
+      "invalid_refs": 0,
+      "total_refs": 52,
+      "by_role": {
+        "stem": 21,
+        "option": 22,
+        "answer": 21
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2021北京石景山高三一模物理（教师版）(1)",
+      "error": null,
+      "total_units": 20,
+      "total_spans": 129,
+      "valid_spans": 129,
+      "invalid_refs": 0,
+      "total_refs": 54,
+      "by_role": {
+        "stem": 20,
+        "option": 89,
+        "answer": 20
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2020北京西城高三（上）期末生物含答案(1)",
+      "error": null,
+      "total_units": 21,
+      "total_spans": 144,
+      "valid_spans": 144,
+      "invalid_refs": 0,
+      "total_refs": 51,
+      "by_role": {
+        "stem": 15,
+        "option": 108,
+        "answer": 21
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2018北京五十六中高二（下）期中数学（理）（教师版）(1)",
+      "error": null,
+      "total_units": 20,
+      "total_spans": 67,
+      "valid_spans": 67,
+      "invalid_refs": 0,
+      "total_refs": 48,
+      "by_role": {
+        "stem": 20,
+        "option": 27,
+        "answer": 20
+      }
+    },
+    {
+      "strategy": "path_b",
+      "case_id": "2019北京四中高二（下）期末物理（教师版）(1)",
+      "error": null,
+      "total_units": 24,
+      "total_spans": 147,
+      "valid_spans": 147,
+      "invalid_refs": 0,
+      "total_refs": 62,
+      "by_role": {
+        "stem": 24,
+        "option": 99,
+        "answer": 24
+      }
+    }
+  ]
+}

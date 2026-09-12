@@ -1,0 +1,34 @@
+{
+  "total_targets": 2750,
+  "legacy": {
+    "resolved": 829,
+    "unresolved": 0,
+    "not_found": 1921,
+    "error": 0,
+    "resolution_rate": 0.3014545454545455
+  },
+  "path_b": {
+    "validated": 2671,
+    "role_mismatch": 79,
+    "content_empty": 0,
+    "validation_rate": 0.9712727272727273
+  },
+  "by_role": {
+    "stem": {
+      "total": 1870,
+      "leg_resolved": 829,
+      "pb_validated": 1820
+    },
+    "explanation": {
+      "total": 880,
+      "leg_resolved": 0,
+      "pb_validated": 851
+    }
+  },
+  "agreement": {
+    "both_ok": 814,
+    "legacy_only": 15,
+    "path_b_only": 1857,
+    "neither": 64
+  }
+}

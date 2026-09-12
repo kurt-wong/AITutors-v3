@@ -1,0 +1,45 @@
+{
+  "sample_size": 50,
+  "passed": 49,
+  "pass_rate": 0.98,
+  "failure_reasons": {
+    "low_coverage": 1
+  },
+  "failed_cases": [
+    {
+      "case_id": "2021北京高中合格考政治（第一次）（教师版）(1)",
+      "unit_id": "Q19",
+      "region": [
+        199,
+        203
+      ],
+      "passed": false,
+      "detail": "low_coverage: 18.2% (12/66)",
+      "raw_lines": [
+        "①法律得到普遍公认和遵从的社会 ②社会治理依法开展的社会  ",
+        "",
+        "③彻底消除了违法犯罪行为的社会 ④公共生活和谐有序的社会  ",
+        "",
+        "A.①②③ B.①②④ C.①③④ D.②③④"
+      ],
+      "parsed": [
+        {
+          "label": "A",
+          "text": "①②③"
+        },
+        {
+          "label": "B",
+          "text": "①②④"
+        },
+        {
+          "label": "C",
+          "text": "①③④"
+        },
+        {
+          "label": "D",
+          "text": "②③④"
+        }
+      ]
+    }
+  ]
+}
