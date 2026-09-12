@@ -1,9 +1,9 @@
 # B2-B5-D: End-to-End Projection Safety Validation Report
 
-**Version**: 3.1.0
+**Version**: 3.2.0
 **Date**: 2026-09-13
-**Status**: B2-B5-D COMPLETED | Gate C BLOCKED (V3 Source Evidence Binding Contract + full E2E)
-**架构审查**: 经三次裁决，修正 preprocessing 依赖 + Evidence Admission Boundary 定性 + structural_regions 命名
+**Status**: B2-B5-D COMPLETED | Gate C BLOCKED (C-1 五层 Evidence Contract + C-2 full E2E)
+**架构审查**: 经四次裁决，修正 preprocessing 依赖 + Evidence Admission Boundary + structural_regions + Proposal→Claim 分离
 
 ---
 
@@ -366,24 +366,35 @@ gate_c_invalid_binding_corpus.json (157 targets)
 
 **C-1: V3 Evidence Contract 边界明确化**
 
-V3 需要显式建模证据生命周期:
+V3 需要显式建模五层证据生命周期:
 ```
-Raw Source → Source Fragment → Evidence Claim → Evidence Validation → Validated Evidence
+Raw Source
+    → Source Fragment
+    → Evidence Proposal
+    → Evidence Claim
+    → Evidence Validation
+    → Validated Evidence
 ```
 每层职责:
-| 层 | 负责 | 不负责 |
-|----|------|--------|
-| Source Fragment | 原始位置、hash、版本 | 不解释含义 |
-| Evidence Claim | 声明 fragment 作为什么证据 | 不证明正确 |
-| Evidence Validation | 检查 claim 与 source contract 一致 | 不重新理解文本 |
-| Validated Evidence | 可进入 Semantic IR 的证据 | 不补救前面错误 |
+| 层 | 负责 | 不负责 | 权限 |
+|----|------|--------|------|
+| Source Fragment | 原始位置、hash、版本 | 不解释含义 | 只读 |
+| Evidence Proposal | 模块提出"这里可能是答案" | 无证据身份 | 任何模块可提 |
+| Evidence Claim | V3 contract 接受 proposal 并赋予证据身份 | 不证明正确 | 受控升级动作 |
+| Evidence Validation | 检查 claim 与 source contract 一致 | 不重新理解文本 | 确定性 |
+| Validated Evidence | 可进入 Semantic IR | 不补救前面错误 | 只读 |
+
+**Evidence Proposal vs Evidence Claim 的区别**:
+- Proposal: OCR/LLM/parser 说 "candidate_answer_span=line 521, confidence=0.93"
+- Claim: V3 contract 接受这个 proposal，赋予它证据身份
+- 没有这个区分 → 自声明自验证 → 重新打开漏洞
 
 **C-2: 完整 157 invalid corpus 真实 pipeline E2E**
 
 需要证明全部 157 targets 经过完整 V3 pipeline
 (Source → Annotation → Resolver → Compiler → Gate) 后全部 fail-closed。
 
-**C-3: Evidence Promotion Negative Test** ✅ 已实现
+**C-3: Evidence Promotion Negative Test** ✅ 已实现 (7 attacks)
 
 证明"地址正确但证据错误"无法通过:
 | 攻击 | 预期 | 状态 |
@@ -393,6 +404,8 @@ Raw Source → Source Fragment → Evidence Claim → Evidence Validation → Va
 | non-strict-auto + valid-looking answer | pending_review | ✅ |
 | text_hash mismatch | rejected | ✅ |
 | answer span missing from ResolvedRun | rejected | ✅ |
+| legal region + illegal role binding | pending_review | ✅ |
+| cross-version provenance mismatch (span v1 + hash v2) | rejected | ✅ |
 
 ### 8.3 不是 Gate C 前置条件的项目
 
@@ -475,6 +488,18 @@ preprocessing → Adapter → V3 Source/Evidence Contract
 
 preprocessing 是可替换的上游实现, 不能反过来成为 V3 架构成立的条件。
 
+### 冻结架构原则 (B2-B5-D 确立)
+
+**Principle 1**: Source Address is location metadata, not semantic authority.
+
+**Principle 2**: Evidence Claim is an explicit promotion event.
+
+**Principle 3**: Only Validated Evidence may enter Semantic IR.
+
+**Principle 4**: No downstream module may infer evidence validity from successful resolution.
+
+这四条原则进入 V3 Frozen Architecture。
+
 ---
 
 ## 十一、状态总结
@@ -482,15 +507,16 @@ preprocessing 是可替换的上游实现, 不能反过来成为 V3 架构成立
 | 项目 | 状态 |
 |------|------|
 | B2-B5-D 实验 | **COMPLETED** — 有效实验, 有效安全发现 |
-| `Legal address ≠ legal evidence` | **确立为 V3 架构原则** |
+| `Legal address ≠ legal evidence` | **确立为 V3 Frozen Architecture 原则** |
+| 四条冻结架构原则 | **确立** — Address≠Authority, Claim=Promotion, Validated-only, No-inference |
 | Evidence Admission Boundary | **Unclosed** — Grammar 输入前置条件未被证明 |
-| Structural consistency check | **IMPLEMENTED** — structural_regions, defense-in-depth |
-| Evidence Promotion Negative Tests (C-3) | **IMPLEMENTED** — 5 attacks 全部 fail-closed |
-| Gate C | **BLOCKED** — C-1 (Evidence Contract) + C-2 (157 E2E) 未闭环 |
+| Structural consistency check | **IMPLEMENTED** — structural_regions, Necessary but not Sufficient |
+| Evidence Promotion Negative Tests (C-3) | **IMPLEMENTED** — 7 attacks 全部 fail-closed |
+| Gate C | **BLOCKED** — C-1 (五层 Evidence Contract) + C-2 (157 E2E) 未闭环 |
 | preprocessing 依赖 | **移除** — 不是 V3 Gate C 前置条件 |
 
 ---
 
-**报告版本**: 3.1.0 (三次架构审查修正)
-**核心修正**: Evidence Admission Boundary 定性 + structural_regions 命名 + C-3 Negative Tests
-**下一步**: V3 Evidence Contract 四层生命周期建模 → 157 E2E → Gate C Closure
+**报告版本**: 3.2.0 (四次架构审查修正)
+**核心修正**: Evidence Proposal→Claim 分离 + 四条冻结原则 + 2 个新 C-3 攻击
+**下一步**: C-1 五层 Evidence Contract 建模 → 157 E2E → Gate C Closure

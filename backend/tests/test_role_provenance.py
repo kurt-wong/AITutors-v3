@@ -345,3 +345,69 @@ class TestEvidencePromotionNegative:
         assert d["decision"] == "rejected", (
             f"missing answer span should reject, got {d['decision']}"
         )
+
+    def test_legal_region_illegal_role_rejected(self):
+        """Legal answer region content claimed as explanation role -> pending_review.
+
+        Attack: answer region contains valid-looking text, but the claim binds
+        it as explanation. Structural consistency catches this because the
+        answer span would overlap the explanation structural region.
+        """
+        lines = _mk(
+            "1. which fruit",
+            "A. apple", "B. banana", "C. car", "D. table",
+            "答案",
+            "1. A",
+            "解析",
+            "1. Because apple is a fruit",
+        )
+        payload = _single_payload()
+        run = SourceResolver(source_version_id=SVID, lines=lines).resolve(payload)
+
+        # Verify structural regions are produced
+        assert run.structural_regions
+        roles = {r.role for r in run.structural_regions}
+        assert "answer" in roles
+        assert "explanation" in roles
+
+        # Answer span and explanation region should be disjoint
+        ans_spans = [s for s in run.resolved_spans if s.role == "answer"]
+        expl_region = next(
+            (r for r in run.structural_regions if r.role == "explanation"), None
+        )
+        if ans_spans and expl_region:
+            overlap = set(ans_spans[0].line_refs) & set(expl_region.line_refs)
+            assert not overlap, (
+                f"answer span should not overlap explanation region, got {overlap}"
+            )
+
+    def test_cross_version_provenance_mismatch_rejected(self):
+        """Span from one version, hash from another -> rejected.
+
+        Attack: answer span references source_v1 lines, but text_hash matches
+        source_v2 content. text_hash integrity check must catch this.
+        """
+        import dataclasses
+        import hashlib
+
+        lines = _single_lines("A")
+        root, ir, compiled, run = _pipeline(lines, _single_payload())
+
+        # Tamper: set text_hash to hash of different content
+        fake_hash = hashlib.sha256("B".encode("utf-8")).hexdigest()
+        leaf = compiled.leaves[0]
+        tampered_answer = dataclasses.replace(
+            leaf.answer,
+            text_hash=fake_hash,  # hash of "B" but text is "A"
+        )
+        tampered_leaf = dataclasses.replace(leaf, answer=tampered_answer)
+        tampered_snap = dataclasses.replace(
+            compiled,
+            leaves=(tampered_leaf,),
+        )
+        d = evaluate(root=root, ir=ir, compiled=tampered_snap, resolved_run=run)
+        assert d["decision"] == "rejected", (
+            f"cross-version hash mismatch should reject, got {d['decision']}"
+        )
+        reasons = " ".join(d["reasons"])
+        assert "text_hash mismatch" in reasons or "evidence broken" in reasons
