@@ -190,9 +190,9 @@ def evaluate(
     # Gate performs span set intersection (contract self-consistency, NOT NLP).
     # Overlap -> downgrade auto (pending_review), not terminal rejected.
     role_provenance_violations: list[str] = []
-    if resolved_run.semantic_regions:
+    if resolved_run.structural_regions:
         region_by_role: dict[str, set[str]] = {}
-        for reg in resolved_run.semantic_regions:
+        for reg in resolved_run.structural_regions:
             region_by_role.setdefault(reg.role, set()).update(reg.line_refs)
         for leaf in leaves:
             if leaf.answer is None:

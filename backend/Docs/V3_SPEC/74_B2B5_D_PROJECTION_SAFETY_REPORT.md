@@ -1,9 +1,9 @@
 # B2-B5-D: End-to-End Projection Safety Validation Report
 
-**Version**: 3.0.0
+**Version**: 3.1.0
 **Date**: 2026-09-13
 **Status**: B2-B5-D COMPLETED | Gate C BLOCKED (V3 Source Evidence Binding Contract + full E2E)
-**架构审查**: 经二次裁决，修正 preprocessing 依赖前提
+**架构审查**: 经三次裁决，修正 preprocessing 依赖 + Evidence Admission Boundary 定性 + structural_regions 命名
 
 ---
 
@@ -39,13 +39,23 @@
 
 | 测试 | 结果 | 说明 |
 |------|------|------|
-| Resolver produces semantic_regions | ✅ PASS | question/answer/explanation structural region map |
+| Resolver produces structural_regions | ✅ PASS | question/answer/explanation structural region map |
 | Region non-overlap | ✅ PASS | question ∩ answer = ∅ |
 | answer ∩ explanation → pending_review | ✅ PASS | Gate span-overlap check |
 | answer ∩ question → pending_review | ✅ PASS | Gate span-overlap check |
 | No overlap → auto_approve | ✅ PASS | 正常路径不受影响 |
 | Cross-role overlap fail-closed | ✅ PASS | 绝不 auto_approve |
 | 49 EXPLANATION_REGION targets | ✅ PASS | 全部非 strict-auto, fail-closed via grammar-None |
+
+### 1.5 Evidence Promotion Negative Tests (C-3)
+
+| 测试 | 结果 | 说明 |
+|------|------|------|
+| answer span → explanation region | ✅ PASS | pending_review |
+| answer span → question region | ✅ PASS | pending_review |
+| non-strict-auto + valid-looking answer | ✅ PASS | pending_review (grammar-None) |
+| text_hash mismatch | ✅ PASS | rejected (terminal) |
+| answer span missing from ResolvedRun | ✅ PASS | rejected (structural) |
 
 ### 1.5 Corpus Validation
 
@@ -54,7 +64,7 @@
 | Gate C corpus frozen | ✅ PASS | 157 targets, 分布验证 |
 | Corpus relationship | ✅ PASS | 157 ⊂ 267 ⊂ 706 |
 
-**总测试数**: 92 (gate-related) + 491 (full suite)
+**总测试数**: 97 (gate-related) + 496 (full suite)
 **通过**: 全部
 **跳过**: 0
 
@@ -257,7 +267,7 @@ Resolver 不能说: "521-522 在语义上一定是答案" — 这是两个完全
 ❌ Resolver = 判断 "这个 span 语义上是什么"
 ```
 
-`semantic_regions` 是 **consistency evidence**: "这些行在结构上属于答案区"
+`structural_regions` 是 **consistency evidence**: "这些行在结构上属于答案区"
 不是 **semantic truth**: "这些行一定是正确答案"。
 
 ### 5.4 Contract 规则
@@ -276,17 +286,20 @@ Resolver 不能说: "521-522 在语义上一定是答案" — 这是两个完全
 
 ---
 
-## 六、Grammar Limitation 与 Defense-in-Depth
+## 六、Unclosed Evidence Admission Boundary
 
 ### 6.1 Grammar 层行为
 
 ```python
 verify("single_choice", "A", ("A", "B"))           # → True (正确)
-verify("single_choice", "【解答】A", ("A", "B"))    # → True (limitation)
+verify("single_choice", "【解答】A", ("A", "B"))    # → True (boundary 未封闭)
 ```
 
-`_option_letters()` 函数本身正确——它按职责提取字母。问题是输入资格:
-上游不应把 explanation content 作为 answer evidence 传入。
+`_option_letters()` 函数本身正确——按职责提取字母。真正的问题是:
+
+> **Grammar 的输入前置条件（"此文本是合法 answer evidence"）没有被任何 Contract 证明。**
+
+不是 Grammar bug, 是 **unclosed Evidence Admission Boundary**。
 
 ### 6.2 Defense-in-Depth 层次
 
@@ -294,17 +307,17 @@ verify("single_choice", "【解答】A", ("A", "B"))    # → True (limitation)
 |----|------|----------|------|
 | Grammar-None | 非 strict-auto → None → pending_review | 49 个 EXPLANATION_REGION targets | 已有 |
 | Structural Consistency | answer span ∩ explanation region = ∅ | answer 落入非答案结构区 | 已实现 |
-| Grammar letters | _option_letters + labels 匹配 | 纯答案格式验证 | limitation documented |
+| Grammar letters | _option_letters + labels 匹配 | 纯答案格式验证 | boundary 未封闭 |
 
 ### 6.3 残余风险
 
-Latent Evidence Validation weakness 在以下场景仍存在:
+Unclosed Evidence Admission Boundary 在以下场景仍存在:
 - strict-auto 题型 (single_choice 等)
 - answer zone 内容本身包含解释性前缀 + 选项字母
 - answer span 在 answer structural region 内 (consistency check 不触发)
 
-**根本修复**: V3 Source Evidence Binding Contract 需要明确
-Source Address → Evidence Claim → Evidence Validation → Validated Evidence
+**根本修复**: V3 Source Evidence Binding Contract 需要显式建模
+Source Fragment → Evidence Claim → Evidence Validation → Validated Evidence
 的提升路径, 使 answer entry 的 evidence 身份验证不依赖题型分类兜底。
 
 ---
@@ -353,16 +366,33 @@ gate_c_invalid_binding_corpus.json (157 targets)
 
 **C-1: V3 Evidence Contract 边界明确化**
 
-V3 需要明确区分:
-- Source Address (引用位置有效性)
-- Semantic Evidence (语义证据合法性)
-
-当前 ResolvedSpan 只证明前者, 但下游有时将其当作后者消费。
+V3 需要显式建模证据生命周期:
+```
+Raw Source → Source Fragment → Evidence Claim → Evidence Validation → Validated Evidence
+```
+每层职责:
+| 层 | 负责 | 不负责 |
+|----|------|--------|
+| Source Fragment | 原始位置、hash、版本 | 不解释含义 |
+| Evidence Claim | 声明 fragment 作为什么证据 | 不证明正确 |
+| Evidence Validation | 检查 claim 与 source contract 一致 | 不重新理解文本 |
+| Validated Evidence | 可进入 Semantic IR 的证据 | 不补救前面错误 |
 
 **C-2: 完整 157 invalid corpus 真实 pipeline E2E**
 
 需要证明全部 157 targets 经过完整 V3 pipeline
 (Source → Annotation → Resolver → Compiler → Gate) 后全部 fail-closed。
+
+**C-3: Evidence Promotion Negative Test** ✅ 已实现
+
+证明"地址正确但证据错误"无法通过:
+| 攻击 | 预期 | 状态 |
+|------|------|------|
+| answer span → explanation region | pending_review | ✅ |
+| answer span → question region | pending_review | ✅ |
+| non-strict-auto + valid-looking answer | pending_review | ✅ |
+| text_hash mismatch | rejected | ✅ |
+| answer span missing from ResolvedRun | rejected | ✅ |
 
 ### 8.3 不是 Gate C 前置条件的项目
 
@@ -374,10 +404,10 @@ V3 需要明确区分:
 - [x] Legal address ≠ legal evidence 原则确认
 - [x] Structural consistency check 实现 (region map + span overlap)
 - [x] 49 EXPLANATION_REGION targets fail-closed 验证
-- [x] `_option_letters` limitation documented as latent weakness
-- [ ] V3 Source Evidence Binding Contract 明确化 (Address vs Evidence 边界)
-- [ ] 完整 157 targets 真实 pipeline E2E
-- [ ] Evidence Promotion path 的 contract 级防护
+- [x] Unclosed Evidence Admission Boundary documented
+- [x] Evidence Promotion Negative Tests (C-3) — 5 attacks 全部 fail-closed
+- [ ] V3 Source Evidence Binding Contract 明确化 (C-1: 四层证据生命周期)
+- [ ] 完整 157 targets 真实 pipeline E2E (C-2)
 
 ---
 
@@ -386,15 +416,15 @@ V3 需要明确区分:
 ### 9.1 测试文件
 
 - `tests/test_b2b5_d_projection_safety.py` — 13 tests (positive + negative + safety + corpus)
-- `tests/test_role_provenance.py` — 10 tests (structural consistency)
+- `tests/test_role_provenance.py` — 15 tests (structural consistency + Evidence Promotion Negative)
 - `tests/test_gate_c_invalid_binding.py` — 11 tests (resolver + grammar + integration)
 - `tests/test_gate_policy.py` — 四层判定全覆盖
 
 ### 9.2 测试结果
 
 ```
-gate-related: 92 passed, 0 skipped
-full suite: 491 passed, 0 failed
+gate-related: 97 passed, 0 skipped
+full suite: 496 passed, 0 failed
 ```
 
 ### 9.3 安全属性证据
@@ -453,13 +483,14 @@ preprocessing 是可替换的上游实现, 不能反过来成为 V3 架构成立
 |------|------|
 | B2-B5-D 实验 | **COMPLETED** — 有效实验, 有效安全发现 |
 | `Legal address ≠ legal evidence` | **确立为 V3 架构原则** |
-| `_option_letters` weakness | **Latent finding** — 非当前 exploit, 但是通用缺陷 |
-| Structural consistency check | **IMPLEMENTED** — defense-in-depth, 非 semantic authority |
-| Gate C | **BLOCKED** — V3 Evidence Contract + 157 E2E 未闭环 |
+| Evidence Admission Boundary | **Unclosed** — Grammar 输入前置条件未被证明 |
+| Structural consistency check | **IMPLEMENTED** — structural_regions, defense-in-depth |
+| Evidence Promotion Negative Tests (C-3) | **IMPLEMENTED** — 5 attacks 全部 fail-closed |
+| Gate C | **BLOCKED** — C-1 (Evidence Contract) + C-2 (157 E2E) 未闭环 |
 | preprocessing 依赖 | **移除** — 不是 V3 Gate C 前置条件 |
 
 ---
 
-**报告版本**: 3.0.0 (二次架构审查修正)
-**核心修正**: V3 Source Evidence Binding Contract 是 V3 自身职责, 不依赖 preprocessing
-**下一步**: V3 Evidence Contract 明确化 → 157 E2E → Gate C Closure
+**报告版本**: 3.1.0 (三次架构审查修正)
+**核心修正**: Evidence Admission Boundary 定性 + structural_regions 命名 + C-3 Negative Tests
+**下一步**: V3 Evidence Contract 四层生命周期建模 → 157 E2E → Gate C Closure

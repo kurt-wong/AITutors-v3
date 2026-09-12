@@ -6,7 +6,7 @@ explanation/question structural regions. This is contract self-consistency
 
 Architecture:
 - Resolver uses deterministic header grammar (H-3) to partition structural regions
-- Region map frozen into ResolvedRun.semantic_regions (consistency evidence,
+- Region map frozen into ResolvedRun.structural_regions (consistency evidence,
   NOT semantic truth)
 - Gate verifies answer span does not overlap other structural regions
 - Overlap -> auto_allowed=False -> pending_review (not terminal rejected)
@@ -66,33 +66,33 @@ def _pipeline(lines, payload, root_unit_id="Q1"):
 
 
 class TestSemanticRegionsProduction:
-    """Verify Resolver produces semantic_regions map."""
+    """Verify Resolver produces structural_regions map."""
 
     def test_resolver_produces_question_region(self):
         lines = _single_lines("A")
         run = SourceResolver(source_version_id=SVID, lines=lines).resolve(_single_payload())
-        assert run.semantic_regions, "Resolver should produce semantic_regions"
-        roles = {r.role for r in run.semantic_regions}
+        assert run.structural_regions, "Resolver should produce structural_regions"
+        roles = {r.role for r in run.structural_regions}
         assert "question" in roles, f"Should have question region, got {roles}"
 
     def test_resolver_produces_answer_region(self):
         lines = _single_lines("A")
         run = SourceResolver(source_version_id=SVID, lines=lines).resolve(_single_payload())
-        roles = {r.role for r in run.semantic_regions}
+        roles = {r.role for r in run.structural_regions}
         assert "answer" in roles, f"Should have answer region, got {roles}"
 
     def test_answer_region_excludes_question_lines(self):
         lines = _single_lines("A")
         run = SourceResolver(source_version_id=SVID, lines=lines).resolve(_single_payload())
-        q_region = next(r for r in run.semantic_regions if r.role == "question")
-        a_region = next(r for r in run.semantic_regions if r.role == "answer")
+        q_region = next(r for r in run.structural_regions if r.role == "question")
+        a_region = next(r for r in run.structural_regions if r.role == "answer")
         overlap = set(q_region.line_refs) & set(a_region.line_refs)
         assert not overlap, f"question/answer regions should not overlap, got {overlap}"
 
     def test_no_explanation_header_no_explanation_region(self):
         lines = _single_lines("A")
         run = SourceResolver(source_version_id=SVID, lines=lines).resolve(_single_payload())
-        roles = {r.role for r in run.semantic_regions}
+        roles = {r.role for r in run.structural_regions}
         assert "explanation" not in roles, "No explanation header -> no explanation region"
 
 
@@ -115,7 +115,7 @@ class TestRoleProvenanceContract:
             unresolved_references=base_run.unresolved_references,
             resolved_relations=base_run.resolved_relations,
             unresolved_relations=base_run.unresolved_relations,
-            semantic_regions=base_run.semantic_regions + (overlap_region,),
+            structural_regions=base_run.structural_regions + (overlap_region,),
         )
         return root, ir, compiled, new_run, answer_span
 
@@ -153,7 +153,7 @@ class TestRoleProvenanceContract:
             unresolved_references=base_run.unresolved_references,
             resolved_relations=base_run.resolved_relations,
             unresolved_relations=base_run.unresolved_relations,
-            semantic_regions=base_run.semantic_regions + (overlap_region,),
+            structural_regions=base_run.structural_regions + (overlap_region,),
         )
         d = evaluate(root=root, ir=ir, compiled=compiled, resolved_run=new_run)
         assert d["decision"] == "pending_review", (
@@ -217,21 +217,131 @@ class TestRoleProvenanceE2ERegression:
             )
 
     def test_strict_auto_grammar_limitation_documented(self):
-        """Document known Grammar limitation for strict-auto + explanation content.
+        """Document unclosed Evidence Admission Boundary for strict-auto types.
 
-        verify() extracts ASCII letters from any text. A string with exactly one
-        ASCII letter (e.g. an explanation marker + letter) passes single_choice.
-        Role-provenance contract does NOT catch this (answer span is in answer
-        region, no overlap). Root fix requires preprocessing manifest region
-        role declarations.
+        verify() extracts ASCII letters from any text. The function is correct
+        per its contract. The issue is upstream: Grammar's input precondition
+        ("this text is valid answer evidence") is not proven by any contract.
+        This is an unclosed Evidence Admission Boundary, not a Grammar bug.
         """
         from app.domains.gate.grammar import verify
 
         assert verify("single_choice", "A", ("A", "B", "C", "D")) is True
 
-        # Explanation marker (no ASCII letters) + single letter A -> grammar True
+        # Explanation marker + single letter A -> grammar True
+        # (correct per _option_letters contract; input qualification is the gap)
         result = verify("single_choice", "【解答】A", ("A", "B", "C", "D"))
         assert result is True, (
-            "KNOWN LIMITATION: Grammar extracts letter A from explanation content. "
-            "Addressed by Semantic Role Provenance Contract at manifest level."
+            "Unclosed Evidence Admission Boundary: text with explanation marker "
+            "passes grammar because input qualification is not enforced."
+        )
+
+
+class TestEvidencePromotionNegative:
+    """C-3: Evidence Promotion Negative Tests.
+
+    Prove that structurally valid addresses with wrong evidence cannot be
+    promoted to validated evidence. Each test constructs a scenario where
+    the address resolves correctly but the evidence identity is wrong.
+    """
+
+    def test_answer_span_in_explanation_region_rejected(self):
+        """Answer span pointing at explanation region -> pending_review."""
+        lines = _single_lines("A")
+        root, ir, compiled, base_run = _pipeline(lines, _single_payload())
+        answer_span = next(s for s in base_run.resolved_spans if s.role == "answer")
+
+        # Construct: explanation region covers the answer span's lines
+        bad_region = SourceRegion(
+            role="explanation",
+            start_seq=0,
+            end_seq=999,
+            line_refs=answer_span.line_refs,
+        )
+        bad_run = ResolvedRun(
+            source_version_id=base_run.source_version_id,
+            resolved_spans=base_run.resolved_spans,
+            unresolved_references=base_run.unresolved_references,
+            resolved_relations=base_run.resolved_relations,
+            unresolved_relations=base_run.unresolved_relations,
+            structural_regions=base_run.structural_regions + (bad_region,),
+        )
+        d = evaluate(root=root, ir=ir, compiled=compiled, resolved_run=bad_run)
+        assert d["decision"] == "pending_review"
+
+    def test_answer_span_in_question_region_rejected(self):
+        """Answer span pointing at question region -> pending_review."""
+        lines = _single_lines("A")
+        root, ir, compiled, base_run = _pipeline(lines, _single_payload())
+        answer_span = next(s for s in base_run.resolved_spans if s.role == "answer")
+
+        bad_region = SourceRegion(
+            role="question",
+            start_seq=0,
+            end_seq=999,
+            line_refs=answer_span.line_refs,
+        )
+        bad_run = ResolvedRun(
+            source_version_id=base_run.source_version_id,
+            resolved_spans=base_run.resolved_spans,
+            unresolved_references=base_run.unresolved_references,
+            resolved_relations=base_run.resolved_relations,
+            unresolved_relations=base_run.unresolved_relations,
+            structural_regions=base_run.structural_regions + (bad_region,),
+        )
+        d = evaluate(root=root, ir=ir, compiled=compiled, resolved_run=bad_run)
+        assert d["decision"] == "pending_review"
+
+    def test_non_strict_auto_always_pending(self):
+        """Non-strict-auto type with any answer content -> pending_review.
+
+        Proves grammar-None path: even if answer text looks like a valid option,
+        non-strict-auto types cannot auto_approve.
+        """
+        lines = _single_lines("A")
+        payload = _single_payload("short_answer")
+        root, ir, compiled, run = _pipeline(lines, payload)
+        d = evaluate(root=root, ir=ir, compiled=compiled, resolved_run=run)
+        assert d["decision"] == "pending_review", (
+            f"short_answer should pending_review, got {d['decision']}"
+        )
+
+    def test_text_hash_mismatch_rejected(self):
+        """Evidence text_hash mismatch -> rejected (terminal)."""
+        import dataclasses
+
+        lines = _single_lines("A")
+        root, ir, compiled, run = _pipeline(lines, _single_payload())
+
+        # Tamper with compiled answer text_hash
+        leaf = compiled.leaves[0]
+        tampered_answer = dataclasses.replace(
+            leaf.answer,
+            text_hash="0" * 64,  # invalid hash
+        )
+        tampered_leaf = dataclasses.replace(leaf, answer=tampered_answer)
+        tampered_snap = dataclasses.replace(
+            compiled,
+            leaves=(tampered_leaf,),
+        )
+        d = evaluate(root=root, ir=ir, compiled=tampered_snap, resolved_run=run)
+        assert d["decision"] == "rejected", (
+            f"text_hash mismatch should reject, got {d['decision']}"
+        )
+
+    def test_missing_span_not_traceable_rejected(self):
+        """Answer span not in ResolvedRun -> rejected (structural failure)."""
+        import dataclasses
+
+        lines = _single_lines("A")
+        root, ir, compiled, run = _pipeline(lines, _single_payload())
+
+        # Remove answer span from resolved run
+        filtered_spans = tuple(
+            s for s in run.resolved_spans if s.role != "answer"
+        )
+        empty_run = dataclasses.replace(run, resolved_spans=filtered_spans)
+        d = evaluate(root=root, ir=ir, compiled=compiled, resolved_run=empty_run)
+        assert d["decision"] == "rejected", (
+            f"missing answer span should reject, got {d['decision']}"
         )

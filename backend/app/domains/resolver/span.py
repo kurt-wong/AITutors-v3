@@ -118,4 +118,4 @@ class ResolvedRun:
     # This is consistency evidence (structural), NOT semantic truth.
     # Gate uses it for span-overlap checks: answer span must not overlap
     # explanation/question structural regions.
-    semantic_regions: tuple["SourceRegion", ...] = field(default_factory=tuple)
+    structural_regions: tuple["SourceRegion", ...] = field(default_factory=tuple)

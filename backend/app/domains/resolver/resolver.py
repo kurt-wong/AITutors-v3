@@ -278,7 +278,7 @@ class SourceResolver:
             unresolved_references=tuple(out.unresolved),
             resolved_relations=tuple(r for r in rels if r.status == "resolved"),
             unresolved_relations=tuple(r for r in rels if r.status != "resolved"),
-            semantic_regions=self._compute_regions(),
+            structural_regions=self._compute_regions(),
         )
 
     def _compute_regions(self) -> tuple[SourceRegion, ...]:
