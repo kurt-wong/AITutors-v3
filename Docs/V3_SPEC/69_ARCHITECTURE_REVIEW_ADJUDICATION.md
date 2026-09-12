@@ -960,7 +960,86 @@ Capability Evidence 记录，不作为 Strategy Comparison 指标。
   主观题：task structure → answer structure（B2-B5，Domain Contract first）
 ```
 
-#### Gate B 当前状态（B2-B2 关闭后）
+### Gate B2-B3 实验结果与裁决（2026-09-11）
+
+**Gate B2-B3-A = CLOSED — Target Classification Audit**
+
+原始 B2-B2 报告的 fill-in 目标 106 个（69/106 = 65%）经过分类审计后发现分母污染：
+
+| 类别 | 数量 | 处理 |
+|------|------|------|
+| 原始 fill_in targets | 70 | — |
+| MC 误分类 | 36 | 移出 B2-B3，回归 B2-B2 |
+| **真填空** | **34** | B2-B3 冻结测试集 |
+
+真填空 Class 分布（52 lines）：
+
+| Class | 数量 | 占比 | Binding 证据需求 |
+|-------|------|------|-----------------|
+| F1_single | 18 | 34.6% | question_id + region |
+| F8_long | 12 | 23.1% | 需审核是否主观题 |
+| F5_multi_token | 9 | 17.3% | token grouping |
+| F3_concatenated | 8 | 15.4% | per-question extraction |
+| F2_multi_blank | 5 | 9.6% | blank ordinal → Domain Contract |
+
+学科分布：英语 14 > 化学 7 > 物理 6 > 政治 5 > 语文 1 = 数学 1
+
+**关键发现**：原 65% fill-in extraction rate 正式失效。`detect_answer_type` 在"MC 答案 + 解释文本"场景存在 classification boundary defect，导致 MC targets 污染 fill-in evaluation set。此 defect 记录为独立 preprocessing defect，不纳入 Source Binding 架构结论。
+
+冻结文件：`Docs/V3_SPEC/gate_b2b3_frozen_testset.json`
+
+---
+
+**Gate B2-B3-B = CLOSED — PASS / TEST-EVIDENCED / DETERMINISTIC**
+
+实验设计：给定 preprocessing evidence（question_id + answer_region），V3 能否**不进行语义搜索、不调用 LLM、不使用 fuzzy matching**，仅通过机械验证形成 ResolvedSpan。
+
+Positive Cases（34 个冻结真填空单元）：
+
+| Check | 结果 | 状态 |
+|-------|------|------|
+| question_id_valid | 34/34 (100%) | PASS |
+| source_version_valid | 34/34 (100%) | PASS |
+| region_valid | 34/34 (100%) | PASS |
+| region_nonempty | 34/34 (100%) | PASS |
+| region_in_scope | 34/34 (100%) | PASS |
+| evidence_hash_valid | 34/34 (100%) | PASS |
+| resolved_span_constructed | 34/34 (100%) | PASS |
+| binding_stable | 34/34 (100%) | PASS |
+| **fallback_used** | **0** | **PASS** |
+
+Determinism：3 次重复 × 10 样本 = 10/10 完全一致
+
+Negative Cases（必须 fail-closed）：
+
+| 测试 | 结果 |
+|------|------|
+| N1_invalid_range | PASS |
+| N2_out_of_range | PASS |
+| N3_empty_region | PASS |
+| N4_wrong_question_id | PASS |
+| N5_tampered_hash | PASS |
+| N6_missing_source | PASS |
+
+**6/6 fail-closed**
+
+**B2-B3-B 核心结论**：
+
+> 已有 preprocessing evidence（question_id + answer_region）可以被 V3 完全机械地验证并形成稳定 ResolvedSpan。零搜索、零 fallback、零 LLM 调用。非法 evidence 全部 fail-closed。
+
+**B2-B3 分层状态**：
+
+```text
+B2-B3-A  Target Classification     CLOSED
+B2-B3-B  Deterministic Binding     CLOSED — PASS
+B2-B3-C  Domain-dependent          DEFERRED（F2/F4/F9 → Domain Contract）
+```
+
+**独立 preprocessing defect 记录**（不纳入 Source Binding 架构结论）：
+
+> `detect_answer_type` 在"答案字母 + 解释文本"场景下存在 classification boundary defect，导致 MC targets 被污染进 fill-in evaluation set。Classification defect ≠ Fill-in binding defect。未来 preprocessing 进入生产级 pipeline 时处理。
+
+#### Gate B 当前状态（B2-B3 关闭后）
 
 ```text
 Gate A: PASS / TEST-EVIDENCED
@@ -974,11 +1053,15 @@ Gate B2-B1: CLOSED — PASS / TEST-EVIDENCED / SCOPE-BOUNDED
 Gate B2-B2: CLOSED — PASS / TEST-EVIDENCED / SCOPE-BOUNDED
   Scope: Structured Multiple-Choice Answer Extraction
   MC answer extraction: 99.8% (1176/1178)
-  Fill-in: 65% (Capability Evidence, → B2-B3)
+  Fill-in: 65% → RECLASSIFIED (see B2-B3-A)
   HTML: 0% (→ B2-B4)
   Sub-question: OUT OF SCOPE (Domain Contract first)
   Unknown: 125 TRIAGE REQUIRED
-Gate B2-B3: OPEN — Fill-in Answer Binding
+Gate B2-B3-A: CLOSED — Target Classification Audit
+  Original fill_in: 70 → MC misclassified: 36, Real fill-in: 34
+Gate B2-B3-B: CLOSED — PASS / TEST-EVIDENCED / DETERMINISTIC
+  Positive: 34/34 resolved, Fallback: 0, Determinism: 10/10, Negative: 6/6 fail-closed
+Gate B2-B3-C: DEFERRED — Domain Contract dependency (F2/F4/F9)
 Gate B2-B4: OPEN — HTML Table
 Gate B2-B5: OPEN — Subjective/Sub-question (Domain Contract first)
 Gate C: OPEN

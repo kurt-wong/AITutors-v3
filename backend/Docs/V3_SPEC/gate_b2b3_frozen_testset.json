@@ -1,0 +1,787 @@
+{
+  "audit_version": "B2-B3-A-v1",
+  "original_fillin_count": 70,
+  "mc_misclassified_count": 36,
+  "real_fillin_count": 34,
+  "class_distribution": {
+    "F8_long": 12,
+    "F3_concatenated": 8,
+    "F2_multi_blank": 5,
+    "F5_multi_token": 9,
+    "F1_single": 18
+  },
+  "subject_distribution": {
+    "英语": 14,
+    "政治": 5,
+    "物理": 6,
+    "语文": 1,
+    "化学": 7,
+    "数学": 1
+  },
+  "mc_misclassified_units": [
+    {
+      "case_id": "2018北京春季高中会考语文（教师版）(1)",
+      "unit_id": "Q6",
+      "subject": "语文"
+    },
+    {
+      "case_id": "2021北京高中合格考物理（第二次）（教师版）(1)",
+      "unit_id": "U1-3",
+      "subject": "物理"
+    },
+    {
+      "case_id": "2021北京高中合格考物理（第二次）（教师版）(1)",
+      "unit_id": "U4-6",
+      "subject": "物理"
+    },
+    {
+      "case_id": "2021北京高中合格考物理（第二次）（教师版）(1)",
+      "unit_id": "U7-9",
+      "subject": "物理"
+    },
+    {
+      "case_id": "2021北京高中合格考物理（第二次）（教师版）(1)",
+      "unit_id": "U10-12",
+      "subject": "物理"
+    },
+    {
+      "case_id": "2021北京高中合格考物理（第二次）（教师版）(1)",
+      "unit_id": "U13-15",
+      "subject": "物理"
+    },
+    {
+      "case_id": "2021北京高中合格考物理（第二次）（教师版）(1)",
+      "unit_id": "U16-17",
+      "subject": "物理"
+    },
+    {
+      "case_id": "2021北京高中合格考物理（第二次）（教师版）(1)",
+      "unit_id": "U18-20",
+      "subject": "物理"
+    },
+    {
+      "case_id": "2019北京清华大学领军计划物理（教师版）(1)",
+      "unit_id": "Q3",
+      "subject": "物理"
+    },
+    {
+      "case_id": "2019北京清华大学领军计划物理（教师版）(1)",
+      "unit_id": "Q4",
+      "subject": "物理"
+    },
+    {
+      "case_id": "2019北京清华大学领军计划物理（教师版）(1)",
+      "unit_id": "Q5",
+      "subject": "物理"
+    },
+    {
+      "case_id": "2019北京清华大学领军计划物理（教师版）(1)",
+      "unit_id": "Q6",
+      "subject": "物理"
+    },
+    {
+      "case_id": "2019北京清华大学领军计划物理（教师版）(1)",
+      "unit_id": "Q7",
+      "subject": "物理"
+    },
+    {
+      "case_id": "2019北京清华大学领军计划物理（教师版）(1)",
+      "unit_id": "Q8",
+      "subject": "物理"
+    },
+    {
+      "case_id": "2019北京清华大学领军计划物理（教师版）(1)",
+      "unit_id": "Q12",
+      "subject": "物理"
+    },
+    {
+      "case_id": "2019北京清华大学领军计划物理（教师版）(1)",
+      "unit_id": "Q14",
+      "subject": "物理"
+    },
+    {
+      "case_id": "2019北京清华大学领军计划物理（教师版）(1)",
+      "unit_id": "Q16",
+      "subject": "物理"
+    },
+    {
+      "case_id": "2019北京清华大学领军计划物理（教师版）(1)",
+      "unit_id": "Q17",
+      "subject": "物理"
+    },
+    {
+      "case_id": "2019北京清华大学领军计划物理（教师版）(1)",
+      "unit_id": "Q18",
+      "subject": "物理"
+    },
+    {
+      "case_id": "2019北京清华大学领军计划物理（教师版）(1)",
+      "unit_id": "Q19",
+      "subject": "物理"
+    },
+    {
+      "case_id": "2019北京三十五中新高一分班考试英语含答案(1)",
+      "unit_id": "Q17",
+      "subject": "英语"
+    },
+    {
+      "case_id": "2019北京三十五中新高一分班考试英语含答案(1)",
+      "unit_id": "Q18",
+      "subject": "英语"
+    },
+    {
+      "case_id": "2019北京三十五中新高一分班考试英语含答案(1)",
+      "unit_id": "Q19",
+      "subject": "英语"
+    },
+    {
+      "case_id": "2019北京三十五中新高一分班考试英语含答案(1)",
+      "unit_id": "Q20",
+      "subject": "英语"
+    },
+    {
+      "case_id": "2019北京三十五中新高一分班考试英语含答案(1)",
+      "unit_id": "Q21",
+      "subject": "英语"
+    },
+    {
+      "case_id": "2019北京三十五中新高一分班考试英语含答案(1)",
+      "unit_id": "Q22",
+      "subject": "英语"
+    },
+    {
+      "case_id": "2019北京三十五中新高一分班考试英语含答案(1)",
+      "unit_id": "Q23",
+      "subject": "英语"
+    },
+    {
+      "case_id": "2019北京三十五中新高一分班考试英语含答案(1)",
+      "unit_id": "Q24",
+      "subject": "英语"
+    },
+    {
+      "case_id": "2019北京三十五中新高一分班考试英语含答案(1)",
+      "unit_id": "Q25",
+      "subject": "英语"
+    },
+    {
+      "case_id": "2019北京三十五中新高一分班考试英语含答案(1)",
+      "unit_id": "Q26",
+      "subject": "英语"
+    },
+    {
+      "case_id": "2019北京三十五中新高一分班考试英语含答案(1)",
+      "unit_id": "Q27",
+      "subject": "英语"
+    },
+    {
+      "case_id": "2019北京三十五中新高一分班考试英语含答案(1)",
+      "unit_id": "Q28",
+      "subject": "英语"
+    },
+    {
+      "case_id": "2019北京三十五中新高一分班考试英语含答案(1)",
+      "unit_id": "Q29",
+      "subject": "英语"
+    },
+    {
+      "case_id": "2019北京三十五中新高一分班考试英语含答案(1)",
+      "unit_id": "Q30",
+      "subject": "英语"
+    },
+    {
+      "case_id": "2019北京三十五中新高一分班考试英语含答案(1)",
+      "unit_id": "Q31",
+      "subject": "英语"
+    },
+    {
+      "case_id": "2019北京三十五中新高一分班考试英语含答案(1)",
+      "unit_id": "Q32",
+      "subject": "英语"
+    }
+  ],
+  "real_fillin_test_set": [
+    {
+      "case_id": "2018北京昌平临川学校高二（下）期中英语（教师版）(1)",
+      "unit_id": "U61-70",
+      "subject": "英语",
+      "region": [
+        433,
+        435
+      ],
+      "line_classes": [
+        {
+          "text": "61 arrived 62 before/earlier 63its 64 that/which 65paintings",
+          "class": "F8_long"
+        },
+        {
+          "text": "66 by 67 is 68 conducted 69 regularly 70 living",
+          "class": "F3_concatenated"
+        }
+      ]
+    },
+    {
+      "case_id": "2018北京夏季高中会考政治（教师版）(1)",
+      "unit_id": "Q34",
+      "subject": "政治",
+      "region": [
+        622,
+        622
+      ],
+      "line_classes": [
+        {
+          "text": "34. 本题为开放性试题，符合题目要求即可。如春节、中秋节、中华人民共和国国庆日、国家宪法日等（2分）",
+          "class": "F2_multi_blank"
+        }
+      ]
+    },
+    {
+      "case_id": "2018北京春季高中会考英语（教师版）(1)",
+      "unit_id": "U57-60",
+      "subject": "英语",
+      "region": [
+        465,
+        471
+      ],
+      "line_classes": [
+        {
+          "text": "57. Because he was not good at sports.",
+          "class": "F5_multi_token"
+        },
+        {
+          "text": "58. Kung Fu Club.",
+          "class": "F5_multi_token"
+        },
+        {
+          "text": "59. He started doing a combat sport again.",
+          "class": "F5_multi_token"
+        },
+        {
+          "text": "60. Because he found the sport that suited him.",
+          "class": "F5_multi_token"
+        }
+      ]
+    },
+    {
+      "case_id": "2021北京高中合格考物理（第二次）（教师版）(1)",
+      "unit_id": "Q21",
+      "subject": "物理",
+      "region": [
+        344,
+        344
+      ],
+      "line_classes": [
+        {
+          "text": "21.  $ \\frac{d}{\\Delta t_{1}} $ 大于",
+          "class": "F1_single"
+        }
+      ]
+    },
+    {
+      "case_id": "2021北京高中合格考物理（第二次）（教师版）(1)",
+      "unit_id": "Q22",
+      "subject": "物理",
+      "region": [
+        346,
+        346
+      ],
+      "line_classes": [
+        {
+          "text": "22. 70 大于",
+          "class": "F1_single"
+        }
+      ]
+    },
+    {
+      "case_id": "2021北京高中合格考物理（第二次）（教师版）(1)",
+      "unit_id": "Q23",
+      "subject": "物理",
+      "region": [
+        348,
+        348
+      ],
+      "line_classes": [
+        {
+          "text": "23. 左  $ \\frac{m(h_{C}-h_{A})^{2}}{8T^{2}} $",
+          "class": "F3_concatenated"
+        }
+      ]
+    },
+    {
+      "case_id": "2020北京高中合格考英语（第二次）（教师版）(1)",
+      "unit_id": "U21-25",
+      "subject": "英语",
+      "region": [
+        1060,
+        1060
+      ],
+      "line_classes": [
+        {
+          "text": "21. small 22. banana 23. Pluto/PLUTO 24. Street 25. 675341",
+          "class": "F8_long"
+        }
+      ]
+    },
+    {
+      "case_id": "2019北京大学博雅计划模拟语文（教师版）(1)",
+      "unit_id": "U1-10",
+      "subject": "语文",
+      "region": [
+        182,
+        200
+      ],
+      "line_classes": [
+        {
+          "text": "1. 贬官文化",
+          "class": "F1_single"
+        },
+        {
+          "text": "2. 先天下之忧而忧，后天下之乐而乐",
+          "class": "F2_multi_blank"
+        },
+        {
+          "text": "3. 文化和自然",
+          "class": "F1_single"
+        },
+        {
+          "text": "4. 胸襟大了",
+          "class": "F1_single"
+        },
+        {
+          "text": "5. 儒家",
+          "class": "F1_single"
+        },
+        {
+          "text": "6. 吕洞宾",
+          "class": "F1_single"
+        },
+        {
+          "text": "7. 道家始祖",
+          "class": "F1_single"
+        },
+        {
+          "text": "8. 秀才遇到兵",
+          "class": "F1_single"
+        },
+        {
+          "text": "9. 百废俱兴",
+          "class": "F1_single"
+        },
+        {
+          "text": "10. 西来爽气",
+          "class": "F1_single"
+        }
+      ]
+    },
+    {
+      "case_id": "2019北京三十五中新高一分班考试英语含答案(1)",
+      "unit_id": "U65-68",
+      "subject": "英语",
+      "region": [
+        522,
+        522
+      ],
+      "line_classes": [
+        {
+          "text": "65. sports 66. seven/7 67. five/5 68. best",
+          "class": "F3_concatenated"
+        }
+      ]
+    },
+    {
+      "case_id": "2019北京三十五中新高一分班考试英语含答案(1)",
+      "unit_id": "U69-75",
+      "subject": "英语",
+      "region": [
+        526,
+        526
+      ],
+      "line_classes": [
+        {
+          "text": "69. special 70. celebrate 71. traditions 72. popular 73. lights 74. after 75. cold",
+          "class": "F8_long"
+        }
+      ]
+    },
+    {
+      "case_id": "2019北京三十五中新高一分班考试英语含答案(1)",
+      "unit_id": "Q81",
+      "subject": "英语",
+      "region": [
+        534,
+        534
+      ],
+      "line_classes": [
+        {
+          "text": "81. not to play games in the street",
+          "class": "F5_multi_token"
+        }
+      ]
+    },
+    {
+      "case_id": "2019北京三十五中新高一分班考试英语含答案(1)",
+      "unit_id": "Q82",
+      "subject": "英语",
+      "region": [
+        536,
+        536
+      ],
+      "line_classes": [
+        {
+          "text": "82. until my mother came back",
+          "class": "F5_multi_token"
+        }
+      ]
+    },
+    {
+      "case_id": "2019北京三十五中新高一分班考试英语含答案(1)",
+      "unit_id": "Q83",
+      "subject": "英语",
+      "region": [
+        538,
+        538
+      ],
+      "line_classes": [
+        {
+          "text": "83. as soon as he saw",
+          "class": "F1_single"
+        }
+      ]
+    },
+    {
+      "case_id": "2019北京三十五中新高一分班考试英语含答案(1)",
+      "unit_id": "Q84",
+      "subject": "英语",
+      "region": [
+        540,
+        540
+      ],
+      "line_classes": [
+        {
+          "text": "84. to keep you waiting/ to make you wait",
+          "class": "F5_multi_token"
+        }
+      ]
+    },
+    {
+      "case_id": "2019北京三十五中新高一分班考试英语含答案(1)",
+      "unit_id": "Q85",
+      "subject": "英语",
+      "region": [
+        542,
+        542
+      ],
+      "line_classes": [
+        {
+          "text": "85. stopped to have a rest",
+          "class": "F1_single"
+        }
+      ]
+    },
+    {
+      "case_id": "2019北京三十五中新高一分班考试英语含答案(1)",
+      "unit_id": "U86-95",
+      "subject": "英语",
+      "region": [
+        548,
+        550
+      ],
+      "line_classes": [
+        {
+          "text": "86. lying 87. look 88. alive 89. save 90. over 91. died 92. way",
+          "class": "F8_long"
+        },
+        {
+          "text": "93. prepare 94. begun 95. Find",
+          "class": "F3_concatenated"
+        }
+      ]
+    },
+    {
+      "case_id": "2021北京丰台高一（下）期中联考英语（B卷）（教师版）(1)",
+      "unit_id": "U18-20",
+      "subject": "英语",
+      "region": [
+        388,
+        388
+      ],
+      "line_classes": [
+        {
+          "text": "18. remembered 19. Standing 20. confidence",
+          "class": "F3_concatenated"
+        }
+      ]
+    },
+    {
+      "case_id": "2018北京昌平临川学校高二（下）期中英语（教师版）(1)",
+      "unit_id": "U61-70",
+      "subject": "英语",
+      "region": [
+        433,
+        435
+      ],
+      "line_classes": [
+        {
+          "text": "61 arrived 62 before/earlier 63its 64 that/which 65paintings",
+          "class": "F8_long"
+        },
+        {
+          "text": "66 by 67 is 68 conducted 69 regularly 70 living",
+          "class": "F3_concatenated"
+        }
+      ]
+    },
+    {
+      "case_id": "2021北京三十一中高一（下）期中化学（教师版）(1)",
+      "unit_id": "F1",
+      "subject": "化学",
+      "region": [
+        531,
+        531
+      ],
+      "line_classes": [
+        {
+          "text": "1. （3分）被还原，还原剂；1。 2. （3分）②③①",
+          "class": "F2_multi_blank"
+        }
+      ]
+    },
+    {
+      "case_id": "2021北京三十一中高一（下）期中化学（教师版）(1)",
+      "unit_id": "F2",
+      "subject": "化学",
+      "region": [
+        531,
+        531
+      ],
+      "line_classes": [
+        {
+          "text": "1. （3分）被还原，还原剂；1。 2. （3分）②③①",
+          "class": "F2_multi_blank"
+        }
+      ]
+    },
+    {
+      "case_id": "2021北京三十一中高一（下）期中化学（教师版）(1)",
+      "unit_id": "F5",
+      "subject": "化学",
+      "region": [
+        544,
+        544
+      ],
+      "line_classes": [
+        {
+          "text": "5. （5分）（1） $ Zn-2e^{-}=Zn^{2+} $（2分）；氧化（2）锌片（3）0.02",
+          "class": "F3_concatenated"
+        }
+      ]
+    },
+    {
+      "case_id": "2021北京三十一中高一（下）期中化学（教师版）(1)",
+      "unit_id": "F6",
+      "subject": "化学",
+      "region": [
+        546,
+        546
+      ],
+      "line_classes": [
+        {
+          "text": "6. （6分）（1） $ \\mathrm{Mg}+2\\mathrm{H}^{+}=\\mathrm{Mg}^{2+}+\\mathrm{H}_{2}\\uparrow $（2分）；（2）b（3）该反应放热，",
+          "class": "F8_long"
+        }
+      ]
+    },
+    {
+      "case_id": "2021北京三十一中高一（下）期中化学（教师版）(1)",
+      "unit_id": "F7",
+      "subject": "化学",
+      "region": [
+        548,
+        548
+      ],
+      "line_classes": [
+        {
+          "text": "7. （5分）（1）Na（2）$H_{2}O$ （3）$H_{2}SiO_{3}$（4）$NH_{4}NO_{3}$ 取少量该化合物于试管中，加入 NaOH 浓溶液，加热，将湿润的红色石蕊试纸放在试管",
+          "class": "F8_long"
+        }
+      ]
+    },
+    {
+      "case_id": "2021北京三十一中高一（下）期中化学（教师版）(1)",
+      "unit_id": "F8",
+      "subject": "化学",
+      "region": [
+        550,
+        550
+      ],
+      "line_classes": [
+        {
+          "text": "8. （5分）（1） $ 2SO_{2}+O_{2}\\xlongequal[500^{\\circ}C]{催化剂}2SO_{3} $（2分）（2）1.25（3）b（2分）",
+          "class": "F8_long"
+        }
+      ]
+    },
+    {
+      "case_id": "2021北京三十一中高一（下）期中化学（教师版）(1)",
+      "unit_id": "F9",
+      "subject": "化学",
+      "region": [
+        552,
+        552
+      ],
+      "line_classes": [
+        {
+          "text": "9. （6分）（1）a （2）b （3） $ 2H_2SO_3 + O_2 = 2SO_4^{2-} + 4H^+ $",
+          "class": "F8_long"
+        }
+      ]
+    },
+    {
+      "case_id": "2018北京师大附中高一（下）期中政治含答案(1)",
+      "unit_id": "Q31",
+      "subject": "政治",
+      "region": [
+        481,
+        481
+      ],
+      "line_classes": [
+        {
+          "text": "31. 国体 人民当家作主",
+          "class": "F1_single"
+        }
+      ]
+    },
+    {
+      "case_id": "2018北京师大附中高一（下）期中政治含答案(1)",
+      "unit_id": "Q32",
+      "subject": "政治",
+      "region": [
+        483,
+        483
+      ],
+      "line_classes": [
+        {
+          "text": "32. 选举权与被选举权",
+          "class": "F1_single"
+        }
+      ]
+    },
+    {
+      "case_id": "2018北京师大附中高一（下）期中政治含答案(1)",
+      "unit_id": "Q33",
+      "subject": "政治",
+      "region": [
+        485,
+        485
+      ],
+      "line_classes": [
+        {
+          "text": "33. 民主",
+          "class": "F1_single"
+        }
+      ]
+    },
+    {
+      "case_id": "2018北京师大附中高一（下）期中政治含答案(1)",
+      "unit_id": "Q34",
+      "subject": "政治",
+      "region": [
+        487,
+        487
+      ],
+      "line_classes": [
+        {
+          "text": "34. 从群众中来到群众中去",
+          "class": "F1_single"
+        }
+      ]
+    },
+    {
+      "case_id": "2021北京丰台高三二模英语（教师版）(1)",
+      "unit_id": "U11-20",
+      "subject": "英语",
+      "region": [
+        380,
+        386
+      ],
+      "line_classes": [
+        {
+          "text": "14. which 12. French",
+          "class": "F1_single"
+        },
+        {
+          "text": "13. stronger 14. to come",
+          "class": "F5_multi_token"
+        },
+        {
+          "text": "15. by 16. traditional 17. was 18. competing",
+          "class": "F3_concatenated"
+        },
+        {
+          "text": "19. women 20. is owned",
+          "class": "F5_multi_token"
+        }
+      ]
+    },
+    {
+      "case_id": "2018北京五十六中高二（下）期中数学（理）（教师版）(1)",
+      "unit_id": "Q19",
+      "subject": "数学",
+      "region": [
+        222,
+        222
+      ],
+      "line_classes": [
+        {
+          "text": "19. (1) 单调递增区间  $ (-\\infty,-2) $， $ (2,+\\infty) $；单调递减区间  $ (-2,2) $；(2)  $ k<\\frac{9}{4} $",
+          "class": "F8_long"
+        }
+      ]
+    },
+    {
+      "case_id": "2019北京四中高二（下）期末物理（教师版）(1)",
+      "unit_id": "Q19",
+      "subject": "物理",
+      "region": [
+        481,
+        481
+      ],
+      "line_classes": [
+        {
+          "text": "19. 发生了全反射；适当减小入射角  $ \\alpha $； $ \\frac{\\sin\\beta}{\\sin\\alpha} $",
+          "class": "F8_long"
+        }
+      ]
+    },
+    {
+      "case_id": "2019北京四中高二（下）期末物理（教师版）(1)",
+      "unit_id": "Q21",
+      "subject": "物理",
+      "region": [
+        487,
+        487
+      ],
+      "line_classes": [
+        {
+          "text": "21.  $ \\frac{mg\\sin\\theta}{IL} $，垂直斜面向下",
+          "class": "F2_multi_blank"
+        }
+      ]
+    },
+    {
+      "case_id": "2019北京四中高二（下）期末物理（教师版）(1)",
+      "unit_id": "Q24",
+      "subject": "物理",
+      "region": [
+        507,
+        507
+      ],
+      "line_classes": [
+        {
+          "text": "24.  $ \\frac{\\sqrt{2gh}}{2} $,  $ \\frac{1}{2} $mgh,  $ P_1 = P_2 + P_3 $",
+          "class": "F8_long"
+        }
+      ]
+    }
+  ]
+}
