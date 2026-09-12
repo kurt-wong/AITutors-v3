@@ -1204,3 +1204,27 @@ Step 5 已于 commit `0917404` 落盘（含 Status/log/restart v1.10 收口）�
   Status.md 快照 + log.md 条目 + restart-prompt v1.33。
 - **下一步**：Gate B corpus 对比 → Gate C 安全不变量验证 → OQ-3/OQ-2 →
   Errata Decision → I-5-2 Adapter → Path B Full Closure E2E。
+
+### 2026-09-11（Gate B 裁决：CONDITIONAL PASS / "18% vs 100%" 撤销）
+
+- **裁决**：Gate B CONDITIONAL PASS / NOT CLOSED。
+  **"18% vs 100%" 结论正式撤销**——两者度量不同事物（搜索成功率 vs range 合法率）。
+- **实验事实**：
+  - Corpus: 67 cases / 1885 units / 10 学科（80 manifest 中 67 mapping-consistent）
+  - Legacy Resolver: ~18% resolution rate（与 Phase I-4 17.6% 一致，失败模式有重复性）
+  - Path B: 100% Range-Valid Rate（**仅行号范围有效，非内容正确**）
+- **P0 发现**（对抗性审查，12 维度）：
+  - 25.9% Path B spans 指向空行（600/2314，sample）
+  - 12.2% answer_lines 指向选项行（66/540，sample）
+  - Legacy target 数（7631）≠ Path B span 数（8089），度量口径不一致
+- **Binding Integrity 分层正式确认**：
+  Level 1 Range Validity → Level 2 Content Validity → Level 3 Role Validity → Level 4 Semantic Validity
+- **循环证明风险已声明**：Manifest 不能同时作为 Expected Truth 和 Path B Evidence。
+- **Gate B 拆分**：
+  - Gate B1 — Binding Integrity：Path B line_refs 是否指向合法、非空、结构匹配的 Source Evidence
+  - Gate B2 — Strategy Comparison：统一 Content Role Target `(unit_id, role)` 后同口径对比
+- **下一阶段**：不修改 V3 生产代码，先修实验 Harness（统一 Role Target Model +
+  增加 content_valid/role_valid 检查 + 重跑完整 corpus）。
+- **产出**：69 号 §10 Gate B 裁决 + Status.md 快照 + log.md 条目 + restart-prompt v1.34。
+- **下一步**：Gate B1/B2 实验 Harness 重设计 → Gate C 安全不变量验证 → OQ-3/OQ-2 →
+  Errata Decision → I-5-2 Adapter → Path B Full Closure E2E。

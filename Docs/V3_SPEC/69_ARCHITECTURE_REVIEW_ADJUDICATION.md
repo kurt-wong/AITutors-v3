@@ -448,3 +448,95 @@ Path B：VALIDATED EXPERIMENTAL PATH
 - 69 号 B5-3：Identity semantics OPEN，禁止提前关闭
 - 核心原则：不因旧 Spec 的 FORBIDDEN 就拒绝已被实验支持的架构方向；
   不因 Path B 21/21 成功就跳过 OQ-1
+
+---
+
+## 10. Gate B 裁决：Source Binding Strategy 对比实验（2026-09-11）
+
+### 裁决结果
+
+**Gate B：CONDITIONAL PASS / NOT CLOSED。"18% vs 100%" 结论正式撤销。**
+
+Gate B 拆分为两个子 Gate：
+- **Gate B1 — Binding Integrity**：Path B line_refs 是否指向合法、非空、结构匹配的 Source Evidence
+- **Gate B2 — Strategy Comparison**：统一 Content Role Target 后 Legacy vs Path B 同口径对比
+
+### 实验事实（已验证）
+
+| 维度 | 结论 | 证据 |
+|------|------|------|
+| Corpus 可用性 | PASS — 67 cases / 1885 units / 10 学科 | 独立重新加载确认 |
+| Semantic projection | PASS — 零 binding field 泄漏 | 1885 units 全量检查 |
+| Legacy Resolver 执行 | PASS — 确实在搜索 | 44 resolved + 58 unresolved（sample），unresolved 原因分布合理 |
+| Legacy baseline signal | PASS — ~18%（与 Phase I-4 17.6% 一致） | 同一 corpus controlled comparison |
+| Path B range 构造 | PASS — 行号在 `[1, len(source_lines)]` 范围内 | 8089 spans 全部 range-valid |
+| **Path B reference integrity** | **FAIL / INCOMPLETE** | 25.9% spans 指向空行（600/2314，sample） |
+| **Manifest answer 质量** | **FAIL** | 12.2% answer_lines 指向选项行（66/540，sample） |
+| Options normalization | INCOMPLETE | ABCDEFGH cap 限制，11/317 不匹配 |
+| **跨策略度量可比性** | **FAIL** | Legacy target 数（7631）≠ Path B span 数（8089），口径不一致 |
+| **"18% vs 100%" 结论** | **REJECTED** | 两者度量不同事物：搜索成功率 vs range 合法率 |
+
+### 核心发现
+
+**Path B 的 "100% validation" 只是 Range-Valid Rate，不是 Reference Integrity Rate。**
+
+当前验证器仅证明 `1 <= start <= end <= len(source_lines)`，未证明：
+1. `resolved_text` 非空（Level 2 — Content Validity）
+2. 内容属于正确 role（Level 3 — Role Validity）
+3. 内容符合 unit 语义（Level 4 — Semantic Validity）
+
+```text
+Level 1 — Range Validity    "行号在范围内"
+Level 2 — Content Validity  "resolved_text 非空"
+Level 3 — Role Validity     "内容属于正确 role"
+Level 4 — Semantic Validity "内容符合 unit 语义（需独立证据）"
+```
+
+### Binding Integrity 分层（正式确认）
+
+Path B Validator 必须产出分层验证结果，而非单一 pass/fail：
+
+```text
+range_valid       → start/end 在 SourceLineView 范围内
+content_valid     → resolved_text 非空
+role_valid        → 内容结构匹配声明 role（stem/options/answer/explanation）
+semantic_valid    → 内容语义正确（独立证据，不由简单规则冒充）
+```
+
+### 循环证明风险（正式声明）
+
+Manifest 可以提供 Expected Structure（expected role + expected line_ref），但：
+- **Expected Structure ≠ Path B Correctness**
+- Path B 使用 manifest 的 line_ref 本身就是被测试的输入
+- 不能形成"Manifest 说 line 155 → Path B 用 line 155 → Path B 验证 line 155 → 因此 Path B 正确"的循环
+
+语义正确性（Level 4）必须有独立证据。
+
+### 下一阶段（Gate B1/B2 重设计）
+
+**不修改 V3 生产代码。** 先修实验 Harness：
+
+1. 统一 Content Role Target Model：`(unit_id, role)` 为对比单位
+2. Path B 增加 content_valid / role_valid 检查
+3. Options normalization 从 manifest 实际结构推导，不假设 ABCD
+4. 重跑完整 corpus（67 cases / 1885 units），非抽样
+5. 产出 Legacy vs Path B 同口径 Role-Level Binding 成功率
+
+### Gate B 当前状态
+
+```text
+Gate A: PASS / TEST-EVIDENCED
+Gate B: CONDITIONAL PASS / NOT CLOSED
+  Gate B1 (Binding Integrity): OPEN — 需要重新设计验证器
+  Gate B2 (Strategy Comparison): BLOCKED BY B1
+Gate C: OPEN
+Gate D: OPEN
+Errata: BLOCKED BY Gate B/C
+```
+
+### 重要措辞
+
+> Path B feasibility 仍成立（技术上可运行），但 Path B correctness 尚未被证明。
+> Legacy Resolver 的失败模式具有一定重复性（~18% 两次独立实验一致），
+> 但这只能证明"Legacy Search 在真实 OCR 数据上存在系统性困难"，
+> 不能单独证明"LLM line_refs + Validator 一定是正确的最终架构"。

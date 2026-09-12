@@ -1,9 +1,9 @@
 # AI Tutor V3 — RESTART PROMPT
 
-Version: v1.33
-Status: **Gate A 关闭** — OQ-1 Identity 分层 PASS / TEST-EVIDENCED；
-B5-3 CLOSED；67 Errata BLOCKED BY Gate B/C；
-下一步 = Gate B 对比 → Gate C 安全不变量
+Version: v1.34
+Status: **Gate B CONDITIONAL PASS** — "18% vs 100%" 结论撤销；
+Gate B 拆分为 B1（Binding Integrity）+ B2（Strategy Comparison）；
+下一步 = Gate B1/B2 实验 Harness 重设计 → Gate C
 Date: 2026-09-11
 
 ## 0.0 当前结论（2026-09-11 Gate A 关闭）
@@ -28,19 +28,29 @@ Date: 2026-09-11
   - Test Isolation: **PASS / TEST-EVIDENCED**
   - Resolver Algorithm Safety: **PASS**；Resolver Real-World Coverage: **FAIL — 16.7%**
   - Path B → IR/Compiler: **PROVEN — 21/21**；→ Gate/Admission: **NOT YET PROVEN**
-  - 67 Contract Change: **CONDITIONALLY ACCEPTED**（Gate A PASS；Errata BLOCKED BY Gate B/C）
+  - 67 Contract Change: **CONDITIONALLY ACCEPTED**（Gate A PASS；Gate B CONDITIONAL；Errata BLOCKED BY Gate B/C）
   - OQ-1: **CLOSED**；OQ-2/OQ-3: **OPEN**
   - Full Production Pipeline: **NOT YET CLOSED**
+- **Gate B 实验结果（2026-09-11）**：
+  - Corpus: 67 cases / 1885 units / 10 学科（80 manifest 中 67 mapping-consistent）
+  - Legacy Resolver: ~18% resolution rate（与 Phase I-4 17.6% 一致）
+  - Path B: 100% Range-Valid Rate（**仅行号范围有效，非内容正确**）
+  - **"18% vs 100%" 结论已撤销**——两者度量不同事物（搜索成功率 vs range 合法率）
+  - **P0 发现**：25.9% Path B spans 指向空行；12.2% answer_lines 指向选项行
+  - **Binding Integrity 分层正式确认**：Range → Content → Role → Semantic
+  - **循环证明风险已声明**：Manifest 不能同时作为 Expected Truth 和 Path B Evidence
 - **红线（不变）**：HTTP retry ≠ LLM retry ≠ fallback；先冻结 Spec 再改代码；
   Schema Source of Truth = 20_Document_Pipeline.md；Resolver 不猜；
   实验结果 ≠ 实施授权；提议修改 ≠ 违反 Frozen Spec。
 - **下一步（按序执行）**：
-  1. **Gate B**：Legacy vs Path B 真实 corpus 对比
-  2. **Gate C**：Safety Invariant Preservation 验证
-  3. **OQ-3 → OQ-2**：物化层 / Standalone+Material 裁决
-  4. **Errata Decision**（Gate B/C/D 通过后）
-  5. **I-5-2 Adapter**（Gate D 约束：Contract Translator，非 Semantic Resolver）
-  6. **Path B Full Closure E2E**（含 Provenance Golden Test + Replay 验证）
+  1. **Gate B1**：Binding Integrity 重设计——统一 Content Role Target `(unit_id, role)`，
+     增加 content_valid / role_valid 检查，重跑完整 corpus
+  2. **Gate B2**：Strategy Comparison——Legacy vs Path B 同口径 Role-Level Binding 成功率
+  3. **Gate C**：Safety Invariant Preservation 验证
+  4. **OQ-3 → OQ-2**：物化层 / Standalone+Material 裁决
+  5. **Errata Decision**（Gate B1/B2/C/D 通过后）
+  6. **I-5-2 Adapter**（Gate D 约束：Contract Translator，非 Semantic Resolver）
+  7. **Path B Full Closure E2E**（含 Provenance Golden Test + Replay 验证）
 - 重启后第一任务：读本文件 → Status.md 尾 → log.md 尾 → bugs.md →
   按上述 Step 顺序执行。
 

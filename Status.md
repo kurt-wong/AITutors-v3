@@ -1581,3 +1581,57 @@ Errata: BLOCKED BY Gate B/C
 4. **Errata Decision**（Gate B/C/D 通过后）
 5. **I-5-2 Adapter**（Gate D 约束）
 6. **Path B Full Closure E2E**
+
+## 状态快照：Gate B 裁决（2026-09-11）
+
+### Gate B：CONDITIONAL PASS / NOT CLOSED
+
+**"18% vs 100%" 结论正式撤销。** 两者度量不同事物：搜索成功率 vs range 合法率。
+
+### 实验结果
+
+| 项目 | 结果 | 说明 |
+|------|------|------|
+| Corpus | 67 cases / 1885 units / 10 学科 | 80 manifest 中 67 mapping-consistent |
+| Legacy Resolver | ~18% resolution rate | 与 Phase I-4 17.6% 一致，失败模式有重复性 |
+| Path B | 100% Range-Valid Rate | **仅行号范围有效，非内容正确** |
+
+### P0 发现（对抗性审查，12 维度）
+
+| 发现 | 数据 |
+|------|------|
+| Path B spans 指向空行 | 25.9%（600/2314，sample） |
+| answer_lines 指向选项行 | 12.2%（66/540，sample） |
+| 度量口径不一致 | Legacy target 7631 ≠ Path B span 8089 |
+
+### Binding Integrity 分层（正式确认）
+
+```text
+Level 1 — Range Validity    "行号在范围内"
+Level 2 — Content Validity  "resolved_text 非空"
+Level 3 — Role Validity     "内容属于正确 role"
+Level 4 — Semantic Validity "内容符合 unit 语义（需独立证据）"
+```
+
+### Gate 状态更新
+
+```text
+Gate A: PASS / TEST-EVIDENCED
+Gate B: CONDITIONAL PASS / NOT CLOSED
+  Gate B1 (Binding Integrity): OPEN
+  Gate B2 (Strategy Comparison): BLOCKED BY B1
+Gate C: OPEN
+Gate D: OPEN
+Errata: BLOCKED BY Gate B/C
+```
+
+### 下一步（按序执行）
+
+1. **Gate B1**：Binding Integrity 重设计——统一 Content Role Target `(unit_id, role)`，
+   增加 content_valid / role_valid 检查，重跑完整 corpus
+2. **Gate B2**：Strategy Comparison——Legacy vs Path B 同口径 Role-Level Binding 成功率
+3. **Gate C**：Safety Invariant Preservation 验证
+4. **OQ-3 → OQ-2**：物化层 / Standalone+Material 裁决
+5. **Errata Decision**（Gate B1/B2/C/D 通过后）
+6. **I-5-2 Adapter**（Gate D 约束）
+7. **Path B Full Closure E2E**
