@@ -36,16 +36,19 @@ class SourceFigureView:
 
 @dataclass(frozen=True)
 class SourceRegion:
-    """结构区域 provenance（Semantic Role Provenance Contract）。
+    """Structural region evidence (Source Evidence Binding Contract).
 
-    Resolver 用表头 grammar（H-3）划分的语义区域。role 值域：
-    - question: 题目区（首个 answer/explanation 表头之前的行）
-    - answer: 答案区（answer 表头之后、explanation 表头之前的行）
-    - explanation: 详解区（explanation 表头之后的行）
+    Resolver uses deterministic header grammar (H-3) to partition source lines
+    into structural regions. This is **consistency evidence**, not semantic truth:
+    - It proves: "these lines structurally belong to the answer zone"
+    - It does NOT prove: "these lines are semantically the correct answer"
 
-    Gate 消费此 map 验证 contract 自洽性：answer span 不得与 explanation/question
-    region 重叠。这不是语义理解——region 划分由 Resolver 的确定性表头解析产出，
-    Gate 只做 span 集合交运算（contract self-consistency，非 NLP）。
+    role values:
+    - question: lines before the first answer/explanation header
+    - answer: lines between answer header and explanation header
+    - explanation: lines after explanation header
+
+    Gate consumes this map for span-overlap consistency checks (set intersection).
     """
 
     role: str
@@ -111,6 +114,8 @@ class ResolvedRun:
     unresolved_references: tuple[UnresolvedReference, ...] = field(default_factory=tuple)
     resolved_relations: tuple[ResolvedRelation, ...] = field(default_factory=tuple)
     unresolved_relations: tuple[ResolvedRelation, ...] = field(default_factory=tuple)
-    # Semantic Role Provenance Contract：Resolver 表头解析产出的区域 map。
-    # Gate 用它验证 answer span 不落入 explanation/question region（span 交运算）。
+    # Source Evidence structural consistency: Resolver-produced region map.
+    # This is consistency evidence (structural), NOT semantic truth.
+    # Gate uses it for span-overlap checks: answer span must not overlap
+    # explanation/question structural regions.
     semantic_regions: tuple["SourceRegion", ...] = field(default_factory=tuple)

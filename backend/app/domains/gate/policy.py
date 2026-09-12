@@ -184,11 +184,11 @@ def evaluate(
     if len(set(all_consumed)) != len(all_consumed):
         provenance_reasons.append("duplicate content span consumed across candidate leaves")
 
-    # Semantic Role Provenance Contract（BUG-V3-ROLE-PROVENANCE）：
-    # answer span 不得落入 explanation/question region。Resolver 已用确定性表头
-    # grammar 产出 semantic_regions map；Gate 只做 span 集合交运算（contract
-    # self-consistency，非 NLP 语义理解）。answer∩explanation≠∅ → 降级 auto
-    # （pending_review），非 terminal rejected——证据可能仍可人工修复。
+    # Source Evidence structural consistency check:
+    # answer span must not fall into explanation/question structural regions.
+    # Resolver produces structural region map via deterministic header grammar;
+    # Gate performs span set intersection (contract self-consistency, NOT NLP).
+    # Overlap -> downgrade auto (pending_review), not terminal rejected.
     role_provenance_violations: list[str] = []
     if resolved_run.semantic_regions:
         region_by_role: dict[str, set[str]] = {}

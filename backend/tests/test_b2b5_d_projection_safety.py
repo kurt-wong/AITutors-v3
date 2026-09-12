@@ -213,12 +213,15 @@ class TestNegativeProjectionSafety:
         """
         EXPLANATION_REGION: explanation content in answer role.
 
-        Grammar limitation: _option_letters() extracts letter A from explanation
-        content, so verify() returns True. KNOWN limitation at grammar layer.
+        _option_letters() extracts letter A from explanation content -> verify True.
+        This is NOT a bug in _option_letters (it correctly extracts letters per its
+        contract). The issue is upstream input qualification: who determined this
+        input is valid answer evidence?
 
-        Defense-in-depth: Semantic Role Provenance Contract catches the case
-        where answer span overlaps explanation region.
-        See tests/test_role_provenance.py for contract tests.
+        Current corpus: all 49 EXPLANATION_REGION targets are non-strict-auto,
+        so grammar-None blocks them. This test documents the latent weakness.
+
+        Defense-in-depth: structural consistency check in test_role_provenance.py.
         """
         from app.domains.gate.grammar import verify
 

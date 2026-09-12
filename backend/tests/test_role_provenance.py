@@ -1,12 +1,14 @@
-"""Semantic Role Provenance Contract tests (BUG-V3-ROLE-PROVENANCE).
+"""Source Evidence structural consistency tests.
 
-Gate role-provenance check: answer span must not fall into explanation/question region.
-Contract self-consistency (span set intersection), NOT NLP semantic understanding.
+Gate span-overlap consistency check: answer span must not fall into
+explanation/question structural regions. This is contract self-consistency
+(span set intersection), NOT NLP semantic understanding.
 
 Architecture:
-- Resolver uses deterministic header grammar (H-3) to partition regions
-- Region map frozen into ResolvedRun.semantic_regions
-- Gate verifies answer span does not overlap other role regions
+- Resolver uses deterministic header grammar (H-3) to partition structural regions
+- Region map frozen into ResolvedRun.semantic_regions (consistency evidence,
+  NOT semantic truth)
+- Gate verifies answer span does not overlap other structural regions
 - Overlap -> auto_allowed=False -> pending_review (not terminal rejected)
 """
 

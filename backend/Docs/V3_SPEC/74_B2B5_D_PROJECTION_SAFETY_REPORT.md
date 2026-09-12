@@ -1,8 +1,9 @@
 # B2-B5-D: End-to-End Projection Safety Validation Report
 
-**Version**: 2.0.0
+**Version**: 3.0.0
 **Date**: 2026-09-13
-**Status**: COMPLETED - Semantic Role Provenance Contract implemented
+**Status**: B2-B5-D COMPLETED | Gate C BLOCKED (V3 Source Evidence Binding Contract + full E2E)
+**架构审查**: 经二次裁决，修正 preprocessing 依赖前提
 
 ---
 
@@ -34,17 +35,17 @@
 | No source mutation | ✅ PASS | Source 不会被修改 |
 | Three-state decision | ✅ PASS | True/False/None 模型正确 |
 
-### 1.4 Semantic Role Provenance Contract
+### 1.4 Source Evidence Structural Consistency
 
 | 测试 | 结果 | 说明 |
 |------|------|------|
-| Resolver produces semantic_regions | ✅ PASS | question/answer/explanation region map |
+| Resolver produces semantic_regions | ✅ PASS | question/answer/explanation structural region map |
 | Region non-overlap | ✅ PASS | question ∩ answer = ∅ |
 | answer ∩ explanation → pending_review | ✅ PASS | Gate span-overlap check |
 | answer ∩ question → pending_review | ✅ PASS | Gate span-overlap check |
 | No overlap → auto_approve | ✅ PASS | 正常路径不受影响 |
 | Cross-role overlap fail-closed | ✅ PASS | 绝不 auto_approve |
-| 49 EXPLANATION_REGION targets | ✅ PASS | 全部非 strict-auto, fail-closed |
+| 49 EXPLANATION_REGION targets | ✅ PASS | 全部非 strict-auto, fail-closed via grammar-None |
 
 ### 1.5 Corpus Validation
 
@@ -59,147 +60,258 @@
 
 ---
 
-## 二、发现的安全缺口与根因修正
+## 二、核心架构原则
 
-### 2.1 原始发现
+### 2.1 Legal Address ≠ Legal Evidence
+
+这是 B2-B5-D 实验最重要的架构发现。
+
+```text
+Source
+  521: 【解答】A
+
+Resolver 产出:
+  ResolvedSpan(start=521, end=521, resolution_status="exact")
+```
+
+这个结果只能证明:
+
+> "你要求的 Source 地址确实存在, 而且地址解析成功。"
+
+它不能自动推出:
+
+> "这个 span 是合法的 Answer Evidence。"
+
+**当前链路存在危险的 Evidence Promotion:**
+
+```text
+exact → answer.text → grammar extracts A → verify(A) → PASS
+```
+
+即: 一个仅仅"结构上可解析"的 span 被过度提升为特定语义证据。
+
+### 2.2 Predicate Correctness ≠ Evidence Validity
+
+`_option_letters("【解答】A") → ("A",)` — **这个函数本身是正确的**。
+
+如果它的职责是"从 answer representation 中提取 option letters",
+那么 `【解答】A` 确实包含 `A`。
+
+问题不在于 `_option_letters()` 太蠢, 而在于:
+
+> **上游对 `_option_letters()` 的输入资格定义太弱。**
+
+谁赋予了这个函数"这个输入已经是合法 answer evidence"的前提?
+如果答案是"因为 Resolver resolution_status == exact", 那就有问题。
+
+---
+
+## 三、潜在攻击路径 (Latent Weakness)
+
+### 3.1 路径描述
+
+```text
+Source
+  ↓
+answer span contains 【解答】A
+  ↓
+Resolver exact (地址正确)
+  ↓
+Compiler answer.text = 【解答】A
+  ↓
+_option_letters() → A
+  ↓
+Grammar verify → True
+  ↓
+auto_approve (潜在)
+```
+
+### 3.2 当前 corpus 中未形成实际 exploit
+
+**关键澄清**: 49 个 EXPLANATION_REGION targets 全部是非 strict-auto 题型
+(short_answer 41, reading 3, vocabulary_fill 2, cloze 1, reading_expression 1, essay 1)。
+
+```text
+_leaf_grammar() → None (非 strict-auto)
+    ↓
+auto_blocker → pending_review
+```
+
+**当前冻结语料中没有观察到实际 auto-admission 绕过。**
+
+但这暴露了一个与题型无关的 **latent Evidence Validation weakness**:
+如果 strict-auto 类型的 answer span 包含解释性前缀, 而该内容仍位于
+声明的 answer span 内, 则 `_option_letters()` 可能将其中的选项字母
+误认为合法答案。
+
+> **不能因为当前 corpus 没打穿就宣布问题不存在。**
+> 这是潜在的通用缺陷, 应通过 V3 Evidence Contract 消除,
+> 而不能依赖题型分类偶然兜底。
+
+---
+
+## 四、根因定性
+
+### 4.1 原始发现
 
 B2-B5-D 测试发现: Grammar `_option_letters()` 从任何文本提取 ASCII 字母,
 导致 `verify("single_choice", "【解答】A", ("A","B"))` 返回 True。
 
-### 2.2 根因修正 (架构审查裁决)
+### 4.2 根因 (二次裁决修正)
 
-**原判断**: "Gate 缺少语义检测能力" → 建议增加 regex semantic layer
-**修正判断**: **Semantic Role Provenance Loss**
+**不是**: "preprocessing semantic role information 丢失给 V3"
 
+**而是**: **V3 Source Evidence Binding Contract 对 "Source Address" 和
+"Semantic Evidence" 的边界定义不足。**
+
+```text
+V3 当前:
+
+  Source Address (Resolver 验证)
+       ↓
+  直接提升为
+       ↓
+  Semantic Evidence (Compiler/Grammar 消费)
+
+缺失:
+
+  Source Address
+       ↓
+  Evidence Claim (声明这是什么 evidence)
+       ↓
+  Evidence Validation (验证声明与结构事实一致)
+       ↓
+  Validated Evidence
 ```
-真正的问题:
 
-Preprocessing (LLM)          Manifest              Resolver
-     │                          │                      │
-     ├─ 知道 521-522 是 answer   ├─ 只记录 answer_zone  ├─ 只验证 line span
-     ├─ 知道 523-530 是 explain  │   reference          │
-     │                          │                      │
-     └─ 语义角色信息丢失 ←────────┴──────────────────────┘
+`ResolvedSpan` 能证明引用位置有效, 但不能单独证明该 span 是目标语义证据。
+
+### 4.3 与 preprocessing 的关系
+
+**V3 是完整系统, 不依赖 preprocessing 成立。**
+
+```text
+                  V3
+                   │
+       ┌───────────┴───────────┐
+       ↓                       ↓
+ Native ingestion       External adapter (optional)
+       │                       │
+ PDF/DOCX/IMG             preprocessing (future)
+       │                       │
+       └───────────┬───────────┘
+                   ↓
+                Source
 ```
 
-**信息丢失位置**: Preprocessing → Manifest Contract
+V3 Native Path 必须自行保证 Source Evidence Binding 的安全性。
 
-**拒绝的修复方向**: Gate-side regex semantic patterns
-- 会让 Gate 退化为半个 NLP parser (V2 trap)
-- Regex 无法解决 role identity 问题
-- 违反 V3 分层原则: 后面的确定性模块不能重新做语义理解
+如果未来 preprocessing 接入 V3, 它必须满足 V3 Evidence Contract,
+而不是反过来 V3 按照 preprocessing 的 contract 设计。
 
-**采纳的修复方向**: 增强 manifest/resolver contract, 让语义角色信息贯穿链路
-
-### 2.3 影响范围
-
-| Invalid 类型 | Grammar 行为 | Role-Provenance Contract | 是否安全 |
-|--------------|--------------|--------------------------|----------|
-| WRONG_REGION | None | N/A | ✅ 安全 |
-| EXPLANATION_REGION | True (limitation) | ✅ 检测 overlap | ✅ 安全 (defense-in-depth) |
-| SEPARATOR_REGION | None | N/A | ✅ 安全 |
-| QUESTION_REGION | None | ✅ 检测 overlap | ✅ 安全 |
-| SUSPICIOUS_CONTENT | None | N/A | ✅ 安全 |
-
-**关键发现**: 49 个 EXPLANATION_REGION targets 全部是非 strict-auto 题型
-(short_answer 41, reading 3, vocabulary_fill 2, cloze 1, reading_expression 1, essay 1),
-经 grammar-None 路径 fail-closed。Grammar limitation 只影响 strict-auto 题型
-(single_choice/multiple_choice/true_false), 语料中无此类 target。
+preprocessing 的 role provenance 是未来 Adapter Contract (Gate D/I-5) 的
+integration 问题, 不是当前 Gate C 的前置条件。
 
 ---
 
-## 三、Semantic Role Provenance Contract 实现
+## 五、Source Evidence Structural Consistency 实现
 
-### 3.1 架构设计
+### 5.1 架构定位
 
-```
-Resolver (确定性表头解析)
-  │
-  ├─ 用 H-3 header grammar 划分 question/answer/explanation region
-  │
-  ├─ 产出 semantic_regions: tuple[SourceRegion, ...]
-  │   SourceRegion(role, start_seq, end_seq, line_refs)
-  │
-  └─ 冻结进 ResolvedRun.semantic_regions
+已实现的 `semantic_regions` 是 **structural consistency evidence**, 不是 Semantic Truth。
 
-Gate (contract self-consistency)
-  │
-  ├─ 消费 resolved_run.semantic_regions
-  │
-  ├─ 对每个 leaf 的 answer span:
-  │   answer_lines ∩ explanation_region_lines = ∅ ?
-  │   answer_lines ∩ question_region_lines = ∅ ?
-  │
-  └─ overlap → auto_allowed=False → pending_review
+```text
+V3 Source Evidence Contract
+        │
+        ├── source_ref
+        ├── span
+        ├── target/evidence role
+        └── structural consistency
+                ↓
+            Resolver (确定性表头 grammar)
+                ↓
+        ResolvedSpan + structural region map
+                ↓
+              Gate (span-overlap consistency check)
 ```
 
-### 3.2 实现文件
+Resolver 说: "根据确定性的 region grammar, 521-522 属于 answer region" — 这可以。
+
+Resolver 不能说: "521-522 在语义上一定是答案" — 这是两个完全不同的强度。
+
+### 5.2 实现文件
 
 | 文件 | 变更 |
 |------|------|
-| `app/domains/resolver/span.py` | 添加 `SourceRegion` dataclass; `ResolvedRun` 添加 `semantic_regions` 字段 |
-| `app/domains/resolver/resolver.py` | 添加 `_compute_regions()` 方法; `resolve()` 产出 region map |
-| `app/domains/gate/policy.py` | provenance 层添加 role-provenance 检查; admission 层 surface violations |
-| `tests/test_role_provenance.py` | 10 个测试: region production, contract check, E2E regression |
+| `resolver/span.py` | `SourceRegion` dataclass (structural region, NOT semantic truth); `ResolvedRun.semantic_regions` |
+| `resolver/resolver.py` | `_compute_regions()` — 确定性表头解析产出 structural region map |
+| `gate/policy.py` | provenance 层 span-overlap 检查 (set intersection, NOT NLP) |
+| `tests/test_role_provenance.py` | 10 tests: region production, consistency check, E2E regression |
 
-### 3.3 Contract 规则
+### 5.3 架构边界 (防滑坡)
 
-1. **Region Production**: Resolver 用确定性表头解析产出 region map
-   - question region: 首个 answer/explanation 表头之前的行
-   - answer region: answer 表头之后、explanation 表头之前的行
-   - explanation region: explanation 表头之后的行
+必须警惕 Resolver 从 reference integrity 滑向 semantic authority:
 
-2. **Gate Consistency Check**: answer span 不得与其他 role region 重叠
-   - answer ∩ explanation = ∅
-   - answer ∩ question = ∅
+```text
+✅ Resolver = reference integrity + header grammar structural regions
+❌ Resolver = 判断 "这个 span 语义上是什么"
+```
+
+`semantic_regions` 是 **consistency evidence**: "这些行在结构上属于答案区"
+不是 **semantic truth**: "这些行一定是正确答案"。
+
+### 5.4 Contract 规则
+
+1. **Region Production**: Resolver 用确定性表头解析产出 structural region map
+2. **Gate Consistency Check**: answer span 不得与其他 structural region 重叠
    - overlap → pending_review (非 terminal rejected)
-
 3. **Compiler Role Filter**: Compiler 只消费 role=answer 的 span (已有行为)
 
-### 3.4 为什么这是 Contract Self-Consistency 而非 NLP
+### 5.5 为什么这是 Contract Self-Consistency 而非 NLP
 
-- Region 划分由 Resolver 的确定性表头 grammar (H-3) 产出, 不是 LLM
-- Gate 只做 span 集合交运算 (set intersection), 不理解自然语言
-- 不引入新的 regex semantic patterns
-- 不让 Gate 重新做人类语义理解
+- Region 划分由确定性表头 grammar 产出, 不是 LLM 或 semantic parser
+- Gate 只做 span 集合交运算, 不理解自然语言
+- 不引入 regex semantic patterns
+- 不让 Gate/Resolver 重新做人类语义理解
 
 ---
 
-## 四、Grammar Limitation 与 Defense-in-Depth
+## 六、Grammar Limitation 与 Defense-in-Depth
 
-### 4.1 Grammar Limitation (已知, 已记录)
+### 6.1 Grammar 层行为
 
 ```python
 verify("single_choice", "A", ("A", "B"))           # → True (正确)
 verify("single_choice", "【解答】A", ("A", "B"))    # → True (limitation)
 ```
 
-`_option_letters()` 提取所有 ASCII 字母, 无法区分纯答案和包含答案的解释文本。
+`_option_letters()` 函数本身正确——它按职责提取字母。问题是输入资格:
+上游不应把 explanation content 作为 answer evidence 传入。
 
-### 4.2 Defense-in-Depth 层次
+### 6.2 Defense-in-Depth 层次
 
-| 层 | 机制 | 覆盖场景 |
-|----|------|----------|
-| Grammar | 字母提取 + labels 匹配 | 纯答案格式验证 |
-| Role-Provenance Contract | answer span ∩ explanation region = ∅ | answer 落入 explanation region |
-| Grammar-None (非 strict-auto) | 非 strict-auto 题型 → pending_review | 49 个 EXPLANATION_REGION targets |
+| 层 | 机制 | 覆盖场景 | 性质 |
+|----|------|----------|------|
+| Grammar-None | 非 strict-auto → None → pending_review | 49 个 EXPLANATION_REGION targets | 已有 |
+| Structural Consistency | answer span ∩ explanation region = ∅ | answer 落入非答案结构区 | 已实现 |
+| Grammar letters | _option_letters + labels 匹配 | 纯答案格式验证 | limitation documented |
 
-### 4.3 残余风险
+### 6.3 残余风险
 
-Grammar limitation 在以下场景仍存在:
+Latent Evidence Validation weakness 在以下场景仍存在:
 - strict-auto 题型 (single_choice 等)
-- answer zone 内容本身是 explanation 标记 + 选项字母
-- answer span 在 answer region 内 (不与 explanation region 重叠)
+- answer zone 内容本身包含解释性前缀 + 选项字母
+- answer span 在 answer structural region 内 (consistency check 不触发)
 
-**根本修复**: 需要 preprocessing 在 manifest 中声明 region role,
-使 answer entry 不指向 explanation content。这是 Annotation Contract 的增强,
-属于后续工作。
+**根本修复**: V3 Source Evidence Binding Contract 需要明确
+Source Address → Evidence Claim → Evidence Validation → Validated Evidence
+的提升路径, 使 answer entry 的 evidence 身份验证不依赖题型分类兜底。
 
 ---
 
-## 五、数字澄清
+## 七、数字澄清
 
-### 5.1 集合关系
+### 7.1 集合关系
 
 ```
 gate_b2b5_frozen_testset.json (706 targets)
@@ -213,16 +325,10 @@ gate_b2b5_frozen_testset.json (706 targets)
 └── suspicious_content: 10
 
 gate_c_invalid_binding_corpus.json (157 targets)
-├── WRONG_REGION: 56
-├── EXPLANATION_REGION: 49
-├── SEPARATOR_REGION: 27
-├── QUESTION_REGION: 15
-└── SUSPICIOUS_CONTENT: 10
-
-关系: 157 = 267 - 120 (EMPTY_REGION) + 10 (SUSPICIOUS_CONTENT)
+  = 267 - 120 (EMPTY_REGION) + 10 (SUSPICIOUS_CONTENT)
 ```
 
-### 5.2 EXPLANATION_REGION 题型分布
+### 7.2 EXPLANATION_REGION 题型分布
 
 | 题型 | 数量 | strict-auto? |
 |------|------|-------------|
@@ -233,80 +339,127 @@ gate_c_invalid_binding_corpus.json (157 targets)
 | reading_expression | 1 | ❌ |
 | essay | 1 | ❌ |
 
-**结论**: 0 个 EXPLANATION_REGION targets 是 strict-auto 题型,
-全部经 grammar-None 路径 fail-closed。
+**0 个 EXPLANATION_REGION targets 是 strict-auto 题型**, 全部经 grammar-None fail-closed。
 
 ---
 
-## 六、Gate C 状态
+## 八、Gate C 状态
 
-### 6.1 修正前
+### 8.1 当前状态
 
-**BLOCKED** - 原因: "EXPLANATION_REGION security gap, 需要 regex semantic layer"
+> **Gate C: BLOCKED — V3 Source Evidence Binding Contract + full 157 E2E 尚未完成闭环**
 
-### 6.2 修正后
+### 8.2 未完成项
 
-**BLOCKED** - 原因: **"Source Binding Contract incomplete"**
+**C-1: V3 Evidence Contract 边界明确化**
 
-Semantic Role Provenance Contract 已实现 (Resolver region map + Gate span-overlap check),
-但 Grammar limitation 仍存在于 strict-auto 题型的 answer zone 内容层面。
-根本修复需要增强 Annotation Contract, 让 preprocessing 声明 region role。
+V3 需要明确区分:
+- Source Address (引用位置有效性)
+- Semantic Evidence (语义证据合法性)
 
-### 6.3 关闭条件
+当前 ResolvedSpan 只证明前者, 但下游有时将其当作后者消费。
 
-- [x] Role provenance test — answer role + explanation span → reject
-- [x] Cross-role overlap test — answer_lines ∩ explanation_lines → fail closed
-- [x] E2E regression — 49 个 EXPLANATION_REGION targets 全部非 strict-auto, fail-closed
-- [x] Resolver produces semantic_regions map
-- [x] Gate consumes semantic_regions for span-overlap check
-- [ ] Annotation Contract enhancement (preprocessing declares region roles) — 后续工作
-- [ ] 完整 157 targets E2E 测试通过真实 pipeline
+**C-2: 完整 157 invalid corpus 真实 pipeline E2E**
+
+需要证明全部 157 targets 经过完整 V3 pipeline
+(Source → Annotation → Resolver → Compiler → Gate) 后全部 fail-closed。
+
+### 8.3 不是 Gate C 前置条件的项目
+
+- ~~preprocessing Annotation Contract enhancement~~ → 未来 Gate D/I-5 integration 项
+- ~~preprocessing declares region roles~~ → 未来可选 adapter 的 contract mapping
+
+### 8.4 关闭条件
+
+- [x] Legal address ≠ legal evidence 原则确认
+- [x] Structural consistency check 实现 (region map + span overlap)
+- [x] 49 EXPLANATION_REGION targets fail-closed 验证
+- [x] `_option_letters` limitation documented as latent weakness
+- [ ] V3 Source Evidence Binding Contract 明确化 (Address vs Evidence 边界)
+- [ ] 完整 157 targets 真实 pipeline E2E
+- [ ] Evidence Promotion path 的 contract 级防护
 
 ---
 
-## 七、测试证据
+## 九、测试证据
 
-### 7.1 测试文件
+### 9.1 测试文件
 
-- `tests/test_b2b5_d_projection_safety.py` — 13 tests (12 PASS + 1 documented limitation)
-- `tests/test_role_provenance.py` — 10 tests (10 PASS)
-- `tests/test_gate_c_invalid_binding.py` — 11 tests (11 PASS)
+- `tests/test_b2b5_d_projection_safety.py` — 13 tests (positive + negative + safety + corpus)
+- `tests/test_role_provenance.py` — 10 tests (structural consistency)
+- `tests/test_gate_c_invalid_binding.py` — 11 tests (resolver + grammar + integration)
+- `tests/test_gate_policy.py` — 四层判定全覆盖
 
-### 7.2 测试结果
+### 9.2 测试结果
 
 ```
 gate-related: 92 passed, 0 skipped
 full suite: 491 passed, 0 failed
 ```
 
-### 7.3 Contract 验证证据
+### 9.3 安全属性证据
 
-```python
-# Resolver produces region map
-run = resolver.resolve(payload)
-assert run.semantic_regions  # (SourceRegion(question,...), SourceRegion(answer,...))
+- 0 search fallback
+- 0 LLM fallback
+- 0 source mutation
+- 157 targets 全部 fail-closed (grammar-None + consistency check)
 
-# Gate detects overlap
-overlap_region = SourceRegion("explanation", 0, 999, answer_span.line_refs)
-run_with_overlap = ResolvedRun(..., semantic_regions=run.semantic_regions + (overlap_region,))
-d = evaluate(root, ir, compiled, run_with_overlap)
-assert d["decision"] == "pending_review"
-assert "role provenance" in " ".join(d["reasons"])
+---
+
+## 十、后续路线
+
+```text
+1. 完成 V3 Source Evidence Binding Contract
+   (明确 Source Address → Evidence Claim → Validated Evidence 提升路径)
+        ↓
+2. 完整 157 targets V3 full E2E
+   (Source → Annotation → Resolver → Compiler → Gate)
+        ↓
+3. Gate C Closure
+        ↓
+4. B2-B5 Closure
+        ↓
+5. Gate D / Optional external-input Adapter
+   (preprocessing 作为可选上游, 其 role provenance 在 Adapter Contract 中映射)
 ```
 
+### 架构原则
+
+V3 Native Path 必须独立成立:
+
+```text
+PDF / DOCX / IMG
+       ↓
+V3 Native Input
+       ↓
+Source → Semantic Claim → Source Binding → Resolved Evidence → Gate → Admission
+```
+
+不依赖 preprocessing。
+
+未来 preprocessing 如果验证成熟, 再证明:
+
+```text
+preprocessing → Adapter → V3 Source/Evidence Contract
+```
+
+preprocessing 是可替换的上游实现, 不能反过来成为 V3 架构成立的条件。
+
 ---
 
-## 八、后续工作
+## 十一、状态总结
 
-1. **Annotation Contract Enhancement**: preprocessing 在 manifest 中声明 region role,
-   使 answer entry 不指向 explanation content (根本修复 Grammar limitation)
-2. **完整 157 targets E2E**: 用真实 pipeline 跑通全部 Gate C corpus
-3. **Gate C Closure**: 所有条件满足后关闭 Gate C
-4. **B2-B5 Closure**: Gate C 关闭后关闭 B2-B5
-5. **Gate D (Adapter Boundary)**: 下一个 Gate
+| 项目 | 状态 |
+|------|------|
+| B2-B5-D 实验 | **COMPLETED** — 有效实验, 有效安全发现 |
+| `Legal address ≠ legal evidence` | **确立为 V3 架构原则** |
+| `_option_letters` weakness | **Latent finding** — 非当前 exploit, 但是通用缺陷 |
+| Structural consistency check | **IMPLEMENTED** — defense-in-depth, 非 semantic authority |
+| Gate C | **BLOCKED** — V3 Evidence Contract + 157 E2E 未闭环 |
+| preprocessing 依赖 | **移除** — 不是 V3 Gate C 前置条件 |
 
 ---
 
-**报告生成**: AI Tutor V3 Team
-**审核状态**: Semantic Role Provenance Contract implemented, Gate C BLOCKED (Source Binding Contract incomplete)
-**下一步**: Annotation Contract enhancement + 完整 157 targets E2E
+**报告版本**: 3.0.0 (二次架构审查修正)
+**核心修正**: V3 Source Evidence Binding Contract 是 V3 自身职责, 不依赖 preprocessing
+**下一步**: V3 Evidence Contract 明确化 → 157 E2E → Gate C Closure

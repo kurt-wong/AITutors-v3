@@ -282,11 +282,13 @@ class SourceResolver:
         )
 
     def _compute_regions(self) -> tuple[SourceRegion, ...]:
-        """Semantic Role Provenance Contract：表头 grammar 划分的区域 map。
+        """Structural region map from deterministic header grammar (H-3).
 
-        确定性表头解析（H-3 grammar，非 NLP）产出 question/answer/explanation 三个
-        region。Gate 消费此 map 验证 answer span 不落入其他 role 的 region。
-        无 answer 表头 → 只有 question region（整个 source 是题目区）。
+        Produces question/answer/explanation structural regions. This is
+        **consistency evidence** for the Source Evidence Binding Contract,
+        NOT semantic truth. Gate uses it for span-overlap consistency checks.
+
+        No answer header -> only question region (entire source is question zone).
         """
         lines = self._idx.lines
         answer_hdr_seq: int | None = None
