@@ -760,6 +760,75 @@ Gate B2-B (option/answer): WAIT FOR MANIFEST CONTRACT UPDATE / STRUCTURAL EXPERI
 记录；然后用实验 harness 验证这些语义能否在真实 corpus 上稳定表达；
 只有实验闭环后，才决定是否形成 Doc 67 Errata 和生产实现。
 
+### Gate B2-A 实验结果与裁决（2026-09-11）
+
+**Gate B2-A = PASS / TEST-EVIDENCED（结论范围仅限 stem）。**
+
+#### 实验设计
+
+- 79 cases / 2750 B1-clean targets（stem 1870 + explanation 880）
+- 同一 SourceLineView、同一 semantic projection、同一批 target
+- Legacy：semantic-only annotation → SourceResolver（search）
+- Path B：manifest line_refs → 直接验证（validation）
+
+#### 核心结果（stem）
+
+| 指标 | Legacy Resolver | Path B |
+|------|----------------|--------|
+| stem resolution/validation | 829/1870 (**44.3%**) | 1820/1870 (**97.3%**) |
+
+Agreement Matrix（stem）：
+
+| | Path B validated | Path B not validated |
+|---|---|---|
+| **Legacy resolved** | 814 | 15 |
+| **Legacy not resolved** | **1857** | 64 |
+
+**1857 个 target 是 Legacy 找不到、Path B 能验证的。** Legacy resolved / Path B not validated 仅 15 个（0.8%）。
+
+#### 解释
+
+Path B 的优势是**把"搜索问题"变成"验证问题"**：
+- Legacy：给语义线索，Resolver 自己全文搜索 → 44.3%
+- Path B：给 Source Binding Claim，Resolver 验证位置 → 97.3%
+
+这正是 Doc 67 想验证的架构变化：Resolver 从"搜索 Source"模式调整为"验证 Source Binding Claim"模式。
+
+#### Explanation 不纳入对比
+
+Legacy Resolver 当前没有 explanation search/binding 能力，其 0% 是
+**capability absence**，不是 comparative failure。Explanation 作为
+Capability Evidence 记录，不作为 Strategy Comparison 指标。
+
+#### 结论边界（正式声明）
+
+- ✅ 在可信 Source Binding Claim 存在时，将 Resolver 从全文搜索转变为位置验证
+  可以显著提高 stem binding 的可用性
+- ❌ 不证明 Path B 的语义正确率为 97.3%（需独立抽样验证）
+- ❌ 不证明 Path B 在所有 Question Roles 上优于 Legacy
+
+#### 关闭 B2-A 前需完成的三项补强
+
+1. **审计 15 个 Legacy-success / Path-B-failure cases**——逐个分类
+   （manifest 错误 / validator 误杀 / binding conflict / 粒度差异）
+2. **独立抽样验证 Path B 成功结果**——从 1820 个成功 stem 随机抽 100-200 个，
+   独立确认 line_ref 指向的确实是该题题干
+3. **正式报告中把 explanation 从 comparative metric 中排除**
+
+### Gate B 当前状态（B2-A 后更新）
+
+```text
+Gate A: PASS / TEST-EVIDENCED
+Gate B1: CONDITIONAL PASS — Region Binding Contract 基本成立
+Gate B2-A: PASS / TEST-EVIDENCED（stem only；待三项补强后正式关闭）
+  Stem: Legacy 44.3% vs Path B 97.3%
+  Explanation: Capability Evidence（不纳入对比）
+Gate B2-B: NEXT — 结构化内容定位（option/answer table/fill-in/HTML table）
+Gate C: OPEN
+Gate D: OPEN
+Errata: BLOCKED BY Gate B/C
+```
+
 ### 禁止事项（正式声明）
 
 **禁止为了提升 B1 数字而继续放宽 validator。** 正确方式是：
@@ -770,19 +839,16 @@ Frozen contract → validator → 发现真实 mismatch → 判断是 validator 
 
 ### 下一步（按序执行）
 
-1. **Gate B2-A**：stem + explanation 的 Legacy vs Path B 同口径对比（READY）
-2. **B1-B Evidence Binding 实验**：验证 Q1-Q4 语义能否在真实 corpus 上稳定表达
-3. **Gate B2-B**：option + answer（manifest contract 更新后）
-4. **Gate C**：Safety Invariant Preservation 验证
-5. **OQ-3 → OQ-2**：物化层 / Standalone+Material 裁决
-6. **Errata Decision**（Gate B/C/D 通过后）
+1. **B2-A 三项补强**：审计 15 个 Legacy-only case + 独立抽样验证 + 排除 explanation
+2. **Gate B2-B**：结构化内容定位（option/answer table/fill-in/HTML table）
+3. **Gate C**：Safety Invariant Preservation 验证
+4. **OQ-3 → OQ-2**：物化层 / Standalone+Material 裁决
+5. **Errata Decision**（Gate B/C/D 通过后）
 
 ### 重要措辞
 
-> Path B feasibility 仍成立（技术上可运行），但 Path B correctness 尚未被证明。
-> Legacy Resolver 的失败模式具有重复性（~18% 两次独立实验一致），
-> 这证明"Legacy Search 在真实 OCR 数据上存在系统性困难"（TEST-EVIDENCED），
-> 不能单独证明"LLM line_refs + Validator 一定是正确的最终架构"。
-> Stem/explanation 已达 97.3%/96.7% role validity，manifest binding claim 基本可用。
-> Contract Adjudication 已完成：Source Region 与 Question Evidence 必须分层。
-> Region Binding 基本成立；Structured Evidence Binding 需要 manifest schema 增强。
+> Path B 的优势是把"搜索问题"变成"验证问题"——这正是 Doc 67 的核心架构变化。
+> Stem 上 Legacy 44.3% vs Path B 97.3%，1857 个 Legacy 失败被 Path B 成功处理。
+> 这证明"从搜索改成验证"方向正确，但不证明 Path B 语义正确率 97.3%。
+> Explanation 是 capability absence，不是 comparative failure。
+> 下一阶段 B2-B 解决"一个区域里面还有更细结构"的定位问题。

@@ -1764,3 +1764,56 @@ Gate B2-B (option + answer): WAIT FOR MANIFEST CONTRACT UPDATE
 4. **Gate C**：Safety Invariant Preservation 验证
 5. **OQ-3 → OQ-2**：物化层 / Standalone+Material 裁决
 6. **Errata Decision**（Gate B/C/D 通过后）
+
+## 状态快照：Gate B2-A 裁决（2026-09-11）
+
+### Gate B2-A：PASS / TEST-EVIDENCED（stem only）
+
+**核心证明：把"搜索问题"变成"验证问题"——Doc 67 架构变化方向正确。**
+
+### 实验结果（79 cases / 2750 B1-clean targets）
+
+| 指标 | Legacy Resolver | Path B |
+|------|----------------|--------|
+| stem | 829/1870 (**44.3%**) | 1820/1870 (**97.3%**) |
+
+Agreement Matrix（stem）：
+
+| | Path B validated | Path B not validated |
+|---|---|---|
+| **Legacy resolved** | 814 | 15 |
+| **Legacy not resolved** | **1857** | 64 |
+
+### 结论边界
+
+- ✅ 在可信 Source Binding Claim 存在时，将 Resolver 从全文搜索转变为位置验证可以显著提高 stem binding 的可用性
+- ❌ 不证明 Path B 的语义正确率为 97.3%（需独立抽样验证）
+- ❌ 不证明 Path B 在所有 Question Roles 上优于 Legacy
+
+### Explanation 不纳入对比
+
+Legacy Resolver 没有 explanation search/binding 能力，0% 是 capability absence，不是 comparative failure。
+
+### 关闭 B2-A 前三项补强
+
+1. 审计 15 个 Legacy-success / Path-B-failure cases
+2. 独立抽样验证 Path B 成功结果（1820 中抽 100-200）
+3. 正式报告排除 explanation
+
+### Gate 状态
+
+```text
+Gate B1: CONDITIONAL PASS
+Gate B2-A: PASS / TEST-EVIDENCED（stem only；待三项补强后正式关闭）
+Gate B2-B: NEXT — 结构化内容定位
+Gate C: OPEN
+Gate D: OPEN
+```
+
+### 下一步（按序执行）
+
+1. **B2-A 三项补强**：审计 15 个 Legacy-only case + 独立抽样验证 + 排除 explanation
+2. **Gate B2-B**：结构化内容定位（option/answer table/fill-in/HTML table）
+3. **Gate C**：Safety Invariant Preservation 验证
+4. **OQ-3 → OQ-2**：物化层 / Standalone+Material 裁决
+5. **Errata Decision**（Gate B/C/D 通过后）

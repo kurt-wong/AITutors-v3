@@ -1296,3 +1296,23 @@ Step 5 已于 commit `0917404` 落盘（含 Status/log/restart v1.10 收口）�
   Status.md 快照 + log.md 条目 + restart-prompt v1.37。
 - **下一步**：Gate B2-A → B1-B Evidence Binding 实验 → Gate B2-B →
   Gate C → OQ-3/OQ-2 → Errata Decision。
+
+### 2026-09-11（Gate B2-A 裁决：PASS / TEST-EVIDENCED — stem only）
+
+- **裁决**：Gate B2-A = PASS / TEST-EVIDENCED（结论范围仅限 stem）。
+- **实验结果**（79 cases / 2750 B1-clean targets）：
+  - Stem: Legacy 829/1870 (44.3%) vs Path B 1820/1870 (97.3%)
+  - Agreement: Both OK 814 / Legacy only 15 / Path B only 1857 / Neither 64
+  - Explanation: Legacy 0% 是 capability absence，不纳入对比
+- **核心证明**：把"搜索问题"变成"验证问题"——Doc 67 架构变化方向正确。
+  1857 个 Legacy 失败被 Path B 成功处理；Legacy-only 仅 15 个（0.8%）。
+- **结论边界**：不证明 Path B 语义正确率 97.3%（需独立抽样验证）；
+  不证明 Path B 在所有 Question Roles 上优于 Legacy。
+- **关闭 B2-A 前三项补强**：
+  1. 审计 15 个 Legacy-success / Path-B-failure cases
+  2. 独立抽样验证 Path B 成功结果（1820 中抽 100-200）
+  3. 正式报告排除 explanation
+- **产出**：69 号 §10 更新（B2-A 结果 + Agreement Matrix + 结论边界）+
+  Status.md 快照 + log.md 条目 + restart-prompt v1.38。
+- **下一步**：B2-A 三项补强 → Gate B2-B（结构化内容定位）→
+  Gate C → OQ-3/OQ-2 → Errata Decision。

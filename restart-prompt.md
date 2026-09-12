@@ -1,10 +1,10 @@
 # AI Tutor V3 — RESTART PROMPT
 
-Version: v1.37
-Status: **Contract Adjudication 完成** — Q1=A(options region) / Q2=B(per-question evidence) /
-Q3=B(single span+subspan) / Q4=B(cell/row)；
-统一原则：Source Region 与 Question Evidence 必须分层；
-Gate B2-A READY（stem+explanation）；下一步 = Gate B2-A
+Version: v1.38
+Status: **Gate B2-A PASS / TEST-EVIDENCED**（stem only）—
+Legacy 44.3% vs Path B 97.3%；1857 个 Legacy 失败被 Path B 成功处理；
+explanation 是 capability absence 不纳入对比；
+待三项补强后正式关闭 B2-A；下一步 = B2-A 补强 → Gate B2-B
 Date: 2026-09-11
 
 ## 0.0 当前结论（2026-09-11 Gate A 关闭）
@@ -49,18 +49,28 @@ Date: 2026-09-11
   - **统一原则：Source Region 与 Question Evidence 必须分层**
   - Region Binding 基本成立；Structured Evidence Binding 需 manifest schema 增强
   - **不修改生产 V3**——先实验验证语义能否在真实 corpus 上稳定表达
+- **Gate B2-A 结果（2026-09-11，79 cases / 2750 B1-clean targets）**：
+  - **Gate B2-A = PASS / TEST-EVIDENCED**（结论范围仅限 stem）
+  - Stem: Legacy 829/1870 (**44.3%**) vs Path B 1820/1870 (**97.3%**)
+  - Agreement: Both OK 814 / Legacy only 15 / Path B only **1857** / Neither 64
+  - **核心证明**：把"搜索问题"变成"验证问题"——Doc 67 的架构变化方向正确
+  - Explanation: 0% 是 capability absence，不是 comparative failure，不纳入对比
+  - **结论边界**：不证明 Path B 语义正确率 97.3%（需独立抽样验证）；
+    不证明 Path B 在所有 Question Roles 上优于 Legacy
 - **红线（不变）**：HTTP retry ≠ LLM retry ≠ fallback；先冻结 Spec 再改代码；
   Schema Source of Truth = 20_Document_Pipeline.md；Resolver 不猜；
   实验结果 ≠ 实施授权；提议修改 ≠ 违反 Frozen Spec。
 - **下一步（按序执行）**：
-  1. **Gate B2-A**：stem + explanation 的 Legacy vs Path B 同口径对比（READY）
-  2. **B1-B Evidence Binding 实验**：验证 Q1-Q4 语义能否在真实 corpus 上稳定表达
-  3. **Gate B2-B**：option + answer（manifest contract 更新后）
-  4. **Gate C**：Safety Invariant Preservation 验证
-  5. **OQ-3 → OQ-2**：物化层 / Standalone+Material 裁决
-  6. **Errata Decision**（Gate B/C/D 通过后）
-  7. **I-5-2 Adapter**（Gate D 约束：Contract Translator，非 Semantic Resolver）
-  8. **Path B Full Closure E2E**（含 Provenance Golden Test + Replay 验证）
+  1. **B2-A 三项补强**：
+     a. 审计 15 个 Legacy-success / Path-B-failure cases（逐个分类）
+     b. 独立抽样验证 Path B 成功结果（1820 个中抽 100-200 个）
+     c. 正式报告中把 explanation 从 comparative metric 中排除
+  2. **Gate B2-B**：结构化内容定位（option/answer table/fill-in/HTML table）
+  3. **Gate C**：Safety Invariant Preservation 验证
+  4. **OQ-3 → OQ-2**：物化层 / Standalone+Material 裁决
+  5. **Errata Decision**（Gate B/C/D 通过后）
+  6. **I-5-2 Adapter**（Gate D 约束：Contract Translator，非 Semantic Resolver）
+  7. **Path B Full Closure E2E**（含 Provenance Golden Test + Replay 验证）
 - 重启后第一任务：读本文件 → Status.md 尾 → log.md 尾 → bugs.md →
   按上述 Step 顺序执行。
 
