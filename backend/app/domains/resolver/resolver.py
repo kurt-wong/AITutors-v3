@@ -34,6 +34,7 @@ from app.domains.resolver.span import (
     ResolvedSpan,
     SourceFigureView,
     SourceLineView,
+    SourceRegion,
     UnresolvedReference,
 )
 
@@ -277,7 +278,54 @@ class SourceResolver:
             unresolved_references=tuple(out.unresolved),
             resolved_relations=tuple(r for r in rels if r.status == "resolved"),
             unresolved_relations=tuple(r for r in rels if r.status != "resolved"),
+            semantic_regions=self._compute_regions(),
         )
+
+    def _compute_regions(self) -> tuple[SourceRegion, ...]:
+        """Semantic Role Provenance Contract：表头 grammar 划分的区域 map。
+
+        确定性表头解析（H-3 grammar，非 NLP）产出 question/answer/explanation 三个
+        region。Gate 消费此 map 验证 answer span 不落入其他 role 的 region。
+        无 answer 表头 → 只有 question region（整个 source 是题目区）。
+        """
+        lines = self._idx.lines
+        answer_hdr_seq: int | None = None
+        explanation_hdr_seq: int | None = None
+        for l in lines:
+            norm = normalize_text(l.text)
+            if answer_hdr_seq is None and is_answer_header(norm):
+                answer_hdr_seq = l.seq
+            if explanation_hdr_seq is None and is_explanation_header(norm):
+                explanation_hdr_seq = l.seq
+            if answer_hdr_seq is not None and explanation_hdr_seq is not None:
+                break
+
+        regions: list[SourceRegion] = []
+
+        def _refs_between(lo: int, hi: int) -> tuple[str, ...]:
+            return tuple(l.line_ref for l in lines if lo <= l.seq < hi)
+
+        # question region: [first_seq, answer_hdr or explanation_hdr or +inf)
+        q_end = answer_hdr_seq or explanation_hdr_seq or (lines[-1].seq + 1 if lines else 0)
+        q_refs = _refs_between(lines[0].seq if lines else 0, q_end)
+        if q_refs:
+            regions.append(SourceRegion("question", lines[0].seq if lines else 0, q_end, q_refs))
+
+        # answer region: (answer_hdr, explanation_hdr or +inf)
+        if answer_hdr_seq is not None:
+            a_end = explanation_hdr_seq or (lines[-1].seq + 1)
+            a_refs = _refs_between(answer_hdr_seq + 1, a_end)
+            if a_refs:
+                regions.append(SourceRegion("answer", answer_hdr_seq + 1, a_end, a_refs))
+
+        # explanation region: (explanation_hdr, +inf)
+        if explanation_hdr_seq is not None:
+            e_end = lines[-1].seq + 1
+            e_refs = _refs_between(explanation_hdr_seq + 1, e_end)
+            if e_refs:
+                regions.append(SourceRegion("explanation", explanation_hdr_seq + 1, e_end, e_refs))
+
+        return tuple(regions)
 
     # ------------------------------------------------------------------ 调度
     def _resolve_unit(self, out: _Out, unit_id: str, targets) -> None:

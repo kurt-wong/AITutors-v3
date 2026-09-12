@@ -184,8 +184,39 @@ def evaluate(
     if len(set(all_consumed)) != len(all_consumed):
         provenance_reasons.append("duplicate content span consumed across candidate leaves")
 
+    # Semantic Role Provenance Contract（BUG-V3-ROLE-PROVENANCE）：
+    # answer span 不得落入 explanation/question region。Resolver 已用确定性表头
+    # grammar 产出 semantic_regions map；Gate 只做 span 集合交运算（contract
+    # self-consistency，非 NLP 语义理解）。answer∩explanation≠∅ → 降级 auto
+    # （pending_review），非 terminal rejected——证据可能仍可人工修复。
+    role_provenance_violations: list[str] = []
+    if resolved_run.semantic_regions:
+        region_by_role: dict[str, set[str]] = {}
+        for reg in resolved_run.semantic_regions:
+            region_by_role.setdefault(reg.role, set()).update(reg.line_refs)
+        for leaf in leaves:
+            if leaf.answer is None:
+                continue
+            ans_span = resolved.get(leaf.answer.span_id)
+            if ans_span is None:
+                continue
+            ans_lines = set(ans_span.line_refs)
+            for bad_role in ("explanation", "question"):
+                bad_lines = region_by_role.get(bad_role, set())
+                overlap = ans_lines & bad_lines
+                if overlap:
+                    auto_allowed = False
+                    violation = (
+                        f"leaf {leaf.unit_id!r} answer span {leaf.answer.span_id!r} "
+                        f"overlaps {bad_role} region at lines {sorted(overlap)[:5]} "
+                        f"(role provenance violation)"
+                    )
+                    provenance_reasons.append(violation)
+                    role_provenance_violations.append(violation)
+
     # provenance 层 fail 仅当证据矛盾（text_hash mismatch）；resolution 非 exact/normalized
     # 只降级 auto（pending），不构成 terminal 矛盾（20 §8.2 contextual 可人工）。
+    # role provenance violation 同样只降级 auto（pending_review）。
     hash_broken = any("text_hash mismatch" in r for r in provenance_reasons)
     provenance = _layer(
         "pass" if not hash_broken else "fail",
@@ -225,6 +256,9 @@ def evaluate(
         auto_blockers: list[str] = []
         if not auto_allowed:
             auto_blockers.append("not byte-proven (resolution not in {exact, normalized})")
+        # Role-provenance violations surface as explicit auto_blockers.
+        for v in role_provenance_violations:
+            auto_blockers.append(v)
         for leaf in leaves:
             g = _leaf_grammar(leaf)
             if g is not None:

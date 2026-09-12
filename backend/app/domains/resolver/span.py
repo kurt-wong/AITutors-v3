@@ -35,6 +35,26 @@ class SourceFigureView:
 
 
 @dataclass(frozen=True)
+class SourceRegion:
+    """结构区域 provenance（Semantic Role Provenance Contract）。
+
+    Resolver 用表头 grammar（H-3）划分的语义区域。role 值域：
+    - question: 题目区（首个 answer/explanation 表头之前的行）
+    - answer: 答案区（answer 表头之后、explanation 表头之前的行）
+    - explanation: 详解区（explanation 表头之后的行）
+
+    Gate 消费此 map 验证 contract 自洽性：answer span 不得与 explanation/question
+    region 重叠。这不是语义理解——region 划分由 Resolver 的确定性表头解析产出，
+    Gate 只做 span 集合交运算（contract self-consistency，非 NLP）。
+    """
+
+    role: str
+    start_seq: int
+    end_seq: int  # exclusive
+    line_refs: tuple[str, ...]
+
+
+@dataclass(frozen=True)
 class ResolvedSpan:
     """20 §5.5 Resolved Span。只有 status ∈ RESOLVED_STATUSES 才实例化。"""
 
@@ -91,3 +111,6 @@ class ResolvedRun:
     unresolved_references: tuple[UnresolvedReference, ...] = field(default_factory=tuple)
     resolved_relations: tuple[ResolvedRelation, ...] = field(default_factory=tuple)
     unresolved_relations: tuple[ResolvedRelation, ...] = field(default_factory=tuple)
+    # Semantic Role Provenance Contract：Resolver 表头解析产出的区域 map。
+    # Gate 用它验证 answer span 不落入 explanation/question region（span 交运算）。
+    semantic_regions: tuple["SourceRegion", ...] = field(default_factory=tuple)
