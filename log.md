@@ -1228,3 +1228,27 @@ Step 5 已于 commit `0917404` 落盘（含 Status/log/restart v1.10 收口）�
 - **产出**：69 号 §10 Gate B 裁决 + Status.md 快照 + log.md 条目 + restart-prompt v1.34。
 - **下一步**：Gate B1/B2 实验 Harness 重设计 → Gate C 安全不变量验证 → OQ-3/OQ-2 →
   Errata Decision → I-5-2 Adapter → Path B Full Closure E2E。
+
+### 2026-09-11（Gate B1 裁决：FAIL / Corpus Not Ready）
+
+- **裁决**：Gate B1 = FAIL / Corpus Not Ready。Gate B2 formal = BLOCKED。
+- **实验结果**（67 cases / 8367 role targets）：
+  - Range Validity: PASS（100%）
+  - Content Validity: FAIL（74.9%）— 2104 targets 指向空行
+  - Role Validity: FAIL — severe（12.6%）— 5212 targets role_mismatch
+  - Structural Validity: NOT YET EVALUATED
+- **根因**：manifest 生成管线数据质量——reslice pipeline 插入区域标记
+  （"题干区开始"/"答案区结束"等），line_refs 大量指向标记而非实际内容；
+  options 按行拆分产生假 target；answer_lines 指向答案表标记或题目编号。
+- **核心区分**：不能推出"Path B 架构有问题"，只能推出"当前 manifest 管线
+  无法提供满足 Path B Binding Contract 的输入"。反而验证了 Doc 67
+  "Source Pointer ≠ Source Content"。
+- **Binding Integrity 五层分层更新**：Range → Content → Role → Structural → Semantic。
+- **修复方向**：修 manifest generator，不修 manifest 本身（避免循环证明）。
+- **B2-preflight**：允许从 clean subset 做诊断，但不得写正式 Strategy Comparison 结论。
+- **Role classifier 对抗性验证**：需要确认 12.6% 是 manifest 错误，非 validator 过度严格。
+- **Legacy Resolver weakness = TEST-EVIDENCED**（~18% 两次独立实验一致）。
+- **产出**：69 号 §10 更新（Gate B1 FAIL + 状态矩阵 + 下一步）+
+  Status.md 快照 + log.md 条目 + restart-prompt v1.35。
+- **下一步**：审计修复 reslice/manifest generator → Role classifier 对抗性验证 →
+  重跑 B1 → 达到门槛后进入 Gate B2 → Gate C → OQ-3/OQ-2 → Errata Decision。

@@ -522,21 +522,117 @@ Manifest 可以提供 Expected Structure（expected role + expected line_ref）�
 4. 重跑完整 corpus（67 cases / 1885 units），非抽样
 5. 产出 Legacy vs Path B 同口径 Role-Level Binding 成功率
 
-### Gate B 当前状态
+### Gate B1 实验结果（2026-09-11，67 cases / 8367 role targets）
+
+| 验证层 | 通过数 | 通过率 | 裁决 |
+|--------|--------|--------|------|
+| Level 1 — Range Validity | 8367 | 100.0% | PASS |
+| Level 2 — Content Validity | 6263 | 74.9% | **FAIL** |
+| Level 3 — Role Validity | 1051 | 12.6% | **FAIL — severe** |
+| Level 4 — Structural Validity | — | 未评估 | INSUFFICIENT |
+| Level 5 — Semantic Validity | — | 未评估 | UNPROVEN |
+
+按 Role 分解：
+
+| Role | Total | Range | Content | Role |
+|------|-------|-------|---------|------|
+| stem | 1556 | 1556 (100%) | 1333 (85.7%) | 205 (13.2%) |
+| option | 4328 | 4328 (100%) | 2774 (64.1%) | 701 (16.2%) |
+| answer | 1874 | 1874 (100%) | 1559 (83.2%) | 133 (7.1%) |
+| explanation | 609 | 609 (100%) | 597 (98.0%) | 12 (2.0%) |
+
+失败原因：role_mismatch 5212（71.2%）/ content_empty 2104（28.8%）。
+
+### Gate B1 裁决（2026-09-11）
+
+**Gate B1 = FAIL / Corpus Not Ready。**
+
+瓶颈不在 Path B 架构，而在 **manifest 生成管线的数据质量**：
+1. line_refs 大量指向 reslice pipeline 插入的区域标记（"题干区开始"/"答案区结束"等），非实际内容
+2. options 按行拆分产生大量假 target（options_lines 范围内包含空行和区域标记）
+3. answer_lines 大量指向答案表区域标记或题目编号
+
+核心区分：
+- **不能推出**："Path B 架构有问题"
+- **只能推出**："当前 manifest 生成管线无法提供满足 Path B Binding Contract 的输入"
+
+这反而验证了 Doc 67 的设计思想：**Source Pointer ≠ Source Content。**
+旧实验把 Pointer validity 当成 Reference integrity；B1 拆开后问题立刻暴露。
+
+### 循环证明风险（正式声明）
+
+Manifest 可以提供 Expected Structure（expected role + expected line_ref），但：
+- **Expected Structure ≠ Path B Correctness**
+- Path B 使用 manifest 的 line_ref 本身就是被测试的输入
+- 不能形成"Manifest 说 line 155 → Path B 用 line 155 → Path B 验证 line 155 → 因此 Path B 正确"的循环
+
+语义正确性（Level 5）必须有独立证据。
+
+**修复方向：修 manifest generator，不修 manifest 本身**——人工修改 manifest 后再用它证明 Path B 正确是闭环证明。
+
+### Binding Integrity 五层分层（正式确认，更新）
+
+```text
+Level 1 — Range Validity       "行号在范围内"
+Level 2 — Content Validity     "resolved_text 非空"
+Level 3 — Role Validity        "内容结构匹配声明 role"
+Level 4 — Structural Validity  "Question Structure 正确（option 顺序/边界/数量/多行/图片）"
+Level 5 — Semantic Validity    "内容语义正确（需独立证据）"
+```
+
+### Gate B 当前状态（2026-09-11 更新）
 
 ```text
 Gate A: PASS / TEST-EVIDENCED
-Gate B: CONDITIONAL PASS / NOT CLOSED
-  Gate B1 (Binding Integrity): OPEN — 需要重新设计验证器
-  Gate B2 (Strategy Comparison): BLOCKED BY B1
+Gate B1: FAIL / Corpus Not Ready
+  Range Validity: PASS (100%)
+  Content Validity: FAIL (74.9%)
+  Role Validity: FAIL — severe (12.6%)
+  Structural Validity: NOT YET EVALUATED
+Gate B2 formal: BLOCKED
+B2 Preflight: 允许（仅 clean subset，仅作诊断，不写正式结论）
 Gate C: OPEN
 Gate D: OPEN
 Errata: BLOCKED BY Gate B/C
 ```
 
+### Phase I-5 状态矩阵（2026-09-11）
+
+| 项目 | 当前状态 |
+|------|---------|
+| Doc 67 B5-1 (line_refs = Source Binding Claim) | ACCEPTED |
+| Doc 67 B5-2 (Authority 转移) | ACCEPTED |
+| Doc 67 B5-3 (Identity semantics) | CLOSED / TEST-EVIDENCED |
+| Doc 67 B5-4 (Resolver 定位) | ACCEPTED |
+| Gate A (Identity Closure) | PASS / TEST-EVIDENCED |
+| Gate B1 Range Validity | PASS |
+| Gate B1 Content Validity | FAIL |
+| Gate B1 Role Validity | FAIL — severe |
+| Gate B1 Structural Validity | NOT YET EVALUATED / INSUFFICIENT |
+| Gate B1 overall | **FAIL — Corpus Not Ready** |
+| Gate B2 formal | BLOCKED |
+| B2 Preflight | 允许进行，仅作诊断 |
+| Legacy Resolver weakness | TEST-EVIDENCED |
+| Path B technical operability | TEST-EVIDENCED |
+| Path B correctness | NOT PROVEN |
+| Manifest generator quality | FAIL |
+| Production code change | 暂缓 |
+
+### 下一步（三件事，按序执行）
+
+1. **审计并修复 reslice/manifest generator**：尤其区域标记、空行、answer_lines、options_lines
+2. **重新生成完整 67 cases / 1885 units manifest，并重新跑 B1**
+3. **只有当 B1 达到预先定义的 corpus-readiness 门槛后，才进入正式 B2**
+
+与此同时：从当前 corpus 抽取独立人工核验的 clean subset 做 B2-preflight，继续验证 Legacy Resolver 的系统性弱点。
+
+**Role classifier 需要对抗性验证**：确认 12.6% 是 manifest 错误，不是 validator 过度严格。需要检查多行 stem、带图片 stem、数学公式、化学式、表格、answer 只有单字母、explanation 格式多样等边界情况。
+
 ### 重要措辞
 
 > Path B feasibility 仍成立（技术上可运行），但 Path B correctness 尚未被证明。
-> Legacy Resolver 的失败模式具有一定重复性（~18% 两次独立实验一致），
-> 但这只能证明"Legacy Search 在真实 OCR 数据上存在系统性困难"，
+> Legacy Resolver 的失败模式具有重复性（~18% 两次独立实验一致），
+> 这证明"Legacy Search 在真实 OCR 数据上存在系统性困难"（TEST-EVIDENCED），
 > 不能单独证明"LLM line_refs + Validator 一定是正确的最终架构"。
+> 真正需要证明的是：在 Source 事实不变、target 定义一致、binding claim 独立可信的条件下，
+> Path B 是否显著优于 Legacy Resolver。

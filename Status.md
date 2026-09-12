@@ -1635,3 +1635,69 @@ Errata: BLOCKED BY Gate B/C
 5. **Errata Decision**（Gate B1/B2/C/D 通过后）
 6. **I-5-2 Adapter**（Gate D 约束）
 7. **Path B Full Closure E2E**
+
+## 状态快照：Gate B1 裁决（2026-09-11）
+
+### Gate B1：FAIL / Corpus Not Ready
+
+**瓶颈不在 Path B 架构，而在 manifest 生成管线的数据质量。**
+
+### 实验结果（67 cases / 8367 role targets）
+
+| 验证层 | 通过数 | 通过率 | 裁决 |
+|--------|--------|--------|------|
+| Level 1 — Range Validity | 8367 | 100.0% | PASS |
+| Level 2 — Content Validity | 6263 | 74.9% | **FAIL** |
+| Level 3 — Role Validity | 1051 | 12.6% | **FAIL — severe** |
+| Level 4 — Structural Validity | — | 未评估 | INSUFFICIENT |
+| Level 5 — Semantic Validity | — | 未评估 | UNPROVEN |
+
+### 按 Role 分解
+
+| Role | Total | Range | Content | Role |
+|------|-------|-------|---------|------|
+| stem | 1556 | 1556 (100%) | 1333 (85.7%) | 205 (13.2%) |
+| option | 4328 | 4328 (100%) | 2774 (64.1%) | 701 (16.2%) |
+| answer | 1874 | 1874 (100%) | 1559 (83.2%) | 133 (7.1%) |
+| explanation | 609 | 609 (100%) | 597 (98.0%) | 12 (2.0%) |
+
+失败原因：role_mismatch 5212（71.2%）/ content_empty 2104（28.8%）。
+
+### 根因
+
+reslice pipeline 插入区域标记（"题干区开始"/"答案区结束"等），
+line_refs 大量指向标记而非实际内容；options 按行拆分产生假 target；
+answer_lines 指向答案表标记或题目编号。
+
+**核心区分**：不能推出"Path B 架构有问题"，只能推出"当前 manifest 管线
+无法提供满足 Path B Binding Contract 的输入"。
+
+### Phase I-5 状态矩阵
+
+| 项目 | 当前状态 |
+|------|---------|
+| Gate A (Identity Closure) | PASS / TEST-EVIDENCED |
+| Gate B1 Range Validity | PASS |
+| Gate B1 Content Validity | FAIL |
+| Gate B1 Role Validity | FAIL — severe |
+| Gate B1 Structural Validity | NOT YET EVALUATED |
+| Gate B1 overall | **FAIL — Corpus Not Ready** |
+| Gate B2 formal | BLOCKED |
+| B2 Preflight | 允许（仅 clean subset，仅作诊断） |
+| Legacy Resolver weakness | TEST-EVIDENCED |
+| Path B technical operability | TEST-EVIDENCED |
+| Path B correctness | NOT PROVEN |
+| Manifest generator quality | FAIL |
+| Production code change | 暂缓 |
+
+### 下一步（按序执行）
+
+1. **审计并修复 reslice/manifest generator**：区域标记、空行、answer_lines、options_lines
+2. **Role classifier 对抗性验证**：确认 12.6% 是 manifest 错误，非 validator 过度严格
+3. **重新生成完整 67 cases manifest，重跑 B1**
+4. **B1 达到 corpus-readiness 门槛后，进入正式 Gate B2**
+5. **Gate C**：Safety Invariant Preservation 验证
+6. **OQ-3 → OQ-2**：物化层 / Standalone+Material 裁决
+7. **Errata Decision**（Gate B1/B2/C/D 通过后）
+8. **I-5-2 Adapter**（Gate D 约束）
+9. **Path B Full Closure E2E**

@@ -1,9 +1,9 @@
 # AI Tutor V3 — RESTART PROMPT
 
-Version: v1.34
-Status: **Gate B CONDITIONAL PASS** — "18% vs 100%" 结论撤销；
-Gate B 拆分为 B1（Binding Integrity）+ B2（Strategy Comparison）；
-下一步 = Gate B1/B2 实验 Harness 重设计 → Gate C
+Version: v1.35
+Status: **Gate B1 FAIL / Corpus Not Ready** — 瓶颈是 manifest 生成管线数据质量，
+非 Path B 架构；Gate B2 formal BLOCKED；B2-preflight 允许（仅诊断）；
+下一步 = 审计修复 reslice/manifest generator → 重跑 B1
 Date: 2026-09-11
 
 ## 0.0 当前结论（2026-09-11 Gate A 关闭）
@@ -31,26 +31,30 @@ Date: 2026-09-11
   - 67 Contract Change: **CONDITIONALLY ACCEPTED**（Gate A PASS；Gate B CONDITIONAL；Errata BLOCKED BY Gate B/C）
   - OQ-1: **CLOSED**；OQ-2/OQ-3: **OPEN**
   - Full Production Pipeline: **NOT YET CLOSED**
-- **Gate B 实验结果（2026-09-11）**：
-  - Corpus: 67 cases / 1885 units / 10 学科（80 manifest 中 67 mapping-consistent）
-  - Legacy Resolver: ~18% resolution rate（与 Phase I-4 17.6% 一致）
-  - Path B: 100% Range-Valid Rate（**仅行号范围有效，非内容正确**）
-  - **"18% vs 100%" 结论已撤销**——两者度量不同事物（搜索成功率 vs range 合法率）
-  - **P0 发现**：25.9% Path B spans 指向空行；12.2% answer_lines 指向选项行
-  - **Binding Integrity 分层正式确认**：Range → Content → Role → Semantic
-  - **循环证明风险已声明**：Manifest 不能同时作为 Expected Truth 和 Path B Evidence
+- **Gate B1 实验结果（2026-09-11，67 cases / 8367 role targets）**：
+  - Range Validity: **PASS**（100%）— 所有行号在范围内
+  - Content Validity: **FAIL**（74.9%）— 25.1% 指向空行
+  - Role Validity: **FAIL — severe**（12.6%）— 大量指向区域标记/答案表/空行
+  - Structural Validity: **NOT YET EVALUATED**
+  - **Gate B1 = FAIL / Corpus Not Ready**
+  - **瓶颈**：manifest 生成管线数据质量（区域标记、空行、options 按行拆分、answer_lines 指向标记）
+  - **不是 Path B 架构问题**——反而验证了 Doc 67 "Source Pointer ≠ Source Content"
+  - **Gate B2 formal = BLOCKED**；B2-preflight 允许（仅 clean subset，仅作诊断）
+  - **Legacy Resolver weakness = TEST-EVIDENCED**（~18% 两次独立实验一致）
+  - **修复方向**：修 manifest generator，不修 manifest 本身（避免循环证明）
 - **红线（不变）**：HTTP retry ≠ LLM retry ≠ fallback；先冻结 Spec 再改代码；
   Schema Source of Truth = 20_Document_Pipeline.md；Resolver 不猜；
   实验结果 ≠ 实施授权；提议修改 ≠ 违反 Frozen Spec。
 - **下一步（按序执行）**：
-  1. **Gate B1**：Binding Integrity 重设计——统一 Content Role Target `(unit_id, role)`，
-     增加 content_valid / role_valid 检查，重跑完整 corpus
-  2. **Gate B2**：Strategy Comparison——Legacy vs Path B 同口径 Role-Level Binding 成功率
-  3. **Gate C**：Safety Invariant Preservation 验证
-  4. **OQ-3 → OQ-2**：物化层 / Standalone+Material 裁决
-  5. **Errata Decision**（Gate B1/B2/C/D 通过后）
-  6. **I-5-2 Adapter**（Gate D 约束：Contract Translator，非 Semantic Resolver）
-  7. **Path B Full Closure E2E**（含 Provenance Golden Test + Replay 验证）
+  1. **审计并修复 reslice/manifest generator**：区域标记、空行、answer_lines、options_lines
+  2. **Role classifier 对抗性验证**：确认 12.6% 是 manifest 错误，非 validator 过度严格
+  3. **重新生成完整 67 cases manifest，重跑 B1**
+  4. **B1 达到 corpus-readiness 门槛后，进入正式 Gate B2**
+  5. **Gate C**：Safety Invariant Preservation 验证
+  6. **OQ-3 → OQ-2**：物化层 / Standalone+Material 裁决
+  7. **Errata Decision**（Gate B1/B2/C/D 通过后）
+  8. **I-5-2 Adapter**（Gate D 约束：Contract Translator，非 Semantic Resolver）
+  9. **Path B Full Closure E2E**（含 Provenance Golden Test + Replay 验证）
 - 重启后第一任务：读本文件 → Status.md 尾 → log.md 尾 → bugs.md →
   按上述 Step 顺序执行。
 
