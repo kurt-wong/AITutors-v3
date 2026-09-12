@@ -46,21 +46,44 @@ _IR_TO_CANDIDATE_UNIT_TYPE = {
 
 
 def _annotation_identity_projection(payload: object) -> object:
-    """Annotation payload → identity projection（BUG-V3-039 的唯一边界）。
+    """Annotation payload → identity projection（BUG-V3-039 + OQ-1 Gate A）。
 
     Frozen Spec（20 §4.5:172 confidence 示例 / §8.1:568、P1-6:768）：confidence 是
     诊断元数据（annotation_meta），不作 decision 触发，因此**不得进入** canonical
-    identity。否则：① 真实 LLM 输出 float confidence → BUG-V3-005 fail-fast；② 即便
-    规范化为 str，confidence 波动（0.98→0.97）也会改变 annotation_payload_hash →
-    compile LE identity 漂移 → artifact 复用/幂等被诊断噪声破坏。
+    identity。
 
-    职责严格限定：只剔除 semantic_units[] 各 unit 顶层的 `confidence` 一个键，其余
-    字段（含嵌套 content）原样保留。不删 unknown fields、不过滤其它 float——BUG-V3-005
-    float 红线对 semantic float 继续 fail-fast。不 mutate 入参（浅拷贝 unit 层）。
+    OQ-1 Gate A（70 号）：line_refs 是 Source Binding Claim（67 号），不是 Semantic
+    Identity 成分。不同 line_refs + same semantic → Semantic Identity 必须相同（A1）。
+    line_refs 完整保留在 payload 存储中，仅从 identity hash 输入中剔除。
+
+    职责严格限定：只剔除 semantic_units[] 各 unit 顶层的 `confidence` 和 `line_refs`
+    两个键，其余字段（含嵌套 content）原样保留。不删 unknown fields、不过滤其它
+    float——BUG-V3-005 float 红线对 semantic float 继续 fail-fast。不 mutate 入参
+    （浅拷贝 unit 层）。
 
     三处 hash 输入（`_compile_input_domain` / `_input_identity` 的 annotation_payload_hash
     与 resolver_input_hash）全部复用本函数，避免「hash A 排除了 confidence、hash B 忘了排」
     的再次漂移。
+    """
+    if not isinstance(payload, dict):
+        return payload
+    units = payload.get("semantic_units")
+    if not isinstance(units, list):
+        return payload
+    projected_units = [
+        ({k: v for k, v in u.items() if k not in ("confidence", "line_refs")}
+         if isinstance(u, dict) else u)
+        for u in units
+    ]
+    return {**payload, "semantic_units": projected_units}
+
+
+def _confidence_only_projection(payload: object) -> object:
+    """仅剔除 confidence（保留 line_refs）——供 resolver_input_hash 使用。
+
+    OQ-1 §6.2 规则 3：line_refs 进入 resolver_input_hash（Resolver 需要知道
+    LLM 声称的位置才能验证）。与 _annotation_identity_projection 的区别：
+    后者额外剔除 line_refs（Semantic Identity 不含 Source Binding Claim）。
     """
     if not isinstance(payload, dict):
         return payload
@@ -235,10 +258,13 @@ class GateService:
         }
 
     def _input_identity(self, sv: uuid.UUID, ann_id: uuid.UUID, ann, resolved_run) -> dict:
-        """input_identity（10 §9 / BUG-V3-022 M1）：对什么输入构建。
+        """input_identity（10 §9 / BUG-V3-022 M1 + OQ-1 Gate A）：对什么输入构建。
 
-        annotation_payload_hash / resolver_input_hash 的 payload 均经
-        _annotation_identity_projection（BUG-V3-039），与 _compile_input_domain 同一边界。
+        annotation_payload_hash 经 _annotation_identity_projection（剔除 confidence +
+        line_refs）——Semantic Identity，不含 Source Binding Claim。
+
+        resolver_input_hash 仅剔除 confidence（保留 line_refs）——Resolver 需要知道
+        LLM 声称的位置才能验证（OQ-1 §6.2 规则 3）。
         """
         resolved_summary = sorted(
             [
@@ -248,12 +274,14 @@ class GateService:
             key=lambda t: t[1],
         )
         projected = _annotation_identity_projection(ann.payload)
+        # resolver_input_hash 保留 line_refs：Resolver 验证需要知道声明位置
+        resolver_payload = _confidence_only_projection(ann.payload)
         return {
             "source_version_id": str(sv),
             "annotation_id": str(ann_id),
             "annotation_payload_hash": sha256_hex(projected),
             "resolver_input_hash": sha256_hex(
-                {"annotation_payload": projected, "source_version_id": str(sv)}
+                {"annotation_payload": resolver_payload, "source_version_id": str(sv)}
             ),
             "compiler_input_hash": sha256_hex({"resolved_spans": resolved_summary}),
         }

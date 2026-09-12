@@ -156,3 +156,63 @@ def test_nested_confidence_is_not_silently_projected() -> None:
     projected_top = _annotation_identity_projection(p_top)
     assert "confidence" not in projected_top["semantic_units"][0]  # top stripped
     assert projected_top["semantic_units"][0]["content"]["stem"]["confidence"] == "high"  # nested kept
+
+
+# ---- OQ-1 Gate A：line_refs 不进 Semantic Identity（A1/A2 直接证明） ----
+
+
+def test_line_refs_change_does_not_change_semantic_identity() -> None:
+    """A1：不同 line_refs + same semantic → annotation_payload_hash 不变。
+
+    line_refs = Source Binding Claim（67 号），不是 Semantic Identity 成分。
+    两次标注同一语义结构但 LLM 给出不同行号 → Semantic Identity 必须相同。
+    """
+    a = SimpleNamespace(payload=_payload(_unit(line_refs=["P1L002", "P1L003"])))
+    b = SimpleNamespace(payload=_payload(_unit(line_refs=["P1L050", "P1L051"])))
+    ann_id, unit_id = uuid.uuid4(), "Q1"
+    ha = GateService._compile_input_domain(ann_id, a, unit_id)["annotation_payload_hash"]
+    hb = GateService._compile_input_domain(ann_id, b, unit_id)["annotation_payload_hash"]
+    assert ha == hb, "line_refs 变化不应改变 Semantic Identity（annotation_payload_hash）"
+
+
+def test_line_refs_change_changes_resolver_input_hash() -> None:
+    """A1 补充：不同 line_refs → resolver_input_hash 不同（Source Binding Claim 层区分）。
+
+    Resolver 需要知道 LLM 声称的位置才能验证——line_refs 必须进入 resolver_input_hash。
+    """
+    sv = uuid.uuid4()
+    ann_id = uuid.uuid4()
+    a = SimpleNamespace(payload=_payload(_unit(line_refs=["P1L002", "P1L003"])))
+    b = SimpleNamespace(payload=_payload(_unit(line_refs=["P1L050", "P1L051"])))
+    ia = object.__new__(GateService)._input_identity(
+        sv, ann_id, a, SimpleNamespace(resolved_spans=[])
+    )
+    ib = object.__new__(GateService)._input_identity(
+        sv, ann_id, b, SimpleNamespace(resolved_spans=[])
+    )
+    assert ia["annotation_payload_hash"] == ib["annotation_payload_hash"], (
+        "Semantic Identity 不应因 line_refs 变化而分裂"
+    )
+    assert ia["resolver_input_hash"] != ib["resolver_input_hash"], (
+        "Source Binding Claim 不同 → resolver_input_hash 必须不同"
+    )
+
+
+def test_semantic_change_with_same_line_refs_still_changes_identity() -> None:
+    """A2：相同 line_refs + 不同 semantic → annotation_payload_hash 不同。
+
+    剥离 line_refs 不得降低 Semantic Payload 的区分能力。
+    """
+    a = SimpleNamespace(payload=_payload(_unit(line_refs=["P1L002"])))
+    b = SimpleNamespace(payload=_payload_stem_changed(line_refs=["P1L002"]))
+    ann_id = uuid.uuid4()
+    ha = GateService._compile_input_domain(ann_id, a, "Q1")["annotation_payload_hash"]
+    hb = GateService._compile_input_domain(ann_id, b, "Q1")["annotation_payload_hash"]
+    assert ha != hb, "语义变化必须改变 Semantic Identity，即使 line_refs 相同"
+
+
+def test_line_refs_absent_backward_compatible() -> None:
+    """旧 payload（无 line_refs）→ projection 恒等变换，hash 行为不变。"""
+    p = _payload(_unit())
+    assert _annotation_identity_projection(p) == p
+    assert sha256_hex(_annotation_identity_projection(p)) == sha256_hex(p)
