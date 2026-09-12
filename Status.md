@@ -1701,3 +1701,61 @@ answer_lines 指向答案表标记或题目编号。
 7. **Errata Decision**（Gate B1/B2/C/D 通过后）
 8. **I-5-2 Adapter**（Gate D 约束）
 9. **Path B Full Closure E2E**
+
+## 状态快照：Gate B1 修正（2026-09-11）
+
+### Gate B1：CONDITIONAL PASS（旧 FAIL 作废）
+
+**旧 FAIL 裁决基于两个实验缺陷，正式作废：**
+1. 读错源文件（切片展示视图 vs 原始源）
+2. validator 过度严格（转义点号、markdown 前缀、答案表格式未覆盖）
+
+### 修正后结果（79 cases / 10343 role targets）
+
+| 验证层 | 修正前 | 修正后 |
+|--------|--------|--------|
+| Range Validity | 100% | **100%** |
+| Content Validity | 74.9% | **79.0%** |
+| Role Validity | 12.6% | **63.3%** |
+
+### 按 Role 分解
+
+| Role | Total | Content | Role | Role Rate |
+|------|-------|---------|------|-----------|
+| stem | 1870 | 1870 (100%) | 1820 | **97.3%** |
+| explanation | 880 | 880 (100%) | 851 | **96.7%** |
+| option | 5311 | 3138 (59.1%) | 2753 | **51.8%** |
+| answer | 2282 | 2280 (99.9%) | 1120 | **49.1%** |
+
+### Contract Readiness
+
+| Contract | 状态 |
+|----------|------|
+| Stem binding | **PASS** (97.3%) |
+| Explanation binding | **PASS** (96.7%) |
+| Option region binding | **UNRESOLVED** — 需 schema 语义裁决 |
+| Answer region binding | **UNRESOLVED** — 需共享答案表 contract 裁决 |
+
+### Gate 状态
+
+```text
+Gate B1: CONDITIONAL PASS
+Gate B2-A (stem + explanation): 允许开始
+Gate B2-B (option + answer): BLOCKED BY contract 裁决
+```
+
+### 进入 B2 前必须裁决的 Contract 问题
+
+- Q1: `options_lines` 是 region 还是 per-option spans？
+- Q2: `answer_lines` 对共享答案表是 source region 还是 per-question evidence？
+- Q3: 语法填空是否允许多个非连续 spans？
+- Q4: HTML table answer 的绑定粒度？
+
+### 下一步（按序执行）
+
+1. **Contract Adjudication**：项目负责人裁决 Q1-Q4
+2. **Gate B2-A**：stem + explanation 的 Legacy vs Path B 同口径对比
+3. **Gate B2-B**：option + answer（contract 裁决后）
+4. **Gate C**：Safety Invariant Preservation 验证
+5. **OQ-3 → OQ-2**：物化层 / Standalone+Material 裁决
+6. **Errata Decision**（Gate B/C/D 通过后）

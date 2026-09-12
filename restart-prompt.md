@@ -1,9 +1,9 @@
 # AI Tutor V3 — RESTART PROMPT
 
-Version: v1.35
-Status: **Gate B1 FAIL / Corpus Not Ready** — 瓶颈是 manifest 生成管线数据质量，
-非 Path B 架构；Gate B2 formal BLOCKED；B2-preflight 允许（仅诊断）；
-下一步 = 审计修复 reslice/manifest generator → 重跑 B1
+Version: v1.36
+Status: **Gate B1 CONDITIONAL PASS** — stem 97.3% / explanation 96.7%；
+option/answer 需 contract 语义裁决；Gate B2-A 允许开始（stem+explanation）；
+下一步 = Contract Adjudication（Q1-Q4）→ Gate B2-A
 Date: 2026-09-11
 
 ## 0.0 当前结论（2026-09-11 Gate A 关闭）
@@ -31,30 +31,31 @@ Date: 2026-09-11
   - 67 Contract Change: **CONDITIONALLY ACCEPTED**（Gate A PASS；Gate B CONDITIONAL；Errata BLOCKED BY Gate B/C）
   - OQ-1: **CLOSED**；OQ-2/OQ-3: **OPEN**
   - Full Production Pipeline: **NOT YET CLOSED**
-- **Gate B1 实验结果（2026-09-11，67 cases / 8367 role targets）**：
-  - Range Validity: **PASS**（100%）— 所有行号在范围内
-  - Content Validity: **FAIL**（74.9%）— 25.1% 指向空行
-  - Role Validity: **FAIL — severe**（12.6%）— 大量指向区域标记/答案表/空行
-  - Structural Validity: **NOT YET EVALUATED**
-  - **Gate B1 = FAIL / Corpus Not Ready**
-  - **瓶颈**：manifest 生成管线数据质量（区域标记、空行、options 按行拆分、answer_lines 指向标记）
-  - **不是 Path B 架构问题**——反而验证了 Doc 67 "Source Pointer ≠ Source Content"
-  - **Gate B2 formal = BLOCKED**；B2-preflight 允许（仅 clean subset，仅作诊断）
-  - **Legacy Resolver weakness = TEST-EVIDENCED**（~18% 两次独立实验一致）
-  - **修复方向**：修 manifest generator，不修 manifest 本身（避免循环证明）
+- **Gate B1 修正后结果（2026-09-11，79 cases / 10343 role targets）**：
+  - **旧 FAIL 裁决作废**：基于两个实验缺陷（读错源文件 + validator 过度严格）
+  - Range Validity: **PASS**（100%）
+  - Content Validity: **PASS WITH RESERVATIONS**（79.0%）
+  - Role Validity: stem **97.3%** / explanation **96.7%** / option **51.8%** / answer **49.1%**
+  - **Gate B1 = CONDITIONAL PASS / Corpus Substantially Valid**
+  - 剩余问题：option region 语义（逐行拆分产生空 target）+ answer 共享答案表 contract
+  - **Gate B2-A 允许开始**（stem + explanation）；B2-B BLOCKED BY contract 裁决
+  - **禁止继续放宽 validator 提升数字**——那是 metric optimization
 - **红线（不变）**：HTTP retry ≠ LLM retry ≠ fallback；先冻结 Spec 再改代码；
   Schema Source of Truth = 20_Document_Pipeline.md；Resolver 不猜；
   实验结果 ≠ 实施授权；提议修改 ≠ 违反 Frozen Spec。
 - **下一步（按序执行）**：
-  1. **审计并修复 reslice/manifest generator**：区域标记、空行、answer_lines、options_lines
-  2. **Role classifier 对抗性验证**：确认 12.6% 是 manifest 错误，非 validator 过度严格
-  3. **重新生成完整 67 cases manifest，重跑 B1**
-  4. **B1 达到 corpus-readiness 门槛后，进入正式 Gate B2**
-  5. **Gate C**：Safety Invariant Preservation 验证
-  6. **OQ-3 → OQ-2**：物化层 / Standalone+Material 裁决
-  7. **Errata Decision**（Gate B1/B2/C/D 通过后）
-  8. **I-5-2 Adapter**（Gate D 约束：Contract Translator，非 Semantic Resolver）
-  9. **Path B Full Closure E2E**（含 Provenance Golden Test + Replay 验证）
+  1. **Contract Adjudication**：项目负责人裁决 Q1-Q4
+     - Q1: `options_lines` 是 region 还是 per-option spans？
+     - Q2: `answer_lines` 对共享答案表是 source region 还是 per-question evidence？
+     - Q3: 语法填空是否允许多个非连续 spans？
+     - Q4: HTML table answer 的绑定粒度？
+  2. **Gate B2-A**：stem + explanation 的 Legacy vs Path B 同口径对比
+  3. **Gate B2-B**：option + answer（contract 裁决后）
+  4. **Gate C**：Safety Invariant Preservation 验证
+  5. **OQ-3 → OQ-2**：物化层 / Standalone+Material 裁决
+  6. **Errata Decision**（Gate B/C/D 通过后）
+  7. **I-5-2 Adapter**（Gate D 约束：Contract Translator，非 Semantic Resolver）
+  8. **Path B Full Closure E2E**（含 Provenance Golden Test + Replay 验证）
 - 重启后第一任务：读本文件 → Status.md 尾 → log.md 尾 → bugs.md →
   按上述 Step 顺序执行。
 

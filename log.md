@@ -1252,3 +1252,27 @@ Step 5 已于 commit `0917404` 落盘（含 Status/log/restart v1.10 收口）�
   Status.md 快照 + log.md 条目 + restart-prompt v1.35。
 - **下一步**：审计修复 reslice/manifest generator → Role classifier 对抗性验证 →
   重跑 B1 → 达到门槛后进入 Gate B2 → Gate C → OQ-3/OQ-2 → Errata Decision。
+
+### 2026-09-11（Gate B1 修正：CONDITIONAL PASS — 旧 FAIL 作废）
+
+- **裁决**：Gate B1 = CONDITIONAL PASS / Corpus Substantially Valid。
+  **旧 FAIL 裁决正式作废**——基于两个实验缺陷。
+- **实验缺陷发现**：
+  1. **读错源文件**：B1 harness 读了切片展示视图（`compile_slices()` 产出，
+     含区域标记，行号与原始源不同），而非 `manifest['source_file']` 指向的原始源
+  2. **validator 过度严格**：`1\.` 转义点号、`## 【解析】` markdown 前缀、
+     答案表 `1-5 BBACB` 格式、`---` 水平线均未覆盖
+- **修正后结果**（79 cases / 10343 role targets）：
+  - Range Validity: PASS（100%）
+  - Content Validity: PASS WITH RESERVATIONS（79.0%）
+  - Role Validity: stem 97.3% / explanation 96.7% / option 51.8% / answer 49.1%
+- **核心进展**：从"Path B 输入数据是不是垃圾"推进到"不同 Question Role 的
+  Source Binding Claim 最小表达能力"——Doc 67 更深层 contract 设计问题。
+- **剩余问题**：option region 语义（逐行拆分产生空 target）+
+  answer 共享答案表 contract——需要项目负责人裁决 Q1-Q4。
+- **Gate B2-A 允许开始**（stem + explanation）；B2-B BLOCKED BY contract 裁决。
+- **禁止事项**：禁止继续放宽 validator 提升数字（metric optimization）。
+- **产出**：69 号 §10 更新（CONDITIONAL PASS + Contract Readiness 矩阵 + Q1-Q4）+
+  Status.md 快照 + log.md 条目 + restart-prompt v1.36。
+- **下一步**：Contract Adjudication（Q1-Q4）→ Gate B2-A → Gate B2-B →
+  Gate C → OQ-3/OQ-2 → Errata Decision。

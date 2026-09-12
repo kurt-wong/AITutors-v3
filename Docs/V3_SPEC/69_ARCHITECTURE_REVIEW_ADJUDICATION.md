@@ -543,21 +543,59 @@ Manifest 可以提供 Expected Structure（expected role + expected line_ref）�
 
 失败原因：role_mismatch 5212（71.2%）/ content_empty 2104（28.8%）。
 
-### Gate B1 裁决（2026-09-11）
+### Gate B1 裁决（2026-09-11，修正后）
 
-**Gate B1 = FAIL / Corpus Not Ready。**
+**Gate B1 = CONDITIONAL PASS / Corpus Substantially Valid, with two structural contract issues remaining.**
 
-瓶颈不在 Path B 架构，而在 **manifest 生成管线的数据质量**：
-1. line_refs 大量指向 reslice pipeline 插入的区域标记（"题干区开始"/"答案区结束"等），非实际内容
-2. options 按行拆分产生大量假 target（options_lines 范围内包含空行和区域标记）
-3. answer_lines 大量指向答案表区域标记或题目编号
+#### 修正记录（正式作废旧数据）
 
-核心区分：
-- **不能推出**："Path B 架构有问题"
-- **只能推出**："当前 manifest 生成管线无法提供满足 Path B Binding Contract 的输入"
+上一轮 Gate B1 = FAIL 基于两个实验缺陷，旧数据（74.9% Content / 12.6% Role）正式作废：
 
-这反而验证了 Doc 67 的设计思想：**Source Pointer ≠ Source Content。**
-旧实验把 Pointer validity 当成 Reference integrity；B1 拆开后问题立刻暴露。
+1. **读错源文件**：B1 harness 读了切片展示视图（`compile_slices()` 产出，含区域标记，行号与原始源不同），而非 `manifest['source_file']` 指向的原始源文件
+2. **validator 过度严格**：`1\.` 反斜杠转义点号、`## 【解析】` markdown 前缀、答案表 `1-5 BBACB` 格式、`---` 水平线均未覆盖
+
+修正后重新运行（79 cases / 10343 role targets）：
+
+| 验证层 | 修正前 | 修正后 |
+|--------|--------|--------|
+| Range Validity | 100% | **100%** |
+| Content Validity | 74.9% | **79.0%** |
+| Role Validity | 12.6% | **63.3%** |
+
+#### 修正后按 Role 分解
+
+| Role | Total | Content | Role | Role Rate |
+|------|-------|---------|------|-----------|
+| stem | 1870 | 1870 (100%) | 1820 | **97.3%** |
+| explanation | 880 | 880 (100%) | 851 | **96.7%** |
+| option | 5311 | 3138 (59.1%) | 2753 | **51.8%** |
+| answer | 2282 | 2280 (99.9%) | 1120 | **49.1%** |
+
+#### Contract Readiness 矩阵
+
+| Contract | 状态 |
+|----------|------|
+| Source line range | **PASS** |
+| Source view / line mapping | **PASS — 已纠正** |
+| Non-empty source evidence | **PASS WITH RESERVATIONS** |
+| Stem binding | **PASS** |
+| Explanation binding | **PASS** |
+| Option region binding | **UNRESOLVED — 需 schema 语义裁决** |
+| Per-option binding | **NOT PROVEN** |
+| Answer region binding | **PASS WITH RESERVATIONS** |
+| Per-question answer binding | **NOT PROVEN** |
+| Semantic validity | **UNPROVEN** |
+
+#### 剩余问题性质
+
+剩余失败集中在 option/answer 两个结构性 role，不是普遍性 line_ref 失真：
+
+1. **Option 51.8%**：`options_lines` 是整个 options region，B1 harness 逐行拆分成 per-option target 时，空行被当成独立 option target。需要裁决：`options_lines` 的 contract 定义的是 region 还是 per-option spans？
+2. **Answer 49.1%**：共享答案表（`1-5: BBACB`）指向整张表而非单题答案。需要裁决：`answer_lines` 对共享答案表的 contract 是 source region 还是 per-question answer evidence？
+
+#### 核心进展
+
+已从"Path B 的输入数据是不是垃圾"推进到"对于不同 Question Role，Source Binding Claim 应该具有什么最小表达能力"——这是 Doc 67 更深层的 contract 设计问题。
 
 ### 循环证明风险（正式声明）
 
@@ -580,23 +618,25 @@ Level 4 — Structural Validity  "Question Structure 正确（option 顺序/边�
 Level 5 — Semantic Validity    "内容语义正确（需独立证据）"
 ```
 
-### Gate B 当前状态（2026-09-11 更新）
+### Gate B 当前状态（2026-09-11 修正后更新）
 
 ```text
 Gate A: PASS / TEST-EVIDENCED
-Gate B1: FAIL / Corpus Not Ready
+Gate B1: CONDITIONAL PASS / Corpus Substantially Valid
   Range Validity: PASS (100%)
-  Content Validity: FAIL (74.9%)
-  Role Validity: FAIL — severe (12.6%)
+  Content Validity: PASS WITH RESERVATIONS (79.0%)
+  Role Validity: stem 97.3% / explanation 96.7% / option 51.8% / answer 49.1%
   Structural Validity: NOT YET EVALUATED
-Gate B2 formal: BLOCKED
-B2 Preflight: 允许（仅 clean subset，仅作诊断，不写正式结论）
+  剩余问题: option region 语义 + answer 共享答案表 contract
+Gate B2: 允许开始，先用 B1-clean target set（stem + explanation）
+  B2-A (Clean Roles): 可以开始
+  B2-B (Structured Roles): BLOCKED BY option/answer contract 裁决
 Gate C: OPEN
 Gate D: OPEN
 Errata: BLOCKED BY Gate B/C
 ```
 
-### Phase I-5 状态矩阵（2026-09-11）
+### Phase I-5 状态矩阵（2026-09-11 修正后）
 
 | 项目 | 当前状态 |
 |------|---------|
@@ -606,27 +646,48 @@ Errata: BLOCKED BY Gate B/C
 | Doc 67 B5-4 (Resolver 定位) | ACCEPTED |
 | Gate A (Identity Closure) | PASS / TEST-EVIDENCED |
 | Gate B1 Range Validity | PASS |
-| Gate B1 Content Validity | FAIL |
-| Gate B1 Role Validity | FAIL — severe |
-| Gate B1 Structural Validity | NOT YET EVALUATED / INSUFFICIENT |
-| Gate B1 overall | **FAIL — Corpus Not Ready** |
-| Gate B2 formal | BLOCKED |
-| B2 Preflight | 允许进行，仅作诊断 |
+| Gate B1 Content Validity | PASS WITH RESERVATIONS |
+| Gate B1 Stem binding | PASS (97.3%) |
+| Gate B1 Explanation binding | PASS (96.7%) |
+| Gate B1 Option binding | UNRESOLVED — 需 schema 语义裁决 |
+| Gate B1 Answer binding | UNRESOLVED — 需共享答案表 contract 裁决 |
+| Gate B1 overall | **CONDITIONAL PASS** |
+| Gate B2-A (stem + explanation) | 允许开始 |
+| Gate B2-B (option + answer) | BLOCKED BY contract 裁决 |
 | Legacy Resolver weakness | TEST-EVIDENCED |
 | Path B technical operability | TEST-EVIDENCED |
 | Path B correctness | NOT PROVEN |
-| Manifest generator quality | FAIL |
+| Manifest binding contract | PARTIALLY RESOLVED |
 | Production code change | 暂缓 |
 
-### 下一步（三件事，按序执行）
+### 进入 B2 前必须完成的 Contract Adjudication
 
-1. **审计并修复 reslice/manifest generator**：尤其区域标记、空行、answer_lines、options_lines
-2. **重新生成完整 67 cases / 1885 units manifest，并重新跑 B1**
-3. **只有当 B1 达到预先定义的 corpus-readiness 门槛后，才进入正式 B2**
+四个问题必须由项目负责人裁决，不得由 Claude 猜测：
 
-与此同时：从当前 corpus 抽取独立人工核验的 clean subset 做 B2-preflight，继续验证 Legacy Resolver 的系统性弱点。
+**Q1**: `options_lines: [start,end]` 表示整个 options region，还是所有 option 的逐项 spans？
 
-**Role classifier 需要对抗性验证**：确认 12.6% 是 manifest 错误，不是 validator 过度严格。需要检查多行 stem、带图片 stem、数学公式、化学式、表格、answer 只有单字母、explanation 格式多样等边界情况。
+**Q2**: `answer_lines: [start,end]` 对共享答案表，表示整张 answer source region，还是当前 Question 的独立 answer evidence？
+
+**Q3**: 语法填空答案（`61 arrived 62 before`）是否允许多个非连续 Source spans？
+
+**Q4**: HTML table 作为 answer 时，绑定粒度是 cell、row 还是整个 table？
+
+### 禁止事项（正式声明）
+
+**禁止为了提升 B1 数字而继续放宽 validator。** 正确方式是：
+Frozen contract → validator → 发现真实 mismatch → 判断是 validator bug / manifest bug / contract gap → 分别处理。
+
+已经完成：validator bug → 修复；source-view bug → 修复。
+剩余：manifest structural semantics / contract gap → 需要裁决。
+
+### 下一步（按序执行）
+
+1. **Contract Adjudication**：项目负责人裁决 Q1-Q4（options_lines / answer_lines 语义）
+2. **Gate B2-A**：stem + explanation 的 Legacy vs Path B 同口径对比
+3. **Gate B2-B**：option + answer（contract 裁决后）
+4. **Gate C**：Safety Invariant Preservation 验证
+5. **OQ-3 → OQ-2**：物化层 / Standalone+Material 裁决
+6. **Errata Decision**（Gate B/C/D 通过后）
 
 ### 重要措辞
 
@@ -636,3 +697,5 @@ Errata: BLOCKED BY Gate B/C
 > 不能单独证明"LLM line_refs + Validator 一定是正确的最终架构"。
 > 真正需要证明的是：在 Source 事实不变、target 定义一致、binding claim 独立可信的条件下，
 > Path B 是否显著优于 Legacy Resolver。
+> Stem/explanation 已达 97.3%/96.7% role validity，manifest binding claim 基本可用。
+> Option/answer 的 contract 语义未决，不得以放宽 validator 的方式提升数字。
