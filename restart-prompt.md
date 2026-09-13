@@ -1,13 +1,26 @@
 # AI Tutor V3 — RESTART PROMPT
 
-Version: v1.38
-Status: **Gate B2-A PASS / TEST-EVIDENCED**（stem only）—
-Legacy 44.3% vs Path B 97.3%；1857 个 Legacy 失败被 Path B 成功处理；
-explanation 是 capability absence 不纳入对比；
-待三项补强后正式关闭 B2-A；下一步 = B2-A 补强 → Gate B2-B
-Date: 2026-09-11
+Version: v1.39
+Status: **Evidence Promotion Phase 1 Hardened + HIGH Fix** —
+AppendOnlyEventLog (__slots__ + name mangling + state machine in append())；
+全量 640 passed；Gate B2-A 仍 pending 三项补强
+Date: 2026-09-13
 
-## 0.0 当前结论（2026-09-11 Gate A 关闭）
+## 0.0 当前结论（2026-09-13 Phase 1 Hardening 关闭）
+
+- **Evidence Promotion Contract Phase 1 Hardened**：
+  - AppendOnlyEventLog: `__slots__` + name mangling (`__events`) + state machine in `append()`
+  - GateService: per-run isolation + reference_ids linking + ProposerIdentity=llm
+  - CheckResult 结构化检查替代叙述性字符串
+  - validation_method 从 gate layers 推导
+- **HIGH 严重性缺陷（第二轮）已修复**：
+  - HIGH-1: `log._events = ()` → AttributeError（__slots__ + name mangling）
+  - HIGH-2: 直接 `log.append()` → ValueError（状态机在 ledger 层）
+- **全量测试：640 passed**
+- **下一步**：C-2 157 E2E → Gate C Closure
+- Gate B2-A 仍 pending 三项补强（审计 15 个 Legacy-only case + 独立抽样 + 排除 explanation）
+
+## 0.1 上一轮结论（2026-09-11 Gate A 关闭）
 
 - **A–G / H Phase 1–8 / Phase 9 / Errata 维持 FINAL CLOSED**。
 - **Phase I-3 CLOSED**：Source Evidence Preservation Layer。

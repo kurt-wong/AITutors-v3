@@ -1817,3 +1817,69 @@ Gate D: OPEN
 3. **Gate C**：Safety Invariant Preservation 验证
 4. **OQ-3 → OQ-2**：物化层 / Standalone+Material 裁决
 5. **Errata Decision**（Gate B/C/D 通过后）
+
+## 状态快照：Phase 1 Hardening + HIGH 严重性缺陷修复（2026-09-13）
+
+### 背景
+
+Evidence Promotion Contract Phase 1（EvidenceReference + ProposerIdentity +
+ValidationEvent）实现完成后，进行两轮对抗性审查：
+1. 第一轮（Phase 1 Hardening）：发现 9 个缺陷（3 CRITICAL + 3 HIGH + 3 MEDIUM）
+2. 第二轮（架构审查裁决）：CRITICAL 全修复后，发现 2 个 HIGH severity 遗留
+
+### Phase 1 Hardening 修复（第一轮，9 缺陷）
+
+| 编号 | 严重性 | 缺陷 | 修复 |
+|------|--------|------|------|
+| C-1 | CRITICAL | append-only 可被绕过 | AppendOnlyEventLog（tuple-based） |
+| C-2 | CRITICAL | 状态机在 service 层，可直接 append 绕过 | 状态机移入 AppendOnlyEventLog.append() |
+| C-3 | CRITICAL | ValidationEvent 无 reference_ids 链接 | 添加 reference_ids 字段 |
+| H-4 | HIGH | validation_method 硬编码 | 从 gate layers 推导 |
+| H-5 | HIGH | gate reason 是叙述性字符串 | CheckResult 结构化检查 |
+| H-6 | HIGH | ProposerIdentity 错误标为 native_parser | 修正为 llm |
+| M-7 | MEDIUM | is_evidence_validated 按位置取最新 | 改为按 timestamp |
+| M-8 | MEDIUM | 无 per-run 隔离 | GateService.run() 内 fresh instance |
+| M-9 | MEDIUM | EvidencePromotionService 是 singleton | 改为 per-run |
+
+### HIGH 严重性缺陷修复（第二轮，2 缺陷）
+
+| 编号 | 缺陷 | 修复方案 |
+|------|------|---------|
+| HIGH-1 | `log._events = ()` 可清空日志 | `__slots__` + name mangling (`__events`) |
+| HIGH-2 | 直接 `log.append()` 绕过状态机 | 状态机移入 `AppendOnlyEventLog.append()` |
+
+**架构改进**：EventLog 是 Evidence Authority Ledger。状态机 enforcement 在 ledger 层，
+不在 service 层。Phase 2 DB 化时状态检查仍在 ledger 层，直接调用 append() 无法绕过。
+
+### 攻击验证
+
+| 攻击向量 | 修复前 | 修复后 |
+|----------|--------|--------|
+| `log._events = ()` | 成功清空 | AttributeError |
+| `service._validation_log.append(fake_event)` | 绕过状态机 | ValueError (terminal state) |
+| 直接设置 `evidence.validated = True` | 可能（如果暴露） | ValidationEvent-only design |
+
+### 测试证据
+
+- test_evidence_promotion.py: 36 passed
+- test_hardening_adversarial.py: 24 passed（新增对抗性测试）
+- test_evidence_adversarial.py: 25 passed（新增对抗性测试）
+- **全量回归：640 passed**
+
+### 文档
+
+- `backend/Docs/V3_SPEC/75_EVIDENCE_PROMOTION_CONTRACT.md` — 契约冻结
+- `backend/Docs/V3_SPEC/76_EVIDENCE_PROMOTION_PHASE1_REPORT.md` — Phase 1 报告
+- `backend/Docs/V3_SPEC/77_EVIDENCE_PROMOTION_PHASE1_HARDENING.md` — Hardening 报告
+- `backend/Docs/V3_SPEC/78_PHASE1_HARDENING_ADVERSARIAL_REVIEW.md` — 对抗性审查
+- `backend/Docs/V3_SPEC/79_PHASE1_HIGH_SEVERITY_FIXES.md` — HIGH 修复报告
+
+### 当前状态
+
+```
+Evidence Promotion Contract Phase 1: IMPLEMENTATION COMPLETE + HARDENED
+AppendOnlyEventLog: __slots__ + name mangling + state machine in append()
+GateService integration: per-run isolation + reference_ids linking
+全量测试: 640 passed
+下一步: C-2 157 E2E → Gate C Closure
+```
