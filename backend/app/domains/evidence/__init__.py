@@ -4,6 +4,8 @@ Phase 1 scope (最小改动):
 - ProposerIdentity: who proposed this evidence (provenance, not reliability)
 - EvidenceReference: bridge from ResolvedSpan (Source Binding) to Evidence Lifecycle
 - ValidationEvent: append-only record of Gate validation outcomes
+- CheckResult: structured check with machine-parseable ID (Hardening)
+- AppendOnlyEventLog: tuple-based immutable log (Hardening)
 
 Key frozen rules enforced here:
 - R1: SourceFragment (ResolvedSpan) never contains semantic role — stays pure location
@@ -12,6 +14,8 @@ Key frozen rules enforced here:
 """
 
 from app.domains.evidence.models import (
+    AppendOnlyEventLog,
+    CheckResult,
     EvidenceReference,
     ProposerIdentity,
     ValidationEvent,
@@ -23,6 +27,8 @@ from app.domains.evidence.promotion import (
 )
 
 __all__ = [
+    "AppendOnlyEventLog",
+    "CheckResult",
     "EvidenceReference",
     "EvidencePromotionService",
     "ProposerIdentity",

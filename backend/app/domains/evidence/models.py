@@ -7,6 +7,11 @@ Phase 1 implements three of these layers as frozen dataclasses:
 - EvidenceReference: bridge from ResolvedSpan to Evidence Lifecycle (Proposal layer)
 - ValidationEvent: append-only validation record (Validation layer)
 
+Phase 1 Hardening (adversarial review 2026-09-13):
+- CheckResult: structured check with machine-parseable ID + human-readable detail
+- ValidationEvent.reference_ids: links to EvidenceReference IDs (Critical 3 fix)
+- AppendOnlyEventLog: tuple-based immutable log (Critical 1 fix)
+
 Frozen rules enforced by dataclass design:
 - R1: ResolvedSpan (SourceFragment) never contains semantic role — EvidenceReference
        carries proposed_role separately, ResolvedSpan stays pure location.
@@ -113,6 +118,35 @@ class EvidenceReference:
 
 
 # ---------------------------------------------------------------------------
+# Check Result: structured check with machine-parseable ID
+# ---------------------------------------------------------------------------
+
+@dataclass(frozen=True)
+class CheckResult:
+    """A single structured check result.
+
+    Phase 1 Hardening (High 5 fix): Separates machine-parseable check_id from
+    human-readable detail. Gate reasons are narrative strings; CheckResult
+    extracts the structured check identity.
+
+    check_id: Machine-parseable identifier (e.g., "TEXT_HASH_MATCH",
+              "ROLE_PROVENANCE_OVERLAP", "STRICT_AUTO_GRAMMAR").
+    result:   "pass" | "fail"
+    detail:   Human-readable description (optional, for audit logs).
+    """
+
+    check_id: str
+    result: str  # "pass" | "fail"
+    detail: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.result not in ("pass", "fail"):
+            raise ValueError(
+                f"Invalid check result {self.result!r}; must be 'pass' or 'fail'"
+            )
+
+
+# ---------------------------------------------------------------------------
 # Validation Event: append-only record of Gate validation outcomes
 # ---------------------------------------------------------------------------
 
@@ -138,17 +172,22 @@ class ValidationEvent:
     - When source changes / OCR upgrades / bug fixes occur, append INVALIDATED,
       never modify past events.
 
+    Phase 1 Hardening:
+    - reference_ids links this event to EvidenceReference IDs (Critical 3 fix).
+    - checks stores structured CheckResult objects (High 5 fix).
+    - validation_method derived from actual gate layers (High 4 fix).
+
     Frozen rule R4: Only ValidationEvent produces Evidence Authority.
     No module may manually set a "validated" flag.
     """
 
     event_id: str
-    claim_id: str                   # identifies what was validated (span_id or claim_id)
-    validation_result: str          # "validated" | "rejected" | "invalidated"
-    checks_passed: tuple[str, ...]  # which checks passed
-    checks_failed: tuple[str, ...]  # which checks failed
-    validation_method: str          # "frozen_header_rule" | "byte_proven" | ...
-    validator: str                  # e.g., "gate/v1" (deterministic, not LLM)
+    claim_id: str                           # identifies what was validated (unit_id)
+    validation_result: str                  # "validated" | "rejected" | "invalidated"
+    checks: tuple[CheckResult, ...]         # structured check results
+    validation_method: str                  # "frozen_header_rule" | "byte_proven" | ...
+    validator: str                          # e.g., "gate/v1" (deterministic, not LLM)
+    reference_ids: tuple[str, ...] = ()     # links to EvidenceReference IDs
     validated_at: datetime = field(default_factory=_utcnow)
 
     def __post_init__(self) -> None:
@@ -164,6 +203,16 @@ class ValidationEvent:
             )
 
     @property
+    def checks_passed(self) -> tuple[str, ...]:
+        """Machine-parseable IDs of checks that passed."""
+        return tuple(c.check_id for c in self.checks if c.result == "pass")
+
+    @property
+    def checks_failed(self) -> tuple[str, ...]:
+        """Machine-parseable IDs of checks that failed."""
+        return tuple(c.check_id for c in self.checks if c.result == "fail")
+
+    @property
     def is_validated(self) -> bool:
         """True only if validation passed. Convenience — does NOT replace
         checking the event chain. ValidatedEvidence still requires this event."""
@@ -173,3 +222,112 @@ class ValidationEvent:
     def is_terminal(self) -> bool:
         """True if this event ends the lifecycle (rejected or invalidated)."""
         return self.validation_result in ("rejected", "invalidated")
+
+
+# ---------------------------------------------------------------------------
+# Append-Only Event Log: tuple-based immutable log with state machine
+# ---------------------------------------------------------------------------
+
+# State machine constants (moved from promotion.py for encapsulation)
+_TERMINAL_STATES = frozenset({"rejected", "invalidated"})
+
+
+class AppendOnlyEventLog:
+    """Append-only event log with built-in state machine enforcement.
+
+    Phase 1 Hardening (Critical 1 + 2 fix):
+    - Tuple-based immutable storage prevents external mutation
+    - __slots__ prevents attribute reassignment
+    - Name mangling (__events) makes direct access harder
+    - State machine validation built into append() — cannot be bypassed
+
+    Architecture review (2026-09-13): EventLog is the Evidence Authority Ledger.
+    State machine must be enforced at the ledger level, not the service level.
+    This prevents bypass via direct log.append() calls.
+
+    Usage:
+        log = AppendOnlyEventLog()
+        log.append(event1)
+        log.append(event2)
+        log.events  # returns immutable tuple snapshot
+    """
+
+    __slots__ = ("__events",)
+
+    def __init__(self) -> None:
+        object.__setattr__(self, "_AppendOnlyEventLog__events", ())
+
+    def _get_events(self) -> tuple[ValidationEvent, ...]:
+        """Internal accessor using name mangling."""
+        return object.__getattribute__(self, "_AppendOnlyEventLog__events")
+
+    def _set_events(self, events: tuple[ValidationEvent, ...]) -> None:
+        """Internal mutator using name mangling."""
+        object.__setattr__(self, "_AppendOnlyEventLog__events", events)
+
+    def _check_state_transition(
+        self,
+        existing_events: tuple[ValidationEvent, ...],
+        new_result: str,
+        claim_id: str,
+    ) -> None:
+        """Enforce state machine transitions. Raises ValueError on violation.
+
+        Critical 2 fix: State machine enforcement at ledger level.
+        - REJECTED is terminal: no events after rejection
+        - INVALIDATED requires prior VALIDATED
+        - VALIDATED → only INVALIDATED allowed
+        """
+        if not existing_events:
+            # First event: must be validated or rejected
+            if new_result == "invalidated":
+                raise ValueError(
+                    f"Cannot INVALIDATE claim {claim_id!r}: no prior VALIDATED event"
+                )
+            return
+
+        # Find latest event by timestamp (Medium 7 fix)
+        latest = max(existing_events, key=lambda e: e.validated_at)
+
+        # Terminal states: no more events allowed
+        if latest.validation_result in _TERMINAL_STATES:
+            raise ValueError(
+                f"Claim {claim_id!r} is {latest.validation_result.upper()} (terminal); "
+                f"cannot append new ValidationEvent"
+            )
+
+        # VALIDATED → only INVALIDATED allowed
+        if latest.validation_result == "validated" and new_result != "invalidated":
+            raise ValueError(
+                f"Claim {claim_id!r} is VALIDATED; only INVALIDATED transition allowed, "
+                f"got {new_result!r}"
+            )
+
+    def append(self, event: ValidationEvent) -> None:
+        """Append an event with state machine validation.
+
+        Critical 2 fix: State machine check is HERE, not in the service.
+        Direct calls to append() cannot bypass state machine.
+        """
+        # State machine validation BEFORE append
+        existing = self.for_claim(event.claim_id)
+        self._check_state_transition(existing, event.validation_result, event.claim_id)
+
+        # Append using immutable tuple concatenation
+        current = self._get_events()
+        self._set_events(current + (event,))
+
+    @property
+    def events(self) -> tuple[ValidationEvent, ...]:
+        """All events as an immutable tuple snapshot."""
+        return self._get_events()
+
+    def for_claim(self, claim_id: str) -> tuple[ValidationEvent, ...]:
+        """Get all events for a specific claim."""
+        return tuple(e for e in self._get_events() if e.claim_id == claim_id)
+
+    def __len__(self) -> int:
+        return len(self._get_events())
+
+    def __iter__(self):
+        return iter(self._get_events())

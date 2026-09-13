@@ -30,7 +30,7 @@ from app.domains.evidence import EvidencePromotionService, ProposerIdentity
 from app.domains.gate import GATE_POLICY_VERSION
 from app.domains.gate.admission import AdmissionService
 from app.domains.gate.payload import build as build_payload
-from app.domains.gate.policy import evaluate
+from app.domains.gate.policy import evaluate, partition_candidate
 from app.domains.resolver import RESOLVER_VERSION
 from app.domains.resolver.resolver import SourceResolver
 from app.domains.resolver.span import SourceFigureView, SourceLineView
@@ -103,15 +103,16 @@ class GateService:
         self._snap = SnapshotRepository(session)
         self._source = SourceRepository(session)
         self._admission = AdmissionService(session)
-        # Evidence Promotion Contract Phase 1 (75_EVIDENCE_PROMOTION_CONTRACT.md)
-        self._evidence = EvidencePromotionService()
+        # Evidence Promotion Contract Phase 1: fresh per run, not singleton.
+        # Phase 1 Hardening (Medium 9 fix): per-run isolation prevents accumulation.
+        self._evidence: EvidencePromotionService | None = None
 
     @property
-    def evidence_promotion(self) -> EvidencePromotionService:
+    def evidence_promotion(self) -> EvidencePromotionService | None:
         """Evidence Promotion Contract Phase 1: access ValidationEvents and EvidenceReferences.
 
         R4: Only ValidationEvent produces Evidence Authority.
-        Callers can inspect validation_events and evidence_references after run().
+        Returns None if run() has not been called yet.
         """
         return self._evidence
 
@@ -156,11 +157,15 @@ class GateService:
             source_version_id=source_version_id, lines=lines, figures=figures
         ).resolve(ann.payload)
 
-        # Evidence Promotion Contract Phase 1: create EvidenceReferences from ResolvedRun.
-        # Bridge: Source Binding (ResolvedSpan) → Evidence Lifecycle (Proposal).
-        # Does NOT change existing pipeline flow — additive only.
+        # Evidence Promotion Contract Phase 1: fresh service per run (Medium 9 fix).
+        # Prevents accumulation across run() calls.
+        self._evidence = EvidencePromotionService()
+
+        # Phase 1 Hardening (High 6 fix): ProposerIdentity is "llm", not "native_parser".
+        # The annotation payload was produced by an LLM. The Resolver merely verified
+        # locations. The actual proposer of the semantic roles is the LLM.
         proposer = ProposerIdentity(
-            producer_type="native_parser",
+            producer_type="llm",
             pipeline_version=RESOLVER_VERSION,
         )
         self._evidence.create_references(resolved_run, proposer)
@@ -183,7 +188,15 @@ class GateService:
 
             # Evidence Promotion Contract Phase 1: record ValidationEvent.
             # R4: Only ValidationEvent produces Evidence Authority.
-            self._evidence.record_validation(root.unit_id, gate)
+            # Phase 1 Hardening (Critical 3 fix): pass reference_ids to link
+            # ValidationEvent → EvidenceReference.
+            span_ids = _extract_unit_span_ids(root, compiled)
+            ref_ids = tuple(
+                f"er-{sid}" for sid in span_ids
+            )
+            self._evidence.record_validation(
+                root.unit_id, gate, reference_ids=ref_ids
+            )
 
             payload = build_payload(
                 root=root, ir=ir, compiled=compiled, resolved_run=resolved_run
@@ -316,3 +329,31 @@ class GateService:
 
 def _candidate_unit_type(ir_unit_type: str) -> str:
     return _IR_TO_CANDIDATE_UNIT_TYPE.get(ir_unit_type, ir_unit_type)
+
+
+def _extract_unit_span_ids(root, compiled) -> tuple[str, ...]:
+    """Extract span_ids consumed by a root unit from CompiledSnapshot.
+
+    Phase 1 Hardening (Critical 3 fix): Enables linking ValidationEvent to
+    EvidenceReference via reference_ids. Traverses the compiled leaves and
+    materials for this unit to collect all consumed span_ids.
+    """
+    from app.domains.gate.policy import partition_candidate
+
+    leaves, materials = partition_candidate(root, compiled)
+    span_ids: set[str] = set()
+
+    for leaf in leaves:
+        if leaf.stem is not None:
+            span_ids.add(leaf.stem.span_id)
+        for opt in leaf.options:
+            span_ids.add(opt.span_id)
+        if leaf.explanation is not None:
+            span_ids.add(leaf.explanation.span_id)
+        if leaf.answer is not None:
+            span_ids.add(leaf.answer.span_id)
+
+    for mat in materials:
+        span_ids.add(mat.span_id)
+
+    return tuple(sorted(span_ids))
