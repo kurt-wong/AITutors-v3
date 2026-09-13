@@ -1,13 +1,24 @@
 # AI Tutor V3 — RESTART PROMPT
 
-Version: v1.45
-Status: **BUG-V3-044 修复并通过对抗性审查** —
+Version: v1.46
+Status: **Grammar 输入来源契约已冻结** —
 Gate C CLOSED + Gate B2-B 全系列 CLOSED + AnswerTokenContract 封闭
-Evidence Admission Boundary（审查发现 1 真实缺陷已修）；
+Evidence Admission Boundary + 输入来源约束落到实现层；
 下一步：Gate D
 Date: 2026-09-13
 
-## 0.0 当前结论（2026-09-13 BUG-V3-044 对抗性审查完成）
+## 0.0 当前结论（2026-09-13 Grammar 输入来源契约冻结）
+
+- **Grammar 输入来源契约（实现层冻结，80 号 §6.6）**：
+  - `Grammar.verify()` 的 `answer_text` **必须**是 Resolver 产出的标准化 answer span
+    （`resolver.py::_answer_span` 的 char-span 切片，20 §5.5），**禁止**裸 source/OCR 文本。
+  - 题号前缀属 Resolver 边界产物，由 `_clean_answer()` 剥除，**不参与** token 判定。
+  - **不走正式 Errata**：20 §8.4 对该点是**沉默**而非**写错**，不属 Contract Change；
+    已挂入 80 §4 显式延期项，若日后写入 20 §8.4 正文须走四道门。
+  - **分层职责**：Grammar 保证 representation validity，**不保证** semantic correctness。
+- **测试规范固化（40 §5 新增）**：度量实验的输入必须是上游组件的**真实输出切片**，
+  禁止近似文本；度量脚本须指出它复刻哪一段 pipeline，并有测试锁死该语义。
+  （反例：本轮覆盖率测量曾用「行内剩余文本」代替 E 的 char-span。）
 
 - **BUG-V3-044: Resolved + 对抗性审查通过**（80 号 §6 实现 / §7 审查）。
   - 裁决：Q-A 白名单为主；Evidence Contract **不扩大**；Evidence Promotion
@@ -82,11 +93,12 @@ Date: 2026-09-13
   实验结果 ≠ 实施授权；提议修改 ≠ 违反 Frozen Spec。
 - **下一步（按序执行）**：
   1. **Gate D**：Adapter Boundary（preprocessing 为可选上游，Contract Translator
-     而非 Semantic Resolver；Grammar Contract 已冻结，阻塞解除）
+     而非 Semantic Resolver；Grammar Contract 已冻结**且含输入来源约束**
+     —— Adapter 不得绕过 Resolver 直送裸文本给 grammar，见 80 §6.6，阻塞解除）
   2. **OQ-3 → OQ-2**：物化层 / Standalone+Material 裁决
   3. **B2-B2 Unknown 125 triage** + B2-B3-C / B2-B4-C 延期项
   4. **Phase 2 Evidence Ledger**：等真实 pipeline 压力出现后再启动
-  5. **Errata Decision**（Gate D 通过后）
+  5. **Errata Decision**（Gate D 通过后；含「Grammar 输入来源契约是否写入 20 §8.4 正文」）
   6. **Path B Full Closure E2E**（含 Provenance Golden Test + Replay 验证）
 - 重启后第一任务：读本文件 → Status.md 尾 → log.md 尾 → bugs.md →
   按上述 Step 顺序执行。

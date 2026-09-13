@@ -2288,3 +2288,67 @@ B2-B5 语料全部为非 strict-auto，与本 weakness 正交，故不构成 B2-
 - 69 号 Gate B 状态块：`B2-B5: OPEN` → `CLOSED`；Gate C/D 状态同步；下一步清单更新
 - log.md：补记 B2-B1～B2-B5 系列与本轮 Closure
 - restart-prompt：升版，0.0 节改为当前真实状态
+
+---
+
+## 2026-09-13 — Grammar 输入来源契约 + 测试规范固化
+
+外部架构复审对 BUG-V3-044 提出三条补充。逐条核对真实代码与文档后：
+**两条真缺口已补，一条确认已满足而未改**。
+
+### 核对结论
+
+| 复审补充项 | 结论 | 处置 |
+|---|---|---|
+| AnswerTokenContract 输入来源约束 | **真缺口** | 冻结为实现层契约（grammar.py + 80 §6.6） |
+| 文档避免「保证答案正确」过度表述 | **已满足** | 不改——80 §6.5 / §5 与本文件均已是正确措辞 |
+| 方法学错误进测试规范 | **真缺口** | 40 §5 新增一条 |
+
+### 1. 输入来源契约（实现层冻结）
+
+`Grammar.verify()` 的 `answer_text` **必须**是 Resolver 产出的标准化 answer span
+（`resolver.py::_answer_span` 的 char-span 切片，20 §5.5），**不得**消费裸
+source / OCR 文本。题号前缀属 Resolver 边界产物，不参与答案 token 判定。
+
+此前该契约只靠唯一生产调用方（`policy.py::_leaf_grammar` 传 `leaf.answer.text`）
+自觉遵守——`verify()` 签名只有 `answer_text: str`，类型上无法区分两者。
+
+**不走正式 Errata 的理由**：冻结文本 20 §8.4 对 `answer_text` 来源**完全沉默**，
+是「未规定」而非「规定错误」，不属 Contract Change，不触发 69 号四道门。该流程
+当前亦 `BLOCKED BY Gate D`，走它会与「Gate D 前补上」自相矛盾。已挂入 80 §4
+显式延期项——若日后要写进 20 §8.4 正文，须走正式 Errata。
+
+### 2. 分层职责澄清（防过度承诺）
+
+| 层 | 能保证 |
+|---|---|
+| Resolver | 找到哪里 |
+| Evidence Authority | 证明来源 |
+| **Grammar** | **表示形式合法** |
+| Gate | 结构规则 |
+| Semantic Model | 内容正确 |
+
+grammar 保证 representation validity，**不保证** semantic correctness。
+
+### 3. 测试规范（40 §5 新增）
+
+度量实验（覆盖率 / 回归 / 通过率）的输入必须是上游组件的**真实输出切片**，
+禁止近似文本代替；度量脚本须能指出它复刻的是哪一段 pipeline，并有测试锁死
+该复刻语义。反例即本轮覆盖率测量曾用「行内剩余文本」代替 E 的 char-span。
+
+### 回归
+
+`test_gate_grammar.py` + `test_bug044_adversarial_review.py` +
+`test_role_provenance.py` + `test_b2b5_d_projection_safety.py` →
+**205 passed**。本轮仅改 docstring 与文档，无生产逻辑变更。
+
+### 下一步优先级
+
+| 顺序 | 项目 | 状态 |
+|------|------|------|
+| 1 | ~~BUG-V3-044 + 对抗性审查~~ | ✅ |
+| 2 | ~~Grammar 输入来源契约 + 测试规范~~ | ✅ 本轮完成 |
+| 3 | **Gate D** | Adapter Boundary — 阻塞已全清 |
+| 4 | OQ-3 → OQ-2 | 物化层 / Standalone+Material |
+| 5 | B2-B2 Unknown 125 triage | 仍未清 |
+| 6 | Errata Decision | Gate D 通过后 |

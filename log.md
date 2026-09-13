@@ -1528,3 +1528,48 @@ Step 5 已于 commit `0917404` 落盘（含 Status/log/restart v1.10 收口）�
   探针 C0/C3 不变，C1/C2 保持 pending_review。
 - **产出**：`test_bug044_adversarial_review.py` + `grammar.py` 括号配对修正 +
   `test_gate_grammar.py` 混合括号拒绝锁 + 80 号 §7 审查记录。
+
+---
+
+## 2026-09-13 — Grammar 输入来源契约 + 测试规范固化（架构复审补充）
+
+**触发**：外部架构复审对 BUG-V3-044 修复提出三条补充。逐条核对真实代码/文档后，
+两条确认为真缺口，一条确认**已满足不改**。
+
+### 逐条核对
+
+| 复审补充项 | 核对结论 |
+|---|---|
+| AnswerTokenContract 输入来源约束 | **真缺口**——`verify()` 签名只有 `answer_text: str`，类型上无法区分「E 的 char-span 切片」与「裸 OCR 原文」，契约只靠唯一调用方自觉 |
+| 文档避免「保证答案正确」过度表述 | **已满足，不改**——80 §6.5 / §5 与 Status.md 均已写明「不主张 grammar 通过即语义正确（必要不充分）」，无一处写成「解决答案正确性」 |
+| 方法学错误进测试规范 | **真缺口**——「测量必须复刻 pipeline 数据语义」只在 restart-prompt 与 80 §7.2，未进 40 §5 |
+
+### 处置（用户裁决）
+
+1. **输入来源约束 → 实现层契约记录**（不走正式 Errata）。冻结于
+   `grammar.py` 模块 docstring + `verify()` docstring + 80 号 §6.6：
+   > AnswerTokenContract 的输入**必须**是 Resolver 输出的标准化 answer span
+   > （`resolver.py::_answer_span` 的 char-span 切片，20 §5.5），**不得**消费
+   > 裸 source / OCR 文本。题号前缀属 Resolver 边界产物，不参与 token 判定。
+
+2. **为什么不走正式 Errata**：查冻结文本 20 §8.4 —— 它规定了「允许 token 集与
+   规范化」，但对 `answer_text` 的**来源完全沉默**。是**未规定**而非**规定错误**，
+   不属 Contract Change，不触发 69 号四道门（该流程当前亦 `BLOCKED BY Gate D`，
+   走它会与「Gate D 前补上」的目标自相矛盾）。已挂入 80 §4 显式延期项：若日后
+   需写入 20 §8.4 正文，必须走正式 Errata。
+
+3. **方法学教训进测试规范**：40 §5 新增一条——度量实验的输入必须是上游组件的
+   **真实输出切片**，禁止近似文本；度量脚本须能指出它复刻的是哪一段 pipeline，
+   并有测试锁死该复刻语义。反例即本轮覆盖率测量。
+
+### 顺带澄清（防过度承诺）
+
+80 §6.6 写入分层职责表：Resolver=找到哪里 / Evidence Authority=证明来源 /
+Grammar=**表示形式合法** / Gate=结构规则 / Semantic Model=内容正确。
+grammar 保证 representation validity，**不保证** semantic correctness。
+
+### 回归
+
+`test_gate_grammar.py` + `test_bug044_adversarial_review.py` +
+`test_role_provenance.py` + `test_b2b5_d_projection_safety.py` →
+**205 passed**（本轮仅改 docstring 与文档，无生产逻辑变更）。

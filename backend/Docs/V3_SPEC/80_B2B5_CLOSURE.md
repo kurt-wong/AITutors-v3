@@ -285,6 +285,47 @@ ValidatedEvidence → QuestionType Contract → AnswerForm Validation
    到 pending_review，不会错准入。
 3. Q-B（Evidence Claim 显式 `answer_form`）留 Phase 2，本轮未做。
 
+### 6.6 输入来源契约（实现层冻结，2026-09-13）
+
+`Grammar.verify()` 的 `answer_text` 参数有**来源约束**，此前未显式声明，本轮补上：
+
+> **AnswerTokenContract operates on the Resolver-produced normalized answer span.**
+> **It MUST NOT consume raw source / OCR text.**
+> **Question-number prefixes are Resolver boundary artifacts and SHALL NOT**
+> **participate in answer-token validation.**
+
+中文：
+
+> AnswerTokenContract 的输入**必须**是 Resolver 输出的标准化 answer span
+> （E 的 char-span 切片，`resolver.py::_answer_span` → `sp-{unit_id}.answer`，
+> 20 §5.5），**不得**消费裸 source / OCR 文本。题号前缀属于 Resolver 边界产物，
+> **不参与**答案 token 合法性判断。
+
+**为什么需要这条**：`verify()` 的签名只有 `answer_text: str`，类型上无法区分
+「E 的 char-span 切片」与「裸 OCR 原文」。契约此前只靠唯一生产调用方
+（`policy.py::_leaf_grammar` 传 `leaf.answer.text`）自觉遵守，没有声明。
+
+**为什么 20 §8.4 不需要 Errata**：冻结文本 20 §8.4 规定了「允许 token 集与
+规范化」，但对 `answer_text` 的**来源完全沉默**——既未授权裸文本，也未要求
+Resolver 切片。它是**未规定**，不是**规定错误**，故不属于 Contract Change，
+不触发 `69 号` 的正式 Errata 四道门（该流程当前亦 `BLOCKED BY Gate D`）。
+
+**记录层级**：本约束冻结于**实现层**（`grammar.py` 模块 docstring + `verify()`
+docstring + 本文档）。若日后需写入 20 §8.4 正文，必须走正式 Errata 流程，已挂入
+§4 显式延期项。
+
+**顺带澄清（防过度承诺）**：grammar 只保证 **representation validity**（该答案
+表示形式对该 canonical type 合法），**不保证 semantic correctness**（该答案语义上
+正确）。两者分属不同层，不得混同：
+
+| 层 | 能保证 |
+|---|---|
+| Resolver | 找到哪里 |
+| Evidence Authority | 证明来源 |
+| Grammar | 表示形式合法 |
+| Gate | 结构规则 |
+| Semantic Model | 内容正确 |
+
 ---
 
 ## 7. BUG-V3-044 对抗性审查（2026-09-13）
@@ -396,6 +437,8 @@ Errata            : BLOCKED BY Gate D
 - B2-B4-C（H4 colspan/rowspan / H5 mixed / H6 html+image）→ Domain/Material
 - B2-B2 Unknown 125 triage → 仍未清
 - Q-B Evidence Claim 显式 `answer_form` → Phase 2
+- **Grammar 输入来源契约写入 20 §8.4 正文** → 正式 Errata（当前冻结在实现层，§6.6；
+  20 §8.4 对该点沉默而非写错，故不阻塞 Gate D）
 
 ---
 
