@@ -1316,3 +1316,215 @@ Step 5 已于 commit `0917404` 落盘（含 Status/log/restart v1.10 收口）�
   Status.md 快照 + log.md 条目 + restart-prompt v1.38。
 - **下一步**：B2-A 三项补强 → Gate B2-B（结构化内容定位）→
   Gate C → OQ-3/OQ-2 → Errata Decision。
+
+### 2026-09-11（Gate B2-B1 / B2-B2 关闭：option region + MC answer）
+
+> **补记（2026-09-13）**：以下 B2-B 系列条目当时只写进 69 号，未入 log.md。
+> 现按 git 历史与 69 号回写。
+
+- **B2-B1 裁决**：CLOSED — PASS / TEST-EVIDENCED / SCOPE-BOUNDED。
+  - 79 cases / 1166 option regions。不再逐行拆分 region（B1 的 interpretation bug），
+    整个 region 作为输入。
+  - 非 HTML 1069 个中 1065 个成功恢复 option structure（**99.6%**）。
+  - 收紧 label sequence 后 1054/1069（**98.6%**）。
+  - 对抗抽样 49/50（**98.0%**）通过；唯一失败为 low_coverage（政治 Q19）。
+  - 未证明：mixed HTML regions（50 个）完整解析、pure HTML table（47 个，归 B2-B4）。
+- **B2-B2 裁决**：CLOSED — PASS / TEST-EVIDENCED / SCOPE-BOUNDED。
+  - Scope 限定为 Structured Multiple-Choice Answer Extraction。
+  - 2282 answer targets / 1573 unique regions / 120 shared regions。
+  - MC answer extraction **99.8%（1176/1178）**。
+  - Fill-in 65% → **RECLASSIFIED**（分母污染，见 B2-B3-A）。
+  - HTML 0% → **RECLASSIFIED**（归 B2-B4）。
+  - Sub-question 271 个 OUT OF SCOPE（Domain Contract first，归 B2-B5）。
+  - Unknown 125 个 TRIAGE REQUIRED（**至今未清**）。
+  - shared region extraction 30.2% vs non-shared 68.5%——共享答案表需 per-question
+    evidence，印证 Contract Adjudication Q2 = B。
+- **架构分界线正式确认**：
+  ```text
+  第一层：Region Binding —— B1/B2-A 已证（stem 97.3% / explanation 96.7%）
+  第二层：In-region Structure Resolution —— B2-B 系列解决
+    选择题：index lookup（B2-B2 已证明）
+    HTML：row/cell lookup（B2-B4）
+    填空：token sequence binding（B2-B3）
+    主观题：task structure → answer structure（B2-B5，Domain Contract first）
+  ```
+- **产出**：69 号 §10 B2-B1/B2-B2 小节 + 实验 harness `scripts/gate_b/`
+  （commit `3f0e79b`）。
+
+### 2026-09-11（Gate B2-B3 / B2-B4 关闭：fill-in + HTML）
+
+> **补记（2026-09-13）**，同上。
+
+- **B2-B3-A 裁决**：CLOSED — Target Classification Audit。
+  - 原报 fill-in 106 个（69/106 = 65%）经分类审计发现**分母污染**：
+    原始 fill_in 70 个中 **36 个是 MC 误分类**，真填空仅 **34** 个。
+  - 根因：`detect_answer_type` 在「MC 答案 + 解释文本」场景存在 classification
+    boundary defect。记录为独立 preprocessing defect，**不纳入 Source Binding 架构结论**。
+  - **原 65% fill-in extraction rate 正式失效。**
+- **B2-B3-B 裁决**：CLOSED — PASS / TEST-EVIDENCED / DETERMINISTIC。
+  - 34/34 resolved，fallback 0，determinism 10/10，negative 6/6 fail-closed。
+  - 冻结测试集：`backend/Docs/V3_SPEC/gate_b2b3_frozen_testset.json`。
+- **B2-B3-C**：DEFERRED — Domain Contract dependency（F2 multi-blank / F4 / F9）。
+- **B2-B4-A 裁决**：CLOSED — HTML Target Classification / Contract Freeze。
+  - 602 个 HTML answer targets 分类：H3_table_with_mc 426（70.8%）/
+    H4_complex 49 / H2_multi_table 39 / H3_table_with_qn 30 / H6_html_image 29 /
+    H5_mixed 17 / H1_simple 12。
+  - 关键发现：H3_table_with_mc 与 B2-B2 的 MC answer extraction 同构，只是载体
+    从纯文本变成 HTML table。
+  - 冻结测试集：`backend/Docs/V3_SPEC/gate_b2b4_frozen_testset.json`。
+- **B2-B4-B 裁决**：CLOSED — PASS / TEST-EVIDENCED / DETERMINISTIC。
+  - 507 个 Direct targets（H1+H2+H3 两类）全部 resolved；Excluded 95（H4/H5/H6）。
+  - fallback 0，determinism 10/10，negative 7/7 fail-closed。
+  - 核心结论：507 个 Direct HTML targets 的 preprocessing evidence 可被 V3 完全机械地
+    验证并形成稳定 ResolvedSpan。**零搜索、零 fallback、零 HTML 解析。**
+- **B2-B4-C**：DEFERRED — Domain/Material dependency（H4/H5/H6）。
+- **产出**：69 号 §10 B2-B3/B2-B4 小节 + 冻结测试集（commits `8bdd050` / `1bce065`）。
+
+### 2026-09-12（Gate B2-B5 系列完成）
+
+> **补记（2026-09-13）**，同上。B2-B5 结果当时写入 docs 71–74（backend/Docs/V3_SPEC/），
+> 未入 log.md、未回写 69 号状态块（69 号此前仍写 `B2-B5: OPEN`）。
+
+- **B2-B5-A 裁决**：CLOSED — PASS。706 targets 分类（S1 469 / S2 94 / S3 143）。
+  对抗审查后按 `Legal address ≠ legal evidence` 重分类为
+  `B2-B5-B-v2-corrected`：representable 429 / invalid_binding 267 / suspicious 10。
+- **B2-B5-B 裁决**：CLOSED — PASS / SCOPE-BOUNDED。
+  Schema 可表达 S1/S2/S3 结构（429 个 representable）。
+  **边界**：只证明表达力，不证明 IR 投影 / Compiler 编译 / Admission 持久化。
+- **B2-B5-C 裁决**：157 个 invalid binding targets → **UNRESOLVED / REVIEW REQUIRED**。
+  正式撤回三条原始主张（`5bce0bb`）：
+  | 原主张 | 撤回后 |
+  |--------|--------|
+  | Resolver reject invalid evidence | Resolver 只验结构有效性 |
+  | Gate reject invalid evidence | Gate grammar 返回 `None` → pending_review |
+  | 157 targets 自动 rejected | 157 targets 走人工裁决路径 |
+  三态决策模型：`True`→可自动 / `False`→pending_review / `None`→pending_review。
+  **None ≠ False；机器无法确定 ≠ 机器拒绝。**
+- **B2-B5-D 裁决**：COMPLETED（`8ca1271`）。13 tests：
+  Positive Projection S1/S2/S3 PASS（层级不 flatten、shared material 不重复）；
+  Negative Projection WRONG/EXPLANATION/SEPARATOR/QUESTION region 全部 pending_review；
+  Safety 0 search fallback / 0 LLM fallback / 0 source mutation；
+  Corpus 关系 157 ⊂ 267 ⊂ 706。
+- **四条冻结架构原则确立**（进入 V3 Frozen Architecture）：
+  ```text
+  P1 Source Address is location metadata, not semantic authority.
+  P2 Evidence Claim is an explicit promotion event.
+  P3 Only Validated Evidence may enter Semantic IR.
+  P4 No downstream module may infer evidence validity from successful resolution.
+  ```
+- **B2-B5-D 记录的 latent weakness**：doc 74 §6.3 —— strict-auto 题型的 answer span
+  若含解释性前缀 + 选项字母，`_option_letters()` 可能误提取。当时仅 documented，
+  **未修复**；Gate C 关闭条件也只要求 documented 而非 fixed。
+- **产出**：docs 71/72/73/74 + `gate_b2b5_frozen_testset.json` +
+  `gate_c_invalid_binding_corpus.json` + `tests/test_gate_c_invalid_binding.py` +
+  `tests/test_b2b5_d_projection_safety.py`。
+
+### 2026-09-13（Gate B2-B5 Closure + Gate B 文档对账）
+
+- **背景**：重启对账发现 restart-prompt 仍写「下一步 = Gate B2-B」，而 B2-B1～B2-B5
+  实际已全部完成，结果散落在 69 号与 docs 71–74，未回写 log/Status/restart-prompt。
+- **测试基线**：全量 pytest **660 passed**（零回归）。
+- **裁决**：**Gate B2-B5: CLOSED — PASS / TEST-EVIDENCED / SCOPE-BOUNDED**。
+  权威文档：`backend/Docs/V3_SPEC/80_B2B5_CLOSURE.md`。
+  Gate B 全系列（B1 / B2-A / B2-B1～B2-B5）至此全部关闭或显式延期。
+- **本轮实测发现（重要）**：doc 74 §6.3 的 latent weakness **至今仍开放**。
+  探针 `scripts/gate_b/gate_b2b5_closure_probe.py` 走真实 pipeline：
+  | Case | 答案区内容 | decision |
+  |------|-----------|----------|
+  | C0 | `1. A` | auto_approve（正确） |
+  | C1 | `1. 【解答】A` | **auto_approve** |
+  | C2 | `1. 【考点】…【解答】A` | **auto_approve** |
+  Grammar 边界：single_choice 对任何恰好含一个 ASCII 字母的正文返回 True，
+  包括 `见解析A页`、`参见教材A册第三章`。Admission 以原始文本持久化并置
+  `verified_correct=True`。三层防御均未拦截——structural overlap 不触发
+  （span 合法在 answer region 内）、grammar-None 不触发（strict-auto）、
+  Evidence Promotion Phase 1 是 additive-only（只记日志，不改准入判定）。
+  **注意 doc 74 把 `structural_regions` 误写为 `semantic_regions`**（§5.1/§5.2），
+  实际代码字段为 `ResolvedRun.structural_regions`。
+- **处置**：登记为 OPEN architectural item（80 号 §3.4），**不随 B2-B5 关闭**，
+  **本轮不修复**。理由：修复属生产行为变更，需先裁决 Grammar 契约（Q-A 白名单 token /
+  Q-B Evidence Claim 显式 answer_form / Q-C 收紧 auto_approve）；
+  B2-B5 语料全部非 strict-auto，与本 weakness 正交。
+- **文档回写**：新增 80 号；69 号 Gate B 状态块 `B2-B5: OPEN` → `CLOSED` +
+  Gate C/D 同步 + 下一步清单更新；Status.md 新段；本 log 补记 B2-B1～B2-B5 + 本轮。
+- **下一步**：Grammar 契约裁决 → Gate D（Adapter Boundary）→ OQ-3 → OQ-2 →
+  B2-B2 Unknown 125 triage → Errata Decision。
+
+### 2026-09-13（BUG-V3-044 修复：AnswerTokenContract 封闭 Evidence Admission Boundary）
+
+- **架构裁决（用户）**：
+  | 项目 | 裁决 |
+  |------|------|
+  | Gate B2-B5 | 保持 CLOSED，不回滚 |
+  | BUG-V3-044 | 必须修复 |
+  | 修复方案 | Q-A 为主（AnswerTokenContract 白名单） |
+  | Evidence Contract | 不扩大（Q-B 留 Phase 2） |
+  | Evidence Promotion Phase 1 | 不回退 |
+  | Gate D | 延后至 Grammar Contract 冻结后 |
+- **架构定位**：Gate C 已解决 Source Binding Boundary 与 Evidence Authority Boundary
+  两层；本 bug 属其下的第三层 **Semantic Answer Contract**——合法 Evidence 仍可能
+  携带不符合 Answer Contract 的内容，被 strict-auto 误提升为 `verified_correct`。
+  若先进 Gate D，外部 Adapter 产生的合法 Evidence 会经 Gate → Admission 写入错误
+  `verified_correct`，污染后续所有 Adapter 验证。
+- **题号前缀冲突裁决**：裁决原文拒绝清单含 `1. A`，但与三层既有冻结行为冲突
+  （20 §5.5 切片规则 / grammar 刻意剥离 / 8 条现有测试锁定）。按字面执行会令真实
+  MC 答案几乎全部 pending_review。**用户裁决：剥离后白名单**——保留 `_LEAD_QN_RE`
+  剥离，契约只校验剥后剩余部分，`1. A` 仍 approve。
+- **真实语料覆盖率实测与二次扩展**：初版白名单在 101 份语料上产生 145 个
+  single_choice 回归，细分后 83 个是修复收益（`【分析】` 正文等）、62 个是合法格式
+  被误伤（`【答案】D` 48 / `（N分）D` 10 / `D。` 4）。**用户裁决：扩至三种合法形态**，
+  全串锚定。关键原则区别：`【答案】` 是冻结答案表头 token（BUG-V3-031）直陈答案；
+  `【分析】`/`【解答】`/`【考点】` 之后是解释正文——非特判。
+  扩展后 single_choice 保持通过 **56 → 119**，剩余 82 个回归全部为真实垃圾。
+- **实现**（`app/domains/gate/grammar.py`）：删除 `_option_letters()`（缺陷源头）；
+  新增 `_SC_FORMS_RE`（单选五形态全串锚定白名单：裸字母/括号/`【答案】`标记/
+  `（N分）`前缀/字母+句号）与 `_MC_TOKEN_RE`（多选：可选前缀 + 字母，仅既定分隔符）；
+  `true_false` 原有白名单不变（实测本就不受污染影响）；grammar 三态约定不变。
+  全串锚定是关键——`（3分）D["莫问…"]`、`【答案】D详见解析`、`D。本句采用暗喻。`
+  全部 → None。
+- **测试**：新增 `TestAnswerTokenContractPositive` / `BoundaryAttacks` /
+  `TypeIsolation`（正向 / 边界攻击 / 题型隔离，+54 条）；反转 2 条原「记录缺陷」
+  断言为「锁死修复」（`test_role_provenance.py` 与 `test_b2b5_d_projection_safety.py`）。
+  **全量 pytest 736 passed**（修复前 660），零失败。
+  探针：C1/C2 由 `auto_approve` → **`pending_review`**；C0/C3 不变。
+- **显式不主张**：不主张 grammar 通过即语义正确（只验格式可表达性，必要不充分）；
+  不主张覆盖全部真实答案形态（未见形态仍 fail-closed）；Q-B 留 Phase 2 未做。
+- **产出**：`grammar.py` 修复 + 3 个测试文件更新 + 覆盖率测量脚本
+  `scripts/gate_b/gate_b044_coverage_measure.py` + 80 号 v1.1.0（新增 §6）+
+  bugs.md BUG-V3-044 → Resolved + Status.md + restart-prompt v1.44。
+- **下一步**：Gate D（Adapter Boundary，Grammar Contract 已冻结故阻塞解除）→
+  OQ-3 → OQ-2 → B2-B2 Unknown 125 triage → Errata Decision。
+
+### 2026-09-13（BUG-V3-044 对抗性审查：发现 1 个真实缺陷 + 1 个方法学缺陷）
+
+- **审查文件**：`tests/test_bug044_adversarial_review.py`（62 项，8 维度）。
+  纪律：每个结论必须有真实测试证据；发现缺陷则让测试失败并如实报告，不自我合理化。
+- **发现 1（真实缺陷，已修复）**：混合括号被接受。
+  `verify("single_choice", "（A)")` 曾返回 True。根因：正则 `[（(]([A-Za-z])[）)]`
+  中 `[）)]` 是字符类，开闭括号各自独立匹配，超出裁决允许形态（只授权 `（A）` 与 `(A)`）。
+  修复：拆为全角/半角两条配对分支，分值前缀同理；拒绝锁入契约测试。
+- **发现 1b（修复过程中自引入，同轮捕获）**：`score_fw` 命名组只捕获数字、字母在组外，
+  会导致 `（3分）D` 正则匹配成功却返回 None。已在测试前修正为整段纳入命名组。
+- **发现 2（方法学缺陷，已修正）**：§6.3 报告的覆盖率数字基于错误语义——用「行内全部
+  剩余文本」而非 E 的 char-span 切片（本题号起点 → 下一题号起点）。
+  修正后按 char-span 语义重扫 **8166 条目**：
+  | 题型 | 保持通过 | 回归拒收 |
+  |---|---:|---:|
+  | single_choice | 552 | 261 |
+  | multiple_choice | 546 | 320 |
+  | true_false | 0（语料未观测到） | 0 |
+  261 个 single_choice 回归细分：205 真实垃圾（78.5%）+ 55 解析类标记（21.1%）
+  + **1 个离群点 `A;`**（0.01%）。`A;` 仅出现 1 次，非系统性合法形态，
+  **不扩展白名单**，fail-closed 到 pending_review。
+- **发现 3（测试断言过严，非生产缺陷）**：A2 测试期望 `'1. A'`、实际 `'1. A '`
+  （切片天然含分隔空白，`_clean_answer` 会 strip）。生产行为正确，是字面量写错，
+  已改为断言真正属性（span 不含下一题号 + decision 正确）。
+- **通过项（均有测试证据）**：A2 grammar 收到带题号前缀的 char-span；A2 同行多题
+  切到下一 qn 前；A3 绕过全拒（CJK 正文含单字母 / 零宽空格 / 标记后跟正文）；
+  A5 MC 形态与前缀正确；A6 true_false 不变且不受 SC 白名单影响；
+  A7 policy 跟随新 grammar、失败落 pending_review 非 terminal、其余层不误判 fail；
+  A8 三态约定与 STRICT_AUTO_TYPES 不变、`_option_letters` 真正删除（非改名保留）。
+- **回归**：全量 pytest **802 passed**（审查前 736，+66 项），零失败。
+  探针 C0/C3 不变，C1/C2 保持 pending_review。
+- **产出**：`test_bug044_adversarial_review.py` + `grammar.py` 括号配对修正 +
+  `test_gate_grammar.py` 混合括号拒绝锁 + 80 号 §7 审查记录。

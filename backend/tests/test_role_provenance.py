@@ -216,25 +216,34 @@ class TestRoleProvenanceE2ERegression:
                 f"EXPLANATION_REGION target should not be strict-auto, got {qt}"
             )
 
-    def test_strict_auto_grammar_limitation_documented(self):
-        """Document unclosed Evidence Admission Boundary for strict-auto types.
+    def test_strict_auto_answer_token_contract_enforced(self):
+        """BUG-V3-044 FIXED：AnswerTokenContract 封闭 Evidence Admission Boundary。
 
-        verify() extracts ASCII letters from any text. The function is correct
-        per its contract. The issue is upstream: Grammar's input precondition
-        ("this text is valid answer evidence") is not proven by any contract.
-        This is an unclosed Evidence Admission Boundary, not a Grammar bug.
+        旧实现 `verify(sc, "【解答】A", labels) is True`（记录为 unclosed
+        boundary）。用户裁决 2026-09-13 采用 Q-A 白名单：剥除题号前缀后，
+        答案文本必须完全落在允许形态内，否则 None → pending_review。
+        本测试从「记录缺陷」反转为「锁死修复」。
         """
         from app.domains.gate.grammar import verify
 
+        # 合法 token 形态仍通过
         assert verify("single_choice", "A", ("A", "B", "C", "D")) is True
+        assert verify("single_choice", "1. A", ("A", "B", "C", "D")) is True
+        assert verify("single_choice", "（A）", ("A", "B", "C", "D")) is True
+        assert verify("single_choice", "A、", ("A", "B", "C", "D")) is True
 
-        # Explanation marker + single letter A -> grammar True
-        # (correct per _option_letters contract; input qualification is the gap)
-        result = verify("single_choice", "【解答】A", ("A", "B", "C", "D"))
-        assert result is True, (
-            "Unclosed Evidence Admission Boundary: text with explanation marker "
-            "passes grammar because input qualification is not enforced."
-        )
+        # 解释性前缀 / 非 token 正文 → None（不得 auto）
+        for polluted in (
+            "【解答】A",
+            "【考点】A",
+            "参见教材A册第三章",
+            "见解析A页",
+            "正确答案为A",
+            "1. 【考点】本题考查词义辨析。【解答】A",
+        ):
+            assert verify("single_choice", polluted, ("A", "B", "C", "D")) is None, (
+                f"AnswerTokenContract must reject non-token answer text: {polluted!r}"
+            )
 
 
 class TestEvidencePromotionNegative:

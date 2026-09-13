@@ -820,6 +820,65 @@
 - **Resolved（2026-09-09 21:00:00）**：15/15 quality tests PASSED。
   Co excluded from non_printable；Cc/Cn still detected。commit `1c31fdf`。
 
+### BUG-V3-044 — strict-auto grammar 对「任意单 ASCII 字母正文」误判为合法答案
+- Status: **Resolved**
+- 登记：2026-09-13
+- 现象：`gate/grammar.py::verify()` 对 single_choice 只要求「答案文本中**恰好一个**
+  ASCII 字母 ∈ resolved labels」。任何恰好含一个 ASCII 字母的正文都会被判 True：
+  ```
+  verify("single_choice", "【解答】A", ("A","B","C","D"))          → True
+  verify("single_choice", "【考点】本题考查…【解答】A", labels)      → True
+  verify("single_choice", "1. 见解析A页", labels)                   → True
+  verify("single_choice", "1. 参见教材A册第三章", labels)           → True
+  ```
+  真实 pipeline 探针（`scripts/gate_b/gate_b2b5_closure_probe.py`）证实：
+  答案区内容为 `1. 【解答】A` / `1. 【考点】…【解答】A` 时，Gate decision = **auto_approve**，
+  Admission 以**原始 span 切片**持久化（`text="1. 【解答】A"`）并置 `verified_correct=True`。
+- 根因：`_option_letters()` 抽取任意 ASCII 字母——该函数行为符合其职责（doc 74 §2.2），
+  缺陷在于**「该输入已是合法 answer evidence」这一前提没有被任何 Contract 证明**。
+  三层防御全部未拦截：① structural overlap 检查不触发（答案 span 合法地位于 answer
+  structural region 内）；② grammar-None 不触发（题型是 strict-auto）；
+  ③ Evidence Promotion Phase 1 是 additive-only（只追加 ValidationEvent 日志，
+  不改准入判定）。
+- 对照：`true_false` 走白名单 token，`verify("true_false", "【解答】对", ())` → None，
+  不受影响。multiple_choice 同样受影响（非空字母集 ⊆ labels 即 True）。
+- 影响：strict-auto 题型的题库可能被写入「已验证正确答案」实为正文噪声的记录。
+- **裁决（用户，2026-09-13）**：采用 **Q-A AnswerTokenContract**（白名单）为主；
+  Evidence Contract **不扩大**（Q-B 留 Phase 2）；Evidence Promotion Phase 1 **不回退**；
+  Gate D **延后**至 Grammar Contract 冻结后。题号前缀采用**剥离后白名单**——
+  保留既有 `_LEAD_QN_RE` 剥离（20 §5.5 冻结切片规则），契约只校验剥后剩余部分，
+  `1. A` 仍 approve。
+- **真实语料覆盖率实测（101 份）驱动的二次扩展（用户裁决）**：初版白名单在真实语料上
+  误伤 62 个合法条目（145 个回归中 83 个是修复收益、62 个是合法格式）。经裁决扩展三种
+  **全串锚定**形态：`【答案】+字母`（48 个，`【答案】` 是冻结答案表头 token，直陈答案，
+  与 `【分析】`/`【解答】` 等解析标记有原则区别）、`（N分）+字母`（10 个）、
+  `字母+句号`（4 个）。扩展后 single_choice 保持通过 56 → **119**，剩余 82 个回归
+  全部为真实垃圾（解析正文 / 分值+字母+解析混合 / 同行多答案）。
+- **Resolved（2026-09-13）**：`grammar.py` 引入 `AnswerTokenContract`——
+  `_SC_FORMS_RE`（单选五形态白名单：裸字母/括号/【答案】标记/分值前缀/字母+句号）
+  与 `_MC_TOKEN_RE`（多选：可选前缀 + 字母，仅既定分隔符），替换 `_option_letters`
+  抽取逻辑；删除 `_option_letters`。全串锚定，任何尾巴（如 `（3分）D["…"`）仍拒。
+  grammar 三态约定不变（只 True/None，永不 False）。
+  新增测试 `TestAnswerTokenContractPositive` / `BoundaryAttacks` / `TypeIsolation`
+  （正向 / 边界攻击 / 题型隔离，共 +54 条）；反转 2 条原「记录缺陷」断言为「锁死修复」
+  （`test_role_provenance.py::test_strict_auto_answer_token_contract_enforced`、
+  `test_b2b5_d_projection_safety.py::test_invalid_explanation_region_blocked`）。
+  全量 pytest **736 passed**（零回归）；探针 C1/C2 由 auto_approve → **pending_review**，
+  C0/C3 不变。
+- 验收（已达成）：`【解答】A` / `【考点】A` / `参见教材A册第三章` / `见解析A页` /
+  `正确答案为A` / `【分析】…` 全部 None；`A` / `1. A` / `（A）` / `A、` /
+  `【答案】D` / `（3分）D` / `D。` 全部 True；非 strict-auto 题型恒 None 不受影响。
+- 关联：doc 74 §6.3（首次记录）；80 号 §3（实测确认）/ §3.4（裁决与实现）/ §7（对抗性审查）；
+  BUG-V3-031（header grammar，同族但不同层——那是区界判定，这是答案 token 判定）。
+- **对抗性审查（2026-09-13，80 号 §7）**：62 项审查发现 **1 个真实缺陷**——
+  正则 `[（(]([A-Za-z])[）)]` 中 `[）)]` 为字符类，开闭括号各自独立匹配，
+  `（A)` / `(A）` 混用括号被错误接受（超出裁决允许形态）。已拆为全角/半角配对分支修复；
+  修复过程中自引入的 `score_fw` 命名组截断 bug（会让 `（3分）D` 匹配却返回 None）
+  同轮捕获。同时修正了覆盖率测量的方法学缺陷（须复刻 E 的 char-span 切片语义，
+  非「行内剩余文本」）：8166 条目重扫，single_choice 552 保持 / 261 回归
+  （205 垃圾 + 55 解析标记 + 1 离群点 `A;`，不扩展白名单）。
+  审查后全量 pytest **802 passed**，零失败。
+
 ## Resolved Bugs
 
 （暂无。）

@@ -1,0 +1,66 @@
+doc 74 §6.3 latent Evidence Admission Boundary — decisive probe
+
+
+===== GRAMMAR BOUNDARY (single/multiple/true_false) =====
+  clean                        sc=True  mc=True  tf=None   'A'
+  qn prefix                    sc=True  mc=True  tf=None   '1. A'
+  solution bracket             sc=True  mc=True  tf=None   '【解答】A'
+  kao dian + jie da            sc=True  mc=True  tf=None   '【考点】本题考查词义辨析。【解答】A'
+  argues against A, picks B    sc=None  mc=True  tf=None   '1. 【解答】不选A，应选B'
+  single wrong letter          sc=True  mc=True  tf=None   '1. 见解析A页'
+  letter in prose only         sc=True  mc=True  tf=None   '1. 参见教材A册第三章'
+  true_false clean             sc=None  mc=None  tf=True   '对'
+  true_false bracket           sc=None  mc=None  tf=None   '【解答】对'
+
+grammar sanity:
+  verify(sc, 'A')            -> True
+  verify(sc, '【解答】A')    -> True
+  verify(sc, '【考点】...A') -> True
+
+===== C0 baseline clean '1. A' =====
+decision        : auto_approve
+structural      : pass
+provenance      : pass
+provenance auto : True
+semantic        : pass
+regions         : [('question', ('P1L001', 'P1L002', 'P1L003', 'P1L004', 'P1L005')), ('answer', ('P1L007',))]
+reasons         : ['strict-auto: all answers verified_correct=true']
+
+===== C1 '1. 【解答】A' in answer region =====
+decision        : auto_approve
+structural      : pass
+provenance      : pass
+provenance auto : True
+semantic        : pass
+regions         : [('question', ('P1L001', 'P1L002', 'P1L003', 'P1L004', 'P1L005')), ('answer', ('P1L007',))]
+reasons         : ['strict-auto: all answers verified_correct=true']
+
+===== C2 rich '【考点】...【解答】A' in answer region =====
+decision        : auto_approve
+structural      : pass
+provenance      : pass
+provenance auto : True
+semantic        : pass
+regions         : [('question', ('P1L001', 'P1L002', 'P1L003', 'P1L004', 'P1L005')), ('answer', ('P1L007',))]
+reasons         : ['strict-auto: all answers verified_correct=true']
+
+===== C3 explanation under real 详解 header =====
+decision        : auto_approve
+structural      : pass
+provenance      : pass
+provenance auto : True
+semantic        : pass
+regions         : [('question', ('P1L001', 'P1L002', 'P1L003', 'P1L004', 'P1L005')), ('answer', ('P1L007',)), ('explanation', ('P1L009',))]
+reasons         : ['strict-auto: all answers verified_correct=true']
+
+
+===== VERDICT =====
+     auto_approve  <- C0 baseline clean '1. A'
+     auto_approve  <- C1 '1. 【解答】A' in answer region
+     auto_approve  <- C2 rich '【考点】...【解答】A' in answer region
+     auto_approve  <- C3 explanation under real 详解 header
+
+*** LATENT WEAKNESS STILL OPEN ***
+   These explanation-prefixed answer spans reached auto_approve:
+     - C1 '1. 【解答】A' in answer region
+     - C2 rich '【考点】...【解答】A' in answer region

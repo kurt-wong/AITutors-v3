@@ -213,15 +213,12 @@ class TestNegativeProjectionSafety:
         """
         EXPLANATION_REGION: explanation content in answer role.
 
-        _option_letters() extracts letter A from explanation content -> verify True.
-        This is NOT a bug in _option_letters (it correctly extracts letters per its
-        contract). The issue is upstream input qualification: who determined this
-        input is valid answer evidence?
+        BUG-V3-044 FIXED（用户裁决 2026-09-13，AnswerTokenContract）：
+        旧实现用 `_option_letters()` 从任意正文抽 ASCII 字母，`【解答】A` 被判
+        True 并可 auto_approve。现剥除题号前缀后走白名单——`【解答】A` 不属于
+        任何允许形态（含汉字与【】标记）→ None → pending_review。
 
-        Current corpus: all 49 EXPLANATION_REGION targets are non-strict-auto,
-        so grammar-None blocks them. This test documents the latent weakness.
-
-        Defense-in-depth: structural consistency check in test_role_provenance.py.
+        本测试从「记录缺陷」反转为「锁死修复」。
         """
         from app.domains.gate.grammar import verify
 
@@ -229,15 +226,12 @@ class TestNegativeProjectionSafety:
 
         result = verify("single_choice", invalid_content, ("A", "B", "C", "D"))
 
-        # Grammar limitation: returns True (extracts letter A from explanation content)
-        # Contract-based detection is in test_role_provenance.py
-        assert result is True, (
-            "Grammar limitation documented: extracts letter from explanation content. "
-            "Contract-based detection in test_role_provenance.py."
+        assert result is None, (
+            "AnswerTokenContract: explanation-prefixed text must not be treated "
+            f"as a valid answer token, got {result!r}"
         )
 
-        print("PASS: EXPLANATION_REGION grammar limitation documented, "
-              "contract-based detection in test_role_provenance.py")
+        print("PASS: EXPLANATION_REGION blocked by AnswerTokenContract")
     
     def test_invalid_separator_region_blocked(self):
         """SEPARATOR_REGION: 分隔符区域绑定 → pending_review"""

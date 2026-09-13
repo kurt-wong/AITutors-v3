@@ -1123,13 +1123,17 @@ B2-B4-B  Deterministic HTML Binding   CLOSED — PASS
 B2-B4-C  Domain/Material-dependent    DEFERRED（H4/H5/H6）
 ```
 
-#### Gate B 当前状态（B2-B4 关闭后）
+#### Gate B 当前状态（B2-B5 关闭后，2026-09-13 对账更新）
+
+> 本块以 `backend/Docs/V3_SPEC/80_B2B5_CLOSURE.md` 为权威来源。
+> B2-B1～B2-B5 的实验在 2026-09-11/12 完成；此前本块漏记 B2-B5 系列结果，
+> 现按 80 号裁决回写。
 
 ```text
 Gate A: PASS / TEST-EVIDENCED
 Gate B1: CONDITIONAL PASS — Region Binding Contract 基本成立
-Gate B2-A: PASS / STRONGLY TEST-EVIDENCED / CLOSED
-  Stem: Legacy 44.3% vs Path B 97.3%
+Gate B2-A: PASS / TEST-EVIDENCED / CLOSED（stem-only, three-task audit）
+  Stem: Legacy 47.1% vs Path B 96.8%（补强后 stem-only 口径）
 Gate B2-B1: CLOSED — PASS / TEST-EVIDENCED / SCOPE-BOUNDED
   Non-HTML extraction: 99.6% (1065/1069)
   Adversarial sampling: 98.0% (49/50)
@@ -1139,8 +1143,8 @@ Gate B2-B2: CLOSED — PASS / TEST-EVIDENCED / SCOPE-BOUNDED
   MC answer extraction: 99.8% (1176/1178)
   Fill-in: 65% → RECLASSIFIED (see B2-B3-A)
   HTML: 0% → RECLASSIFIED (see B2-B4-A)
-  Sub-question: OUT OF SCOPE (Domain Contract first)
-  Unknown: 125 TRIAGE REQUIRED
+  Sub-question: → B2-B5
+  Unknown: 125 TRIAGE REQUIRED（仍未清）
 Gate B2-B3-A: CLOSED — Target Classification Audit
   Original fill_in: 70 → MC misclassified: 36, Real fill-in: 34
 Gate B2-B3-B: CLOSED — PASS / TEST-EVIDENCED / DETERMINISTIC
@@ -1151,10 +1155,14 @@ Gate B2-B4-A: CLOSED — HTML Target Classification
 Gate B2-B4-B: CLOSED — PASS / TEST-EVIDENCED / DETERMINISTIC
   Positive: 507/507 resolved, Fallback: 0, Determinism: 10/10, Negative: 7/7 fail-closed
 Gate B2-B4-C: DEFERRED — Domain/Material dependency (H4/H5/H6)
-Gate B2-B5: OPEN — Subjective/Sub-question (Domain Contract first)
-Gate C: OPEN
-Gate D: OPEN
-Errata: BLOCKED BY Gate B/C
+Gate B2-B5: CLOSED — PASS / TEST-EVIDENCED / SCOPE-BOUNDED（80 号，2026-09-13）
+  A classification 706 / B expressiveness 429 representable
+  C invalid binding → pending_review（157 targets, UNRESOLVED/REVIEW REQUIRED）
+  D E2E projection safety 13 tests PASS
+  Residual: Evidence Admission Boundary → CLOSED（BUG-V3-044，80 号 §6）
+Gate C: CLOSED (Phase 1 Evidence Authority Boundary Closure)
+Gate D: OPEN（Grammar Contract 已冻结，阻塞解除）
+Errata: BLOCKED BY Gate D
 ```
 
 ### 禁止事项（正式声明）
@@ -1165,13 +1173,16 @@ Frozen contract → validator → 发现真实 mismatch → 判断是 validator 
 已经完成：validator bug → 修复；source-view bug → 修复。
 剩余：manifest structural semantics / contract gap → 需要裁决。
 
-### 下一步（按序执行）
+### 下一步（按序执行，2026-09-13 二次更新）
 
-1. **B2-A 三项补强**：审计 15 个 Legacy-only case + 独立抽样验证 + 排除 explanation
-2. **Gate B2-B**：结构化内容定位（option/answer table/fill-in/HTML table）
-3. **Gate C**：Safety Invariant Preservation 验证
-4. **OQ-3 → OQ-2**：物化层 / Standalone+Material 裁决
-5. **Errata Decision**（Gate B/C/D 通过后）
+> Grammar 契约裁决已完成（BUG-V3-044 Resolved，80 号 §6）。
+
+1. **Gate D**：Adapter Boundary（preprocessing 作为可选上游，Contract Translator
+   而非 Semantic Resolver）。Grammar Contract 已冻结，阻塞解除。
+2. **OQ-3 → OQ-2**：物化层 / Standalone+Material 裁决。
+3. **B2-B2 Unknown 125 triage**（仍未清）+ B2-B3-C / B2-B4-C 延期项。
+4. **Phase 2 Evidence Ledger**（含 Q-B Evidence Claim 显式 `answer_form`）。
+5. **Errata Decision**（Gate D 通过后）。
 
 ### 重要措辞
 
