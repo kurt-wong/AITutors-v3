@@ -1955,5 +1955,61 @@ GateService integration: per-run isolation + reference_ids linking
 | Structural consistency | ✅ Complete |
 | Evidence Promotion Contract | ✅ Design accepted |
 | Evidence Authority Ledger Phase 1 | ✅ Ready |
-| C-2 157 E2E | ▶️ 可以开始 |
-| Gate C Closure | ⏳ 尚未 |
+| C-2 157 E2E | ✅ PASS（20 tests） |
+| Gate C Closure | ✅ **CLOSED (Phase 1 Evidence Authority Boundary Closure)** |
+
+---
+
+## 2026-09-13 — Gate C Closure (Phase 1)
+
+### 架构审查裁决
+
+**B2-B5-D：通过。Evidence Promotion Contract Phase 1：通过。C-2 157 E2E：通过。**
+
+> Gate C 关闭名称限定为 **Phase 1 Evidence Authority Boundary Closure**。
+> 不宣称 "生产级 Evidence Authority 完成"。
+
+### Gate C Closure 声明
+
+```
+Gate C: CLOSED (Phase 1 Evidence Authority Validation)
+
+Evidence Promotion Contract:    PASS
+C-2 157 E2E:                     PASS
+Semantic IR bypass:              PASS
+Invalid Binding fail-closed:     PASS
+```
+
+### Deferred（合理延期至 Phase 2）
+
+- Proposal/Claim creator separation（提出者=审核者自证风险）
+- Persistent Evidence Ledger（DB append-only table）
+- Cryptographic audit chain（audit hash chain）
+- INVALIDATED state full lifecycle
+
+### 核心架构跃迁
+
+> 从"相信 Resolver 输出"升级为"不相信任何模块输出，
+> 只相信经过 Authority Ledger 授权的 Evidence"。
+
+关键修正：Ledger 下沉到数据层（append-only + state machine enforcement）解决 TOCTOU。
+Evidence Validity 从隐含属性提升为显式授权状态（Authority State）。
+
+### 分层边界（不可逾越）
+
+```
+Source → Evidence Authority → Semantic IR → Knowledge Reasoning
+```
+
+- Evidence Authority 保证：来源可追溯 / 提出者有身份 / 验证有 check_id / IR 只消费 validated
+- Evidence Authority **不**保证：OCR 正确 / LLM annotation 正确 / 数学答案正确
+- **Evidence Validity ≠ Semantic Correctness**
+
+### 下一步优先级
+
+| 顺序 | 项目 | 原因 |
+|------|------|------|
+| 1 | ~~Gate C Closure~~ | ✅ 本轮完成 |
+| 2 | **Gate B2-A 三项补强** | Path B 主线真实阻塞 |
+| 3 | Gate B2-B | 结构化内容定位 |
+| 4 | Phase 2 Evidence Ledger | 等真实 pipeline 压力 |
