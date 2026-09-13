@@ -1,15 +1,54 @@
 # AI Tutor V3 — RESTART PROMPT
 
-Version: v1.51
-Status: **Phase I-5-G Document Governance ACTIVE（90 号元规范已立）** —
+Version: v1.52
+Status: **Phase I-5-G Document Governance ACTIVE** —
+**CA-001 OPEN（`40` 被新增 CHANGE-2 强制规则，无 Change Record）**；
+OPEN 12 项（P0：CA-001 / D-01 / C-01 / D-02）；
 Gate A PASS / Gate B **NOT CLOSED** / Gate C CLOSED (Phase 1) /
 Gate D CONTRACT CLOSED / Adapter NOT STARTED / Binding Carrier PENDING；
-**Documentation Governance Pass 未完成（90 §10 十项中 5 项达成）**，
-不得进入 Binding Authority Decision；
-下一步：**裁决 `84` 台账 15 项 OPEN**（优先 D-01 → A-07 → C-01 → B-01）
+下一步：**裁决 CA-001**（追认 / 撤回 / 挂起）
 Date: 2026-09-13
 
-## 0.0 当前结论（2026-09-13 Phase I-5-G — 治理元规范 90 号 ACTIVE）
+## 0.0 当前结论（2026-09-13 CA-001 L0 修改审计 + P0 三项裁决）
+
+- **🔴 CA-001 — L0 完整性问题，当前最高优先级。**
+  `40_Development_Rules.md §5` 在 `0dd954d`（09-13 14:43）被新增一条**强制**规则
+  （「测量语义必须复刻真实 pipeline…禁止用近似文本代替…度量脚本必须能指出它复刻
+  哪一段 pipeline，并有测试锁死该复刻语义」），**无 Change Record**。
+  - **分类 CHANGE-2 Normative Addition**——新增了「指出复刻哪一段」+「测试锁死」
+    两项此前不存在的可验证要求，**不是** CHANGE-1 Clarification。
+  - **时序缓解因素，非豁免**：发生在 90 生效前，当时 CHANGE 分类未建立，但
+    `82 §2` 与「先冻结 Spec 再改代码」已存在。
+  - **内容可辩护**（源自 BUG-V3-044 教训），**但缺 Change Record 是事实**。
+  - **可选处置待裁决**：(a) 追认 / (b) 撤回重走 L1 / (c) 挂起。见 `90 §11`。
+  - **审计范围**：`0dd954d` 后触及 L0 的提交**仅 40 一处**。更早的 L0 修改自带
+    `errata` 标记，属 90 前既有惯例。
+- **P0 三项已裁决（用户 2026-09-13）**：
+  - **A-07 → DECIDED：语义A 成立，Gate C CLOSED 不动摇。**
+    `72 §3` 157 = invalid/suspicious targets；`73:215-221` NOT proven **全是语义
+    正确性**；C-2 实际 = `test_c2_evidence_authority_e2e.py`（IR bypass + Lifecycle
+    + 157 fail-closed）——**证明管线不变量，非每个 binding 的语义正确性**。
+    已在 `73` 文首写 **C-2 Evidence Scope Clarification**，**正文未改**。
+  - **B-01 → DECIDED：名称漂移非概念缺失。** `75` 实际标题是「Evidence
+    **Promotion** Contract」。已在 `75` 加 **Terminology** 节声明简称等同；
+    **不全文替换**；新文档用全称。
+  - **B-02 → DECIDED：不升 L0。我先前判「零定义」是错的**——`Validated Evidence`
+    **有 L2 定义**（`75:42` 状态机 `state: trusted`、`75:194` `§4.5`）。它是证据
+    生命周期**状态**（系统机制），非基础原则。`90 R9` 已冻结 `≠ verified_correct`。
+- **90 号新增四条规则**：
+  - **R7 引用闭包**：L2/L3/L4 的规范性结论必须存在向上闭包。
+  - **R8 废止传播**：`supersede` 后不得作为引用来源；扫描器跳过；`docs_audit` 标
+    `deprecated`。
+  - **R9 Evidence 术语不可互换（永久）**：`Validated Evidence ≠ verified_correct`；
+    `Verified Evidence` 永久禁用。
+  - **R10 L2 不得创造新名词**：`Binding Carrier` / `External Claim` /
+    `Semantic Authority` 三项 ⚠️ 未定义，进入代码前须走 Terminology Proposal。
+- **检测器改进（R6 定义形态扩展）**：识别表格 / 状态机 `state:` / 「唯一可进入」。
+  改进后 `Validated Evidence` defs 0→6、`ResolvedSpan` 0→3、`annotation_payload`
+  0→1、`FORBIDDEN_FIELDS` 0→1——**所有 HIGH 漂移风险清零**，证实全是检测器局限。
+- **Closure 归层改为 `L2-proposed` + `classification_status: pending`**——
+  L2 本身也是治理事实，未经裁决不能成为事实。
+- **本轮未裁决**：CA-001 / D-01 / C-01 / D-02。**未改任何 L0 内容。**
 
 - **`90 号` = 治理元规范（L0-META，最高）**。**不是业务 Spec**，不含任何
   annotation / resolver / gate / admission 业务语义。它规定「规范如何被管理」。
@@ -233,24 +272,24 @@ Date: 2026-09-13
 - **红线（不变）**：HTTP retry ≠ LLM retry ≠ fallback；先冻结 Spec 再改代码；
   Schema Source of Truth = 20_Document_Pipeline.md；Resolver 不猜；
   实验结果 ≠ 实施授权；提议修改 ≠ 违反 Frozen Spec。
-- **下一步（按序执行；90 §10 十项完成条件全绿前不得进入 I-5-BIND）**：
-  1. **裁决 `84` 台账 15 项 OPEN**（优先级见 `84 §2`）：
-     **D-01**（71 号双份，阻塞第 10 项）→ **A-07**（73 的 157 targets vs Gate C）
-     → **C-01**（`line_refs` 四方不一致）→ **B-01**（`Evidence Contract` 零定义）
-     → **B-02**（三近义词）→ **D-02/D-03**（归层）→ **A-04/A-06/A-08/A-09**（状态对账）
-     → **D-04/D-05**（L3 自立规范 + 状态行集中面）。
-  2. **重跑 `i5g_emit_audit.py`** 复核 `docs_audit/` 四件产物；diff 看治理漂移。
-  3. **90 §10 十项全绿 → Current Baseline declared**。
-  4. **I-5-BIND — Binding Authority Decision**（BIND-1 优先；`82 §5`）。
-  5. 之后才依次：V3 Annotation Contract → Manifest Contract → Change Records
-     （E1=CHANGE-2；67=CHANGE-4/5 REJECT）→ Errata Decision → 最小 Adapter +
-     对抗性测试 → 真实 corpus E2E → Path B Full Closure。
-  - **非 Path B 侧（不阻塞于上表）**：OQ-3 → OQ-2；B2-B2 Unknown 125 triage
-    （完成时补 `80:426` scope 声明，消 84 A-04）；B2-B3-C / B2-B4-C 延期项；
-    Phase 2 Evidence Ledger（含 Q-B Evidence Claim 显式 `answer_form`）。
-  - **每次 Gate 状态变更，必须在同一 commit 内更新 `82 §3`。** 其他文档的 Gate
-    状态均为回声；与 82 §3 矛盾即该文档 stale。**新增** Gate 状态行须用
-    `90 §4` + `82 §3.3` 模板。
+- **下一步（按序执行；90 §10 全绿前不得进入 I-5-BIND）**：
+  1. **裁决 CA-001**（`90 §11`）——**L0 完整性问题，最高优先级**。
+     `40 §5` 被 `0dd954d` 新增 CHANGE-2 强制规则而无 Change Record。
+     选项：(a) 追认 / (b) 撤回重走 L1 / (c) 挂起。
+  2. **裁决 D-01**（71 号双份不同内容）——阻塞 `90 §10` 第 10 项。建议 root 版
+     判 stale + supersede 指针 → backend CORRECTED 版；**不删除任一份**。
+  3. **裁决 C-01**（`line_refs` 四方不一致）——须走 BIND-1/2/3（`82 §5`）。
+  4. **裁决 D-02 / D-03**（归层：4×Closure 现为 `L2-proposed`；`63` 升 L0 须走 L1）。
+  5. **A-04 / A-06 / A-08 / A-09** 状态对账；**D-04 / D-05** L3 自立规范改写。
+  6. **重跑 `i5g_emit_audit.py`** 复核 `docs_audit/`，diff 看治理漂移。
+  7. **90 §10 十项全绿 → Current Baseline declared**。
+  8. **I-5-BIND — Binding Authority Decision**（BIND-1 优先）。
+  9. 之后才依次：V3 Annotation Contract → Manifest Contract → Change Records
+     （E1=CHANGE-2；67=CHANGE-4/5 REJECT）→ Errata Decision → 最小 Adapter。
+  - **非 Path B 侧**：OQ-3 → OQ-2；B2-B2 Unknown 125 triage；B2-B3-C / B2-B4-C；
+    Phase 2 Evidence Ledger。
+  - **L0 修改强制登记**：任何 L0 改动必须在 `90 §11` 登记，否则违规。
+  - **每次 Gate 状态变更必须同 commit 更新 `82 §3`。**
   - **Agent 读取顺序强制（90 §7）**：90 → 82 §3/§10 → L0 00–50 → L1/L2 → L3 →
     L4 → L5。**禁止「grep 到什么读什么」。**
   - **权威链**：`90`（元规范）→ `82 §3`（Gate State Authority，唯一）→

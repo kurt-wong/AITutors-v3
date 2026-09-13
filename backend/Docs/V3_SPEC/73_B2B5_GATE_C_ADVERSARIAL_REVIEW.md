@@ -1,7 +1,65 @@
 # B2-B5 / Gate C Adversarial Review
 
+**Document Type**: Experiment Report
+**Authority Level**: L4
+**Status**: ACTIVE（结论有效；§157 状态行的解释见下方澄清）
+**Normative**: NO
+**Supersedes**: —
+**Superseded By**: —
+**Gate State Authority**: NO（唯一权威是 `82 §3`）
+
 > **Date**: 2026-09-11
 > **Principle**: Every conclusion must have real test evidence. No speculation.
+
+---
+
+## C-2 Evidence Scope Clarification（2026-09-13，84 号 A-07 裁决）
+
+> **本澄清不修改本报告任何正文。** 本报告的三项 RETRACTED 结论
+> （`§8`：Resolver rejects / Gate rejects / 157 targets automatically rejected）
+> **继续有效**——它们是本轮对抗性审查的核心成果。
+
+**需要澄清的是 §157「UNRESOLVED / REVIEW REQUIRED」与 Gate C CLOSED 的关系。**
+
+本报告 `:213-221` 写的 NOT proven 是：
+
+> - All 157 are **correct** bindings
+> - All 157 are **incorrect** bindings
+> - All 157 can be **auto-admitted**
+> - All 157 will **pass manual review**
+
+这四条全部是**语义正确性**判断。
+
+而 Gate C 的 C-2（`test_c2_evidence_authority_e2e.py`，commit `f5e2020`）证明的是
+**管线不变量**：
+
+```text
+C-2 proves:
+    - corpus 构成正确（157 个；reason 分布 56/49/27/15/10 匹配 spec）
+    - 每个 target 的 expected_resolver_behavior 含 REJECT / UNRESOLVED
+    - invalid binding 不产生 validated evidence（fail-closed）
+    - Semantic IR bypass 被阻断（无 ValidationEvent 不得进 IR）
+    - Evidence Authority Lifecycle 六问成立（version anchor / producer identity
+      / check_id / 可追溯）
+
+C-2 does NOT prove:
+    - 每个 binding 的语义正确性
+    - 157 个能否通过人工审
+```
+
+**因此本报告的 UNRESOLVED 不削弱 C-2 闭环。** 二者正交：
+
+```text
+Gate C 职责 : invalid evidence 不会污染系统
+非 Gate C   : 每个 evidence 是否语义正确
+```
+
+这正是 V3 的 `Evidence Validity ≠ Semantic Correctness` 原则。
+
+**本报告 §157 的处置**：157 个 target 的语义裁决属**人工审范围**，
+仍是未完成项（`84 A-04` 关联的 B2-B2 Unknown 125 triage 同类）。
+**`73:213` 的 `UNRESOLVED` 保留原意**——它说的是「语义未裁决」，
+不是「管线未验证」。
 
 ---
 

@@ -2658,3 +2658,76 @@ Errata  : 暂缓          Documentation Governance Pass : 未完成
 
 **权威链**：90 → 82 §3 → 84 → docs_audit/。**Agent 读取顺序（90 §7）强制：
 90 → 82 §3/§10 → L0 → L1/L2 → L3 → L4 → L5。禁止「grep 到什么读什么」。**
+
+---
+
+## 2026-09-13 — CA-001 L0 修改审计 + P0 三项裁决 + R7–R10
+
+**触发**：用户指出 `40` 今日 14:33 被改而它是 **L0**，须先审计；并裁决 P0 三项、要求拆 commit。
+
+### 🔴 CA-001 — L0 完整性问题（当前最高优先级）
+
+`40 §5` 在 `0dd954d`（09-13 14:43，**本轮我自己改的**）被新增一条**强制**规则，
+**无 Change Record**：
+
+> 测量语义**必须**复刻真实 pipeline…**禁止**用近似文本代替…度量脚本**必须**能
+> 指出它复刻哪一段 pipeline，并有测试锁死该复刻语义。
+
+- **CHANGE-2 Normative Addition**——新增「指出复刻哪一段」+「测试锁死」两项
+  此前不存在的可验证要求，**不是** Clarification。
+- **时序缓解因素，非豁免**：90 生效前发生，但 `82 §2` 与「先冻结 Spec」已存在。
+- **内容可辩护**（BUG-V3-044 教训），**缺 Change Record 是事实**。
+- **审计范围**：`0dd954d` 后触及 L0 的**仅 40 一处**；更早 L0 修改自带 `errata` 标记。
+- **待裁决**：(a) 追认 / (b) 撤回重走 L1 / (c) 挂起。见 `90 §11`。
+
+### P0 三项已裁决
+
+| ID | 裁决 | 处置 |
+|---|---|---|
+| **A-07** | **语义A 成立，Gate C CLOSED 不动摇** | `72 §3` 157 = invalid/suspicious；`73:215-221` NOT proven **全是语义正确性**；C-2 = `test_c2_evidence_authority_e2e.py` 证明**管线不变量**。已在 `73` 文首写 **C-2 Evidence Scope Clarification**，**正文未改** |
+| **B-01** | **名称漂移非概念缺失** | `75` 实际标题「Evidence **Promotion** Contract」。已在 `75` 加 **Terminology** 节声明等同；**不全文替换**；新文档用全称 |
+| **B-02** | **不升 L0；我先前判「零定义」是错的** | `Validated Evidence` **有 L2 定义**（`75:42` 状态机 `state: trusted`、`75:194` `§4.5`）。它是证据生命周期**状态**（系统机制）非基础原则。`90 R9` 冻结 `≠ verified_correct` |
+
+### 90 号新增 R7–R10
+
+- **R7 引用闭包**：L2/L3/L4 规范性结论必须存在向上闭包
+- **R8 废止传播**：`supersede` 后不得作为引用来源；扫描器跳过；标 `deprecated`
+- **R9 Evidence 术语不可互换（永久）**：`Validated Evidence ≠ verified_correct`；`Verified Evidence` 永久禁用
+- **R10 L2 不得创造新名词**：`Binding Carrier` / `External Claim` / `Semantic Authority` 三项 ⚠️ 未定义
+
+### 检测器改进（R6 定义形态扩展）
+
+识别表格 / 状态机 `state:` / 「唯一可进入」。`Validated Evidence` defs 0→6、
+`ResolvedSpan` 0→3、`annotation_payload` 0→1、`FORBIDDEN_FIELDS` 0→1。
+**所有 HIGH 漂移风险清零**——证实全是检测器局限，不是文档缺陷。
+
+### Closure 归层 → `L2-proposed` / `pending`
+
+L2 本身也是治理事实，未经裁决不能成为事实。
+
+归层：L0=7 / L0-META=1 / L2=7 / **L2-proposed=4** / L3=3 / L4=16 / L5=4 / UNASSIGNED=1
+
+### 状态
+
+```text
+OPEN 12（P0：CA-001 / D-01 / C-01 / D-02）
+已处置 7（SUPERSEDED 2 + INCORPORATED 2 + DECIDED 3）
+误报 3 · MITIGATED 1
+Gate 系列未变：A PASS / B NOT CLOSED / C CLOSED(P1) / D CONTRACT CLOSED
+```
+
+**本轮未裁决 CA-001 / D-01 / C-01 / D-02；未改任何 L0 内容。802 passed。**
+
+### 下一步
+
+| 顺序 | 项目 |
+|------|------|
+| 1 | **裁决 CA-001**（追认 / 撤回 / 挂起）— L0 完整性 |
+| 2 | D-01（71 号双份） |
+| 3 | C-01（`line_refs`，须走 BIND-1/2/3） |
+| 4 | D-02 / D-03（归层） |
+| 5 | A-04/06/08/09 + D-04/05 |
+| 6 | 90 §10 全绿 → Current Baseline |
+| 7 | I-5-BIND |
+
+**L0 修改强制登记于 90 §11，否则违规。**

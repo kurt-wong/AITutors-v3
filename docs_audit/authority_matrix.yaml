@@ -2,262 +2,307 @@
 # Governed by Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md section 1
 # level: L0 Frozen Spec | L0-META governance meta-spec |
 #        L1 Contract Change Record | L2 Decision Record |
+#        L2-proposed (pending adjudication, NOT citable as authority) |
 #        L3 Gate Report | L4 Experiment Report | L5 Status | UNASSIGNED
+# classification_status: active | pending
 documents:
   - path: Docs/V3_SPEC/00_Master_Spec.md
     level: L0
+    classification_status: active
     normative: YES
     gate_state_authority: NO
     reason: Frozen Spec volume
     status_field: "V3 收敛基线（00 分册，宪法）— 已落实二轮审查 6 项修正与收尾服从性验证（10/20/30/40/50 已冻结且服从本册）；正式冻结（Baseline—Frozen）"
   - path: Docs/V3_SPEC/10_Data_Model.md
     level: L0
+    classification_status: active
     normative: YES
     gate_state_authority: NO
     reason: Frozen Spec volume
     status_field: "V3 收敛基线（10 分册）— 已落实 10 二轮审查 4 项冻结前修订 + v1.2.1 锚点 errata + v1.2.2 BUG-011 Scope Freeze errata，冻结（与 20/30/40/50 对齐）"
   - path: Docs/V3_SPEC/20_Document_Pipeline.md
     level: L0
+    classification_status: active
     normative: YES
     gate_state_authority: NO
     reason: Frozen Spec volume
     status_field: "V3 收敛基线（20 分册）— 已落实对抗性审查 3×P0 + 6×P1 与冻结前 2 条文字钉死，冻结"
   - path: Docs/V3_SPEC/30_Task_LLM_Safety.md
     level: L0
+    classification_status: active
     normative: YES
     gate_state_authority: NO
     reason: Frozen Spec volume
     status_field: "V3 收敛基线（30 分册）— 已落实 v1.0 对抗性审查 P0-1 + 10×P1 + 3×LOW 与冻结前 1 条预算实现禁令，冻结"
   - path: Docs/V3_SPEC/40_Development_Rules.md
     level: L0
+    classification_status: active
     normative: YES
     gate_state_authority: NO
     reason: Frozen Spec volume
     status_field: "V3 收敛基线（40 分册）— 已落实 v1.0 对抗性审查 P1-1~P1-6 + 4×LOW 与冻结前 3 处文字收口，冻结"
   - path: Docs/V3_SPEC/50_Migration_Assets.md
     level: L0
+    classification_status: active
     normative: YES
     gate_state_authority: NO
     reason: Frozen Spec volume
     status_field: "V3 收敛基线（50 分册）— 已落实 v1.0 对抗性审查 P1-1~P1-4 + 3×LOW，冻结"
   - path: Docs/V3_SPEC/README.md
     level: L0
+    classification_status: active
     normative: YES
     gate_state_authority: NO
     reason: Frozen Spec volume
     status_field: "V3 收敛基线（索引分册）— V3 Architecture & Development Baseline — Frozen"
   - path: Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md
     level: L0-META
+    classification_status: active
     normative: YES
     gate_state_authority: NO
     reason: governance meta-spec (90 section 1)
     status_field: "ACTIVE"
   - path: Docs/V3_SPEC/67_ANNOTATION_RESOLVER_BOUNDARY_ADJUSTMENT.md
     level: L2
+    classification_status: active
     normative: NO
     gate_state_authority: NO
     reason: Architecture Decision Record (allowlist, 90 section 1)
     status_field: "Draft v2 — 对抗性审查后修订"
   - path: Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md
     level: L2
+    classification_status: active
     normative: NO
     gate_state_authority: NO
     reason: Architecture Decision Record (allowlist, 90 section 1)
     status_field: "Adjudicated — 项目负责人已裁决"
   - path: Docs/V3_SPEC/70_OQ1_IDENTITY_LAYERING.md
     level: L2
+    classification_status: active
     normative: NO
     gate_state_authority: NO
     reason: Architecture Decision Record (allowlist, 90 section 1)
     status_field: "**Adjudicated / CLOSED — PASS / TEST-EVIDENCED**"
   - path: Docs/V3_SPEC/82_CONTRACT_AUTHORITY_RECONCILIATION.md
     level: L2
+    classification_status: active
     normative: NO
     gate_state_authority: YES
     reason: Architecture Decision Record (allowlist, 90 section 1)
-    status_field: "**ACTIVE — 本文档是文档权威层级与 Gate 状态的唯一现行权威**"
-  - path: Docs/V3_SPEC/Closure/PHASE_I2C_CLOSURE.md
-    level: L2
-    normative: NO
-    gate_state_authority: NO
-    reason: formal phase closure record (pending D-02 adjudication)
-    status_field: "CLOSED"
-  - path: Docs/V3_SPEC/Closure/PHASE_I2_REVISION_CLOSURE.md
-    level: L2
-    normative: NO
-    gate_state_authority: NO
-    reason: formal phase closure record (pending D-02 adjudication)
-    status_field: "CLOSED WITH NOTES"
-  - path: Docs/V3_SPEC/Closure/PHASE_I3_CLOSURE.md
-    level: L2
-    normative: NO
-    gate_state_authority: NO
-    reason: formal phase closure record (pending D-02 adjudication)
-    status_field: "CLOSED"
-  - path: Docs/V3_SPEC/Closure/PHASE_I4_CLOSURE.md
-    level: L2
-    normative: NO
-    gate_state_authority: NO
-    reason: formal phase closure record (pending D-02 adjudication)
-    status_field: "**CLOSED**"
+    status_field: "**ACTIVE — Gate State Authority（本文档 §3 是唯一权威）**"
   - path: backend/Docs/V3_SPEC/75_EVIDENCE_PROMOTION_CONTRACT.md
     level: L2
+    classification_status: active
     normative: NO
     gate_state_authority: NO
     reason: Architecture Decision Record (allowlist, 90 section 1)
-    status_field: "REVIEWED — 架构审查通过 (含补充约束), 可进入 Phase 1 实现"
+    status_field: "ACTIVE"
   - path: backend/Docs/V3_SPEC/80_B2B5_CLOSURE.md
     level: L2
+    classification_status: active
     normative: NO
     gate_state_authority: NO
     reason: Architecture Decision Record (allowlist, 90 section 1)
     status_field: "**B2-B5 CLOSED — PASS / TEST-EVIDENCED / SCOPE-BOUNDED**；"
   - path: backend/Docs/V3_SPEC/81_GATE_D_ADAPTER_BOUNDARY.md
     level: L2
+    classification_status: active
     normative: NO
     gate_state_authority: NO
     reason: Architecture Decision Record (allowlist, 90 section 1)
     status_field: "**Gate D — CONTRACT CLOSED / IMPLEMENTATION NOT STARTED**"
+  - path: Docs/V3_SPEC/Closure/PHASE_I2C_CLOSURE.md
+    level: L2-proposed
+    classification_status: pending
+    normative: NO
+    gate_state_authority: NO
+    reason: formal phase closure record - PROPOSED L2, pending D-02 adjudication; may not be cited as authority until decided
+    status_field: "CLOSED"
+  - path: Docs/V3_SPEC/Closure/PHASE_I2_REVISION_CLOSURE.md
+    level: L2-proposed
+    classification_status: pending
+    normative: NO
+    gate_state_authority: NO
+    reason: formal phase closure record - PROPOSED L2, pending D-02 adjudication; may not be cited as authority until decided
+    status_field: "CLOSED WITH NOTES"
+  - path: Docs/V3_SPEC/Closure/PHASE_I3_CLOSURE.md
+    level: L2-proposed
+    classification_status: pending
+    normative: NO
+    gate_state_authority: NO
+    reason: formal phase closure record - PROPOSED L2, pending D-02 adjudication; may not be cited as authority until decided
+    status_field: "CLOSED"
+  - path: Docs/V3_SPEC/Closure/PHASE_I4_CLOSURE.md
+    level: L2-proposed
+    classification_status: pending
+    normative: NO
+    gate_state_authority: NO
+    reason: formal phase closure record - PROPOSED L2, pending D-02 adjudication; may not be cited as authority until decided
+    status_field: "**CLOSED**"
   - path: backend/Docs/V3_SPEC/74_B2B5_D_PROJECTION_SAFETY_REPORT.md
     level: L3
+    classification_status: active
     normative: NO
     gate_state_authority: NO
     reason: Gate / governance report (allowlist, 90 section 1)
     status_field: "B2-B5-D COMPLETED | Gate C BLOCKED (C-1 Evidence Promotion Contract design freeze + C-2 full E2E)"
   - path: backend/Docs/V3_SPEC/83_GOVERNANCE_AUDIT.md
     level: L3
+    classification_status: active
     normative: NO
     gate_state_authority: NO
     reason: Gate / governance report (allowlist, 90 section 1)
     status_field: "ACTIVE"
   - path: backend/Docs/V3_SPEC/84_CONFLICT_LEDGER.md
     level: L3
+    classification_status: active
     normative: NO
     gate_state_authority: NO
     reason: Gate / governance report (allowlist, 90 section 1)
     status_field: "ACTIVE"
   - path: Docs/V3_SPEC/60_PHASE_I2C_RESOLVER.md
     level: L4
+    classification_status: active
     normative: NO
     gate_state_authority: NO
     reason: Experiment / phase report (default for numbered phase docs)
     status_field: "**CLOSED**"
   - path: Docs/V3_SPEC/61_PHASE_I3_SOURCE_PROVIDER.md
     level: L4
+    classification_status: active
     normative: NO
     gate_state_authority: NO
     reason: Experiment / phase report (default for numbered phase docs)
     status_field: "IN PROGRESS"
   - path: Docs/V3_SPEC/62_PHASE_I3_STORAGE_DECISION.md
     level: L4
+    classification_status: active
     normative: NO
     gate_state_authority: NO
     reason: Experiment / phase report (default for numbered phase docs)
     status_field: "FROZEN"
   - path: Docs/V3_SPEC/63_ARCHITECTURE_COMPLEXITY_GUARDRAILS.md
     level: L4
+    classification_status: active
     normative: NO
     gate_state_authority: NO
     reason: Experiment / phase report (default for numbered phase docs)
     status_field: "Frozen Constraint"
   - path: Docs/V3_SPEC/64_PHASE_I4_EVIDENCE_EVALUATION.md
     level: L4
+    classification_status: active
     normative: NO
     gate_state_authority: NO
     reason: Experiment / phase report (default for numbered phase docs)
     status_field: "COMPLETE"
   - path: Docs/V3_SPEC/65_PHASE_I5_SCOPE_FREEZE.md
     level: L4
+    classification_status: active
     normative: NO
     gate_state_authority: NO
     reason: Experiment / phase report (default for numbered phase docs)
     status_field: "Experiment Constraint (NOT a Domain Contract modification)"
   - path: Docs/V3_SPEC/66_PHASE_I5_1_BOUNDARY_ANALYSIS.md
     level: L4
+    classification_status: active
     normative: NO
     gate_state_authority: NO
     reason: Experiment / phase report (default for numbered phase docs)
     status_field: "Manifest Capability Check Complete"
   - path: Docs/V3_SPEC/68_QUESTION_STRUCTURE_DEFINITION.md
     level: L4
+    classification_status: active
     normative: NO
     gate_state_authority: NO
     reason: Experiment / phase report (default for numbered phase docs)
     status_field: "Adjudicated — 经 Step B/B5/C 对抗性审查裁决（见 69 号裁决记录）"
   - path: Docs/V3_SPEC/71_B2B5_SUBJECTIVE_SUBQUESTION_ADJUDICATION.md
     level: L4
+    classification_status: active
     normative: NO
     gate_state_authority: NO
     reason: Experiment / phase report (default for numbered phase docs)
     status_field: "Adjudicated — 语义裁决 + 测试集冻结完成"
   - path: backend/Docs/V3_SPEC/71_B2B5_SUBJECTIVE_SUBQUESTION_ADJUDICATION.md
     level: L4
+    classification_status: active
     normative: NO
     gate_state_authority: NO
     reason: Experiment / phase report (default for numbered phase docs)
     status_field: "Original conclusions RETRACTED based on real test evidence"
   - path: backend/Docs/V3_SPEC/72_GATE_C_INVALID_BINDING_TEST_SPEC.md
     level: L4
+    classification_status: active
     normative: NO
     gate_state_authority: NO
     reason: Experiment / phase report (default for numbered phase docs)
     status_field: "(no Status field)"
   - path: backend/Docs/V3_SPEC/73_B2B5_GATE_C_ADVERSARIAL_REVIEW.md
     level: L4
+    classification_status: active
     normative: NO
     gate_state_authority: NO
     reason: Experiment / phase report (default for numbered phase docs)
-    status_field: "UNRESOLVED / REVIEW REQUIRED"
+    status_field: "ACTIVE（结论有效；§157 状态行的解释见下方澄清）"
   - path: backend/Docs/V3_SPEC/76_EVIDENCE_PROMOTION_PHASE1_REPORT.md
     level: L4
+    classification_status: active
     normative: NO
     gate_state_authority: NO
     reason: Experiment / phase report (default for numbered phase docs)
     status_field: "COMPLETE — 全部测试通过"
   - path: backend/Docs/V3_SPEC/77_EVIDENCE_PROMOTION_PHASE1_HARDENING.md
     level: L4
+    classification_status: active
     normative: NO
     gate_state_authority: NO
     reason: Experiment / phase report (default for numbered phase docs)
     status_field: "COMPLETE — All 6 adversarial gaps fixed, 616 tests pass"
   - path: backend/Docs/V3_SPEC/78_PHASE1_HARDENING_ADVERSARIAL_REVIEW.md
     level: L4
+    classification_status: active
     normative: NO
     gate_state_authority: NO
     reason: Experiment / phase report (default for numbered phase docs)
     status_field: "COMPLETE — 24 adversarial tests executed"
   - path: backend/Docs/V3_SPEC/79_PHASE1_HIGH_SEVERITY_FIXES.md
     level: L4
+    classification_status: active
     normative: NO
     gate_state_authority: NO
     reason: Experiment / phase report (default for numbered phase docs)
     status_field: "(no Status field)"
   - path: Status.md
     level: L5
+    classification_status: active
     normative: NO
     gate_state_authority: NO
     reason: Status / log / restart
     status_field: "V3 Spec Baseline — Frozen（实现未开始）"
   - path: bugs.md
     level: L5
+    classification_status: active
     normative: NO
     gate_state_authority: NO
     reason: Status / log / restart
     status_field: "(no Status field)"
   - path: log.md
     level: L5
+    classification_status: active
     normative: NO
     gate_state_authority: NO
     reason: Status / log / restart
     status_field: "(no Status field)"
   - path: restart-prompt.md
     level: L5
+    classification_status: active
     normative: NO
     gate_state_authority: NO
     reason: Status / log / restart
-    status_field: "**Phase I-5-G Document Governance ACTIVE** —"
+    status_field: "**Phase I-5-G Document Governance ACTIVE（90 号元规范已立）** —"
   - path: backend/Docs/V3_SPEC/gate_b2a_three_task_report.md
     level: UNASSIGNED
+    classification_status: active
     normative: NO
     gate_state_authority: NO
     reason: not covered by 90 section 1 - may not be cited as authority

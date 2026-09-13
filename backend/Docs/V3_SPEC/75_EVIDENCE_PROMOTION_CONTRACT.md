@@ -1,10 +1,56 @@
 # V3 Evidence Promotion Contract — Design Freeze
 
+**Document Type**: Decision Record
+**Authority Level**: L2
+**Status**: ACTIVE
+**Normative**: NO（L2 裁决范围内的契约描述，**不是 Frozen Spec**）
+**Supersedes**: —
+**Superseded By**: —
+**Gate State Authority**: NO（唯一权威是 `82 §3`）
+
 **Version**: 1.1.0-reviewed
 **Date**: 2026-09-13
-**Status**: REVIEWED — 架构审查通过 (含补充约束), 可进入 Phase 1 实现
 **Parent**: 74_B2B5_D_PROJECTION_SAFETY_REPORT.md v3.3.0
 **Review**: 架构审查 2026-09-13 — 批准, 含 5 条新增冻结规则 + 禁止规则 4 + 信任拆分 + Phase 1 路径修正
+
+---
+
+## Terminology（2026-09-13 补，84 号 B-01 裁决）
+
+> **「Evidence Contract」是本契约（`Evidence Promotion Contract`）的非正式简称。**
+> 二者指同一份契约。
+
+| 名称 | 地位 |
+|---|---|
+| **`Evidence Promotion Contract`** | **正式名称**（本文件标题）。**新文档一律使用全称** |
+| `Evidence Contract` | 非正式简称。**既有文档不改写**（Reconcile, don't rewrite）；仅此处声明等同 |
+
+**背景**：全仓 `Evidence Promotion Contract` 15 处 / `Evidence Contract` 19 处，
+分属 7 份文档，其中 `74` 同时使用两种写法。二者**从未被显式等同**，导致
+「preprocessing 必须满足 V3 Evidence Contract」这类规范性表述指向一个
+看似未定义的术语（违反 `90 §2 R6`）。**概念本身有完整定义**（见下 §二 状态机
++ §4.5 + 5 条禁止转换）；缺的只是名称等同声明。
+
+**术语层级（`90 §2 R9` 永久规则）**：
+
+| 术语 | 定义处 | 层 | 含义 |
+|---|---|---|---|
+| `Source Fragment` | 本册 §二 `state: immutable` | L2 | 源切片本体 |
+| `Evidence Proposal` | 本册 §二 `state: untrusted` | L2 | 提议，未声明 |
+| `Evidence Claim` | 本册 §二 `state: awaiting validation` | L2 | 已声明，待验证 |
+| **`Validated Evidence`** | 本册 §二 `state: trusted`；§4.5「唯一可进入 IR」 | **L2** | 已验证、可进 IR |
+| `INVALIDATED` | 本册 §二 `state: terminal` | L2 | 撤销终态 |
+| **`verified_correct`** | **L0 `20 §8.3`** | **L0** | 答案与权威答案/人工确认一致 |
+
+> **`Validated Evidence` ≠ `verified_correct`。二者永不可互换或互相推导。**
+> 前者是**证据生命周期状态**（L2，本册），后者是 **Admission 结果**（L0）。
+> **`Verified Evidence` 全仓零使用，永久禁用**——它会与 `verified_correct`
+> 产生强语义关联，制造「已验证 = 答案正确」的误读。
+
+**本术语表不升入 L0**（84 号 B-02 裁决）：`Validated Evidence` 描述的是
+证据生命周期中的一个状态，属系统机制（同类：`ResolvedSpan`、`Admission
+Candidate`），不是整个系统不可改变的基础原则（同类：`Question`、`Source`、
+`Resolver`）。层级 **L0 存「Evidence is source-backed」原则 / L2 定义机制** 是合理的。
 
 ---
 

@@ -1982,3 +1982,103 @@ D-02 仍在 84 台账 OPEN。`gate_b2a_three_task_report.md` 仍 UNASSIGNED。
 `90_DOCUMENT_GOVERNANCE.md`（新建，L0-META）+ `84_CONFLICT_LEDGER.md`（新建，L3）+
 `docs_audit/` 四件产物 + `backend/scripts/i5g_emit_audit.py` +
 `82 号` 降级指针 + `restart-prompt` v1.50 → v1.51。**无生产代码变更。**
+
+---
+
+## 2026-09-13 — CA-001 L0 修改审计 + R7/R8/R9/R10 + P0 三项裁决
+
+**触发**：用户指出 `40_Development_Rules.md` 今日 14:33 被改，而 40 是 **L0**，
+须先审计再提交；并裁决 P0 三项、要求拆分 commit。
+
+### CA-001 — 40 号被新增强制规则，无 Change Record（🔴 OPEN）
+
+**查证**：`0dd954d`（2026-09-13 14:43）——**是我今天下午自己改的**。
+`40 §5` 新增一条使用「必须 / 禁止 / 必须能指出 / 有测试锁死」的强制规则
+（测量语义必须复刻真实 pipeline）。
+
+**分类：CHANGE-2 Normative Addition。** 不是 CHANGE-1 Clarification——它新增了
+「指出复刻哪一段 pipeline」与「测试锁死该复刻语义」两项此前不存在的可验证要求，
+语义有变化。
+
+**时序缓解因素，非豁免**：发生在 90 生效前（`0dd954d` 14:43；90 建于 `c5a899f`），
+当时 CHANGE 分类尚未建立，但 `82 §2` 与「先冻结 Spec 再改代码」原则均已存在。
+
+**内容可辩护**：源自 BUG-V3-044 真实教训——覆盖率测量曾用「行内剩余文本」
+代替 E 的 char-span 切片，同时高估回归与低估收益，据此得出的裁决全部作废。
+**但缺 Change Record 是事实。**
+
+**审计范围**：`0dd954d` 后触及 L0 的提交**仅 40 一处**。更早的 L0 修改
+（`10`/`20` 于 09-08/09-09，`30`/`50` 于 09-08）提交信息自带 `errata` /
+`Scope Freeze errata` / `A-Guarded` 标记，属 90 前既有惯例，不在本轮范围。
+
+**可选处置（待裁决，未自行决定）**：(a) 追认 Change Record / (b) 撤回重走 L1 /
+(c) 挂起待下次 L0 修订。权威版见 `90 §11`。
+
+### 90 号新增四条规则
+
+- **R7 引用闭包**：L2/L3/L4 的规范性结论必须存在向上闭包——否则「大家都这么认为」
+  等同于 L2 偷偷产生新架构事实。
+- **R8 废止传播**：`supersede` 后保留正文，但**不得作为引用来源**、扫描器跳过、
+  `docs_audit` 标 `deprecated`。否则历史文档仍污染未来决策（A-01 即此类）。
+- **R9 Evidence 术语不可互换（永久）**：`Validated Evidence ≠ verified_correct`；
+  `Verified Evidence` 全仓零使用，**永久禁用**。
+- **R10 L2 不得创造新名词**：未引用 L0 定义的新词须走 Terminology Proposal。
+  已登记：`Binding Carrier` / `External Claim` / `Semantic Authority` 三项 ⚠️ 未定义。
+
+### P0 三项裁决（用户，2026-09-13）
+
+- **A-07 → DECIDED：语义A 成立，Gate C CLOSED 不动摇。**
+  查证：`72 §3` 157 = invalid/suspicious targets（56/49/27/15/10）；
+  `73:215-221` NOT proven **全是语义正确性**（correct / incorrect / auto-admitted /
+  pass manual review）；C-2 实际 = `test_c2_evidence_authority_e2e.py`
+  （IR bypass 5 测 + Lifecycle 5 测 + 157 fail-closed 4 测）。
+  **C-2 证明管线不变量，73 的 UNRESOLVED 是语义裁决——从来不是 Gate C 职责。**
+  已在 `73` 文首写入 **C-2 Evidence Scope Clarification**（proves / does not prove），
+  **正文未改**，三项 RETRACTED 继续有效。
+- **B-01 → DECIDED：名称漂移，非概念缺失。**
+  `75` 实际标题是「Evidence **Promotion** Contract」。全称 15 处 / 简称 19 处，
+  `74` 同时用两种。**概念有完整定义**（75 §二 状态机 + 5 条禁止转换 + §4.5）。
+  已在 `75` 加 **Terminology** 节声明等同；**不全文替换**；新文档用全称。
+- **B-02 → DECIDED：不升 L0。我先前判断过严，已更正。**
+  `Validated Evidence` **有 L2 定义**（`75:42` 状态机 `state: trusted`、`75:194`
+  `§4.5`、`75:280`、`75:298`）。我先前说「L0/L2 零定义」是**错的**——检测器漏了
+  状态机图与小节标题形态。裁决：它是证据生命周期**状态**（系统机制，同类
+  `ResolvedSpan`/`Admission Candidate`），不是基础原则，**不升 L0**。
+
+### 检测器改进（R6 定义形态扩展）
+
+识别表格行 / 状态机 `state:` / 「唯一可进入」形态。改进后：
+
+| 术语 | 改前 defs | 改后 defs | risk |
+|---|---|---|---|
+| `Validated Evidence` | 0 | 6 | HIGH→LOW |
+| `ResolvedSpan` | 0 | 3 | HIGH→LOW |
+| `annotation_payload` | 0 | 1 | HIGH→LOW |
+| `FORBIDDEN_FIELDS` | 0 | 1 | HIGH→LOW |
+
+**所有 HIGH 漂移风险清零**——证实全是检测器局限，不是文档缺陷。
+
+### Closure 归层改为 L2-proposed
+
+`L2-proposed` + `classification_status: pending` + `normative: NO`。
+**L2 本身也是治理事实，未经裁决不能成为事实。**
+
+归层现为：L0=7 / L0-META=1 / L2=7 / **L2-proposed=4** / L3=3 / L4=16 / L5=4 /
+UNASSIGNED=1。
+
+### 状态
+
+```text
+OPEN 12 项（P0 四项：CA-001 / D-01 / C-01 / D-02）
+已处置 7 项（SUPERSEDED 2 + INCORPORATED 2 + DECIDED 3）
+误报 3 项 · MITIGATED 1 项
+Gate 系列状态未变（A PASS / B NOT CLOSED / C CLOSED(P1) / D CONTRACT CLOSED）
+```
+
+**本轮未裁决 CA-001、D-01、C-01、D-02；未改任何 L0 内容。**
+
+### 产出
+
+`90 号` §2 R7–R10 + §11 CA-001；`75 号` Terminology 节；`73 号` C-2 Scope
+Clarification（正文未改）；`84 号` A-07/B-01/B-02 标 DECIDED + F 类 CA-001；
+emitter 改进 + 重新生成 `docs_audit/`。**无生产代码变更。**
