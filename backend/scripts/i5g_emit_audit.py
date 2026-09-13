@@ -47,24 +47,37 @@ def level_of(path):
     base = os.path.basename(path)
     norm = path.replace("\\", "/")
     if path in A_LAYER.values() or base == "README.md":
-        return "L0", "Frozen Spec volume", "YES"
+        return "L0", "Frozen Spec volume", "YES", "active"
     if base == "90_DOCUMENT_GOVERNANCE.md":
-        return "L0-META", "governance meta-spec (90 section 1)", "YES"
+        return "L0-META", "governance meta-spec (90 section 1)", "YES", "active"
     m = re.match(r"^(\d+)_", base)
     if m:
         num = m.group(1)
         if num in L1_ALLOW:
-            return "L1", "released Contract Change Record", "NO"
+            return "L1", "released Contract Change Record", "NO", "active"
         if num in L2_ALLOW:
-            return "L2", "Architecture Decision Record (allowlist, 90 section 1)", "NO"
+            return "L2", "Architecture Decision Record (allowlist, 90 section 1)", "NO", "active"
         if num in L3_ALLOW:
-            return "L3", "Gate / governance report (allowlist, 90 section 1)", "NO"
-        return "L4", "Experiment / phase report (default for numbered phase docs)", "NO"
+            return "L3", "Gate / governance report (allowlist, 90 section 1)", "NO", "active"
+        return "L4", "Experiment / phase report (default for numbered phase docs)", "NO", "active"
     if "/Closure/" in norm:
-        return "L2", "formal phase closure record (pending D-02 adjudication)", "NO"
+        # Proposed, not decided: L2 itself is a governance fact and cannot become
+        # fact without adjudication. See 84 D-02 and 90 section 1.
+        return (
+            "L2-proposed",
+            "formal phase closure record - PROPOSED L2, pending D-02 adjudication; "
+            "may not be cited as authority until decided",
+            "NO",
+            "pending",
+        )
     if base in ("restart-prompt.md", "Status.md", "log.md", "bugs.md"):
-        return "L5", "Status / log / restart", "NO"
-    return "UNASSIGNED", "not covered by 90 section 1 - may not be cited as authority", "NO"
+        return "L5", "Status / log / restart", "NO", "active"
+    return (
+        "UNASSIGNED",
+        "not covered by 90 section 1 - may not be cited as authority",
+        "NO",
+        "active",
+    )
 
 
 def iter_docs():
@@ -94,13 +107,14 @@ def build_authority_matrix(docs):
     rows = []
     for d in docs:
         text = read(os.path.join(ROOT, d))
-        level, reason, normative = level_of(d)
+        level, reason, normative, lstatus = level_of(d)
         sm = STATUS_LINE.search(text)
         status = sm.group(1).strip()[:120] if sm else "(no Status field)"
         rows.append(
             {
                 "path": d,
                 "level": level,
+                "classification_status": lstatus,
                 "reason": reason,
                 "status_field": status,
                 "normative": normative,
@@ -136,7 +150,30 @@ TERMS = [
     "verified_correct", "Evidence Contract", "canonical_question_type",
     "STRICT_AUTO_TYPES", "structural_regions", "Binding Carrier", "line_refs",
 ]
-DEFINE_RX = re.compile(r"(定义|定为|冻结为|指的是|:=|denotes|is defined as)")
+# A definition is not always a prose "X means Y". Frozen Spec and Decision
+# Records commonly define via tables, state-machine diagrams, JSON field lists
+# and forbidden-field enumerations. 90 section 2 R6 requires the detector to
+# recognise those, otherwise a table-defined term scores as undefined (B-03).
+DEFINE_RX = re.compile(
+    r"(定义|定为|冻结为|指的是|:=|denotes|is defined as"
+    r"|唯一的?进入|唯一可进入|state:\s*\w+|唯一允许)"
+)
+
+
+def is_definition_line(line, term):
+    if DEFINE_RX.search(line):
+        return True
+    if term in line and re.search(
+        r"(state:\s*(?:trusted|immutable|untrusted|awaiting|terminal)"
+        r"|唯一可进入|唯一允许进入|唯一进入)", line, re.IGNORECASE
+    ):
+        return True
+    # Table row: | Term | ... | with a definitional-looking neighbour cell
+    if line.strip().startswith("|") and term in line:
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if any(c == term or c == f"`{term}`" for c in cells):
+            return True
+    return False
 
 
 def build_terms(docs):
@@ -148,7 +185,7 @@ def build_terms(docs):
             for i, ln in enumerate(text.splitlines(), 1):
                 if term in ln:
                     entry = {"doc": d, "line": i}
-                    (defs if DEFINE_RX.search(ln) else uses).append(entry)
+                    (defs if is_definition_line(ln, term) else uses).append(entry)
         if len(uses) >= 8 and len(defs) == 0:
             risk = "HIGH"
         elif len(uses) >= 3 and len(defs) == 0:
@@ -186,23 +223,23 @@ CANDIDATES = [
     {"id": "A-06", "type": "status_drift", "severity": "P1", "status": "OPEN",
      "summary": "doc 61 Status IN PROGRESS while PHASE_I3_CLOSURE records CLOSED",
      "evidence": ["61:4", "Docs/V3_SPEC/Closure/PHASE_I3_CLOSURE.md:4"]},
-    {"id": "A-07", "type": "status_drift", "severity": "P0", "status": "OPEN",
-     "summary": "doc 73 declares 157 targets UNRESOLVED / REVIEW REQUIRED while Gate C closed on C-2 157 E2E",
-     "evidence": ["73:213", "80:439"]},
+    {"id": "A-07", "type": "status_drift", "severity": "P0", "status": "DECIDED",
+     "summary": "doc 73 declares 157 targets UNRESOLVED while Gate C closed on C-2 - DECIDED as orthogonal: C-2 proves pipeline invariant, not semantic truth",
+     "evidence": ["73:213", "80:439", "backend/tests/test_c2_evidence_authority_e2e.py"]},
     {"id": "A-08", "type": "opposite_polarity", "severity": "P1", "status": "OPEN",
      "summary": "Status.md holds both retracted and corrected Grammar input contract, retracted one unmarked",
      "evidence": ["Status.md:2309", "Status.md:2423"]},
     {"id": "A-09", "type": "stale_header", "severity": "P2", "status": "OPEN",
      "summary": "Status.md top-level Status line still reads implementation not started",
      "evidence": ["Status.md"]},
-    {"id": "B-01", "type": "undefined_term", "severity": "P0", "status": "OPEN",
-     "summary": "Evidence Contract used 13 times across 4+ docs as a constraint basis, zero definitions anywhere",
-     "evidence": ["74:165", "74:226", "80:181", "81:221", "restart-prompt.md:99"]},
-    {"id": "B-02", "type": "term_drift", "severity": "P0", "status": "OPEN",
-     "summary": "Validated Evidence (10 uses, all in L3 doc 74, no L0/L2 definition) vs Verified Evidence (0 uses) vs verified_correct (L0 20 section 8.3)",
-     "evidence": ["74:385", "20:637"]},
-    {"id": "B-03", "type": "detector_limitation", "severity": "P2", "status": "OPEN",
-     "summary": "ResolvedSpan shows zero definition sites because it is defined by a field table, not prose; detector matches prose only",
+    {"id": "B-01", "type": "term_name_drift", "severity": "P0", "status": "DECIDED",
+     "summary": "'Evidence Contract' is an undeclared abbreviation of 'Evidence Promotion Contract' (doc 75); terminology note added to 75, no mass rename",
+     "evidence": ["75", "74:226", "81:221"]},
+    {"id": "B-02", "type": "term_drift", "severity": "P0", "status": "DECIDED",
+     "summary": "Validated Evidence is L2-defined in doc 75 state machine, not L0; not promoted to L0; 90 R2/R9 freezes Validated Evidence != verified_correct and bans Verified Evidence",
+     "evidence": ["75:42", "75:194", "20:637"]},
+    {"id": "B-03", "type": "detector_limitation", "severity": "P2", "status": "MITIGATED",
+     "summary": "detector missed table and state-machine definitions; fixed, all HIGH drift risks cleared",
      "evidence": ["20:288", "20:308"]},
     {"id": "C-01", "type": "boundary_conflict", "severity": "P0", "status": "OPEN",
      "summary": "line_refs carrier has four different answers across L0/L4/L2: FORBIDDEN_FIELDS, annotation payload, manifest, PENDING",
@@ -210,6 +247,9 @@ CANDIDATES = [
     {"id": "C-02", "type": "boundary_conflict", "severity": "P0", "status": "INCORPORATED",
      "summary": "doc 66 section 7 'Bypasses: Annotation, Resolver' contradicted IRBuilder.build signature; corrected to Resolver only",
      "evidence": ["66:7", "backend/app/domains/compile/ir.py:87"]},
+    {"id": "CA-001", "type": "l0_change_audit", "severity": "P0", "status": "OPEN",
+     "summary": "doc 40 section 5 gained a mandatory measurement-semantics rule in 0dd954d with no Change Record; classified CHANGE-2 Normative Addition; options ratify / revert / hold",
+     "evidence": ["40", "0dd954d"]},
     {"id": "D-01", "type": "duplicate_number", "severity": "P0", "status": "OPEN",
      "summary": "doc 71 exists twice with different content; root copy is older and sits in the L0 directory",
      "evidence": ["Docs/V3_SPEC/71_B2B5_SUBJECTIVE_SUBQUESTION_ADJUDICATION.md",
@@ -248,11 +288,14 @@ def main():
         fh.write("# Governed by Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md section 1\n")
         fh.write("# level: L0 Frozen Spec | L0-META governance meta-spec |\n")
         fh.write("#        L1 Contract Change Record | L2 Decision Record |\n")
+        fh.write("#        L2-proposed (pending adjudication, NOT citable as authority) |\n")
         fh.write("#        L3 Gate Report | L4 Experiment Report | L5 Status | UNASSIGNED\n")
+        fh.write("# classification_status: active | pending\n")
         fh.write("documents:\n")
         for r in sorted(matrix, key=lambda x: (x["level"], x["path"])):
             fh.write(f"  - path: {r['path']}\n")
             fh.write(f"    level: {r['level']}\n")
+            fh.write(f"    classification_status: {r['classification_status']}\n")
             fh.write(f"    normative: {r['normative']}\n")
             fh.write(f"    gate_state_authority: {r['gate_state_authority']}\n")
             fh.write(f"    reason: {r['reason']}\n")
