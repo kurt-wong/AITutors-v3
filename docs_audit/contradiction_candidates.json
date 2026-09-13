@@ -69,7 +69,7 @@
       "summary": "doc 61 Status IN PROGRESS while PHASE_I3_CLOSURE records CLOSED",
       "evidence": [
         "61:4",
-        "Docs/V3_SPEC/Closure/PHASE_I3_CLOSURE.md:4"
+        "Docs/REPORTS/PHASE_I3_CLOSURE.md:4"
       ]
     },
     {
@@ -195,7 +195,7 @@
       "status": "OPEN",
       "summary": "5 docs inside V3_SPEC trees have no L-level; PHASE_I3_CLOSURE even writes Gate PASS",
       "evidence": [
-        "Docs/V3_SPEC/Closure/PHASE_I3_CLOSURE.md:5"
+        "Docs/REPORTS/PHASE_I3_CLOSURE.md:5"
       ]
     },
     {
@@ -267,398 +267,6 @@
   ],
   "gate_state_lines": [
     {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 297,
-      "gate": "C",
-      "state": "CLOSED",
-      "text": "> **NOT CLOSED**（B1 CONDITIONAL + 两项 DEFERRED），Gate C 已 CLOSED (Phase 1)，"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 298,
-      "gate": "D",
-      "state": "CLOSED",
-      "text": "> Gate D 已 CONTRACT CLOSED。当前权威顺序见 **`82 号 §8`**。"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 401,
-      "gate": "A",
-      "state": "PASS",
-      "text": "#### Gate A — Identity Closure — **PASS / TEST-EVIDENCED（2026-09-11）**"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 443,
-      "gate": "A",
-      "state": "PASS",
-      "text": "67 号：CONDITIONALLY ACCEPTED（Gate A PASS；Pending Gate B/C）"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 464,
-      "gate": "B",
-      "state": "CONDITIONAL",
-      "text": "**Gate B：CONDITIONAL PASS / NOT CLOSED。\"18% vs 100%\" 结论正式撤销。**"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 554,
-      "gate": "B1",
-      "state": "CONDITIONAL",
-      "text": "**Gate B1 = CONDITIONAL PASS / Corpus Substantially Valid, with two structural contract issues remaining.**"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 630,
-      "gate": "A",
-      "state": "PASS",
-      "text": "Gate A: PASS / TEST-EVIDENCED"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 631,
-      "gate": "B1",
-      "state": "CONDITIONAL",
-      "text": "Gate B1: CONDITIONAL PASS / Corpus Substantially Valid"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 653,
-      "gate": "A",
-      "state": "PASS",
-      "text": "| Gate A (Identity Closure) | PASS / TEST-EVIDENCED |"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 654,
-      "gate": "B1",
-      "state": "PASS",
-      "text": "| Gate B1 Range Validity | PASS |"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 655,
-      "gate": "B1",
-      "state": "PASS",
-      "text": "| Gate B1 Content Validity | PASS WITH RESERVATIONS |"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 656,
-      "gate": "B1",
-      "state": "PASS",
-      "text": "| Gate B1 Stem binding | PASS (97.3%) |"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 657,
-      "gate": "B1",
-      "state": "PASS",
-      "text": "| Gate B1 Explanation binding | PASS (96.7%) |"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 660,
-      "gate": "B1",
-      "state": "CONDITIONAL",
-      "text": "| Gate B1 overall | **CONDITIONAL PASS** |"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 662,
-      "gate": "B2-B",
-      "state": "BLOCKED",
-      "text": "| Gate B2-B (option + answer) | BLOCKED BY contract 裁决 |"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 759,
-      "gate": "B1",
-      "state": "CONDITIONAL",
-      "text": "Gate B1: CONDITIONAL PASS — Region Binding Contract 基本成立"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 762,
-      "gate": "B2-B",
-      "state": "WAIT",
-      "text": "Gate B2-B (option/answer): WAIT FOR MANIFEST CONTRACT UPDATE / STRUCTURAL EXPERIMENT"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 771,
-      "gate": "B2-A",
-      "state": "PASS",
-      "text": "**Gate B2-A = PASS / TEST-EVIDENCED（结论范围仅限 stem）。**"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 840,
-      "gate": "B2-A",
-      "state": "PASS",
-      "text": "**Gate B2-A = PASS / STRONGLY TEST-EVIDENCED / CLOSED**"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 861,
-      "gate": "B2-A",
-      "state": "CLOSED",
-      "text": "> **Gate B2-A：CLOSED。**"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 865,
-      "gate": "B2-B1",
-      "state": "CLOSED",
-      "text": "**Gate B2-B1 = CLOSED — PASS / TEST-EVIDENCED / SCOPE-BOUNDED**"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 908,
-      "gate": "B2-B2",
-      "state": "CLOSED",
-      "text": "**Gate B2-B2 = CLOSED — PASS / TEST-EVIDENCED / SCOPE-BOUNDED**"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 971,
-      "gate": "B2-B3-A",
-      "state": "CLOSED",
-      "text": "**Gate B2-B3-A = CLOSED — Target Classification Audit**"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 999,
-      "gate": "B2-B3-B",
-      "state": "CLOSED",
-      "text": "**Gate B2-B3-B = CLOSED — PASS / TEST-EVIDENCED / DETERMINISTIC**"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 1050,
-      "gate": "B2-B4-A",
-      "state": "CLOSED",
-      "text": "**Gate B2-B4-A = CLOSED — HTML Target Classification / Contract Freeze**"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 1075,
-      "gate": "B2-B4-B",
-      "state": "CLOSED",
-      "text": "**Gate B2-B4-B = CLOSED — PASS / TEST-EVIDENCED / DETERMINISTIC**"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 1139,
-      "gate": "A",
-      "state": "PASS",
-      "text": "Gate A: PASS / TEST-EVIDENCED"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 1140,
-      "gate": "B1",
-      "state": "CONDITIONAL",
-      "text": "Gate B1: CONDITIONAL PASS — Region Binding Contract 基本成立"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 1141,
-      "gate": "B2-A",
-      "state": "PASS",
-      "text": "Gate B2-A: PASS / TEST-EVIDENCED / CLOSED（stem-only, three-task audit）"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 1143,
-      "gate": "B2-B1",
-      "state": "CLOSED",
-      "text": "Gate B2-B1: CLOSED — PASS / TEST-EVIDENCED / SCOPE-BOUNDED"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 1147,
-      "gate": "B2-B2",
-      "state": "CLOSED",
-      "text": "Gate B2-B2: CLOSED — PASS / TEST-EVIDENCED / SCOPE-BOUNDED"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 1154,
-      "gate": "B2-B3-A",
-      "state": "CLOSED",
-      "text": "Gate B2-B3-A: CLOSED — Target Classification Audit"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 1156,
-      "gate": "B2-B3-B",
-      "state": "CLOSED",
-      "text": "Gate B2-B3-B: CLOSED — PASS / TEST-EVIDENCED / DETERMINISTIC"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 1158,
-      "gate": "B2-B3-",
-      "state": "DEFERRED",
-      "text": "Gate B2-B3-C: DEFERRED — Domain Contract dependency (F2/F4/F9)"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 1159,
-      "gate": "B2-B4-A",
-      "state": "CLOSED",
-      "text": "Gate B2-B4-A: CLOSED — HTML Target Classification"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 1161,
-      "gate": "B2-B4-B",
-      "state": "CLOSED",
-      "text": "Gate B2-B4-B: CLOSED — PASS / TEST-EVIDENCED / DETERMINISTIC"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 1163,
-      "gate": "B2-B4-",
-      "state": "DEFERRED",
-      "text": "Gate B2-B4-C: DEFERRED — Domain/Material dependency (H4/H5/H6)"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 1164,
-      "gate": "B2-B5",
-      "state": "CLOSED",
-      "text": "Gate B2-B5: CLOSED — PASS / TEST-EVIDENCED / SCOPE-BOUNDED（80 号，2026-09-13）"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 1169,
-      "gate": "C",
-      "state": "CLOSED",
-      "text": "Gate C: CLOSED (Phase 1 Evidence Authority Boundary Closure)"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 1170,
-      "gate": "B",
-      "state": "NOT CLOSED",
-      "text": "Gate B: NOT CLOSED（依据 82 §3，2026-09-13）"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 1173,
-      "gate": "D",
-      "state": "CLOSED",
-      "text": "Gate D: CONTRACT CLOSED / IMPLEMENTATION NOT STARTED（81 号，2026-09-13）"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 1180,
-      "gate": "B",
-      "state": "NOT CLOSED",
-      "text": "（Gate B NOT CLOSED）；E1 属 CHANGE-2 Normative Addition，需 Change Record"
-    },
-    {
-      "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "line": 1205,
-      "gate": "B",
-      "state": "NOT CLOSED",
-      "text": "67 = CHANGE-4/5 → REJECT / WITHDRAW（Gate B NOT CLOSED）。"
-    },
-    {
-      "doc": "Docs/V3_SPEC/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
-      "line": 38,
-      "gate": "B",
-      "state": "CLOSED",
-      "text": "| 发布 67 号 Errata | CHANGE-4/5，Gate B 未 CLOSED（§3） |"
-    },
-    {
-      "doc": "Docs/V3_SPEC/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
-      "line": 83,
-      "gate": "A",
-      "state": "CLOSED",
-      "text": "| `70_OQ1_IDENTITY_LAYERING.md` | Gate A 三层 Identity 裁决 | CLOSED |"
-    },
-    {
-      "doc": "Docs/V3_SPEC/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
-      "line": 184,
-      "gate": "B",
-      "state": "NOT CLOSED",
-      "text": "Gate B = NOT CLOSED"
-    },
-    {
-      "doc": "Docs/V3_SPEC/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
-      "line": 217,
-      "gate": "C",
-      "state": "BLOCKED",
-      "text": "| **C1** | Gate C：`74` 仍写 BLOCKED，`80` 已宣布 CLOSED，**无废止记录** | `74:5` / `74:363` / `74:537` = BLOCKED（C-1+C-2 未闭环）；`80:439` = CLOSED；C-1 实际完成=`75`，C-2=`76`/`77` | 🔴 P0 | **本节 §3.1 即"
-    },
-    {
-      "doc": "Docs/V3_SPEC/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
-      "line": 219,
-      "gate": "B",
-      "state": "CLOSED",
-      "text": "| **C3** | `81` 声称「Gate B 系列 CLOSED」，但 `80` 自己写 B1 CONDITIONAL + 两项 DEFERRED | `81:11` vs `80:421`（B1 CONDITIONAL PASS）、`80:432`/`80:437`（B2-B3-C / B2-B4-C DEFERRED） | 🔴 P0 | **本轮已"
-    },
-    {
-      "doc": "Docs/V3_SPEC/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
-      "line": 229,
-      "gate": "B2-B",
-      "state": "NEXT",
-      "text": "| 「Gate B2-B = NEXT」 | **不成立**。全仓无「NEXT」措辞。实际残留是 C5 所列的 BLOCKED / WAIT |"
-    },
-    {
-      "doc": "Docs/V3_SPEC/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
-      "line": 277,
-      "gate": "B",
-      "state": "CLOSED",
-      "text": "| `81:11` | 「Gate B 系列 CLOSED（80 号）」→ 精确列出 B1 CONDITIONAL PASS / B2-A~B5 各自状态 / 两项 DEFERRED / **Gate B 整体 NOT CLOSED** | §3.2 聚合规则；`80:421`/`80:432`/`80:437` |"
-    },
-    {
-      "doc": "Docs/V3_SPEC/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
-      "line": 277,
-      "gate": "B",
-      "state": "NOT CLOSED",
-      "text": "| `81:11` | 「Gate B 系列 CLOSED（80 号）」→ 精确列出 B1 CONDITIONAL PASS / B2-A~B5 各自状态 / 两项 DEFERRED / **Gate B 整体 NOT CLOSED** | §3.2 聚合规则；`80:421`/`80:432`/`80:437` |"
-    },
-    {
-      "doc": "Docs/V3_SPEC/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
-      "line": 290,
-      "gate": "B",
-      "state": "NOT CLOSED",
-      "text": "3. **不主张** Gate B 已关闭——整体 NOT CLOSED（§3.1）。"
-    },
-    {
-      "doc": "Docs/V3_SPEC/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
-      "line": 364,
-      "gate": "A",
-      "state": "PASS",
-      "text": "║ Gate A                        PASS / TEST-EVIDENCED        ║"
-    },
-    {
-      "doc": "Docs/V3_SPEC/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
-      "line": 365,
-      "gate": "B",
-      "state": "NOT CLOSED",
-      "text": "║ Gate B                        NOT CLOSED                   ║"
-    },
-    {
-      "doc": "Docs/V3_SPEC/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
-      "line": 366,
-      "gate": "C",
-      "state": "CLOSED",
-      "text": "║ Gate C                        CLOSED — Phase 1             ║"
-    },
-    {
-      "doc": "Docs/V3_SPEC/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
-      "line": 367,
-      "gate": "D",
-      "state": "CLOSED",
-      "text": "║ Gate D                        CONTRACT CLOSED              ║"
-    },
-    {
       "doc": "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
       "line": 92,
       "gate": "B",
@@ -687,329 +295,721 @@
       "text": "例：`Gate B2-B5: CLOSED — PASS / TEST-EVIDENCED / SCOPE-BOUNDED（依据 82 §3）`。"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/73_B2B5_GATE_C_ADVERSARIAL_REVIEW.md",
-      "line": 22,
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 297,
       "gate": "C",
       "state": "CLOSED",
-      "text": "**需要澄清的是 §157「UNRESOLVED / REVIEW REQUIRED」与 Gate C CLOSED 的关系。**"
+      "text": "> **NOT CLOSED**（B1 CONDITIONAL + 两项 DEFERRED），Gate C 已 CLOSED (Phase 1)，"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
-      "line": 5,
-      "gate": "C",
-      "state": "BLOCKED",
-      "text": "**Status**: B2-B5-D COMPLETED | Gate C BLOCKED (C-1 Evidence Promotion Contract design freeze + C-2 full E2E)"
-    },
-    {
-      "doc": "backend/Docs/V3_SPEC/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
-      "line": 11,
-      "gate": "C",
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 298,
+      "gate": "D",
       "state": "CLOSED",
-      "text": "> **Gate C 现行状态 = CLOSED (Phase 1)**，唯一权威见 **`82 号 §3.1`**。"
+      "text": "> Gate D 已 CONTRACT CLOSED。当前权威顺序见 **`82 号 §8`**。"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
-      "line": 71,
-      "gate": "C",
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 401,
+      "gate": "A",
       "state": "PASS",
-      "text": "| Gate C corpus frozen | ✅ PASS | 157 targets, 分布验证 |"
+      "text": "#### Gate A — Identity Closure — **PASS / TEST-EVIDENCED（2026-09-11）**"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
-      "line": 370,
-      "gate": "C",
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 443,
+      "gate": "A",
+      "state": "PASS",
+      "text": "67 号：CONDITIONALLY ACCEPTED（Gate A PASS；Pending Gate B/C）"
+    },
+    {
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 464,
+      "gate": "B",
+      "state": "CONDITIONAL",
+      "text": "**Gate B：CONDITIONAL PASS / NOT CLOSED。\"18% vs 100%\" 结论正式撤销。**"
+    },
+    {
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 554,
+      "gate": "B1",
+      "state": "CONDITIONAL",
+      "text": "**Gate B1 = CONDITIONAL PASS / Corpus Substantially Valid, with two structural contract issues remaining.**"
+    },
+    {
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 630,
+      "gate": "A",
+      "state": "PASS",
+      "text": "Gate A: PASS / TEST-EVIDENCED"
+    },
+    {
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 631,
+      "gate": "B1",
+      "state": "CONDITIONAL",
+      "text": "Gate B1: CONDITIONAL PASS / Corpus Substantially Valid"
+    },
+    {
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 653,
+      "gate": "A",
+      "state": "PASS",
+      "text": "| Gate A (Identity Closure) | PASS / TEST-EVIDENCED |"
+    },
+    {
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 654,
+      "gate": "B1",
+      "state": "PASS",
+      "text": "| Gate B1 Range Validity | PASS |"
+    },
+    {
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 655,
+      "gate": "B1",
+      "state": "PASS",
+      "text": "| Gate B1 Content Validity | PASS WITH RESERVATIONS |"
+    },
+    {
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 656,
+      "gate": "B1",
+      "state": "PASS",
+      "text": "| Gate B1 Stem binding | PASS (97.3%) |"
+    },
+    {
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 657,
+      "gate": "B1",
+      "state": "PASS",
+      "text": "| Gate B1 Explanation binding | PASS (96.7%) |"
+    },
+    {
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 660,
+      "gate": "B1",
+      "state": "CONDITIONAL",
+      "text": "| Gate B1 overall | **CONDITIONAL PASS** |"
+    },
+    {
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 662,
+      "gate": "B2-B",
       "state": "BLOCKED",
-      "text": "> **Gate C: BLOCKED — V3 Source Evidence Binding Contract + full 157 E2E 尚未完成闭环**"
+      "text": "| Gate B2-B (option + answer) | BLOCKED BY contract 裁决 |"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
-      "line": 547,
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 759,
+      "gate": "B1",
+      "state": "CONDITIONAL",
+      "text": "Gate B1: CONDITIONAL PASS — Region Binding Contract 基本成立"
+    },
+    {
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 762,
+      "gate": "B2-B",
+      "state": "WAIT",
+      "text": "Gate B2-B (option/answer): WAIT FOR MANIFEST CONTRACT UPDATE / STRUCTURAL EXPERIMENT"
+    },
+    {
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 771,
+      "gate": "B2-A",
+      "state": "PASS",
+      "text": "**Gate B2-A = PASS / TEST-EVIDENCED（结论范围仅限 stem）。**"
+    },
+    {
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 840,
+      "gate": "B2-A",
+      "state": "PASS",
+      "text": "**Gate B2-A = PASS / STRONGLY TEST-EVIDENCED / CLOSED**"
+    },
+    {
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 861,
+      "gate": "B2-A",
+      "state": "CLOSED",
+      "text": "> **Gate B2-A：CLOSED。**"
+    },
+    {
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 865,
+      "gate": "B2-B1",
+      "state": "CLOSED",
+      "text": "**Gate B2-B1 = CLOSED — PASS / TEST-EVIDENCED / SCOPE-BOUNDED**"
+    },
+    {
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 908,
+      "gate": "B2-B2",
+      "state": "CLOSED",
+      "text": "**Gate B2-B2 = CLOSED — PASS / TEST-EVIDENCED / SCOPE-BOUNDED**"
+    },
+    {
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 971,
+      "gate": "B2-B3-A",
+      "state": "CLOSED",
+      "text": "**Gate B2-B3-A = CLOSED — Target Classification Audit**"
+    },
+    {
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 999,
+      "gate": "B2-B3-B",
+      "state": "CLOSED",
+      "text": "**Gate B2-B3-B = CLOSED — PASS / TEST-EVIDENCED / DETERMINISTIC**"
+    },
+    {
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 1050,
+      "gate": "B2-B4-A",
+      "state": "CLOSED",
+      "text": "**Gate B2-B4-A = CLOSED — HTML Target Classification / Contract Freeze**"
+    },
+    {
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 1075,
+      "gate": "B2-B4-B",
+      "state": "CLOSED",
+      "text": "**Gate B2-B4-B = CLOSED — PASS / TEST-EVIDENCED / DETERMINISTIC**"
+    },
+    {
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 1139,
+      "gate": "A",
+      "state": "PASS",
+      "text": "Gate A: PASS / TEST-EVIDENCED"
+    },
+    {
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 1140,
+      "gate": "B1",
+      "state": "CONDITIONAL",
+      "text": "Gate B1: CONDITIONAL PASS — Region Binding Contract 基本成立"
+    },
+    {
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 1141,
+      "gate": "B2-A",
+      "state": "PASS",
+      "text": "Gate B2-A: PASS / TEST-EVIDENCED / CLOSED（stem-only, three-task audit）"
+    },
+    {
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 1143,
+      "gate": "B2-B1",
+      "state": "CLOSED",
+      "text": "Gate B2-B1: CLOSED — PASS / TEST-EVIDENCED / SCOPE-BOUNDED"
+    },
+    {
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 1147,
+      "gate": "B2-B2",
+      "state": "CLOSED",
+      "text": "Gate B2-B2: CLOSED — PASS / TEST-EVIDENCED / SCOPE-BOUNDED"
+    },
+    {
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 1154,
+      "gate": "B2-B3-A",
+      "state": "CLOSED",
+      "text": "Gate B2-B3-A: CLOSED — Target Classification Audit"
+    },
+    {
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 1156,
+      "gate": "B2-B3-B",
+      "state": "CLOSED",
+      "text": "Gate B2-B3-B: CLOSED — PASS / TEST-EVIDENCED / DETERMINISTIC"
+    },
+    {
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 1158,
+      "gate": "B2-B3-",
+      "state": "DEFERRED",
+      "text": "Gate B2-B3-C: DEFERRED — Domain Contract dependency (F2/F4/F9)"
+    },
+    {
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 1159,
+      "gate": "B2-B4-A",
+      "state": "CLOSED",
+      "text": "Gate B2-B4-A: CLOSED — HTML Target Classification"
+    },
+    {
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 1161,
+      "gate": "B2-B4-B",
+      "state": "CLOSED",
+      "text": "Gate B2-B4-B: CLOSED — PASS / TEST-EVIDENCED / DETERMINISTIC"
+    },
+    {
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 1163,
+      "gate": "B2-B4-",
+      "state": "DEFERRED",
+      "text": "Gate B2-B4-C: DEFERRED — Domain/Material dependency (H4/H5/H6)"
+    },
+    {
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 1164,
+      "gate": "B2-B5",
+      "state": "CLOSED",
+      "text": "Gate B2-B5: CLOSED — PASS / TEST-EVIDENCED / SCOPE-BOUNDED（80 号，2026-09-13）"
+    },
+    {
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 1169,
       "gate": "C",
-      "state": "BLOCKED",
-      "text": "| Gate C | **BLOCKED** — C-1 (五层 Evidence Contract) + C-2 (157 E2E) 未闭环 ／ **⚠️ 已作废，82 号 §4-C1；现行 = CLOSED (Phase 1)** |"
+      "state": "CLOSED",
+      "text": "Gate C: CLOSED (Phase 1 Evidence Authority Boundary Closure)"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/80_B2B5_CLOSURE.md",
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 1170,
+      "gate": "B",
+      "state": "NOT CLOSED",
+      "text": "Gate B: NOT CLOSED（依据 82 §3，2026-09-13）"
+    },
+    {
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 1173,
+      "gate": "D",
+      "state": "CLOSED",
+      "text": "Gate D: CONTRACT CLOSED / IMPLEMENTATION NOT STARTED（81 号，2026-09-13）"
+    },
+    {
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 1180,
+      "gate": "B",
+      "state": "NOT CLOSED",
+      "text": "（Gate B NOT CLOSED）；E1 属 CHANGE-2 Normative Addition，需 Change Record"
+    },
+    {
+      "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "line": 1205,
+      "gate": "B",
+      "state": "NOT CLOSED",
+      "text": "67 = CHANGE-4/5 → REJECT / WITHDRAW（Gate B NOT CLOSED）。"
+    },
+    {
+      "doc": "Docs/DECISIONS/80_B2B5_CLOSURE.md",
       "line": 7,
       "gate": "C",
       "state": "CLOSED",
       "text": "**前置**: Gate C CLOSED (Phase 1 Evidence Authority Boundary Closure)"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/80_B2B5_CLOSURE.md",
+      "doc": "Docs/DECISIONS/80_B2B5_CLOSURE.md",
       "line": 420,
       "gate": "A",
       "state": "PASS",
       "text": "Gate A            : PASS / TEST-EVIDENCED"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/80_B2B5_CLOSURE.md",
+      "doc": "Docs/DECISIONS/80_B2B5_CLOSURE.md",
       "line": 421,
       "gate": "B1",
       "state": "CONDITIONAL",
       "text": "Gate B1           : CONDITIONAL PASS — Region Binding Contract 基本成立"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/80_B2B5_CLOSURE.md",
+      "doc": "Docs/DECISIONS/80_B2B5_CLOSURE.md",
       "line": 422,
       "gate": "B2-A",
       "state": "CLOSED",
       "text": "Gate B2-A         : CLOSED — PASS / TEST-EVIDENCED（stem-only, three-task audit）"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/80_B2B5_CLOSURE.md",
+      "doc": "Docs/DECISIONS/80_B2B5_CLOSURE.md",
       "line": 424,
       "gate": "B2-B1",
       "state": "CLOSED",
       "text": "Gate B2-B1        : CLOSED — PASS / SCOPE-BOUNDED"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/80_B2B5_CLOSURE.md",
+      "doc": "Docs/DECISIONS/80_B2B5_CLOSURE.md",
       "line": 426,
       "gate": "B2-B2",
       "state": "CLOSED",
       "text": "Gate B2-B2        : CLOSED — PASS / SCOPE-BOUNDED"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/80_B2B5_CLOSURE.md",
+      "doc": "Docs/DECISIONS/80_B2B5_CLOSURE.md",
       "line": 428,
       "gate": "B2-B3-A",
       "state": "CLOSED",
       "text": "Gate B2-B3-A      : CLOSED — Target Classification Audit"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/80_B2B5_CLOSURE.md",
+      "doc": "Docs/DECISIONS/80_B2B5_CLOSURE.md",
       "line": 430,
       "gate": "B2-B3-B",
       "state": "CLOSED",
       "text": "Gate B2-B3-B      : CLOSED — PASS / DETERMINISTIC"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/80_B2B5_CLOSURE.md",
+      "doc": "Docs/DECISIONS/80_B2B5_CLOSURE.md",
       "line": 432,
       "gate": "B2-B3-",
       "state": "DEFERRED",
       "text": "Gate B2-B3-C      : DEFERRED — Domain Contract dependency (F2/F4/F9)"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/80_B2B5_CLOSURE.md",
+      "doc": "Docs/DECISIONS/80_B2B5_CLOSURE.md",
       "line": 433,
       "gate": "B2-B4-A",
       "state": "CLOSED",
       "text": "Gate B2-B4-A      : CLOSED — HTML Target Classification"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/80_B2B5_CLOSURE.md",
+      "doc": "Docs/DECISIONS/80_B2B5_CLOSURE.md",
       "line": 435,
       "gate": "B2-B4-B",
       "state": "CLOSED",
       "text": "Gate B2-B4-B      : CLOSED — PASS / DETERMINISTIC"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/80_B2B5_CLOSURE.md",
+      "doc": "Docs/DECISIONS/80_B2B5_CLOSURE.md",
       "line": 437,
       "gate": "B2-B4-",
       "state": "DEFERRED",
       "text": "Gate B2-B4-C      : DEFERRED — Domain/Material dependency (H4/H5/H6)"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/80_B2B5_CLOSURE.md",
+      "doc": "Docs/DECISIONS/80_B2B5_CLOSURE.md",
       "line": 438,
       "gate": "B2-B5",
       "state": "CLOSED",
       "text": "Gate B2-B5        : CLOSED — PASS / TEST-EVIDENCED / SCOPE-BOUNDED"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/80_B2B5_CLOSURE.md",
+      "doc": "Docs/DECISIONS/80_B2B5_CLOSURE.md",
       "line": 439,
       "gate": "C",
       "state": "CLOSED",
       "text": "Gate C            : CLOSED (Phase 1 Evidence Authority Boundary Closure)"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/80_B2B5_CLOSURE.md",
+      "doc": "Docs/DECISIONS/80_B2B5_CLOSURE.md",
       "line": 440,
       "gate": "D",
       "state": "CLOSED",
       "text": "Gate D            : CONTRACT CLOSED / IMPLEMENTATION NOT STARTED（81 号，2026-09-13）"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/80_B2B5_CLOSURE.md",
+      "doc": "Docs/DECISIONS/80_B2B5_CLOSURE.md",
       "line": 447,
       "gate": "B1",
       "state": "CONDITIONAL",
       "text": "> 两处需注意：(1) 本文件 `Gate B1: CONDITIONAL PASS` 与 `B2-B3-C / B2-B4-C"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/80_B2B5_CLOSURE.md",
+      "doc": "Docs/DECISIONS/80_B2B5_CLOSURE.md",
       "line": 448,
       "gate": "B",
       "state": "NOT CLOSED",
       "text": "> DEFERRED` 意味着 **Gate B 整体 NOT CLOSED**——82 §3.2 聚合规则禁止把子项 PASS"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/80_B2B5_CLOSURE.md",
+      "doc": "Docs/DECISIONS/80_B2B5_CLOSURE.md",
       "line": 468,
       "gate": "B2-B5",
       "state": "CLOSED",
       "text": "**Gate B2-B5: CLOSED — PASS / TEST-EVIDENCED / SCOPE-BOUNDED**"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/80_B2B5_CLOSURE.md",
+      "doc": "Docs/DECISIONS/80_B2B5_CLOSURE.md",
       "line": 487,
       "gate": "B",
       "state": "NOT CLOSED",
       "text": "Change Records（E1=CHANGE-2；67=CHANGE-4/5 REJECT，Gate B NOT CLOSED）→"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/81_GATE_D_ADAPTER_BOUNDARY.md",
+      "doc": "Docs/DECISIONS/81_GATE_D_ADAPTER_BOUNDARY.md",
       "line": 4,
       "gate": "D",
       "state": "CLOSED",
       "text": "**Status**: **Gate D — CONTRACT CLOSED / IMPLEMENTATION NOT STARTED**"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/81_GATE_D_ADAPTER_BOUNDARY.md",
+      "doc": "Docs/DECISIONS/81_GATE_D_ADAPTER_BOUNDARY.md",
       "line": 8,
       "gate": "D",
       "state": "CLOSED",
       "text": "> 测试证据」。Gate D 的要求是**契约裁决**，不是实现验收，故不用裸 `CLOSED`。"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/81_GATE_D_ADAPTER_BOUNDARY.md",
+      "doc": "Docs/DECISIONS/81_GATE_D_ADAPTER_BOUNDARY.md",
       "line": 11,
       "gate": "A",
       "state": "PASS",
       "text": "**前置**: Gate A PASS / Gate C CLOSED / BUG-V3-044 CLOSED / Gate B 见下"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/81_GATE_D_ADAPTER_BOUNDARY.md",
+      "doc": "Docs/DECISIONS/81_GATE_D_ADAPTER_BOUNDARY.md",
       "line": 11,
       "gate": "C",
       "state": "CLOSED",
       "text": "**前置**: Gate A PASS / Gate C CLOSED / BUG-V3-044 CLOSED / Gate B 见下"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/81_GATE_D_ADAPTER_BOUNDARY.md",
+      "doc": "Docs/DECISIONS/81_GATE_D_ADAPTER_BOUNDARY.md",
       "line": 17,
       "gate": "B",
       "state": "NOT CLOSED",
       "text": "- **Gate B 整体 = NOT CLOSED**"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/81_GATE_D_ADAPTER_BOUNDARY.md",
+      "doc": "Docs/DECISIONS/81_GATE_D_ADAPTER_BOUNDARY.md",
       "line": 19,
       "gate": "B",
       "state": "CLOSED",
       "text": "> ⚠️ **更正（2026-09-13，82 号 §4-C3）**：本行此前写的是「Gate B 系列 CLOSED"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/81_GATE_D_ADAPTER_BOUNDARY.md",
+      "doc": "Docs/DECISIONS/81_GATE_D_ADAPTER_BOUNDARY.md",
       "line": 22,
       "gate": "B",
       "state": "NOT CLOSED",
       "text": "> 或 DEFERRED 子项时，父 Gate 不得记为 PASS 或 CLOSED**——Gate B 整体 NOT CLOSED。"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/81_GATE_D_ADAPTER_BOUNDARY.md",
+      "doc": "Docs/DECISIONS/81_GATE_D_ADAPTER_BOUNDARY.md",
       "line": 32,
       "gate": "D",
       "state": "BLOCKED",
       "text": "Gate D 此前被 `BLOCKED BY Grammar Contract`（80 号 §3）。BUG-V3-044 修复并通过"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/81_GATE_D_ADAPTER_BOUNDARY.md",
+      "doc": "Docs/DECISIONS/81_GATE_D_ADAPTER_BOUNDARY.md",
       "line": 120,
       "gate": "D",
       "state": "PASS",
       "text": "**处置**：I-5-1 结论降级为**方向性参考**，不作为 Gate D PASS 依据。"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/81_GATE_D_ADAPTER_BOUNDARY.md",
+      "doc": "Docs/DECISIONS/81_GATE_D_ADAPTER_BOUNDARY.md",
       "line": 352,
       "gate": "A",
       "state": "PASS",
       "text": "Gate A            : PASS / TEST-EVIDENCED"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/81_GATE_D_ADAPTER_BOUNDARY.md",
+      "doc": "Docs/DECISIONS/81_GATE_D_ADAPTER_BOUNDARY.md",
       "line": 353,
       "gate": "B1",
       "state": "CONDITIONAL",
       "text": "Gate B1           : CONDITIONAL PASS"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/81_GATE_D_ADAPTER_BOUNDARY.md",
+      "doc": "Docs/DECISIONS/81_GATE_D_ADAPTER_BOUNDARY.md",
       "line": 354,
       "gate": "B2-A",
       "state": "CLOSED",
       "text": "Gate B2-A         : CLOSED — PASS / TEST-EVIDENCED"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/81_GATE_D_ADAPTER_BOUNDARY.md",
+      "doc": "Docs/DECISIONS/81_GATE_D_ADAPTER_BOUNDARY.md",
       "line": 355,
       "gate": "B2-B1",
       "state": "CLOSED",
       "text": "Gate B2-B1~B2-B5  : CLOSED（B2-B3-C / B2-B4-C DEFERRED）"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/81_GATE_D_ADAPTER_BOUNDARY.md",
+      "doc": "Docs/DECISIONS/81_GATE_D_ADAPTER_BOUNDARY.md",
       "line": 356,
       "gate": "C",
       "state": "CLOSED",
       "text": "Gate C            : CLOSED (Phase 1)"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/81_GATE_D_ADAPTER_BOUNDARY.md",
+      "doc": "Docs/DECISIONS/81_GATE_D_ADAPTER_BOUNDARY.md",
       "line": 358,
       "gate": "D",
       "state": "CLOSED",
       "text": "Gate D            : **CONTRACT CLOSED / IMPLEMENTATION NOT STARTED**（本文档）"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/81_GATE_D_ADAPTER_BOUNDARY.md",
+      "doc": "Docs/DECISIONS/81_GATE_D_ADAPTER_BOUNDARY.md",
       "line": 378,
       "gate": "B",
       "state": "NOT CLOSED",
       "text": "Change Records（E1 = CHANGE-2；67 = CHANGE-4/5 → REJECT，Gate B NOT CLOSED）"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/84_CONFLICT_LEDGER.md",
+      "doc": "Docs/DECISIONS/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
+      "line": 38,
+      "gate": "B",
+      "state": "CLOSED",
+      "text": "| 发布 67 号 Errata | CHANGE-4/5，Gate B 未 CLOSED（§3） |"
+    },
+    {
+      "doc": "Docs/DECISIONS/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
+      "line": 83,
+      "gate": "A",
+      "state": "CLOSED",
+      "text": "| `70_OQ1_IDENTITY_LAYERING.md` | Gate A 三层 Identity 裁决 | CLOSED |"
+    },
+    {
+      "doc": "Docs/DECISIONS/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
+      "line": 184,
+      "gate": "B",
+      "state": "NOT CLOSED",
+      "text": "Gate B = NOT CLOSED"
+    },
+    {
+      "doc": "Docs/DECISIONS/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
+      "line": 217,
+      "gate": "C",
+      "state": "BLOCKED",
+      "text": "| **C1** | Gate C：`74` 仍写 BLOCKED，`80` 已宣布 CLOSED，**无废止记录** | `74:5` / `74:363` / `74:537` = BLOCKED（C-1+C-2 未闭环）；`80:439` = CLOSED；C-1 实际完成=`75`，C-2=`76`/`77` | 🔴 P0 | **本节 §3.1 即"
+    },
+    {
+      "doc": "Docs/DECISIONS/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
+      "line": 219,
+      "gate": "B",
+      "state": "CLOSED",
+      "text": "| **C3** | `81` 声称「Gate B 系列 CLOSED」，但 `80` 自己写 B1 CONDITIONAL + 两项 DEFERRED | `81:11` vs `80:421`（B1 CONDITIONAL PASS）、`80:432`/`80:437`（B2-B3-C / B2-B4-C DEFERRED） | 🔴 P0 | **本轮已"
+    },
+    {
+      "doc": "Docs/DECISIONS/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
+      "line": 229,
+      "gate": "B2-B",
+      "state": "NEXT",
+      "text": "| 「Gate B2-B = NEXT」 | **不成立**。全仓无「NEXT」措辞。实际残留是 C5 所列的 BLOCKED / WAIT |"
+    },
+    {
+      "doc": "Docs/DECISIONS/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
+      "line": 277,
+      "gate": "B",
+      "state": "CLOSED",
+      "text": "| `81:11` | 「Gate B 系列 CLOSED（80 号）」→ 精确列出 B1 CONDITIONAL PASS / B2-A~B5 各自状态 / 两项 DEFERRED / **Gate B 整体 NOT CLOSED** | §3.2 聚合规则；`80:421`/`80:432`/`80:437` |"
+    },
+    {
+      "doc": "Docs/DECISIONS/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
+      "line": 277,
+      "gate": "B",
+      "state": "NOT CLOSED",
+      "text": "| `81:11` | 「Gate B 系列 CLOSED（80 号）」→ 精确列出 B1 CONDITIONAL PASS / B2-A~B5 各自状态 / 两项 DEFERRED / **Gate B 整体 NOT CLOSED** | §3.2 聚合规则；`80:421`/`80:432`/`80:437` |"
+    },
+    {
+      "doc": "Docs/DECISIONS/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
+      "line": 290,
+      "gate": "B",
+      "state": "NOT CLOSED",
+      "text": "3. **不主张** Gate B 已关闭——整体 NOT CLOSED（§3.1）。"
+    },
+    {
+      "doc": "Docs/DECISIONS/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
+      "line": 364,
+      "gate": "A",
+      "state": "PASS",
+      "text": "║ Gate A                        PASS / TEST-EVIDENCED        ║"
+    },
+    {
+      "doc": "Docs/DECISIONS/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
+      "line": 365,
+      "gate": "B",
+      "state": "NOT CLOSED",
+      "text": "║ Gate B                        NOT CLOSED                   ║"
+    },
+    {
+      "doc": "Docs/DECISIONS/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
+      "line": 366,
+      "gate": "C",
+      "state": "CLOSED",
+      "text": "║ Gate C                        CLOSED — Phase 1             ║"
+    },
+    {
+      "doc": "Docs/DECISIONS/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
+      "line": 367,
+      "gate": "D",
+      "state": "CLOSED",
+      "text": "║ Gate D                        CONTRACT CLOSED              ║"
+    },
+    {
+      "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
       "line": 37,
       "gate": "C",
       "state": "CLOSED",
       "text": "| **A-07** | **DECIDED** — 语义A 成立，Gate C CLOSED 不动摇。已在 `73` 文首写入 **C-2 Evidence Scope Clarification**（proves / does not prove），**正文未改** |"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/84_CONFLICT_LEDGER.md",
+      "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
       "line": 53,
       "gate": "C",
       "state": "BLOCKED",
       "text": "| **A-01** | Gate C：`74` 仍 BLOCKED，`80` 已 CLOSED，无废止记录 | `74:5` `74:363` `74:537` vs `80:439`；C-1=`75`、C-2=`76`/`77` 已完成 | 🔴 | **SUPERSEDED** | `82 §3.1` 即废止记录；`74` 三处已加 supersede "
     },
     {
-      "doc": "backend/Docs/V3_SPEC/84_CONFLICT_LEDGER.md",
+      "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
       "line": 55,
       "gate": "B",
       "state": "CLOSED",
       "text": "| **A-03** | `81:11` 称「Gate B 系列 CLOSED」，过度陈述 `80` | `81:11` vs `80:421`（B1 CONDITIONAL）、`80:432`/`80:437`（DEFERRED） | 🔴 | **INCORPORATED** | 本轮自引入，已修正；聚合规则见 `90 §5 Rule 1` |"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/84_CONFLICT_LEDGER.md",
+      "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
       "line": 59,
       "gate": "C",
       "state": "CLOSED",
       "text": "| **A-07** | `73:213` 声明 157 targets `UNRESOLVED / REVIEW REQUIRED`，而 Gate C 以 C-2「157 E2E」关闭 | `73:213-221`（NOT proven 全是**语义正确性**：correct / incorrect / auto-admitted / pass manua"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/84_CONFLICT_LEDGER.md",
+      "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
       "line": 118,
       "gate": "B2-B",
       "state": "NEXT",
       "text": "| **E-03** | 「Gate B2-B = NEXT」 | **不成立**。全仓无「NEXT」措辞；实际残留是 A-05 的 BLOCKED / WAIT | **误报** |"
     },
     {
-      "doc": "backend/Docs/V3_SPEC/gate_b2a_three_task_report.md",
+      "doc": "Docs/REPORTS/73_B2B5_GATE_C_ADVERSARIAL_REVIEW.md",
+      "line": 22,
+      "gate": "C",
+      "state": "CLOSED",
+      "text": "**需要澄清的是 §157「UNRESOLVED / REVIEW REQUIRED」与 Gate C CLOSED 的关系。**"
+    },
+    {
+      "doc": "Docs/REPORTS/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
+      "line": 5,
+      "gate": "C",
+      "state": "BLOCKED",
+      "text": "**Status**: B2-B5-D COMPLETED | Gate C BLOCKED (C-1 Evidence Promotion Contract design freeze + C-2 full E2E)"
+    },
+    {
+      "doc": "Docs/REPORTS/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
+      "line": 11,
+      "gate": "C",
+      "state": "CLOSED",
+      "text": "> **Gate C 现行状态 = CLOSED (Phase 1)**，唯一权威见 **`82 号 §3.1`**。"
+    },
+    {
+      "doc": "Docs/REPORTS/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
+      "line": 71,
+      "gate": "C",
+      "state": "PASS",
+      "text": "| Gate C corpus frozen | ✅ PASS | 157 targets, 分布验证 |"
+    },
+    {
+      "doc": "Docs/REPORTS/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
+      "line": 370,
+      "gate": "C",
+      "state": "BLOCKED",
+      "text": "> **Gate C: BLOCKED — V3 Source Evidence Binding Contract + full 157 E2E 尚未完成闭环**"
+    },
+    {
+      "doc": "Docs/REPORTS/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
+      "line": 547,
+      "gate": "C",
+      "state": "BLOCKED",
+      "text": "| Gate C | **BLOCKED** — C-1 (五层 Evidence Contract) + C-2 (157 E2E) 未闭环 ／ **⚠️ 已作废，82 号 §4-C1；现行 = CLOSED (Phase 1)** |"
+    },
+    {
+      "doc": "Docs/REPORTS/gate_b2a_three_task_report.md",
       "line": 165,
       "gate": "B2-A",
       "state": "PASS",
@@ -1017,105 +1017,105 @@
     },
     {
       "doc": "restart-prompt.md",
-      "line": 7,
+      "line": 6,
       "gate": "A",
       "state": "PASS",
       "text": "Gate A PASS / B **NOT CLOSED** / C CLOSED (Phase 1) / D CONTRACT CLOSED；"
     },
     {
       "doc": "restart-prompt.md",
-      "line": 70,
+      "line": 79,
       "gate": "C",
       "state": "CLOSED",
       "text": "- **A-07 → DECIDED：语义A 成立，Gate C CLOSED 不动摇。**"
     },
     {
       "doc": "restart-prompt.md",
-      "line": 121,
+      "line": 130,
       "gate": "C",
       "state": "CLOSED",
       "text": "**无文件声明 73 已关闭**。可能动摇 Gate C CLOSED 的证据基础。"
     },
     {
       "doc": "restart-prompt.md",
-      "line": 182,
+      "line": 191,
       "gate": "B",
       "state": "NOT CLOSED",
       "text": "- **Gate B 整体 = NOT CLOSED**（依据 82 §3）：B1 CONDITIONAL PASS（option Role"
     },
     {
       "doc": "restart-prompt.md",
-      "line": 187,
+      "line": 196,
       "gate": "C",
       "state": "BLOCKED",
       "text": "- **C1** `74:5/363/537` 仍写 Gate C BLOCKED，`80:439` 已 CLOSED，**无废止记录** →"
     },
     {
       "doc": "restart-prompt.md",
-      "line": 191,
+      "line": 200,
       "gate": "B",
       "state": "CLOSED",
       "text": "- **C3** `81:11` 曾称「Gate B 系列 CLOSED」，**过度陈述 80 号**（80:421 自己写"
     },
     {
       "doc": "restart-prompt.md",
-      "line": 209,
+      "line": 218,
       "gate": "D",
       "state": "CLOSED",
       "text": "- **Gate D: CONTRACT CLOSED / IMPLEMENTATION NOT STARTED**（权威：`81 号`）。"
     },
     {
       "doc": "restart-prompt.md",
-      "line": 210,
+      "line": 219,
       "gate": "D",
       "state": "CLOSED",
       "text": "- 状态措辞：Gate D 的要求是**契约裁决**，不是实现验收，故不用裸 `CLOSED`。"
     },
     {
       "doc": "restart-prompt.md",
-      "line": 266,
+      "line": 275,
       "gate": "B2-B5",
       "state": "CLOSED",
       "text": "- **Gate B2-B5: CLOSED — PASS / TEST-EVIDENCED / SCOPE-BOUNDED**"
     },
     {
       "doc": "restart-prompt.md",
-      "line": 268,
+      "line": 277,
       "gate": "B",
       "state": "CONDITIONAL",
       "text": "- **Gate B 全系列关闭或显式延期**：B1 CONDITIONAL PASS / B2-A PASS /"
     },
     {
       "doc": "restart-prompt.md",
-      "line": 270,
+      "line": 279,
       "gate": "B2-A",
       "state": "PASS",
       "text": "- **Gate B2-A: PASS / TEST-EVIDENCED（stem-only, three-task audit）**。"
     },
     {
       "doc": "restart-prompt.md",
-      "line": 274,
+      "line": 283,
       "gate": "C",
       "state": "CLOSED",
       "text": "- **Gate C CLOSED（Phase 1 Evidence Authority Boundary Closure）**。"
     },
     {
       "doc": "restart-prompt.md",
-      "line": 283,
+      "line": 292,
       "gate": "A",
       "state": "PASS",
       "text": "- **Gate A（Identity Closure）**：**PASS / TEST-EVIDENCED**。"
     },
     {
       "doc": "restart-prompt.md",
-      "line": 298,
+      "line": 307,
       "gate": "A",
       "state": "BLOCKED",
       "text": "- 67 Contract Change: **CONDITIONALLY ACCEPTED**（Gate A/B/C 通过；Errata BLOCKED BY Gate D）"
     },
     {
       "doc": "restart-prompt.md",
-      "line": 304,
+      "line": 313,
       "gate": "B1",
       "state": "CONDITIONAL",
       "text": "- **Gate B1 = CONDITIONAL PASS / Corpus Substantially Valid**"

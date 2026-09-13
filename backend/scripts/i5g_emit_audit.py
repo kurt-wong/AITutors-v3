@@ -30,8 +30,10 @@ A_LAYER = {
 # Contract Change Record. L2/L3 are allowlists. Everything else in the numbered
 # phase-doc range is L4 unless it is a formal closure record.
 L1_ALLOW = set()  # no Contract Change Record has been released
-L2_ALLOW = {"67", "69", "70", "75", "80", "81", "82", "90"}
-L3_ALLOW = {"74", "83", "84"}
+# 84 is the Conflict Ledger and 71 (CORRECTED) is a Domain Contract adjudication:
+# both record decisions, so both are L2 and live in Docs/DECISIONS.
+L2_ALLOW = {"67", "69", "70", "71", "75", "80", "81", "82", "84", "90"}
+L3_ALLOW = {"74", "83"}
 
 
 def read(path):
@@ -60,9 +62,10 @@ def level_of(path):
         if num in L3_ALLOW:
             return "L3", "Gate / governance report (allowlist, 90 section 1)", "NO", "active"
         return "L4", "Experiment / phase report (default for numbered phase docs)", "NO", "active"
-    if "/Closure/" in norm:
-        # Proposed, not decided: L2 itself is a governance fact and cannot become
-        # fact without adjudication. See 84 D-02 and 90 section 1.
+    # Closure records were moved to Docs/REPORTS in DG-2, so they are detected by
+    # basename, not by a /Closure/ path segment. Proposed, not decided: L2 itself
+    # is a governance fact and cannot become fact without adjudication (84 D-02).
+    if "CLOSURE" in base.upper():
         return (
             "L2-proposed",
             "formal phase closure record - PROPOSED L2, pending D-02 adjudication; "
@@ -72,6 +75,12 @@ def level_of(path):
         )
     if base in ("restart-prompt.md", "Status.md", "log.md", "bugs.md"):
         return "L5", "Status / log / restart", "NO", "active"
+    if "/ARCHIVE/" in norm or "_SUPERSEDED" in base:
+        return "L4", "superseded, archived as audit evidence (90 section 2 R8)", "NO", "deprecated"
+    if "/REPORTS/" in norm:
+        # Unnumbered report sitting in the reports tree defaults to L4 rather
+        # than UNASSIGNED: its location already answers "what kind of doc".
+        return "L4", "report placed in Docs/REPORTS (unnumbered, default L4)", "NO", "active"
     return (
         "UNASSIGNED",
         "not covered by 90 section 1 - may not be cited as authority",
@@ -80,8 +89,20 @@ def level_of(path):
     )
 
 
+# Directory model after DG-2 relocation (2026-09-13). L0 stays put; non-L0 is
+# physically separated by layer. The four JSON corpora stay in
+# backend/Docs/V3_SPEC because tests read them by path.
+DOC_ROOTS = (
+    "Docs/V3_SPEC",          # L0 Frozen Spec + L0-META governance meta-spec
+    "Docs/DECISIONS",        # L2 Decision Records
+    "Docs/REPORTS",          # L3/L4 Gate and Experiment Reports, Closure records
+    "Docs/ARCHIVE",          # superseded / stale, kept as audit evidence
+    "backend/Docs/V3_SPEC",  # legacy location; holds the frozen test corpora
+)
+
+
 def iter_docs():
-    for root in ("Docs/V3_SPEC", "backend/Docs/V3_SPEC"):
+    for root in DOC_ROOTS:
         base = os.path.join(ROOT, root)
         for dirpath, dirnames, filenames in os.walk(base):
             dirnames[:] = [d for d in dirnames if d != ".git"]
@@ -222,7 +243,7 @@ CANDIDATES = [
      "evidence": ["69:656", "69:756"]},
     {"id": "A-06", "type": "status_drift", "severity": "P1", "status": "OPEN",
      "summary": "doc 61 Status IN PROGRESS while PHASE_I3_CLOSURE records CLOSED",
-     "evidence": ["61:4", "Docs/V3_SPEC/Closure/PHASE_I3_CLOSURE.md:4"]},
+     "evidence": ["61:4", "Docs/REPORTS/PHASE_I3_CLOSURE.md:4"]},
     {"id": "A-07", "type": "status_drift", "severity": "P0", "status": "DECIDED",
      "summary": "doc 73 declares 157 targets UNRESOLVED while Gate C closed on C-2 - DECIDED as orthogonal: C-2 proves pipeline invariant, not semantic truth",
      "evidence": ["73:213", "80:439", "backend/tests/test_c2_evidence_authority_e2e.py"]},
@@ -256,7 +277,7 @@ CANDIDATES = [
                   "backend/Docs/V3_SPEC/71_B2B5_SUBJECTIVE_SUBQUESTION_ADJUDICATION.md"]},
     {"id": "D-02", "type": "unassigned_layer", "severity": "P0", "status": "OPEN",
      "summary": "5 docs inside V3_SPEC trees have no L-level; PHASE_I3_CLOSURE even writes Gate PASS",
-     "evidence": ["Docs/V3_SPEC/Closure/PHASE_I3_CLOSURE.md:5"]},
+     "evidence": ["Docs/REPORTS/PHASE_I3_CLOSURE.md:5"]},
     {"id": "D-03", "type": "mislayered", "severity": "P1", "status": "OPEN",
      "summary": "doc 63 self-declares Frozen Constraint from an L4 slot; doc 65 is a scope-freeze contract; doc 68 typed by doc 69",
      "evidence": ["63:3", "65:95", "68"]},

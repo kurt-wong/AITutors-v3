@@ -2844,3 +2844,55 @@ DG-5 顺序：~~CA-001~~ → D-01 → C-01 → D-02。
 OPEN 11（P0：C-01 / D-01 / D-02）· 已处置 8 · 误报 3 · MITIGATED 1
 归层未变 · 无新增 authority drift · L0 内容零改动
 ```
+
+---
+
+## 2026-09-13 — DG-2 文档归位 + DG-3 71 号去重（D-01 CLOSED）
+
+### 目录模型（冻结，90 §1.2）
+
+| 目录 | 层 | 份数 |
+|---|---|---|
+| `Docs/V3_SPEC/` | L0 Frozen Spec + L0-META（90/91） | 9 |
+| `Docs/DECISIONS/` | L2 Decision Records | 9 |
+| `Docs/REPORTS/` | L3/L4 Reports + Closure | 21 |
+| `Docs/ARCHIVE/` | SUPERSEDED，不得引用 | 1 |
+| 根目录 Status/log/bugs/restart-prompt | L5 | 4 |
+
+归层：L0=7 / L0-META=2 / **L2=10** / L2-proposed=4 / L3=2 / L4=15 / L5=4。
+**UNASSIGNED 归零。**
+
+分类修正：`84` Conflict Ledger → **L2**；`71` CORRECTED → **L2**（均记录裁决）。
+
+### L0 文件名永久保持现状
+
+用户示意树的三处 L0 改名经核实与实际权威范围不符，**未采纳**：
+`20_Evidence_Contract` 会与 Doc 75 抢「Evidence Contract」一词（`90 R9`）；
+`30_IR_Compiler` 名不副实（IR/Compiler 在 20，30 是 Task/LLM 安全）；
+`50_Admission` 名不副实（Admission 事务在 10）。
+
+### 例外：4 个 JSON 测试语料不动
+
+留在 `backend/Docs/V3_SPEC/`——测试按路径读取，移动会打断测试。**802 passed。**
+
+### D-01 → CLOSED
+
+root 71 → `Docs/ARCHIVE/71_…_SUPERSEDED.md`（加 SUPERSEDED 声明，`90 R8`：
+正文保留、不得引用、标 `deprecated`）；backend CORRECTED 版 → `Docs/DECISIONS/`
+为权威版。**两份都未删除。**
+
+### 引用坐标
+
+`84` 用**文档编号 + 行号**（`74:5`），编号不变即不失效。仅 2 处全路径已更新。
+
+### 90 §1.3 根目录四份状态文件职责
+
+Status=状态快照 / log=时间线 / bugs=问题列表 / restart-prompt=Agent 入口。
+**四份都是 L5，永远不得改变 L0/L1。**
+
+### 状态
+
+```text
+OPEN 10（P0：C-01 / D-02）· 已处置 9 · UNASSIGNED 归零
+802 passed · L0 内容零改动 · L0 文件名零改动
+```

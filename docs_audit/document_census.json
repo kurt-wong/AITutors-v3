@@ -81,212 +81,6 @@
       "banned_status_words": []
     },
     {
-      "path": "Docs/V3_SPEC/60_PHASE_I2C_RESOLVER.md",
-      "level": "L4",
-      "classification_status": "active",
-      "lines": 199,
-      "normative_rule_lines": 2,
-      "cites_l0": false,
-      "birth_certificate": false,
-      "overreach_candidates": [
-        24,
-        25
-      ],
-      "implicit_l0_modification": [],
-      "banned_status_words": []
-    },
-    {
-      "path": "Docs/V3_SPEC/61_PHASE_I3_SOURCE_PROVIDER.md",
-      "level": "L4",
-      "classification_status": "active",
-      "lines": 319,
-      "normative_rule_lines": 2,
-      "cites_l0": false,
-      "birth_certificate": false,
-      "overreach_candidates": [
-        24,
-        31
-      ],
-      "implicit_l0_modification": [],
-      "banned_status_words": []
-    },
-    {
-      "path": "Docs/V3_SPEC/62_PHASE_I3_STORAGE_DECISION.md",
-      "level": "L4",
-      "classification_status": "active",
-      "lines": 103,
-      "normative_rule_lines": 0,
-      "cites_l0": false,
-      "birth_certificate": false,
-      "overreach_candidates": [],
-      "implicit_l0_modification": [],
-      "banned_status_words": []
-    },
-    {
-      "path": "Docs/V3_SPEC/63_ARCHITECTURE_COMPLEXITY_GUARDRAILS.md",
-      "level": "L4",
-      "classification_status": "active",
-      "lines": 430,
-      "normative_rule_lines": 25,
-      "cites_l0": false,
-      "birth_certificate": false,
-      "overreach_candidates": [
-        15,
-        44,
-        61,
-        67,
-        79,
-        81,
-        91,
-        93,
-        95,
-        126,
-        138,
-        166
-      ],
-      "implicit_l0_modification": [],
-      "banned_status_words": []
-    },
-    {
-      "path": "Docs/V3_SPEC/64_PHASE_I4_EVIDENCE_EVALUATION.md",
-      "level": "L4",
-      "classification_status": "active",
-      "lines": 191,
-      "normative_rule_lines": 0,
-      "cites_l0": false,
-      "birth_certificate": false,
-      "overreach_candidates": [],
-      "implicit_l0_modification": [],
-      "banned_status_words": [
-        3
-      ]
-    },
-    {
-      "path": "Docs/V3_SPEC/65_PHASE_I5_SCOPE_FREEZE.md",
-      "level": "L4",
-      "classification_status": "active",
-      "lines": 326,
-      "normative_rule_lines": 11,
-      "cites_l0": false,
-      "birth_certificate": false,
-      "overreach_candidates": [
-        95,
-        96,
-        97,
-        98,
-        105,
-        106,
-        181,
-        187,
-        209,
-        296,
-        323
-      ],
-      "implicit_l0_modification": [],
-      "banned_status_words": []
-    },
-    {
-      "path": "Docs/V3_SPEC/66_PHASE_I5_1_BOUNDARY_ANALYSIS.md",
-      "level": "L4",
-      "classification_status": "active",
-      "lines": 325,
-      "normative_rule_lines": 8,
-      "cites_l0": false,
-      "birth_certificate": false,
-      "overreach_candidates": [
-        158,
-        195,
-        204,
-        214,
-        268,
-        304,
-        315,
-        319
-      ],
-      "implicit_l0_modification": [],
-      "banned_status_words": []
-    },
-    {
-      "path": "Docs/V3_SPEC/67_ANNOTATION_RESOLVER_BOUNDARY_ADJUSTMENT.md",
-      "level": "L2",
-      "classification_status": "active",
-      "lines": 292,
-      "normative_rule_lines": 11,
-      "cites_l0": false,
-      "birth_certificate": false,
-      "overreach_candidates": [],
-      "implicit_l0_modification": [],
-      "banned_status_words": []
-    },
-    {
-      "path": "Docs/V3_SPEC/68_QUESTION_STRUCTURE_DEFINITION.md",
-      "level": "L4",
-      "classification_status": "active",
-      "lines": 306,
-      "normative_rule_lines": 6,
-      "cites_l0": true,
-      "birth_certificate": false,
-      "overreach_candidates": [],
-      "implicit_l0_modification": [],
-      "banned_status_words": []
-    },
-    {
-      "path": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "level": "L2",
-      "classification_status": "active",
-      "lines": 1219,
-      "normative_rule_lines": 36,
-      "cites_l0": true,
-      "birth_certificate": false,
-      "overreach_candidates": [],
-      "implicit_l0_modification": [
-        48
-      ],
-      "banned_status_words": []
-    },
-    {
-      "path": "Docs/V3_SPEC/70_OQ1_IDENTITY_LAYERING.md",
-      "level": "L2",
-      "classification_status": "active",
-      "lines": 277,
-      "normative_rule_lines": 2,
-      "cites_l0": false,
-      "birth_certificate": false,
-      "overreach_candidates": [],
-      "implicit_l0_modification": [],
-      "banned_status_words": []
-    },
-    {
-      "path": "Docs/V3_SPEC/71_B2B5_SUBJECTIVE_SUBQUESTION_ADJUDICATION.md",
-      "level": "L4",
-      "classification_status": "active",
-      "lines": 228,
-      "normative_rule_lines": 3,
-      "cites_l0": false,
-      "birth_certificate": false,
-      "overreach_candidates": [
-        16,
-        36,
-        37
-      ],
-      "implicit_l0_modification": [],
-      "banned_status_words": []
-    },
-    {
-      "path": "Docs/V3_SPEC/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
-      "level": "L2",
-      "classification_status": "active",
-      "lines": 407,
-      "normative_rule_lines": 29,
-      "cites_l0": true,
-      "birth_certificate": true,
-      "overreach_candidates": [],
-      "implicit_l0_modification": [],
-      "banned_status_words": [
-        84
-      ]
-    },
-    {
       "path": "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
       "level": "L0-META",
       "classification_status": "active",
@@ -328,11 +122,11 @@
       "banned_status_words": []
     },
     {
-      "path": "Docs/V3_SPEC/Closure/PHASE_I2C_CLOSURE.md",
-      "level": "L2-proposed",
-      "classification_status": "pending",
-      "lines": 161,
-      "normative_rule_lines": 0,
+      "path": "Docs/DECISIONS/67_ANNOTATION_RESOLVER_BOUNDARY_ADJUSTMENT.md",
+      "level": "L2",
+      "classification_status": "active",
+      "lines": 292,
+      "normative_rule_lines": 11,
       "cites_l0": false,
       "birth_certificate": false,
       "overreach_candidates": [],
@@ -340,34 +134,24 @@
       "banned_status_words": []
     },
     {
-      "path": "Docs/V3_SPEC/Closure/PHASE_I2_REVISION_CLOSURE.md",
-      "level": "L2-proposed",
-      "classification_status": "pending",
-      "lines": 142,
-      "normative_rule_lines": 0,
-      "cites_l0": false,
+      "path": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "level": "L2",
+      "classification_status": "active",
+      "lines": 1219,
+      "normative_rule_lines": 36,
+      "cites_l0": true,
       "birth_certificate": false,
       "overreach_candidates": [],
-      "implicit_l0_modification": [],
+      "implicit_l0_modification": [
+        48
+      ],
       "banned_status_words": []
     },
     {
-      "path": "Docs/V3_SPEC/Closure/PHASE_I3_CLOSURE.md",
-      "level": "L2-proposed",
-      "classification_status": "pending",
-      "lines": 234,
-      "normative_rule_lines": 0,
-      "cites_l0": false,
-      "birth_certificate": false,
-      "overreach_candidates": [],
-      "implicit_l0_modification": [],
-      "banned_status_words": []
-    },
-    {
-      "path": "Docs/V3_SPEC/Closure/PHASE_I4_CLOSURE.md",
-      "level": "L2-proposed",
-      "classification_status": "pending",
-      "lines": 130,
+      "path": "Docs/DECISIONS/70_OQ1_IDENTITY_LAYERING.md",
+      "level": "L2",
+      "classification_status": "active",
+      "lines": 277,
       "normative_rule_lines": 2,
       "cites_l0": false,
       "birth_certificate": false,
@@ -376,22 +160,219 @@
       "banned_status_words": []
     },
     {
-      "path": "backend/Docs/V3_SPEC/71_B2B5_SUBJECTIVE_SUBQUESTION_ADJUDICATION.md",
-      "level": "L4",
+      "path": "Docs/DECISIONS/71_B2B5_SUBJECTIVE_SUBQUESTION_ADJUDICATION.md",
+      "level": "L2",
       "classification_status": "active",
       "lines": 242,
       "normative_rule_lines": 2,
       "cites_l0": false,
       "birth_certificate": false,
+      "overreach_candidates": [],
+      "implicit_l0_modification": [],
+      "banned_status_words": []
+    },
+    {
+      "path": "Docs/DECISIONS/75_EVIDENCE_PROMOTION_CONTRACT.md",
+      "level": "L2",
+      "classification_status": "active",
+      "lines": 500,
+      "normative_rule_lines": 22,
+      "cites_l0": true,
+      "birth_certificate": false,
+      "overreach_candidates": [],
+      "implicit_l0_modification": [],
+      "banned_status_words": []
+    },
+    {
+      "path": "Docs/DECISIONS/80_B2B5_CLOSURE.md",
+      "level": "L2",
+      "classification_status": "active",
+      "lines": 490,
+      "normative_rule_lines": 12,
+      "cites_l0": true,
+      "birth_certificate": false,
+      "overreach_candidates": [],
+      "implicit_l0_modification": [],
+      "banned_status_words": []
+    },
+    {
+      "path": "Docs/DECISIONS/81_GATE_D_ADAPTER_BOUNDARY.md",
+      "level": "L2",
+      "classification_status": "active",
+      "lines": 411,
+      "normative_rule_lines": 26,
+      "cites_l0": true,
+      "birth_certificate": false,
+      "overreach_candidates": [],
+      "implicit_l0_modification": [],
+      "banned_status_words": []
+    },
+    {
+      "path": "Docs/DECISIONS/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
+      "level": "L2",
+      "classification_status": "active",
+      "lines": 407,
+      "normative_rule_lines": 29,
+      "cites_l0": true,
+      "birth_certificate": true,
+      "overreach_candidates": [],
+      "implicit_l0_modification": [],
+      "banned_status_words": [
+        84
+      ]
+    },
+    {
+      "path": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
+      "level": "L2",
+      "classification_status": "active",
+      "lines": 189,
+      "normative_rule_lines": 12,
+      "cites_l0": true,
+      "birth_certificate": false,
+      "overreach_candidates": [],
+      "implicit_l0_modification": [],
+      "banned_status_words": []
+    },
+    {
+      "path": "Docs/REPORTS/60_PHASE_I2C_RESOLVER.md",
+      "level": "L4",
+      "classification_status": "active",
+      "lines": 199,
+      "normative_rule_lines": 2,
+      "cites_l0": false,
+      "birth_certificate": false,
       "overreach_candidates": [
-        105,
-        240
+        24,
+        25
       ],
       "implicit_l0_modification": [],
       "banned_status_words": []
     },
     {
-      "path": "backend/Docs/V3_SPEC/72_GATE_C_INVALID_BINDING_TEST_SPEC.md",
+      "path": "Docs/REPORTS/61_PHASE_I3_SOURCE_PROVIDER.md",
+      "level": "L4",
+      "classification_status": "active",
+      "lines": 319,
+      "normative_rule_lines": 2,
+      "cites_l0": false,
+      "birth_certificate": false,
+      "overreach_candidates": [
+        24,
+        31
+      ],
+      "implicit_l0_modification": [],
+      "banned_status_words": []
+    },
+    {
+      "path": "Docs/REPORTS/62_PHASE_I3_STORAGE_DECISION.md",
+      "level": "L4",
+      "classification_status": "active",
+      "lines": 103,
+      "normative_rule_lines": 0,
+      "cites_l0": false,
+      "birth_certificate": false,
+      "overreach_candidates": [],
+      "implicit_l0_modification": [],
+      "banned_status_words": []
+    },
+    {
+      "path": "Docs/REPORTS/63_ARCHITECTURE_COMPLEXITY_GUARDRAILS.md",
+      "level": "L4",
+      "classification_status": "active",
+      "lines": 430,
+      "normative_rule_lines": 25,
+      "cites_l0": false,
+      "birth_certificate": false,
+      "overreach_candidates": [
+        15,
+        44,
+        61,
+        67,
+        79,
+        81,
+        91,
+        93,
+        95,
+        126,
+        138,
+        166
+      ],
+      "implicit_l0_modification": [],
+      "banned_status_words": []
+    },
+    {
+      "path": "Docs/REPORTS/64_PHASE_I4_EVIDENCE_EVALUATION.md",
+      "level": "L4",
+      "classification_status": "active",
+      "lines": 191,
+      "normative_rule_lines": 0,
+      "cites_l0": false,
+      "birth_certificate": false,
+      "overreach_candidates": [],
+      "implicit_l0_modification": [],
+      "banned_status_words": [
+        3
+      ]
+    },
+    {
+      "path": "Docs/REPORTS/65_PHASE_I5_SCOPE_FREEZE.md",
+      "level": "L4",
+      "classification_status": "active",
+      "lines": 326,
+      "normative_rule_lines": 11,
+      "cites_l0": false,
+      "birth_certificate": false,
+      "overreach_candidates": [
+        95,
+        96,
+        97,
+        98,
+        105,
+        106,
+        181,
+        187,
+        209,
+        296,
+        323
+      ],
+      "implicit_l0_modification": [],
+      "banned_status_words": []
+    },
+    {
+      "path": "Docs/REPORTS/66_PHASE_I5_1_BOUNDARY_ANALYSIS.md",
+      "level": "L4",
+      "classification_status": "active",
+      "lines": 325,
+      "normative_rule_lines": 8,
+      "cites_l0": false,
+      "birth_certificate": false,
+      "overreach_candidates": [
+        158,
+        195,
+        204,
+        214,
+        268,
+        304,
+        315,
+        319
+      ],
+      "implicit_l0_modification": [],
+      "banned_status_words": []
+    },
+    {
+      "path": "Docs/REPORTS/68_QUESTION_STRUCTURE_DEFINITION.md",
+      "level": "L4",
+      "classification_status": "active",
+      "lines": 306,
+      "normative_rule_lines": 6,
+      "cites_l0": true,
+      "birth_certificate": false,
+      "overreach_candidates": [],
+      "implicit_l0_modification": [],
+      "banned_status_words": []
+    },
+    {
+      "path": "Docs/REPORTS/72_GATE_C_INVALID_BINDING_TEST_SPEC.md",
       "level": "L4",
       "classification_status": "active",
       "lines": 227,
@@ -403,7 +384,7 @@
       "banned_status_words": []
     },
     {
-      "path": "backend/Docs/V3_SPEC/73_B2B5_GATE_C_ADVERSARIAL_REVIEW.md",
+      "path": "Docs/REPORTS/73_B2B5_GATE_C_ADVERSARIAL_REVIEW.md",
       "level": "L4",
       "classification_status": "active",
       "lines": 287,
@@ -418,7 +399,7 @@
       "banned_status_words": []
     },
     {
-      "path": "backend/Docs/V3_SPEC/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
+      "path": "Docs/REPORTS/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
       "level": "L3",
       "classification_status": "active",
       "lines": 554,
@@ -444,19 +425,7 @@
       ]
     },
     {
-      "path": "backend/Docs/V3_SPEC/75_EVIDENCE_PROMOTION_CONTRACT.md",
-      "level": "L2",
-      "classification_status": "active",
-      "lines": 500,
-      "normative_rule_lines": 22,
-      "cites_l0": true,
-      "birth_certificate": false,
-      "overreach_candidates": [],
-      "implicit_l0_modification": [],
-      "banned_status_words": []
-    },
-    {
-      "path": "backend/Docs/V3_SPEC/76_EVIDENCE_PROMOTION_PHASE1_REPORT.md",
+      "path": "Docs/REPORTS/76_EVIDENCE_PROMOTION_PHASE1_REPORT.md",
       "level": "L4",
       "classification_status": "active",
       "lines": 213,
@@ -477,7 +446,7 @@
       ]
     },
     {
-      "path": "backend/Docs/V3_SPEC/77_EVIDENCE_PROMOTION_PHASE1_HARDENING.md",
+      "path": "Docs/REPORTS/77_EVIDENCE_PROMOTION_PHASE1_HARDENING.md",
       "level": "L4",
       "classification_status": "active",
       "lines": 255,
@@ -493,7 +462,7 @@
       ]
     },
     {
-      "path": "backend/Docs/V3_SPEC/78_PHASE1_HARDENING_ADVERSARIAL_REVIEW.md",
+      "path": "Docs/REPORTS/78_PHASE1_HARDENING_ADVERSARIAL_REVIEW.md",
       "level": "L4",
       "classification_status": "active",
       "lines": 342,
@@ -507,7 +476,7 @@
       ]
     },
     {
-      "path": "backend/Docs/V3_SPEC/79_PHASE1_HIGH_SEVERITY_FIXES.md",
+      "path": "Docs/REPORTS/79_PHASE1_HIGH_SEVERITY_FIXES.md",
       "level": "L4",
       "classification_status": "active",
       "lines": 183,
@@ -521,31 +490,7 @@
       "banned_status_words": []
     },
     {
-      "path": "backend/Docs/V3_SPEC/80_B2B5_CLOSURE.md",
-      "level": "L2",
-      "classification_status": "active",
-      "lines": 490,
-      "normative_rule_lines": 12,
-      "cites_l0": true,
-      "birth_certificate": false,
-      "overreach_candidates": [],
-      "implicit_l0_modification": [],
-      "banned_status_words": []
-    },
-    {
-      "path": "backend/Docs/V3_SPEC/81_GATE_D_ADAPTER_BOUNDARY.md",
-      "level": "L2",
-      "classification_status": "active",
-      "lines": 411,
-      "normative_rule_lines": 26,
-      "cites_l0": true,
-      "birth_certificate": false,
-      "overreach_candidates": [],
-      "implicit_l0_modification": [],
-      "banned_status_words": []
-    },
-    {
-      "path": "backend/Docs/V3_SPEC/83_GOVERNANCE_AUDIT.md",
+      "path": "Docs/REPORTS/83_GOVERNANCE_AUDIT.md",
       "level": "L3",
       "classification_status": "active",
       "lines": 221,
@@ -572,20 +517,56 @@
       ]
     },
     {
-      "path": "backend/Docs/V3_SPEC/84_CONFLICT_LEDGER.md",
-      "level": "L3",
-      "classification_status": "active",
-      "lines": 189,
-      "normative_rule_lines": 12,
-      "cites_l0": true,
+      "path": "Docs/REPORTS/PHASE_I2C_CLOSURE.md",
+      "level": "L2-proposed",
+      "classification_status": "pending",
+      "lines": 161,
+      "normative_rule_lines": 0,
+      "cites_l0": false,
       "birth_certificate": false,
       "overreach_candidates": [],
       "implicit_l0_modification": [],
       "banned_status_words": []
     },
     {
-      "path": "backend/Docs/V3_SPEC/gate_b2a_three_task_report.md",
-      "level": "UNASSIGNED",
+      "path": "Docs/REPORTS/PHASE_I2_REVISION_CLOSURE.md",
+      "level": "L2-proposed",
+      "classification_status": "pending",
+      "lines": 142,
+      "normative_rule_lines": 0,
+      "cites_l0": false,
+      "birth_certificate": false,
+      "overreach_candidates": [],
+      "implicit_l0_modification": [],
+      "banned_status_words": []
+    },
+    {
+      "path": "Docs/REPORTS/PHASE_I3_CLOSURE.md",
+      "level": "L2-proposed",
+      "classification_status": "pending",
+      "lines": 234,
+      "normative_rule_lines": 0,
+      "cites_l0": false,
+      "birth_certificate": false,
+      "overreach_candidates": [],
+      "implicit_l0_modification": [],
+      "banned_status_words": []
+    },
+    {
+      "path": "Docs/REPORTS/PHASE_I4_CLOSURE.md",
+      "level": "L2-proposed",
+      "classification_status": "pending",
+      "lines": 130,
+      "normative_rule_lines": 2,
+      "cites_l0": false,
+      "birth_certificate": false,
+      "overreach_candidates": [],
+      "implicit_l0_modification": [],
+      "banned_status_words": []
+    },
+    {
+      "path": "Docs/REPORTS/gate_b2a_three_task_report.md",
+      "level": "L4",
       "classification_status": "active",
       "lines": 170,
       "normative_rule_lines": 0,
@@ -598,11 +579,23 @@
       ]
     },
     {
+      "path": "Docs/ARCHIVE/71_B2B5_SUBJECTIVE_SUBQUESTION_ADJUDICATION_SUPERSEDED.md",
+      "level": "L2",
+      "classification_status": "active",
+      "lines": 250,
+      "normative_rule_lines": 5,
+      "cites_l0": false,
+      "birth_certificate": false,
+      "overreach_candidates": [],
+      "implicit_l0_modification": [],
+      "banned_status_words": []
+    },
+    {
       "path": "restart-prompt.md",
       "level": "L5",
       "classification_status": "active",
-      "lines": 378,
-      "normative_rule_lines": 35,
+      "lines": 388,
+      "normative_rule_lines": 36,
       "cites_l0": true,
       "birth_certificate": false,
       "overreach_candidates": [],
@@ -613,8 +606,8 @@
       "path": "Status.md",
       "level": "L5",
       "classification_status": "active",
-      "lines": 2799,
-      "normative_rule_lines": 68,
+      "lines": 2846,
+      "normative_rule_lines": 71,
       "cites_l0": true,
       "birth_certificate": false,
       "overreach_candidates": [],
@@ -633,8 +626,8 @@
       "path": "log.md",
       "level": "L5",
       "classification_status": "active",
-      "lines": 2169,
-      "normative_rule_lines": 63,
+      "lines": 2251,
+      "normative_rule_lines": 68,
       "cites_l0": true,
       "birth_certificate": false,
       "overreach_candidates": [],
@@ -662,254 +655,75 @@
     }
   ],
   "duplicate_stage_names": {
-    "Phase I-3": [
-      "Docs/V3_SPEC/61_PHASE_I3_SOURCE_PROVIDER.md",
-      "Docs/V3_SPEC/62_PHASE_I3_STORAGE_DECISION.md",
-      "Docs/V3_SPEC/63_ARCHITECTURE_COMPLEXITY_GUARDRAILS.md",
-      "Docs/V3_SPEC/64_PHASE_I4_EVIDENCE_EVALUATION.md",
-      "Docs/V3_SPEC/91_PROJECT_TERMINOLOGY.md",
-      "Docs/V3_SPEC/Closure/PHASE_I2C_CLOSURE.md",
-      "Docs/V3_SPEC/Closure/PHASE_I3_CLOSURE.md",
-      "Docs/V3_SPEC/Closure/PHASE_I4_CLOSURE.md",
+    "Gate X": [
+      "Docs/DECISIONS/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
+      "Docs/REPORTS/83_GOVERNANCE_AUDIT.md",
+      "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
       "Status.md",
-      "backend/Docs/V3_SPEC/83_GOVERNANCE_AUDIT.md",
-      "backend/Docs/V3_SPEC/84_CONFLICT_LEDGER.md",
       "log.md",
       "restart-prompt.md"
     ],
-    "Phase I-2": [
-      "Docs/V3_SPEC/61_PHASE_I3_SOURCE_PROVIDER.md",
-      "Docs/V3_SPEC/Closure/PHASE_I2_REVISION_CLOSURE.md",
-      "Status.md",
-      "bugs.md",
-      "log.md"
-    ],
-    "Phase I-4": [
-      "Docs/V3_SPEC/63_ARCHITECTURE_COMPLEXITY_GUARDRAILS.md",
-      "Docs/V3_SPEC/64_PHASE_I4_EVIDENCE_EVALUATION.md",
-      "Docs/V3_SPEC/65_PHASE_I5_SCOPE_FREEZE.md",
-      "Docs/V3_SPEC/66_PHASE_I5_1_BOUNDARY_ANALYSIS.md",
-      "Docs/V3_SPEC/67_ANNOTATION_RESOLVER_BOUNDARY_ADJUSTMENT.md",
-      "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+    "Gate B": [
+      "Docs/ARCHIVE/71_B2B5_SUBJECTIVE_SUBQUESTION_ADJUDICATION_SUPERSEDED.md",
+      "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "Docs/DECISIONS/70_OQ1_IDENTITY_LAYERING.md",
+      "Docs/DECISIONS/80_B2B5_CLOSURE.md",
+      "Docs/DECISIONS/81_GATE_D_ADAPTER_BOUNDARY.md",
+      "Docs/DECISIONS/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
+      "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
+      "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
       "Docs/V3_SPEC/91_PROJECT_TERMINOLOGY.md",
-      "Docs/V3_SPEC/Closure/PHASE_I3_CLOSURE.md",
-      "Docs/V3_SPEC/Closure/PHASE_I4_CLOSURE.md",
       "Status.md",
-      "bugs.md",
       "log.md",
       "restart-prompt.md"
     ],
-    "Phase I-5": [
-      "Docs/V3_SPEC/65_PHASE_I5_SCOPE_FREEZE.md",
-      "Docs/V3_SPEC/67_ANNOTATION_RESOLVER_BOUNDARY_ADJUSTMENT.md",
-      "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "Docs/V3_SPEC/71_B2B5_SUBJECTIVE_SUBQUESTION_ADJUDICATION.md",
-      "Docs/V3_SPEC/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
+    "Gate D": [
+      "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "Docs/DECISIONS/80_B2B5_CLOSURE.md",
+      "Docs/DECISIONS/81_GATE_D_ADAPTER_BOUNDARY.md",
+      "Docs/DECISIONS/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
+      "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
+      "Docs/REPORTS/66_PHASE_I5_1_BOUNDARY_ANALYSIS.md",
+      "Docs/REPORTS/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
+      "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
       "Docs/V3_SPEC/91_PROJECT_TERMINOLOGY.md",
-      "Docs/V3_SPEC/Closure/PHASE_I4_CLOSURE.md",
       "Status.md",
       "bugs.md",
       "log.md",
       "restart-prompt.md"
     ],
-    "Path A": [
-      "Docs/V3_SPEC/66_PHASE_I5_1_BOUNDARY_ANALYSIS.md",
+    "Gate C": [
+      "Docs/ARCHIVE/71_B2B5_SUBJECTIVE_SUBQUESTION_ADJUDICATION_SUPERSEDED.md",
+      "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "Docs/DECISIONS/70_OQ1_IDENTITY_LAYERING.md",
+      "Docs/DECISIONS/71_B2B5_SUBJECTIVE_SUBQUESTION_ADJUDICATION.md",
+      "Docs/DECISIONS/80_B2B5_CLOSURE.md",
+      "Docs/DECISIONS/81_GATE_D_ADAPTER_BOUNDARY.md",
+      "Docs/DECISIONS/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
+      "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
+      "Docs/REPORTS/72_GATE_C_INVALID_BINDING_TEST_SPEC.md",
+      "Docs/REPORTS/73_B2B5_GATE_C_ADVERSARIAL_REVIEW.md",
+      "Docs/REPORTS/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
+      "Docs/REPORTS/78_PHASE1_HARDENING_ADVERSARIAL_REVIEW.md",
+      "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
       "Docs/V3_SPEC/91_PROJECT_TERMINOLOGY.md",
       "Status.md",
       "log.md",
       "restart-prompt.md"
     ],
     "Path B": [
-      "Docs/V3_SPEC/66_PHASE_I5_1_BOUNDARY_ANALYSIS.md",
-      "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "Docs/V3_SPEC/70_OQ1_IDENTITY_LAYERING.md",
-      "Docs/V3_SPEC/71_B2B5_SUBJECTIVE_SUBQUESTION_ADJUDICATION.md",
-      "Docs/V3_SPEC/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
+      "Docs/ARCHIVE/71_B2B5_SUBJECTIVE_SUBQUESTION_ADJUDICATION_SUPERSEDED.md",
+      "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "Docs/DECISIONS/70_OQ1_IDENTITY_LAYERING.md",
+      "Docs/DECISIONS/80_B2B5_CLOSURE.md",
+      "Docs/DECISIONS/81_GATE_D_ADAPTER_BOUNDARY.md",
+      "Docs/DECISIONS/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
+      "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
+      "Docs/REPORTS/66_PHASE_I5_1_BOUNDARY_ANALYSIS.md",
+      "Docs/REPORTS/gate_b2a_three_task_report.md",
       "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
       "Docs/V3_SPEC/91_PROJECT_TERMINOLOGY.md",
       "Status.md",
-      "backend/Docs/V3_SPEC/80_B2B5_CLOSURE.md",
-      "backend/Docs/V3_SPEC/81_GATE_D_ADAPTER_BOUNDARY.md",
-      "backend/Docs/V3_SPEC/84_CONFLICT_LEDGER.md",
-      "backend/Docs/V3_SPEC/gate_b2a_three_task_report.md",
-      "log.md",
-      "restart-prompt.md"
-    ],
-    "Gate D": [
-      "Docs/V3_SPEC/66_PHASE_I5_1_BOUNDARY_ANALYSIS.md",
-      "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "Docs/V3_SPEC/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
-      "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
-      "Docs/V3_SPEC/91_PROJECT_TERMINOLOGY.md",
-      "Status.md",
-      "backend/Docs/V3_SPEC/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
-      "backend/Docs/V3_SPEC/80_B2B5_CLOSURE.md",
-      "backend/Docs/V3_SPEC/81_GATE_D_ADAPTER_BOUNDARY.md",
-      "backend/Docs/V3_SPEC/84_CONFLICT_LEDGER.md",
-      "bugs.md",
-      "log.md",
-      "restart-prompt.md"
-    ],
-    "Step B": [
-      "Docs/V3_SPEC/68_QUESTION_STRUCTURE_DEFINITION.md",
-      "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "Docs/V3_SPEC/91_PROJECT_TERMINOLOGY.md",
-      "Status.md",
-      "log.md",
-      "restart-prompt.md"
-    ],
-    "Step 0.5": [
-      "Docs/V3_SPEC/68_QUESTION_STRUCTURE_DEFINITION.md",
-      "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "Docs/V3_SPEC/91_PROJECT_TERMINOLOGY.md",
-      "Status.md",
-      "log.md"
-    ],
-    "Step 3": [
-      "Docs/V3_SPEC/68_QUESTION_STRUCTURE_DEFINITION.md",
-      "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "Docs/V3_SPEC/70_OQ1_IDENTITY_LAYERING.md",
-      "Docs/V3_SPEC/91_PROJECT_TERMINOLOGY.md",
-      "Status.md",
-      "log.md",
-      "restart-prompt.md"
-    ],
-    "Step 4": [
-      "Docs/V3_SPEC/68_QUESTION_STRUCTURE_DEFINITION.md",
-      "Status.md",
-      "log.md"
-    ],
-    "Step 5": [
-      "Docs/V3_SPEC/68_QUESTION_STRUCTURE_DEFINITION.md",
-      "Status.md",
-      "log.md"
-    ],
-    "Step C": [
-      "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "Docs/V3_SPEC/91_PROJECT_TERMINOLOGY.md",
-      "Status.md",
-      "log.md"
-    ],
-    "Step B.5": [
-      "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "Docs/V3_SPEC/91_PROJECT_TERMINOLOGY.md",
-      "Status.md",
-      "log.md"
-    ],
-    "Step 0": [
-      "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "Docs/V3_SPEC/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
-      "Docs/V3_SPEC/91_PROJECT_TERMINOLOGY.md",
-      "Status.md",
-      "log.md"
-    ],
-    "Gate B": [
-      "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "Docs/V3_SPEC/70_OQ1_IDENTITY_LAYERING.md",
-      "Docs/V3_SPEC/71_B2B5_SUBJECTIVE_SUBQUESTION_ADJUDICATION.md",
-      "Docs/V3_SPEC/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
-      "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
-      "Docs/V3_SPEC/91_PROJECT_TERMINOLOGY.md",
-      "Status.md",
-      "backend/Docs/V3_SPEC/80_B2B5_CLOSURE.md",
-      "backend/Docs/V3_SPEC/81_GATE_D_ADAPTER_BOUNDARY.md",
-      "backend/Docs/V3_SPEC/84_CONFLICT_LEDGER.md",
-      "log.md",
-      "restart-prompt.md"
-    ],
-    "Gate C": [
-      "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "Docs/V3_SPEC/70_OQ1_IDENTITY_LAYERING.md",
-      "Docs/V3_SPEC/71_B2B5_SUBJECTIVE_SUBQUESTION_ADJUDICATION.md",
-      "Docs/V3_SPEC/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
-      "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
-      "Docs/V3_SPEC/91_PROJECT_TERMINOLOGY.md",
-      "Status.md",
-      "backend/Docs/V3_SPEC/71_B2B5_SUBJECTIVE_SUBQUESTION_ADJUDICATION.md",
-      "backend/Docs/V3_SPEC/72_GATE_C_INVALID_BINDING_TEST_SPEC.md",
-      "backend/Docs/V3_SPEC/73_B2B5_GATE_C_ADVERSARIAL_REVIEW.md",
-      "backend/Docs/V3_SPEC/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
-      "backend/Docs/V3_SPEC/78_PHASE1_HARDENING_ADVERSARIAL_REVIEW.md",
-      "backend/Docs/V3_SPEC/80_B2B5_CLOSURE.md",
-      "backend/Docs/V3_SPEC/81_GATE_D_ADAPTER_BOUNDARY.md",
-      "backend/Docs/V3_SPEC/84_CONFLICT_LEDGER.md",
-      "log.md",
-      "restart-prompt.md"
-    ],
-    "Phase 1": [
-      "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "Docs/V3_SPEC/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
-      "Docs/V3_SPEC/91_PROJECT_TERMINOLOGY.md",
-      "Status.md",
-      "backend/Docs/V3_SPEC/72_GATE_C_INVALID_BINDING_TEST_SPEC.md",
-      "backend/Docs/V3_SPEC/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
-      "backend/Docs/V3_SPEC/75_EVIDENCE_PROMOTION_CONTRACT.md",
-      "backend/Docs/V3_SPEC/76_EVIDENCE_PROMOTION_PHASE1_REPORT.md",
-      "backend/Docs/V3_SPEC/77_EVIDENCE_PROMOTION_PHASE1_HARDENING.md",
-      "backend/Docs/V3_SPEC/78_PHASE1_HARDENING_ADVERSARIAL_REVIEW.md",
-      "backend/Docs/V3_SPEC/79_PHASE1_HIGH_SEVERITY_FIXES.md",
-      "backend/Docs/V3_SPEC/80_B2B5_CLOSURE.md",
-      "backend/Docs/V3_SPEC/81_GATE_D_ADAPTER_BOUNDARY.md",
-      "bugs.md",
-      "log.md",
-      "restart-prompt.md"
-    ],
-    "Gate A-D": [
-      "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "Docs/V3_SPEC/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
-      "Status.md",
-      "backend/Docs/V3_SPEC/84_CONFLICT_LEDGER.md",
-      "log.md",
-      "restart-prompt.md"
-    ],
-    "Gate A": [
-      "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "Docs/V3_SPEC/70_OQ1_IDENTITY_LAYERING.md",
-      "Docs/V3_SPEC/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
-      "Docs/V3_SPEC/91_PROJECT_TERMINOLOGY.md",
-      "Status.md",
-      "backend/Docs/V3_SPEC/80_B2B5_CLOSURE.md",
-      "backend/Docs/V3_SPEC/81_GATE_D_ADAPTER_BOUNDARY.md",
-      "log.md",
-      "restart-prompt.md"
-    ],
-    "Gate B1": [
-      "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "Docs/V3_SPEC/91_PROJECT_TERMINOLOGY.md",
-      "Status.md",
-      "backend/Docs/V3_SPEC/80_B2B5_CLOSURE.md",
-      "backend/Docs/V3_SPEC/81_GATE_D_ADAPTER_BOUNDARY.md",
-      "bugs.md",
-      "log.md",
-      "restart-prompt.md"
-    ],
-    "Gate B2": [
-      "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "Status.md",
-      "log.md"
-    ],
-    "Phase 2": [
-      "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-      "Docs/V3_SPEC/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
-      "Docs/V3_SPEC/91_PROJECT_TERMINOLOGY.md",
-      "Status.md",
-      "backend/Docs/V3_SPEC/72_GATE_C_INVALID_BINDING_TEST_SPEC.md",
-      "backend/Docs/V3_SPEC/75_EVIDENCE_PROMOTION_CONTRACT.md",
-      "backend/Docs/V3_SPEC/76_EVIDENCE_PROMOTION_PHASE1_REPORT.md",
-      "backend/Docs/V3_SPEC/77_EVIDENCE_PROMOTION_PHASE1_HARDENING.md",
-      "backend/Docs/V3_SPEC/78_PHASE1_HARDENING_ADVERSARIAL_REVIEW.md",
-      "backend/Docs/V3_SPEC/79_PHASE1_HIGH_SEVERITY_FIXES.md",
-      "backend/Docs/V3_SPEC/80_B2B5_CLOSURE.md",
-      "backend/Docs/V3_SPEC/81_GATE_D_ADAPTER_BOUNDARY.md",
-      "bugs.md",
-      "log.md",
-      "restart-prompt.md"
-    ],
-    "Gate X": [
-      "Docs/V3_SPEC/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
-      "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
-      "Status.md",
-      "backend/Docs/V3_SPEC/83_GOVERNANCE_AUDIT.md",
       "log.md",
       "restart-prompt.md"
     ],
@@ -940,6 +754,155 @@
       "log.md",
       "restart-prompt.md"
     ],
+    "Step B": [
+      "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "Docs/REPORTS/68_QUESTION_STRUCTURE_DEFINITION.md",
+      "Docs/V3_SPEC/91_PROJECT_TERMINOLOGY.md",
+      "Status.md",
+      "log.md",
+      "restart-prompt.md"
+    ],
+    "Phase 1": [
+      "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "Docs/DECISIONS/75_EVIDENCE_PROMOTION_CONTRACT.md",
+      "Docs/DECISIONS/80_B2B5_CLOSURE.md",
+      "Docs/DECISIONS/81_GATE_D_ADAPTER_BOUNDARY.md",
+      "Docs/DECISIONS/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
+      "Docs/REPORTS/72_GATE_C_INVALID_BINDING_TEST_SPEC.md",
+      "Docs/REPORTS/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
+      "Docs/REPORTS/76_EVIDENCE_PROMOTION_PHASE1_REPORT.md",
+      "Docs/REPORTS/77_EVIDENCE_PROMOTION_PHASE1_HARDENING.md",
+      "Docs/REPORTS/78_PHASE1_HARDENING_ADVERSARIAL_REVIEW.md",
+      "Docs/REPORTS/79_PHASE1_HIGH_SEVERITY_FIXES.md",
+      "Docs/V3_SPEC/91_PROJECT_TERMINOLOGY.md",
+      "Status.md",
+      "bugs.md",
+      "log.md",
+      "restart-prompt.md"
+    ],
+    "Phase I-3": [
+      "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
+      "Docs/REPORTS/61_PHASE_I3_SOURCE_PROVIDER.md",
+      "Docs/REPORTS/62_PHASE_I3_STORAGE_DECISION.md",
+      "Docs/REPORTS/63_ARCHITECTURE_COMPLEXITY_GUARDRAILS.md",
+      "Docs/REPORTS/64_PHASE_I4_EVIDENCE_EVALUATION.md",
+      "Docs/REPORTS/83_GOVERNANCE_AUDIT.md",
+      "Docs/REPORTS/PHASE_I2C_CLOSURE.md",
+      "Docs/REPORTS/PHASE_I3_CLOSURE.md",
+      "Docs/REPORTS/PHASE_I4_CLOSURE.md",
+      "Docs/V3_SPEC/91_PROJECT_TERMINOLOGY.md",
+      "Status.md",
+      "log.md",
+      "restart-prompt.md"
+    ],
+    "Phase 2": [
+      "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "Docs/DECISIONS/75_EVIDENCE_PROMOTION_CONTRACT.md",
+      "Docs/DECISIONS/80_B2B5_CLOSURE.md",
+      "Docs/DECISIONS/81_GATE_D_ADAPTER_BOUNDARY.md",
+      "Docs/DECISIONS/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
+      "Docs/REPORTS/72_GATE_C_INVALID_BINDING_TEST_SPEC.md",
+      "Docs/REPORTS/76_EVIDENCE_PROMOTION_PHASE1_REPORT.md",
+      "Docs/REPORTS/77_EVIDENCE_PROMOTION_PHASE1_HARDENING.md",
+      "Docs/REPORTS/78_PHASE1_HARDENING_ADVERSARIAL_REVIEW.md",
+      "Docs/REPORTS/79_PHASE1_HIGH_SEVERITY_FIXES.md",
+      "Docs/V3_SPEC/91_PROJECT_TERMINOLOGY.md",
+      "Status.md",
+      "bugs.md",
+      "log.md",
+      "restart-prompt.md"
+    ],
+    "Phase I-4": [
+      "Docs/DECISIONS/67_ANNOTATION_RESOLVER_BOUNDARY_ADJUSTMENT.md",
+      "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "Docs/REPORTS/63_ARCHITECTURE_COMPLEXITY_GUARDRAILS.md",
+      "Docs/REPORTS/64_PHASE_I4_EVIDENCE_EVALUATION.md",
+      "Docs/REPORTS/65_PHASE_I5_SCOPE_FREEZE.md",
+      "Docs/REPORTS/66_PHASE_I5_1_BOUNDARY_ANALYSIS.md",
+      "Docs/REPORTS/PHASE_I3_CLOSURE.md",
+      "Docs/REPORTS/PHASE_I4_CLOSURE.md",
+      "Docs/V3_SPEC/91_PROJECT_TERMINOLOGY.md",
+      "Status.md",
+      "bugs.md",
+      "log.md",
+      "restart-prompt.md"
+    ],
+    "Phase I-5": [
+      "Docs/ARCHIVE/71_B2B5_SUBJECTIVE_SUBQUESTION_ADJUDICATION_SUPERSEDED.md",
+      "Docs/DECISIONS/67_ANNOTATION_RESOLVER_BOUNDARY_ADJUSTMENT.md",
+      "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "Docs/DECISIONS/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
+      "Docs/REPORTS/65_PHASE_I5_SCOPE_FREEZE.md",
+      "Docs/REPORTS/PHASE_I4_CLOSURE.md",
+      "Docs/V3_SPEC/91_PROJECT_TERMINOLOGY.md",
+      "Status.md",
+      "bugs.md",
+      "log.md",
+      "restart-prompt.md"
+    ],
+    "Step C": [
+      "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "Docs/V3_SPEC/91_PROJECT_TERMINOLOGY.md",
+      "Status.md",
+      "log.md"
+    ],
+    "Step 3": [
+      "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "Docs/DECISIONS/70_OQ1_IDENTITY_LAYERING.md",
+      "Docs/REPORTS/68_QUESTION_STRUCTURE_DEFINITION.md",
+      "Docs/V3_SPEC/91_PROJECT_TERMINOLOGY.md",
+      "Status.md",
+      "log.md",
+      "restart-prompt.md"
+    ],
+    "Step 0.5": [
+      "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "Docs/REPORTS/68_QUESTION_STRUCTURE_DEFINITION.md",
+      "Docs/V3_SPEC/91_PROJECT_TERMINOLOGY.md",
+      "Status.md",
+      "log.md"
+    ],
+    "Step B.5": [
+      "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "Docs/V3_SPEC/91_PROJECT_TERMINOLOGY.md",
+      "Status.md",
+      "log.md"
+    ],
+    "Step 0": [
+      "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "Docs/DECISIONS/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
+      "Docs/V3_SPEC/91_PROJECT_TERMINOLOGY.md",
+      "Status.md",
+      "log.md"
+    ],
+    "Path A": [
+      "Docs/REPORTS/66_PHASE_I5_1_BOUNDARY_ANALYSIS.md",
+      "Docs/V3_SPEC/91_PROJECT_TERMINOLOGY.md",
+      "Status.md",
+      "log.md",
+      "restart-prompt.md"
+    ],
+    "Gate B1": [
+      "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "Docs/DECISIONS/80_B2B5_CLOSURE.md",
+      "Docs/DECISIONS/81_GATE_D_ADAPTER_BOUNDARY.md",
+      "Docs/V3_SPEC/91_PROJECT_TERMINOLOGY.md",
+      "Status.md",
+      "bugs.md",
+      "log.md",
+      "restart-prompt.md"
+    ],
+    "Gate A": [
+      "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "Docs/DECISIONS/70_OQ1_IDENTITY_LAYERING.md",
+      "Docs/DECISIONS/80_B2B5_CLOSURE.md",
+      "Docs/DECISIONS/81_GATE_D_ADAPTER_BOUNDARY.md",
+      "Docs/DECISIONS/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
+      "Docs/V3_SPEC/91_PROJECT_TERMINOLOGY.md",
+      "Status.md",
+      "log.md",
+      "restart-prompt.md"
+    ],
     "Step 1": [
       "Docs/V3_SPEC/91_PROJECT_TERMINOLOGY.md",
       "Status.md",
@@ -959,16 +922,16 @@
       "restart-prompt.md"
     ],
     "Phase 3": [
+      "Docs/DECISIONS/75_EVIDENCE_PROMOTION_CONTRACT.md",
+      "Docs/REPORTS/72_GATE_C_INVALID_BINDING_TEST_SPEC.md",
       "Docs/V3_SPEC/91_PROJECT_TERMINOLOGY.md",
       "Status.md",
-      "backend/Docs/V3_SPEC/72_GATE_C_INVALID_BINDING_TEST_SPEC.md",
-      "backend/Docs/V3_SPEC/75_EVIDENCE_PROMOTION_CONTRACT.md",
       "log.md"
     ],
     "Phase 4": [
+      "Docs/REPORTS/72_GATE_C_INVALID_BINDING_TEST_SPEC.md",
       "Docs/V3_SPEC/91_PROJECT_TERMINOLOGY.md",
       "Status.md",
-      "backend/Docs/V3_SPEC/72_GATE_C_INVALID_BINDING_TEST_SPEC.md",
       "log.md"
     ],
     "Phase 9": [
@@ -977,6 +940,36 @@
       "bugs.md",
       "log.md",
       "restart-prompt.md"
+    ],
+    "Gate A-D": [
+      "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "Docs/DECISIONS/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
+      "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
+      "Status.md",
+      "log.md",
+      "restart-prompt.md"
+    ],
+    "Gate B2": [
+      "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+      "Status.md",
+      "log.md"
+    ],
+    "Phase I-2": [
+      "Docs/REPORTS/61_PHASE_I3_SOURCE_PROVIDER.md",
+      "Docs/REPORTS/PHASE_I2_REVISION_CLOSURE.md",
+      "Status.md",
+      "bugs.md",
+      "log.md"
+    ],
+    "Step 4": [
+      "Docs/REPORTS/68_QUESTION_STRUCTURE_DEFINITION.md",
+      "Status.md",
+      "log.md"
+    ],
+    "Step 5": [
+      "Docs/REPORTS/68_QUESTION_STRUCTURE_DEFINITION.md",
+      "Status.md",
+      "log.md"
     ],
     "Gate P": [
       "Status.md",

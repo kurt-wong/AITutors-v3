@@ -1,5 +1,27 @@
 # B2-B5 Subjective / Sub-question / Material 裁决记录
 
+> ⚠️ **SUPERSEDED — 已归档，不得作为引用来源（`90 §2 R8`，D-01 裁决 2026-09-13）**
+>
+> 本文件是 **71 号的 stale 份**。同号曾存在两份且内容不同（`diff` = DIFFERENT）：
+>
+> | 份 | 时间 | 大小 | 现状 |
+> |---|---|---|---|
+> | **本文件**（原 `Docs/V3_SPEC/71_…`） | Sep 12 **21:33** | 6914 B | **STALE，已归档** |
+> | `Docs/DECISIONS/71_B2B5_…`（原 `backend/Docs/V3_SPEC/71_…`） | Sep 12 **23:05** | 7783 B | **(CORRECTED) — 权威版** |
+>
+> **权威版**：`Docs/DECISIONS/71_B2B5_SUBJECTIVE_SUBQUESTION_ADJUDICATION.md`
+>
+> **本文件正文保留为审计证据**（不删除、不改写）；但按 `90 §2 R8`：
+> 不得作为引用来源、不得进入新文档的引用搜索结果、`docs_audit/` 标 `deprecated`。
+
+**Document Type**: Experiment Report
+**Authority Level**: L4
+**Status**: **SUPERSEDED**
+**Normative**: NO
+**Supersedes**: —
+**Superseded By**: `Docs/DECISIONS/71_B2B5_SUBJECTIVE_SUBQUESTION_ADJUDICATION.md`
+**Gate State Authority**: NO
+
 Status: Adjudicated — 语义裁决 + 测试集冻结完成
 Date: 2026-09-11
 Predecessors: 68_QUESTION_STRUCTURE_DEFINITION.md, 69_ARCHITECTURE_REVIEW_ADJUDICATION.md

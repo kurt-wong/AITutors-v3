@@ -57,6 +57,49 @@ Frozen Spec → Decision Record 解释 Spec → Closure Report 再解释 Decisio
 | D Status | **L5** | 不变 |
 | E Experimental | 并入 **L4** | 不再单列 |
 
+### 1.2 目录模型（DG-2 归位，2026-09-13 冻结）
+
+**物理目录强制分层。** 层级不再只存在于 `authority_matrix.yaml` 里。
+
+```text
+AITutors-v3/
+├── Docs/
+│   ├── V3_SPEC/          L0 Frozen Spec + L0-META（90/91）—— 唯一冻结规范
+│   ├── DECISIONS/        L2 Decision Records
+│   ├── REPORTS/          L3/L4 Gate & Experiment Reports + Closure records
+│   └── ARCHIVE/          SUPERSEDED / stale，保留为审计证据（不得引用）
+├── Status.md             L5 — 当前项目状态快照
+├── log.md                L5 — 时间线事件记录
+├── bugs.md               L5 — 已确认问题列表
+└── restart-prompt.md     L5 — Agent 恢复上下文入口
+```
+
+| 目录 | 层 | 允许 | 禁止 |
+|---|---|---|---|
+| `Docs/V3_SPEC/` | L0 / L0-META | 引用；补 Change Record；新增 L1 | 直接编辑；隐式改变 |
+| `Docs/DECISIONS/` | L2 | 解释与裁决 | 产生新架构事实；修改 L0 |
+| `Docs/REPORTS/` | L3 / L4 / L2-proposed | 证明状态；提供证据 | 定义规则；单独支撑 PASS |
+| `Docs/ARCHIVE/` | deprecated | 审计证据 | **作为引用来源** |
+
+**例外（冻结）**：4 个 JSON 测试语料（`gate_c_invalid_binding_corpus.json`、
+`gate_b2b{3,4,5}_frozen_testset.json`）**留在 `backend/Docs/V3_SPEC/`**——
+测试按路径读取（`backend/tests/test_b2b5_d_projection_safety.py:354`、
+`test_c2_evidence_authority_e2e.py:54`），移动会打断测试。
+
+**L0 文件名永久保持现状。** 改 L0 文件名本身是 CHANGE，须走 L1；且会打断全部
+`file:line` 引用坐标。分层靠本节目录 + `authority_matrix.yaml` 表达。
+
+### 1.3 根目录四份状态文件的职责（冻结）
+
+| 文件 | 唯一职责 | 允许 | 禁止 |
+|---|---|---|---|
+| **`Status.md`** | **当前项目状态快照** | 当前阶段 / Gate 状态 / OPEN 问题 / 下一步 | 技术分析、长篇原因解释、设计决策 |
+| **`log.md`** | **时间线事件记录**（类 git commit） | `日期 / Action / Decision / Reference` | 重新解释设计 |
+| **`bugs.md`** | **已确认问题列表** | ID / Title / Impact / Status | 解决方案讨论 |
+| **`restart-prompt.md`** | **Agent 恢复上下文入口** | 当前项目是什么 / 哪些文件权威 / 做到哪 / 下一步 | 保存历史讨论 |
+
+**这四份是 L5，永远不得改变 L0/L1（`90 §2` 最高规则）。**
+
 ---
 
 ## 2. 核心规则（冻结）

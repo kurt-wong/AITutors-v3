@@ -86,7 +86,7 @@
 
 | ID | 冲突 | 证据 | 级别 | 状态 | 备注 |
 |---|---|---|---|---|---|
-| **D-01** | **71 号同号双份且内容不同** | `Docs/V3_SPEC/71_…`（6914 B，Sep 12 21:33，「裁决记录」）vs `backend/Docs/V3_SPEC/71_…`（7783 B，23:05，「(CORRECTED)」）；`diff -q` = **DIFFERENT** | 🔴 | **OPEN** | **本轮最重的文档治理缺陷**。两个文件抢同一编号且无废止声明；**旧的那份在 L0 目录里**，路径直觉会当更权威。**建议**：root 版判 stale + supersede 指针 → backend CORRECTED 版；**不删除任一份** |
+| **D-01** | **71 号同号双份且内容不同** | 原 `Docs/V3_SPEC/71_…`（6914 B，Sep 12 21:33，「裁决记录」）vs 原 `backend/Docs/V3_SPEC/71_…`（7783 B，23:05，「(CORRECTED)」）；`diff -q` = **DIFFERENT** | 🔴 | **DECIDED** | **DG-3 处置（2026-09-13）**：root 版判 **stale**，`git mv` 至 `Docs/ARCHIVE/71_…_SUPERSEDED.md` 并加 SUPERSEDED 声明块（`90 §2 R8`：正文保留、不得作为引用来源、`docs_audit` 标 `deprecated`）；backend CORRECTED 版为**权威版**，移至 `Docs/DECISIONS/71_…` 并归 **L2**。**两份都未删除。** |
 | **D-02** | 5 份文档在 V3_SPEC 树内但未归层（837 行） | `Closure/PHASE_I2C` `PHASE_I2_REVISION` `PHASE_I3` `PHASE_I4_CLOSURE.md`（均含 `Status: CLOSED`；`PHASE_I3_CLOSURE.md:5` 直接写 `Gate: PASS`）+ `gate_b2a_three_task_report.md` | 🔴 | **OPEN** | 未归层 = 不得引用为权威（`90 §1`）。**建议**：4×Closure → **L2**；`gate_b2a_…` → **L4** |
 | **D-03** | 分层错误 3 份 | `63:3` `Status: Frozen Constraint`（L4 位置自封 L0 权限）；`65:95-106` 十二条禁令实为 scope freeze 契约；`68` 经 `69` 判为 Domain Definition Proposal | 🟠 | **OPEN** | `63` **升 L0 须走 L1**，不能靠改标签（`90 §2 R1`）。`65` 建议归 **L2**。`68` 保持 L4 但须注明 `69` 定性 |
 | **D-04** | L3 `74` 对 V3 自立规范 6 处 | `74:224`（Native Path **必须**保证…）`74:226`（preprocessing **必须**满足…）`74:283`（answer span **不得**重叠）`74:385`（**唯一**允许进 IR）`74:395-396`（**禁止** CLAIMED/PROPOSED → IR）`74:418`（Validation **必须** append-only） | 🟠 | **OPEN** | 违反 `90 §2 R3`（L3 不得定义规则）。对照 `74:94`「这个结果**只能**证明」是**正确用法**——同文档两种用法并存，说明缺的是分类约束。大多已被 `75 号`（L2）承接，待逐条加指针 |

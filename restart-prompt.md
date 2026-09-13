@@ -1,11 +1,11 @@
-Version: v1.54
+Version: v1.55
 Status: **Documentation Governance Stabilization（DG）ACTIVE** —
-**CA-001 CLOSED（CR-001，CHANGE-2 追认 ACCEPTED/EFFECTIVE）**；
-91 号词汇宪法已立；DG-1 IN PROGRESS / DG-5 IN PROGRESS；
-出生证明 **3/44**；OPEN 11 项（P0：D-01 / C-01 / D-02）；
+**DG-2 归位完成 + DG-3 71 号去重完成（D-01 CLOSED）**；
+目录模型已冻结（V3_SPEC / DECISIONS / REPORTS / ARCHIVE）；
+出生证明 **3/44**；OPEN 10 项（P0：C-01 / D-02）；
 Gate A PASS / B **NOT CLOSED** / C CLOSED (Phase 1) / D CONTRACT CLOSED；
 **DG 全绿前不得进入 Binding Authority Decision，更不得实现 Adapter**；
-下一步：**裁决 D-01**（71 号双份）
+下一步：**裁决 C-01**（line_refs，须走 BIND-1/2/3）
 Date: 2026-09-13
 
 ## 0.0 当前结论（2026-09-13 CA-001 CLOSED + 91 号词汇宪法 + DG 阶段）

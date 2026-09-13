@@ -2249,3 +2249,82 @@ OPEN 11（P0 三项：C-01 / D-01 / D-02）  ← CA-001 移出 P0
 `91` §1.3 Path 登记制 + §5.1 文档创建门槛 + §6.1 扫描器非裁决器 + DG 表更新；
 `84` CA-001 CLOSED + 汇总与优先级更新；emitter CA-001 状态更新 + 重跑 `docs_audit/`。
 **L0 内容零改动。**
+
+---
+
+## 2026-09-13 — DG-2 文档归位 + DG-3 71 号去重（D-01 CLOSED）
+
+**触发**：用户裁决「L0 文件名完全保持现状」「非 L0 物理移入 DECISIONS/ REPORTS/
+ARCHIVE/，并同步重写全部引用坐标」。
+
+### 目录模型（冻结，已写入 90 §1.2）
+
+```text
+Docs/V3_SPEC/     L0 Frozen Spec + L0-META（90/91）—— 唯一冻结规范      9 份
+Docs/DECISIONS/   L2 Decision Records                                  9 份
+Docs/REPORTS/     L3/L4 Reports + Closure records                     21 份
+Docs/ARCHIVE/     SUPERSEDED / stale，审计证据，不得引用                 1 份
+Status/log/bugs/restart-prompt   L5                                    4 份
+```
+
+**归层结果**：L0=7 / L0-META=2 / L2=10 / L2-proposed=4 / L3=2 / L4=15 / L5=4。
+**UNASSIGNED 归零。**
+
+### 两处分类修正以匹配物理位置
+
+- **84 号 Conflict Ledger → L2**（原 L3）。它记录裁决，是 Decision Record。
+- **71 号 CORRECTED → L2**（原 L4）。它是 Domain Contract 裁决记录。
+
+### L0 文件名永久保持现状（用户裁决）
+
+改 L0 文件名本身是 CHANGE，须走 L1；且会打断全部 `file:line` 引用坐标。
+分层靠目录 + `authority_matrix.yaml` 表达，不靠物理文件名。
+
+**用户示意树中的三处 L0 改名经核实与实际权威范围不符，未采纳**：
+
+| 示意 | 实际 | 问题 |
+|---|---|---|
+| `20_Evidence_Contract.md` | 20 = Annotation→Resolver→IR→Compiler→Gate 管线 | 🔴 `Evidence Contract` 已在 `90 R9` + `75 Terminology` 定为 **Doc 75 简称**，会造成 L0 与 L2 抢同一个词 |
+| `30_IR_Compiler.md` | 30 = Task/Worker/Lease/Recovery/Retry/Gateway/Audit/Budget | 🔴 IR/Compiler 在 **20**（3 处小节），30 里 **0 处** |
+| `50_Admission.md` | 50 = Migration Assets / Golden Corpus / 清理归档 | 🔴 Admission 事务在 **10**（标题即含），不在 50 |
+
+### 例外：4 个 JSON 测试语料不动
+
+`gate_c_invalid_binding_corpus.json`、`gate_b2b{3,4,5}_frozen_testset.json`
+**留在 `backend/Docs/V3_SPEC/`**——测试按路径读取
+（`test_b2b5_d_projection_safety.py:354`、`test_c2_evidence_authority_e2e.py:54`），
+移动会打断测试。**802 passed 证实无影响。**
+
+### 引用坐标未大规模破坏
+
+`84` 的引用是**文档编号 + 行号**（`74:5`、`80:426`），编号不变即不失效。
+只有 2 处全路径引用（`Docs/V3_SPEC/Closure/PHASE_I3_CLOSURE.md`）需更新为
+`Docs/REPORTS/PHASE_I3_CLOSURE.md`，已在 emitter 中修正。
+
+### D-01 → CLOSED（DG-3）
+
+root 71 判 **stale**，`git mv` 至 `Docs/ARCHIVE/71_…_SUPERSEDED.md`，加
+SUPERSEDED 声明块（`90 §2 R8`：正文保留、不得作为引用来源、`docs_audit` 标
+`deprecated`）；backend CORRECTED 版为**权威版**，移至 `Docs/DECISIONS/71_…`。
+**两份都未删除。**
+
+### 90 §1.3 根目录四份状态文件职责（冻结）
+
+`Status.md` = 当前状态快照（禁技术分析）· `log.md` = 时间线事件（禁重新解释设计）·
+`bugs.md` = 已确认问题列表（禁方案讨论）· `restart-prompt.md` = Agent 恢复入口
+（禁保存历史讨论）。**四份都是 L5，永远不得改变 L0/L1。**
+
+### 状态
+
+```text
+OPEN 10（P0：C-01 / D-02）              ← D-01 移出
+已处置 9（SUPERSEDED 2 + INCORPORATED 2 + DECIDED 3 + CLOSED 2）
+UNASSIGNED 归零 · 802 passed · L0 内容零改动 · L0 文件名零改动
+```
+
+### 产出
+
+`git mv` 40 份非 L0 文档至 DECISIONS/ REPORTS/ ARCHIVE/；`90 §1.2` 目录模型 +
+§1.3 状态文件职责 + §1.1 恢复；emitter 路径映射 + Closure 检测改按文件名 +
+REPORTS 未编号默认 L4 + 84/71 归 L2；`84` D-01 → DECIDED；归档 71 加 SUPERSEDED
+声明。**无生产代码变更。**
