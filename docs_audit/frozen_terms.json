@@ -16,15 +16,15 @@
         },
         {
           "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
-          "line": 95
-        },
-        {
-          "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
           "line": 96
         },
         {
           "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
-          "line": 183
+          "line": 97
+        },
+        {
+          "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
+          "line": 184
         },
         {
           "doc": "log.md",
@@ -231,7 +231,7 @@
         },
         {
           "doc": "Status.md",
-          "line": 1544
+          "line": 1556
         }
       ],
       "uses_sample": [
@@ -377,7 +377,7 @@
         },
         {
           "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
-          "line": 95
+          "line": 96
         },
         {
           "doc": "Docs/REPORTS/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
@@ -446,7 +446,7 @@
       "definitions": [
         {
           "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
-          "line": 95
+          "line": 96
         },
         {
           "doc": "restart-prompt.md",
@@ -480,11 +480,11 @@
         },
         {
           "doc": "Status.md",
-          "line": 2629
+          "line": 2641
         },
         {
           "doc": "Status.md",
-          "line": 2703
+          "line": 2715
         },
         {
           "doc": "log.md",
@@ -499,7 +499,7 @@
       "definitions": [
         {
           "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
-          "line": 95
+          "line": 96
         },
         {
           "doc": "restart-prompt.md",
@@ -507,7 +507,7 @@
         },
         {
           "doc": "Status.md",
-          "line": 2697
+          "line": 2709
         },
         {
           "doc": "log.md",
@@ -576,7 +576,7 @@
         },
         {
           "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
-          "line": 94
+          "line": 95
         },
         {
           "doc": "restart-prompt.md",
@@ -588,11 +588,11 @@
         },
         {
           "doc": "Status.md",
-          "line": 2091
+          "line": 2103
         },
         {
           "doc": "Status.md",
-          "line": 2628
+          "line": 2640
         },
         {
           "doc": "log.md",
@@ -786,11 +786,11 @@
         },
         {
           "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
-          "line": 97
+          "line": 98
         },
         {
           "doc": "Status.md",
-          "line": 2704
+          "line": 2716
         },
         {
           "doc": "log.md",
@@ -836,11 +836,11 @@
         },
         {
           "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
-          "line": 163
+          "line": 164
         },
         {
           "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
-          "line": 184
+          "line": 185
         },
         {
           "doc": "restart-prompt.md",

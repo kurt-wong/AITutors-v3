@@ -69,13 +69,6 @@ documents:
     gate_state_authority: NO
     reason: governance meta-spec (90 section 1)
     status_field: "ACTIVE"
-  - path: Docs/ARCHIVE/71_B2B5_SUBJECTIVE_SUBQUESTION_ADJUDICATION_SUPERSEDED.md
-    level: L2
-    classification_status: active
-    normative: NO
-    gate_state_authority: NO
-    reason: Architecture Decision Record (allowlist, 90 section 1)
-    status_field: "**SUPERSEDED**"
   - path: Docs/DECISIONS/67_ANNOTATION_RESOLVER_BOUNDARY_ADJUSTMENT.md
     level: L2
     classification_status: active
@@ -181,6 +174,20 @@ documents:
     gate_state_authority: NO
     reason: Gate / governance report (allowlist, 90 section 1)
     status_field: "ACTIVE"
+  - path: Docs/ARCHIVE/71_B2B5_SUBJECTIVE_SUBQUESTION_ADJUDICATION_SUPERSEDED.md
+    level: L4
+    classification_status: deprecated
+    normative: NO
+    gate_state_authority: NO
+    reason: superseded, archived as audit evidence (90 section 2 R8)
+    status_field: "**SUPERSEDED**"
+  - path: Docs/ARCHIVE/PHASE_I2_REVISION_CLOSURE_SUPERSEDED.md
+    level: L4
+    classification_status: deprecated
+    normative: NO
+    gate_state_authority: NO
+    reason: superseded, archived as audit evidence (90 section 2 R8)
+    status_field: "CLOSED"
   - path: Docs/REPORTS/60_PHASE_I2C_RESOLVER.md
     level: L4
     classification_status: active

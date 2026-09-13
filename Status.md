@@ -1050,6 +1050,13 @@ Date: 2026-09-05
 
 ### 2026-09-09 20:30:00（Phase I-2 Revision CLOSED — Source Quality Gate + Real File E2E）
 
+> 📌 **Provenance 修正（残余审计 A-10，2026-09-13）**：本节「文档冻结」栏所指
+> `Docs/V3_PHASE_STATUS/Phase_I2_Revision_Closure.md` 是**早期快照份，已归档**至
+> `Docs/ARCHIVE/PHASE_I2_REVISION_CLOSURE_SUPERSEDED.md`（`Docs/V3_PHASE_STATUS/`
+> 目录已清空移除）。**权威版 = `Docs/REPORTS/PHASE_I2_REVISION_CLOSURE.md`（L2）**。
+> 本节正文保留为历史；下方 421 passed / QG 11-11 是当时的中间快照，**最终数字以
+> 权威版的 425 passed / QG 15-15 为准**。不得按本节判断当前状态（`82 §3`）。
+
 - **Status: Phase I-2 Revision CLOSED**。SourceQualityGate 架构层验证完成，真实 PDF E2E
   边界建立。文档冻结 → PUA 修复 → 进入 Phase I-2C。
 - **关键认知修正（BUG-V3-040 Resolved）**：初始判断 "PyMuPDF 中文编码失败" **不存在**。
@@ -1089,6 +1096,11 @@ Date: 2026-09-05
   - 本文件：Phase I-2 Revision CLOSED
 
 ### 2026-09-09 21:30:00（Phase I-2 Revision 文档冻结 + Git 收口）
+
+> 📌 **路径修正（残余审计 A-10，2026-09-13）**：本节末尾所写
+> `Docs/V3_SPEC/Closure/PHASE_I2_REVISION_CLOSURE.md` 是 **DG-2 之前的路径，已失效**
+> （`Docs/V3_SPEC/Closure/` 目录不存在）。现行路径 =
+> **`Docs/REPORTS/PHASE_I2_REVISION_CLOSURE.md`（L2）**。本节正文保留为历史。
 
 - **Status: Phase I-2 Revision CLOSED WITH NOTES**。
 - **已完成**：
@@ -2991,3 +3003,55 @@ A-04/05/06/08/09、C-01、D-01～D-05 的 status/summary 回写；
 
 下一步：**preprocessing 独立收口**（AITutors-preprocessing 自身）。
 **不是继续整理文档，不是设计 Manifest Schema。**
+
+---
+
+## 2026-09-13 — Documentation Residual Audit 案例 1（A-10）+ 机器源 ARCHIVE 分类缺陷修复
+
+**性质**：残余风险审计**第一个完整案例**（验证方法）。非重跑 DG-5——DG-5 已关闭的
+Duplicate Authority / Normative Leakage / State Drift **本轮不重扫**；只处理
+**Provenance Missing** 与 **Dead/Superseded** 两类。
+
+### 处置摘要
+
+| 项 | 结果 |
+|---|---|
+| 旧份 `Docs/V3_PHASE_STATUS/Phase_I2_Revision_Closure.md` | **ARCHIVE** → `Docs/ARCHIVE/PHASE_I2_REVISION_CLOSURE_SUPERSEDED.md`（正文零改动） |
+| 空目录 `Docs/V3_PHASE_STATUS/` | 已移除 |
+| 未迁移决策核查 | 三个 Design Decision **均已有载体**（D1/D3 → 权威份 §4；**D2 → L0 `10_Data_Model.md §4.2`**） |
+| DELETE 三证 | **三证不全**（有历史价值、有活引用）→ 不得 DELETE |
+| `Status.md` 两个 2026-09-09 历史节 | 各加 provenance / 路径 banner，**历史正文零改动** |
+| `84` | 新增 **A-10**（复用 A 类既有 ID 空间，未造新分类体系） |
+| State Drift | 测试数字 421/11 vs **425/15** → 后者为准（新版含更多 commit） |
+
+### 顺带发现的机器源缺陷（已修）
+
+`i5g_emit_audit.py` 的 `level_of()` 中 **ARCHIVE 分支是死代码**（排在编号 allowlist
+与 CLOSURE 分支之后），导致**两份归档件都被报告为 `L2 / active`**：
+
+```text
+Docs/ARCHIVE/71_…_SUPERSEDED.md            → L2 active   ← 先前就存在
+Docs/ARCHIVE/PHASE_I2_REVISION_CLOSURE_…   → L2 active   ← 本轮引入
+```
+
+后果：`authority_matrix.yaml` 把**已归档的废止副本当作现行 L2 权威**——
+这正是归档本应消除的重复权威。
+
+**修复**：ARCHIVE/`_SUPERSEDED` 判定提到 L0-META 之后、编号分支之前；删除下游重复分支。
+
+```text
+层计数：L2 14 → 13    L4 15 → 17    census 44 → 45
+UNASSIGNED = 0
+802 passed, 8 warnings in 43.41s
+```
+
+⚠️ **上一轮已提交的 `L2=14` 基线含一份误判为 active 的归档件。** 本轮据实修正。
+
+### 边界
+
+**做了**：provenance 补充 · supersede/archive 修复 · 机器源 ARCHIVE 分类缺陷修复。
+**没做**：未重扫 DG-5 已关三类 · 未全库关键词扫描 · 未动 `Docs/reference` ·
+未给全部文档建 birth certificate · 未新建四类审计报告 · 未改 C-01（仍 OPEN/PAUSED）·
+未动 Manifest Schema / Adapter · 未改 L0 / 90 / 91 · 未调整任何已有 authority level。
+
+下一步：**方法已验证**。是否继续审计其余残余同类项，**等 Owner 明示**，不自动扩大范围。

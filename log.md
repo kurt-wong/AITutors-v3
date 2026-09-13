@@ -2451,3 +2451,113 @@ evidence：真实 corpus → OCR → Source Markdown → deterministic repair �
 需要知道的不是「设计上应该输出什么」，而是**它实际上稳定输出了什么**。
 
 **不是继续整理文档。不是设计 Manifest Schema。不是实现 Adapter。**
+
+---
+
+## 2026-09-13 — Documentation Residual Audit 案例 1：Phase I-2 Revision Closure 双份（A-10）
+
+**性质**：残余风险审计的第一个完整案例，用于验证方法。**不是**重跑 DG-5——
+DG-5 已关闭的三类（Duplicate Authority / Normative Leakage / State Drift）本轮不重扫。
+本轮只处理 DG-5 未覆盖的两类：**Provenance Missing** 与 **Dead/Superseded**。
+
+### 一、发现
+
+```text
+Docs/V3_PHASE_STATUS/Phase_I2_Revision_Closure.md   6363 B  Sep 10  ← 未进 census（未治理）
+Docs/REPORTS/PHASE_I2_REVISION_CLOSURE.md           3339 B  Sep 13  ← L2（D-02 归层）
+```
+
+两份**内容不同**，同日均自称 Phase I-2 Revision Closure。
+
+| 维度 | 旧份 | 权威份 |
+|---|---|---|
+| 测试数字 | 421 passed · QG 11/11 | **425 passed · QG 15/15** |
+| commit 数 | 3 | 5（含 `cf9d4b4` Status update + freeze） |
+| 治理状态 | **不在 census 44 份内** | L2 active |
+
+**State Drift**：新版含更多 commit，是较晚冻结 → **425 / 15 为准**。
+
+**Provenance Missing**：旧份 `Supersedes: PHASE_I2_REVISION_REVIEW.md` 所指文件**全仓不存在**，
+上游来源已断；`Status.md` 两个 2026-09-09 历史节各含一个失效路径指针
+（一处指旧路径，一处指 DG-2 前的 `Docs/V3_SPEC/Closure/…`，该目录已不存在）。
+
+### 二、未迁移决策核查 —— 三个 Design Decision 均已有载体
+
+| Decision | 载体 | 权威 |
+|---|---|---|
+| D1 SourceQualityGate 位于 Seal 后 Annotation 前 | 权威份 §4（压缩迁移） | L2 |
+| D2 OCR 是 Provider，不是替代 | **L0 `10_Data_Model.md §4.2`** role 枚举 `native / ocr_ppsv3 / ocr_ppsvl / docx / canonical` + role/provider 封闭配对；配合 `20 §3.1` sealed 不可变 | **L0（更高权威）** |
+| D3 Quality Gate 为纯函数 | 权威份 §4（压缩迁移） | L2 |
+
+→ **无未迁移决策信息。** 旧份独有内容全是**证据粒度**（Real-file E2E 明细、
+math fragmentation 例子、Closure Verification checklist、PDF 误报证据链），
+非决策；其中 math fragmentation 已由 Phase I-2C 承接并 CLOSED。
+
+### 三、DELETE 三证检验
+
+```text
+无历史价值  ✗  （真实历史快照，含 E2E 明细）
+无决策价值  ✓
+无引用价值  ✗  （Status.md 历史节曾引用）
+→ 三证不全，不得 DELETE
+→ Disposition = ARCHIVE
+```
+
+### 四、处置
+
+1. `git mv` → `Docs/ARCHIVE/PHASE_I2_REVISION_CLOSURE_SUPERSEDED.md`，加 SUPERSEDED banner
+   （对齐既有 `71_…_SUPERSEDED.md` 风格：双份对照表 + 决策迁移核查 + 三证检验 + 权威版指针）。
+   **正文零改动。**
+2. 空目录 `Docs/V3_PHASE_STATUS/` 移除。
+3. `Status.md` 两个 2026-09-09 历史节各加 provenance / 路径 banner，**历史正文零改动**
+   （沿用 A-05 / A-08 的 banner-only 先例）。
+4. `84` 加 **A-10** 行（复用 A 类既有 6 列结构与 ID 空间，**未引入新问题分类体系**）。
+5. `i5g_emit_audit.py` `CANDIDATES` 同步 A-10。
+
+### 五、顺带发现并修复的机器源缺陷（重要）
+
+复跑 scanner 时发现 **两份归档件都被误判为 `L2 / active`**：
+
+```text
+Docs/ARCHIVE/71_…_SUPERSEDED.md            → L2 active   ← 先前就存在
+Docs/ARCHIVE/PHASE_I2_REVISION_CLOSURE_…   → L2 active   ← 本轮引入
+```
+
+根因：`level_of()` 里 **ARCHIVE 分支排在编号 allowlist 与 CLOSURE 分支之后**，实际是**死代码**——
+`71_…_SUPERSEDED` 命中 `L2_ALLOW` 的 `"71"`，`…_CLOSURE_SUPERSEDED` 命中 CLOSURE 分支。
+后果：`authority_matrix.yaml` 会把**已归档的废止副本报告为现行 L2 权威**，
+这恰恰是归档本应消除的重复权威。
+
+**修复**：ARCHIVE/`_SUPERSEDED` 判定**提到 L0-META 之后、编号分支之前**，并删除下游重复分支。
+
+```text
+层计数变化：L2 14 → 13   L4 15 → 17   （两份归档件各 L2 active → L4 deprecated）
+census：44 → 45（新增归档件）；V3_PHASE_STATUS 从 census 消失
+UNASSIGNED = 0（authority_matrix 内仅注释行出现该词）
+```
+
+⚠️ **这意味着上一轮已提交的 `L2=14` 基线里，含一份被误判为 active 的归档件。**
+本轮据实修正，不粉饰。
+
+### 六、验收
+
+```text
+802 passed, 8 warnings in 43.41s      ← 唯一 .py 变更后跑
+未改 L0 00–50 · 未改 90/91 · 未调整任何已有 authority level（84/82 层级未动）
+未新建治理文档 · 未新建四类审计报告 · 未造新 metadata 体系
+```
+
+### 七、边界自检
+
+**本轮做了**：provenance 补充（84 A-10 / Status 两处 banner / ARCHIVE banner）·
+supersede-archive 修复（git mv + 空目录移除）· 机器源 ARCHIVE 分类缺陷修复。
+
+**本轮没做**：未重扫 Duplicate Authority / Normative Leakage / State Drift ·
+未做全库关键词扫描 · 未动 `Docs/reference` · 未给全部文档建 birth certificate ·
+未新建 Inventory / Conflict Report / Consolidation Proposal / Risk Assessment ·
+未改 C-01（仍 OPEN/PAUSED）· 未动 Manifest Schema / Adapter。
+
+### 八、下一步
+
+**方法已验证。** 是否继续审计其余残余（同类双份/孤立旧案卷/失效指针），
+等 Owner 明示。**不自动扩大扫描范围。**

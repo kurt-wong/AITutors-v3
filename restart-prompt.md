@@ -1,15 +1,69 @@
-Version: v1.58
-Status: **Documentation Governance Stabilization（DG）— DG-5 收口完成** —
+Version: v1.59
+Status: **Documentation Governance Stabilization（DG）— DG-5 已收口；Residual Audit 案例 1 完成** —
 **C-01 = OPEN / PAUSED**（权威落点 `82 §5.3.1`）：暂停于**上游生产事实缺口**，
 **非架构错误**，也**不**意味着「应立即继续设计 Manifest Schema」；
 BIND-1 **PASS/FROZEN** · BIND-2 **PASS/FROZEN** · BIND-3 方向 ACCEPTED / 契约 UNPROVEN；
 Binding Carrier = PENDING；manifest-only 未冻结；
-**84 台账：A 类 0 OPEN · D 类 0 OPEN**；剩余 3 项（C-01 PAUSED + B-03/B-04 非缺陷）；
+**84 台账：A 类 0 OPEN · D 类 0 OPEN**（A-10 已 RESOLVED）；剩余 3 项（C-01 PAUSED + B-03/B-04 非缺陷）；
 Gate A PASS / B **NOT CLOSED** / C CLOSED (Phase 1) / D CONTRACT CLOSED；
 **Adapter 未开工**（BIND-1/2 PASS 不构成开工授权；前置仍 `81 §5.4` 三项）；
 下一步：**preprocessing 独立收口**（AITutors-preprocessing 自身）——
 **不是**继续整理文档，**不是**设计 Manifest Schema
 Date: 2026-09-13
+
+## 0.0c Residual Audit 案例 1 + 机器源 ARCHIVE 分类缺陷修复（2026-09-13）
+
+**性质**：Documentation **Residual** Audit（残余风险审计）的第一个完整案例，用于**验证方法**。
+**不是**重跑 DG-5：DG-5 已关闭的三类（Duplicate Authority / Normative Leakage / State Drift）
+**本轮不重扫**。本轮只处理 DG-5 未覆盖的 **Provenance Missing** 与 **Dead/Superseded**。
+
+**范围**：仅 `Docs/{V3_SPEC,DECISIONS,REPORTS,ARCHIVE}` + L5 四文件。**排除 `Docs/reference`。**
+未做全库关键词扫描。**未新建任何治理文档**，产出全部落进已有容器（`84` / `docs_audit/` / `Status.md` / `log.md`）。
+
+### 案例：Phase I-2 Revision Closure 双份（`84` A-10 = RESOLVED）
+
+```text
+旧份 Docs/V3_PHASE_STATUS/Phase_I2_Revision_Closure.md   6363 B  未进 census（未治理）
+权威 Docs/REPORTS/PHASE_I2_REVISION_CLOSURE.md           3339 B  L2（D-02 归层）
+```
+
+| 判定 | 结论 |
+|---|---|
+| 未迁移决策 | **无**——D1 位置 / D3 纯函数 → 权威份 §4；**D2「OCR 是 Provider 不是替代」→ L0 `10_Data_Model.md §4.2` role 枚举 + role/provider 封闭配对（更高权威）** |
+| State Drift | 测试数字 421/11 vs **425/15**；新版含更多 commit → **425/15 为准** |
+| Provenance | 旧份 `Supersedes: PHASE_I2_REVISION_REVIEW.md` 所指文件**全仓不存在**；`Status.md` 两个历史节各含一个失效路径指针 |
+| DELETE 三证 | **三证不全**（有历史价值 ✗ · 有活引用 ✗）→ **不得 DELETE** |
+| **Disposition** | **ARCHIVE** → `Docs/ARCHIVE/PHASE_I2_REVISION_CLOSURE_SUPERSEDED.md`（+ SUPERSEDED banner，**正文零改动**）；空目录 `Docs/V3_PHASE_STATUS/` 已移除 |
+
+`Status.md` 两个 2026-09-09 历史节各加 provenance/路径 banner（**历史正文零改动**，
+沿用 A-05 / A-08 的 banner-only 先例）；`84` 加 **A-10**（复用 A 类既有 ID 空间，
+**未造新问题分类体系**）；`i5g_emit_audit.py` `CANDIDATES` 同步。
+
+### 顺带发现并修复的机器源缺陷（重要）
+
+复跑 scanner 发现 **两份归档件都被误判为 `L2 / active`**：`level_of()` 里 ARCHIVE 分支
+排在编号 allowlist 与 CLOSURE 分支之后，**实际是死代码**——`71_…_SUPERSEDED` 命中
+`L2_ALLOW` 的 `"71"`，`…_CLOSURE_SUPERSEDED` 命中 CLOSURE 分支。后果：`authority_matrix.yaml`
+把**已归档的废止副本报告为现行 L2 权威**，正是归档本应消除的重复权威。
+
+**修复**：ARCHIVE/`_SUPERSEDED` 判定提到 L0-META 之后、编号分支之前；删除下游重复分支。
+
+```text
+层计数：L2 14 → 13    L4 15 → 17    census 44 → 45    UNASSIGNED = 0
+802 passed, 8 warnings in 43.41s
+```
+
+⚠️ **上一轮已提交的 `L2=14` 基线含一份误判为 active 的归档件。** 本轮据实修正，不粉饰。
+
+### 边界
+
+**做了**：provenance 补充 · supersede/archive 修复 · 机器源 ARCHIVE 分类缺陷修复。
+**没做**：未重扫 DG-5 已关三类 · 未全库关键词扫描 · 未动 `Docs/reference` ·
+未给全部文档建 birth certificate · 未新建四类审计报告（Inventory / Conflict Report /
+Consolidation Proposal / Risk Assessment）· 未改 C-01 · 未动 Manifest Schema / Adapter ·
+未改 L0 00–50 · 未改 90/91 · 未调整任何已有 authority level。
+
+**方法已验证。是否继续审计其余残余同类项，等 Owner 明示；不自动扩大扫描范围。**
 
 ## 0.0b C-01 PAUSE + DG-5 收口（2026-09-13 Owner 五次裁决，权威落点 `82 §5.3.1` + `84 §五次裁决`）
 

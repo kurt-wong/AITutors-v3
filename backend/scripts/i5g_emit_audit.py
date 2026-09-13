@@ -52,6 +52,15 @@ def level_of(path):
         return "L0", "Frozen Spec volume", "YES", "active"
     if base in ("90_DOCUMENT_GOVERNANCE.md", "91_PROJECT_TERMINOLOGY.md"):
         return "L0-META", "governance meta-spec (90 section 1)", "YES", "active"
+    # Archived / superseded copies are deprecated regardless of what else they
+    # look like. This check MUST come before the numbered-allowlist and CLOSURE
+    # branches: an archived "71_..._SUPERSEDED.md" would otherwise match L2_ALLOW
+    # via "71", and an archived "PHASE_..._CLOSURE_SUPERSEDED.md" would match the
+    # CLOSURE branch - both would then be reported as ACTIVE L2 authority, which
+    # is exactly the duplicate-authority problem archiving is meant to remove.
+    # Found by the residual audit (A-10) 2026-09-13; previously dead code.
+    if "/ARCHIVE/" in norm or "_SUPERSEDED" in base:
+        return "L4", "superseded, archived as audit evidence (90 section 2 R8)", "NO", "deprecated"
     m = re.match(r"^(\d+)_", base)
     if m:
         num = m.group(1)
@@ -75,8 +84,6 @@ def level_of(path):
         )
     if base in ("restart-prompt.md", "Status.md", "log.md", "bugs.md"):
         return "L5", "Status / log / restart", "NO", "active"
-    if "/ARCHIVE/" in norm or "_SUPERSEDED" in base:
-        return "L4", "superseded, archived as audit evidence (90 section 2 R8)", "NO", "deprecated"
     if "/REPORTS/" in norm:
         # Unnumbered report sitting in the reports tree defaults to L4 rather
         # than UNASSIGNED: its location already answers "what kind of doc".
@@ -253,6 +260,12 @@ CANDIDATES = [
     {"id": "A-09", "type": "stale_header", "severity": "P2", "status": "RESOLVED",
      "summary": "Status.md top-level Status line still reads implementation not started - RESOLVED 2026-09-13: top-level Status is now a pointer to 82 section 3, it no longer self-describes",
      "evidence": ["Status.md"]},
+    {"id": "A-10", "type": "provenance_missing", "severity": "P1", "status": "RESOLVED",
+     "summary": "Phase I-2 Revision Closure existed twice with different content; the stale copy never entered the census and Status.md held two dead path pointers - RESOLVED 2026-09-13 (residual audit): all three Design Decisions already have carriers (D1/D3 in the governed closure section 4; D2 OCR-is-a-provider lives in L0 10_Data_Model section 4.2 role enum, higher authority). DELETE three-proof test failed (has historical value, has a live reference) so Disposition = ARCHIVE: git-mv to Docs/ARCHIVE/PHASE_I2_REVISION_CLOSURE_SUPERSEDED.md with a SUPERSEDED banner, empty Docs/V3_PHASE_STATUS/ removed, both Status.md historical sections got provenance banners. Body text unchanged everywhere. Method-validation case for the residual audit.",
+     "evidence": ["Docs/ARCHIVE/PHASE_I2_REVISION_CLOSURE_SUPERSEDED.md",
+                  "Docs/REPORTS/PHASE_I2_REVISION_CLOSURE.md",
+                  "Docs/V3_SPEC/10_Data_Model.md:136",
+                  "Docs/DECISIONS/84_CONFLICT_LEDGER.md"]},
     {"id": "B-01", "type": "term_name_drift", "severity": "P0", "status": "DECIDED",
      "summary": "'Evidence Contract' is an undeclared abbreviation of 'Evidence Promotion Contract' (doc 75); terminology note added to 75, no mass rename",
      "evidence": ["75", "74:226", "81:221"]},

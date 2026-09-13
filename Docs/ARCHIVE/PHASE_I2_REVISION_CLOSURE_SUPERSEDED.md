@@ -1,5 +1,34 @@
 # Phase I-2 Revision Closure
 
+> ⚠️ **SUPERSEDED — 已归档，不得作为引用来源（`90 §2 R8`，残余审计 A-10 2026-09-13）**
+>
+> 本文件是 Phase I-2 Revision Closure 的**早期快照份**。同主题曾存在两份且内容不同：
+>
+> | 份 | 时间 | 大小 | 测试数字 | 现状 |
+> |---|---|---|---|---|
+> | **本文件**（原 `Docs/V3_PHASE_STATUS/Phase_I2_Revision_Closure.md`） | Sep 10 00:30 | 6363 B | 421 passed · QG 11/11 | **STALE，已归档** |
+> | `Docs/REPORTS/PHASE_I2_REVISION_CLOSURE.md` | 较晚冻结 | 3339 B | **425 passed · QG 15/15** | **权威版**（L2，D-02 归层） |
+>
+> 新版含更多 commit（`cf9d4b4` Status update + freeze commit），**425 / 15 为准**。
+>
+> **未迁移决策信息核查** —— 本文 §6 三个 Design Decision **均已有载体**：
+>
+> | Decision | 载体 | 权威层级 |
+> |---|---|---|
+> | D1 SourceQualityGate 位于 Seal 后 Annotation 前 | `Docs/REPORTS/PHASE_I2_REVISION_CLOSURE.md §4` | L2（压缩迁移） |
+> | D2 OCR 是 Provider，不是替代 | **L0 `10_Data_Model.md` §4.2** role 枚举 `native / ocr_ppsv3 / ocr_ppsvl / docx / canonical` + role/provider 封闭配对；sealed 不可变 = `20 §3.1` | **L0（更高权威）** |
+> | D3 Quality Gate 为纯函数（无 IO、确定性） | `Docs/REPORTS/PHASE_I2_REVISION_CLOSURE.md §4` | L2（压缩迁移） |
+>
+> **DELETE 三证检验**：无历史价值 **✗**（真实历史快照，含 Real-file E2E 明细与 math fragmentation 例子）· 无决策价值 ✓ · 无引用价值 **✗**（`Status.md` 历史节曾引用）→ **三证不全，不得 DELETE** → **Disposition = ARCHIVE**。
+>
+> **本文独有内容**（证据粒度，非决策）：Real-file E2E 明细（PDF 名 / 11 页 / 2377 行 / 11 figures / CJK 42% · replacement 0% · non-printable 7%）· math fragmentation 具体例子（`P1L014`–`P1L018` → `点(1/2, 2)`）· Closure Verification checklist · PDF 编码误报完整证据链。math fragmentation 已由 **Phase I-2C** 承接并 CLOSED（`Docs/REPORTS/PHASE_I2C_CLOSURE.md`）。
+>
+> **Provenance 断链**：本文下方 `Supersedes: PHASE_I2_REVISION_REVIEW.md` 所指文件**全仓不存在**，上游来源已断——这也是本文件被判定为孤立旧案卷的依据之一。
+>
+> **权威版**：`Docs/REPORTS/PHASE_I2_REVISION_CLOSURE.md`
+>
+> **本文件正文保留为审计证据**（不删除、不改写）；按 `90 §2 R8`：不得作为引用来源、不得进入新文档的引用搜索结果、`docs_audit/` 标 `deprecated`。
+
 **Date**: 2026-09-09
 **Status**: CLOSED
 **Supersedes**: PHASE_I2_REVISION_REVIEW.md (adversarial review)

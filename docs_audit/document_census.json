@@ -225,8 +225,8 @@
       "path": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
       "level": "L2",
       "classification_status": "active",
-      "lines": 224,
-      "normative_rule_lines": 18,
+      "lines": 225,
+      "normative_rule_lines": 19,
       "cites_l0": true,
       "birth_certificate": true,
       "overreach_candidates": [],
@@ -568,11 +568,29 @@
     },
     {
       "path": "Docs/ARCHIVE/71_B2B5_SUBJECTIVE_SUBQUESTION_ADJUDICATION_SUPERSEDED.md",
-      "level": "L2",
-      "classification_status": "active",
+      "level": "L4",
+      "classification_status": "deprecated",
       "lines": 250,
       "normative_rule_lines": 5,
       "cites_l0": false,
+      "birth_certificate": false,
+      "overreach_candidates": [
+        3,
+        15,
+        38,
+        58,
+        59
+      ],
+      "implicit_l0_modification": [],
+      "banned_status_words": []
+    },
+    {
+      "path": "Docs/ARCHIVE/PHASE_I2_REVISION_CLOSURE_SUPERSEDED.md",
+      "level": "L4",
+      "classification_status": "deprecated",
+      "lines": 297,
+      "normative_rule_lines": 3,
+      "cites_l0": true,
       "birth_certificate": false,
       "overreach_candidates": [],
       "implicit_l0_modification": [],
@@ -594,8 +612,8 @@
       "path": "Status.md",
       "level": "L5",
       "classification_status": "active",
-      "lines": 2993,
-      "normative_rule_lines": 75,
+      "lines": 3005,
+      "normative_rule_lines": 76,
       "cites_l0": true,
       "birth_certificate": false,
       "overreach_candidates": [],
@@ -607,7 +625,7 @@
         242,
         264,
         285,
-        1883
+        1895
       ]
     },
     {
@@ -945,6 +963,8 @@
       "log.md"
     ],
     "Phase I-2": [
+      "Docs/ARCHIVE/PHASE_I2_REVISION_CLOSURE_SUPERSEDED.md",
+      "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
       "Docs/REPORTS/61_PHASE_I3_SOURCE_PROVIDER.md",
       "Docs/REPORTS/PHASE_I2_REVISION_CLOSURE.md",
       "Status.md",
@@ -958,6 +978,11 @@
     ],
     "Step 5": [
       "Docs/REPORTS/68_QUESTION_STRUCTURE_DEFINITION.md",
+      "Status.md",
+      "log.md"
+    ],
+    "Phase I-1": [
+      "Docs/ARCHIVE/PHASE_I2_REVISION_CLOSURE_SUPERSEDED.md",
       "Status.md",
       "log.md"
     ],
@@ -1019,10 +1044,6 @@
       "log.md"
     ],
     "Phase 10": [
-      "Status.md",
-      "log.md"
-    ],
-    "Phase I-1": [
       "Status.md",
       "log.md"
     ],
