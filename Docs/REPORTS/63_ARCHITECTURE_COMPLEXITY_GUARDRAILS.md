@@ -1,6 +1,12 @@
 # V3 Architecture Constraint: Source Evidence Complexity Boundary
 
-Status: Frozen Constraint
+Authority Level: L4 — Experiment Report（D-03 归层 2026-09-13）
+Normative: NO
+Gate State Authority: NO（唯一权威 = 82 §3）
+Status: HISTORICAL — 本文件在 L4 位置自述的约束**不构成 L0 权威**
+        （2026-09-13 84 D-03：原文「Frozen Constraint」属 L4 自封 L0 权限。
+        若要升为 Frozen Spec 条款，**必须走 L1 Contract Change Record**（90 §2 R1），
+        不能靠改标签。Phase I-3 后的架构约束现行载体见 81 §5.6 与 82 §5.0。）
 Applies From: Phase I-3 Closure onward
 Purpose: Prevent Source Evidence Layer over-expansion after layout preservation capability is established.
 
@@ -220,7 +226,7 @@ Source
 
 ## 10. Phase I-4 Evidence Diagnostic Layer Constraints
 
-Status: Frozen Constraint
+Status: L4 Experiment Constraint（**非 L0 权威** — 见文首 D-03 归层声明）
 Applies From: Phase I-4 Closure onward
 
 ### 10.1 Primary Purpose
@@ -361,7 +367,7 @@ The implementation MUST NOT be expanded merely to force a positive outcome.
 
 ### 10.9 Evidence Sufficiency Before Architecture Expansion
 
-Status: Frozen Constraint
+Status: L4 Experiment Constraint（**非 L0 权威** — 见文首 D-03 归层声明）
 Derived From: Phase I-4-2 measured negative result
 Applies From: Phase I-4 Closure onward
 

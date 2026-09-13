@@ -57,6 +57,18 @@
 | **落笔约束** | 裁决写入既有 `82 §5`，**不新建 C-01 专题治理文档** |
 | **未变** | manifest-only 未冻结 · 67 Errata 未发布 · Adapter 未开工 · L0 零改动 |
 
+### 2026-09-13 五次裁决（用户）— C-01 PAUSE + DG-5 收口
+
+| 项 | 裁决 |
+|---|---|
+| **C-01 = OPEN / PAUSED** | **不是架构错误，是缺乏必要上游事实。** BIND-3 的契约验证**暂停**——preprocessing 尚未形成可测量、可复现的**生产级**输出（Source fidelity / line stability / role coverage / manifest 完整性 / 失败分布均未生产验证）。在不知道上游能稳定提供什么之前冻结 Manifest Schema = **从 V3 内部模型反向规定上游**。权威落点 `82 §5.3.1` |
+| **误读明确否定** | 「BIND-3 UNPROVEN → 立即设计 Manifest Schema → C-01 CLOSED → Adapter」**不是**已由事实证明的工程路线，只是架构假设链。**不成立** |
+| **BIND-1/2 不变** | 均为 V3 内部证据，**不依赖 preprocessing**，FROZEN 状态**不因 PAUSE 改变**。不重开讨论 |
+| **当前不冻结** | Manifest Schema · BIND-3 完整契约 · Path B 最终接口 · Adapter 输入/输出 · Adapter 是否 bypass Resolver · preprocessing evidence 可否直入 ResolvedRun · material/figure Carrier · 两条路径最终 convergence point。`Manifest → Adapter → ResolvedRun` 目前**只能**是 Candidate Architecture |
+| **执行顺序** | DG-5 收口 → 治理体系稳定 → C-01 暂停 → **preprocessing 独立收口** → 以真实生产输出建立事实基线 → 重开 C-01/BIND-3 → 再裁决 Manifest Schema / Adapter / Path B |
+| **Adapter** | **NOT STARTED**，且**不因 BIND-1/2 PASS 而具备开工条件**。Adapter 职责必须由「V3 已有 contract + preprocessing 实际稳定输出」**两者共同**决定 |
+| **DG-5 边界** | 只做：状态对账 / disposition / 归层 / 过时标记 / L3-L4 越权语言修正 / 引用修正 / audit 同步 / L5 同步。**不得**：改 L0 00–50 · 改 L0 文件名 · 改 90/91 治理原则 · 改写 82 的 BIND-1/2 裁决 · 冻结 Manifest Schema · 实现 Adapter · 改 preprocessing · 因 C-01 新建治理文档 · 顺手做架构设计 |
+
 ---
 
 ## A 类 — 状态漂移（Gate / Phase 状态在文档间不一致）
@@ -66,12 +78,12 @@
 | **A-01** | Gate C：`74` 仍 BLOCKED，`80` 已 CLOSED，无废止记录 | `74:5` `74:363` `74:537` vs `80:439`；C-1=`75`、C-2=`76`/`77` 已完成 | 🔴 | **SUPERSEDED** | `82 §3.1` 即废止记录；`74` 三处已加 supersede 标注 |
 | **A-02** | `69 §8` 无日期路线图仍写「Errata Decision（Gate A-D 全部通过后）」 | `69:306` | 🔴 | **SUPERSEDED** | 已加 supersede 指针 |
 | **A-03** | `81:11` 称「Gate B 系列 CLOSED」，过度陈述 `80` | `81:11` vs `80:421`（B1 CONDITIONAL）、`80:432`/`80:437`（DEFERRED） | 🔴 | **INCORPORATED** | 本轮自引入，已修正；聚合规则见 `90 §5 Rule 1` |
-| **A-04** | `80` 内部：B2-B2 同时 CLOSED 与「Unknown 125 仍未清」 | `80:426`（CLOSED，99.8% = 1176/1178）vs `80:448` | 🟠 | **OPEN** | **歧义非错误**。合理读法：closed scope = 已测 1178 个 MC target，Unknown 125 在 scope 外，但 `80` **未写明**。待 triage 完成补 scope 声明 |
-| **A-05** | `69` 带日期矩阵仍写 B2-B 为 BLOCKED / WAIT | `69:656`、`69:756` vs `80:426` 起 B2-B1~B5 已 CLOSED | 🟠 | **OPEN** | 历史快照，**建议保留原文**，以 `82 §3` 为准。（全仓**无**「B2-B = NEXT」表述） |
-| **A-06** | `61` `Status: IN PROGRESS`，而 `Closure/PHASE_I3_CLOSURE.md` 已 CLOSED / Gate PASS | `61:4` vs `Closure/PHASE_I3_CLOSURE.md:4-5` | 🟠 | **OPEN** | **Phase I-3 关闭后 61 从未回写**。建议 61 加 supersede 标注 → Closure 记录 |
+| **A-04** | `80` 内部：B2-B2 同时 CLOSED 与「Unknown 125 仍未清」 | `80:426`（CLOSED，99.8% = 1176/1178）vs `80:448` | 🟠 | **RESOLVED** | **歧义非错误**。closed scope = 已测 1178 个 MC target，Unknown 125 在 scope 外。**scope 声明已写入 `80 §4` Gate B2-B2 行**（2026-09-13）；`82 §4-C4` 同步 RESOLVED。**不再「待 triage 后补」**——Unknown 125 仍是显式延期项，与 closed scope 不冲突 |
+| **A-05** | `69` 带日期矩阵仍写 B2-B 为 BLOCKED / WAIT | `69:656`、`69:756` vs `80:426` 起 B2-B1~B5 已 CLOSED | 🟠 | **RESOLVED** | 历史快照，**正文保留原文**（Reconcile, don't rewrite）。已在 **3 个** 2026-09-11 带日期 Gate 状态块（`627`/`645`/`756`）各加 supersession banner → `82 §3`。（全仓无「B2-B = NEXT」表述） |
+| **A-06** | `61` `Status: IN PROGRESS`，而 `PHASE_I3_CLOSURE.md` 已 CLOSED / Gate PASS | `61:4` vs `PHASE_I3_CLOSURE.md:4-5` | 🟠 | **RESOLVED** | Phase I-3 关闭后 61 从未回写。**已改**：`61` 头行 → `Status: HISTORICAL`，指向 Closure 记录并声明本文件非当前状态权威 |
 | **A-07** | `73:213` 声明 157 targets `UNRESOLVED / REVIEW REQUIRED`，而 Gate C 以 C-2「157 E2E」关闭 | `73:213-221`（NOT proven 全是**语义正确性**：correct / incorrect / auto-admitted / pass manual review）vs C-2 实际 = `test_c2_evidence_authority_e2e.py`（Semantic IR bypass 5 测 + Lifecycle 5 测 + 157 fail-closed 4 测） | 🔴 | **DECIDED** | **语义A 成立，非语义B**。C-2 证明**管线不变量**（invalid binding 不产生 validated evidence、IR bypass 阻断）；`73` 的 UNRESOLVED 是**语义裁决**——从来不是 Gate C 职责。二者正交，**Gate C CLOSED 成立**。已在 `73` 文首写入 **C-2 Evidence Scope Clarification**，**正文未改**（`73:202-204` 三项 RETRACTED 继续有效）。157 个的语义裁决仍属人工审未完成项 |
-| **A-08** | `Status.md` 同时含已撤回与已修正的 Grammar 输入契约 | `Status.md:2309`（`必须是 Resolver 产出`——已撤回措辞，**未标记**）vs `Status.md:2423`（不变量版） | 🟠 | **OPEN** | **对立极性同主题**。2309 所在历史节未标 retracted |
-| **A-09** | `Status.md` 顶层 Status 行 stale | 首个 Status 行 = `V3 Spec Baseline — Frozen（实现未开始）`，而 `backend/app` 已有完整实现 | 🟡 | **OPEN** | 正则取首个 Status 行；最新节在文件末尾。建议顶层 Status 改为指针 → `82 §3` |
+| **A-08** | `Status.md` 同时含已撤回与已修正的 Grammar 输入契约 | `Status.md:2309`（`必须是 Resolver 产出`——已撤回措辞，**未标记**）vs `Status.md:2423`（不变量版） | 🟠 | **RESOLVED** | **对立极性同主题**。已在 2309 所在历史节节首加 retraction banner：该措辞**已撤回**，现行权威 = `81 §6.2` / `80 §6.6`（生产者可以是 Resolver **或** Adapter）。正文保留为历史 |
+| **A-09** | `Status.md` 顶层 Status 行 stale | 首个 Status 行 = `V3 Spec Baseline — Frozen（实现未开始）`，而 `backend/app` 已有完整实现 | 🟡 | **RESOLVED** | **顶层 Status 已改为指针 → `82 §3`**，不再自述。并注明「最新状态 = 文末最新一条」以保持该文件自身的流式追加约定 |
 
 ---
 
@@ -90,7 +102,7 @@
 
 | ID | 冲突 | 证据 | 级别 | 状态 | 备注 |
 |---|---|---|---|---|---|
-| **C-01** | **`line_refs` 载体四方不一致** | L0 `20:117` FORBIDDEN_FIELDS 含 `line_refs`；`20:73` 硬边界 #2「不携带 resolved span / line_ref」；`67:114` 提议放进 annotation payload；`81 §5.1` 定在独立 manifest；`82 §5` 判 `PENDING` | 🔴 | **OPEN（BIND-1/2 已 PASS）** | 裁决见 `82 §5`：BIND-1 **PASS/FROZEN**；BIND-2 **PASS/FROZEN**（Owner 确认 2026-09-13）；BIND-3 方向 ACCEPTED / 契约 UNPROVEN。**manifest-only 仍 🟡 PROVISIONAL**，Carrier = PENDING。**单一剩余阻塞 = BIND-3**（manifest schema 冻结后完成契约验证） |
+| **C-01** | **`line_refs` 载体四方不一致** | L0 `20:117` FORBIDDEN_FIELDS 含 `line_refs`；`20:73` 硬边界 #2「不携带 resolved span / line_ref」；`67:114` 提议放进 annotation payload；`81 §5.1` 定在独立 manifest；`82 §5` 判 `PENDING` | 🔴 | **OPEN / PAUSED** | BIND-1 **PASS/FROZEN**；BIND-2 **PASS/FROZEN**；BIND-3 方向 ACCEPTED / 契约 **UNPROVEN**。**PAUSED（2026-09-13 Owner 五次裁决）**：暂停于**上游生产事实缺口**，非架构错误。**不**意味着「应立即继续设计 Manifest Schema」。manifest-only 仍 🟡 PROVISIONAL，Carrier = PENDING。权威落点 `82 §5.3.1`。**重开条件 = preprocessing 收口并形成可复现的生产级输出** |
 | **C-02** | `66 §7` `Bypasses: Annotation, Resolver` 与 `IRBuilder.build` 签名冲突 | `66 §7` vs `ir.py:87` `build(resolved_run, annotation_payload, ...)` 必需 annotation_payload；span_id `sp-{unit_id}.{role}` 由 annotation 反推 | 🔴 | **INCORPORATED** | 已修正为 `Bypasses: Resolver only`；`66 §7` 就地更正；裁决见 `81 §5.2` |
 
 ---
@@ -100,10 +112,10 @@
 | ID | 冲突 | 证据 | 级别 | 状态 | 备注 |
 |---|---|---|---|---|---|
 | **D-01** | **71 号同号双份且内容不同** | 原 `Docs/V3_SPEC/71_…`（6914 B，Sep 12 21:33，「裁决记录」）vs 原 `backend/Docs/V3_SPEC/71_…`（7783 B，23:05，「(CORRECTED)」）；`diff -q` = **DIFFERENT** | 🔴 | **DECIDED** | **DG-3 处置（2026-09-13）**：root 版判 **stale**，`git mv` 至 `Docs/ARCHIVE/71_…_SUPERSEDED.md` 并加 SUPERSEDED 声明块（`90 §2 R8`：正文保留、不得作为引用来源、`docs_audit` 标 `deprecated`）；backend CORRECTED 版为**权威版**，移至 `Docs/DECISIONS/71_…` 并归 **L2**。**两份都未删除。** |
-| **D-02** | 5 份文档在 V3_SPEC 树内但未归层（837 行） | `Closure/PHASE_I2C` `PHASE_I2_REVISION` `PHASE_I3` `PHASE_I4_CLOSURE.md`（均含 `Status: CLOSED`；`PHASE_I3_CLOSURE.md:5` 直接写 `Gate: PASS`）+ `gate_b2a_three_task_report.md` | 🔴 | **OPEN** | 未归层 = 不得引用为权威（`90 §1`）。**建议**：4×Closure → **L2**；`gate_b2a_…` → **L4** |
-| **D-03** | 分层错误 3 份 | `63:3` `Status: Frozen Constraint`（L4 位置自封 L0 权限）；`65:95-106` 十二条禁令实为 scope freeze 契约；`68` 经 `69` 判为 Domain Definition Proposal | 🟠 | **OPEN** | `63` **升 L0 须走 L1**，不能靠改标签（`90 §2 R1`）。`65` 建议归 **L2**。`68` 保持 L4 但须注明 `69` 定性 |
-| **D-04** | L3 `74` 对 V3 自立规范 6 处 | `74:224`（Native Path **必须**保证…）`74:226`（preprocessing **必须**满足…）`74:283`（answer span **不得**重叠）`74:385`（**唯一**允许进 IR）`74:395-396`（**禁止** CLAIMED/PROPOSED → IR）`74:418`（Validation **必须** append-only） | 🟠 | **OPEN** | 违反 `90 §2 R3`（L3 不得定义规则）。对照 `74:94`「这个结果**只能**证明」是**正确用法**——同文档两种用法并存，说明缺的是分类约束。大多已被 `75 号`（L2）承接，待逐条加指针 |
-| **D-05** | Gate 状态行集中面：`Status.md` 45 行 / `69` 42 行 | 扫描统计 | 🟠 | **OPEN** | 聚合错误最大温床（A-03 即此类产物）。**建议**：新增行强制 `90 §4` + `82 §3.3` 模板；存量不回填 |
+| **D-02** | 5 份文档在 V3_SPEC 树内但未归层（837 行） | `PHASE_I2C_CLOSURE` `PHASE_I2_REVISION_CLOSURE` `PHASE_I3_CLOSURE` `PHASE_I4_CLOSURE.md`（均含 `Status: CLOSED`；`PHASE_I3_CLOSURE.md:5` 直接写 `Gate: PASS`）+ `gate_b2a_three_task_report.md` | 🔴 | **CLOSED** | **Disposition = KEEP，无一删除/归档。** 4×Closure → **L2**（formal phase closure = Decision Record：记录阶段裁决，不定义新架构事实 — `90 §2 R2`）。`gate_b2a_three_task_report` → **L4**（经 `Docs/REPORTS` 默认规则，本已 active）。四份 Closure 已各加 `Authority Level: L2` 头块；`PHASE_I3_CLOSURE` 另加澄清：`Gate: PASS` 指**阶段出口**，非项目级 Gate。机器源 `i5g_emit_audit.py` CLOSURE 分支由 `L2-proposed`/`pending` → `L2`/`active` |
+| **D-03** | 分层错误 3 份 | `63:3` `Status: Frozen Constraint`（L4 位置自封 L0 权限）；`65:95-106` 十二条禁令实为 scope freeze 契约；`68` 经 `69` 判为 Domain Definition Proposal | 🟠 | **CLOSED** | **Disposition = 三份全部 KEEP → L4，零提升、零删除。** ① **63**：3 处 `Status: Frozen Constraint` 全改——文首加 `Authority Level: L4 / Normative: NO` + 声明「**升 L0 必须走 L1**（`90 §2 R1`），不能靠改标签」；`§10`/`§10.9` 两处改 `L4 Experiment Constraint（非 L0 权威）`。② **65**：**不采纳原「建议归 L2」**——`69 §2` 已定性为 **Evidence**、`69 §65` 写明 `Experiment / Evidence Record`，升 L2 会与 69 矛盾且重复 `63 §10.9/§10.10` 与 `81 §5.6` 已承载的约束（造成第二来源）。已加 HISTORICAL + 定性注。③ **68**：加 `69` 定性注 = **Proposal**，非 Domain Contract、非 L0 权威；「Adjudicated」仅指完成兼容性审查 |
+| **D-04** | L3 `74` 对 V3 自立规范 6 处 | `74:224`（Native Path **必须**保证…）`74:226`（preprocessing **必须**满足…）`74:283`（answer span **不得**重叠）`74:385`（**唯一**允许进 IR）`74:395-396`（**禁止** CLAIMED/PROPOSED → IR）`74:418`（Validation **必须** append-only） | 🟠 | **CLOSED** | 违反 `90 §2 R3`（L3 不得定义规则）。对照 `74:94`「这个结果**只能**证明」是**正确用法**。**6 处已全部改写为「report finding + 权威指针」**，正文测量内容零改动：`224`/`226` → 指 `81 §5.4` + `82 §5.0`；`283` → 指 `75 §九`（`role_region_consistency`）+ `20 §5.5`；`385`/`395-396` → 指 `75 §三 R5` + `75 §4.5` + `75 §二·禁止转换`；`418` → 指 `75 §4.4` + `75 §三 R4` |
+| **D-05** | Gate 状态行集中面：`Status.md` 45 行 / `69` 42 行 | 扫描统计 | 🟠 | **CLOSED** | **控制已就位，无需改文档。** `90 §4`（Status Header 规范，强制）+ `82 §3.3`（状态声明模板，供 B/C 层引用）均已冻结，且两者都写明「**存量文档不强制回填**（Reconcile, don't rewrite）」。存量不回填；`69` 中**实际已 stale** 的三个块由 A-05 处理完毕。新增行强制走模板 |
 
 ---
 
@@ -162,22 +174,24 @@ L0-META 90 §6 H-B   BIND-1：semantic_unit.id ←确定性 join→ binding.unit
 
 ## 2. 待裁决优先级（建议，非裁决）
 
-> **2026-09-13 三次裁决后**：A-07 / B-01 / B-02 / **CA-001** 已处置。剩余 OPEN 11 项。
-
-| 序 | ID | 为什么先 |
-|---|---|---|
-| 1 | **D-01**（71 号双份） | 阻塞 `90 §10` 第 10 项「无未登记 contradiction」；两文件抢同号 |
-| 2 | **C-01**（`line_refs` 四方不一致） | 未来 preprocessing 架构的根；须走 BIND-1/2/3 |
-| 3 | **D-02 / D-03**（归层：Closure 4 份 + `63`/`65`/`68`） | 未归层 = 不得引用为权威；`63` 升 L0 须走 L1 |
-| 4 | **A-04 / A-06 / A-08 / A-09**（状态歧义与 stale） | 常规对账 |
-| 5 | **D-04 / D-05**（L3 自立规范 + 状态行集中面） | 引用式改写，逐条 |
-| 6 | **B-03 / B-04**（检测器局限 / 故意 PENDING） | 非缺陷；B-03 已随检测器改进大幅缓解 |
+> **2026-09-13 五次裁决后**：A 类 **0 OPEN** · D 类 **0 OPEN** · E 类全为误报。
+> **剩余 3 项，其中 2 项已判非缺陷：**
+>
+> | ID | 状态 | 性质 |
+> |---|---|---|
+> | **C-01** | **OPEN / PAUSED** | 唯一真实阻塞项，但**暂停于上游事实缺口**（`82 §5.3.1`），不是待办设计任务 |
+> | **B-03** | OPEN（疑误报） | 检测器局限：`ResolvedSpan` 由 `20 §5.5` **字段表**定义，散文定义句匹配不到。**非缺陷**，应改检测器 |
+> | **B-04** | OPEN（故意） | `Binding Carrier` 本就应为 `PENDING`。**非缺陷**，是未决标记 |
+>
+> **因此当前没有「应立即推进的架构设计项」。** 下一步不是继续整理文档或设计
+> Manifest Schema，而是 **preprocessing 独立收口**（§4）。
 
 ---
 
 ## 3. 显式不主张
 
-1. **不主张**本台账任何条目已裁决——除已标 `SUPERSEDED` / `INCORPORATED` 者。
+1. **不主张**本台账任何条目已裁决——除已标 `SUPERSEDED` / `INCORPORATED` /
+   `RESOLVED` / `CLOSED` / `DECIDED` / `FALSE_POSITIVE` 者。
 2. **不主张**本台账穷尽全部冲突——只覆盖 `90 §5` 四条规则的机械可查部分 + 本轮人工核验项。
 3. **不主张** E 类误报是缺陷——它们是**检测器局限**，记录以防重复排查。
 4. **不主张** A 层可据本台账修改——修改 A 层须走 L1（`90 §2 R1`）。
@@ -188,15 +202,23 @@ L0-META 90 §6 H-B   BIND-1：semantic_unit.id ←确定性 join→ binding.unit
 ## 4. 下一步
 
 ```text
-本台账（84 号，15 项 OPEN）      ← 现在
+DG-5 收口（本轮）                        ← 现在
         ↓
-逐条裁决（§2 优先级顺序）
+治理体系稳定（A 类 0 OPEN · D 类 0 OPEN）
         ↓
-docs_audit/ 四件产物复核
+C-01 PAUSED —— 不继续架构推演
         ↓
-90 §10 十项完成条件全绿
+preprocessing 独立收口（AITutors-preprocessing 自身）
         ↓
-I-5-BIND — Binding Authority Decision（C-01 的 BIND-1/2/3）
+生产级真实输出 → 事实基线
+        ↓
+重开 C-01 / BIND-3（按 82 §5.3.1 的 12 项逐条取证）
+        ↓
+再裁决：Manifest Schema · Path B · Adapter · Resolver 是否 bypass
+        · ResolvedRun 是否为 convergence point · material/figure Carrier
 ```
+
+**当前没有应立即推进的架构设计项。** B-03 / B-04 已判非缺陷；C-01 PAUSED。
+「继续整理文档」或「先设计 Manifest Schema」**都不是**下一步。
 
 **不碰 L0、不发 67、不冻结 manifest-only、不实现 Adapter。**

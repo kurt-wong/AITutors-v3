@@ -1,7 +1,8 @@
 # Phase I-3 Source Provider Layer Evaluation
 
 Date: 2026-09-09
-Status: IN PROGRESS
+Status: HISTORICAL — Phase I-3 已由 `PHASE_I3_CLOSURE.md` 收口（CLOSED / Gate PASS）
+        （2026-09-13 84 A-06：本文件为进行期实验记录，**非当前状态权威**；原文「IN PROGRESS」已过时）
 Prerequisite: Phase I-2C CLOSED
 
 ---

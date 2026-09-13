@@ -1,7 +1,10 @@
 # AI Tutor V3 — 项目状态（Status）
 
 Version: v1.0
-Status: V3 Spec Baseline — Frozen（实现未开始）
+Status: 当前状态权威见 `Docs/DECISIONS/82_CONTRACT_AUTHORITY_RECONCILIATION.md` §3
+        （本行自 2026-09-13 起改为**指针**，不再自述——原「V3 Spec Baseline — Frozen
+        （实现未开始）」已 stale，`backend/app` 已有完整实现。84 A-09。
+        本文件按下方更新规范**在末尾流式追加快照**，最新状态 = 文末最新一条。）
 Date: 2026-09-05
 
 > 本文件**取代 V2 的 `PROJECT_STATUS.md`**。
@@ -2306,6 +2309,11 @@ B2-B5 语料全部为非 strict-auto，与本 weakness 正交，故不构成 B2-
 
 ### 1. 输入来源契约（实现层冻结）
 
+> ⚠️ **本节措辞已撤回（84 A-08，2026-09-13）。** 下文「**必须**是 Resolver 产出」
+> 是**过窄表述**，已在同日被 `81 §6.2` 改写为**不变量形式**：生产者**可以是
+> Resolver 或 Adapter**，约束落在 `ResolvedSpan` 的字段与 `text_hash` 上，而非
+> 落在「谁产出」。**现行权威 = `81 §6.2` / `80 §6.6`。** 正文保留为历史。
+
 `Grammar.verify()` 的 `answer_text` **必须**是 Resolver 产出的标准化 answer span
 （`resolver.py::_answer_span` 的 char-span 切片，20 §5.5），**不得**消费裸
 source / OCR 文本。题号前缀属 Resolver 边界产物，不参与答案 token 判定。
@@ -2927,3 +2935,59 @@ OPEN 10（P0：C-01 / D-02）· 已处置 9 · UNASSIGNED 归零
 **Adapter 未开工**（BIND-2 PASS 不构成开工授权）· L0 **零改动**。
 
 下一步：继续 DG-5（A-04/A-05/A-06/A-08/A-09、D-02/D-03、D-04/D-05）。
+
+---
+
+## 2026-09-13 — C-01 OPEN/PAUSED + DG-5 收口（Owner 五次裁决）
+
+**C-01 改判 = OPEN / PAUSED**（权威落点 `82 §5.3.1`）。
+
+> **不是发现了新的架构错误，而是缺乏必要的上游事实，因此暂缓架构裁决。**
+
+BIND-3 的契约验证暂停：preprocessing **尚未形成可测量、可复现的生产级输出**
+（Source fidelity / line stability / line structure 稳定性 / LLM reslice 稳定性 /
+role 覆盖率 / composite 表达能力 / figure·material 关联质量 / answer·explanation
+region 覆盖 / 题号与 source line 长期稳定对应 / 大规模 corpus 失败分布 / manifest
+完整性与 fail-closed 行为——**12 项全部未生产验证**）。**trial ≠ 生产级事实。**
+
+**明确否定的误读**：「BIND-3 UNPROVEN → 立即设计 Manifest Schema → C-01 CLOSED →
+Adapter」**只是架构假设链，不是已由事实证明的工程路线。**
+
+**BIND-1 / BIND-2 不因 PAUSE 改变**（V3 内部证据，不依赖 preprocessing）。
+
+**当前全部保持 Candidate，不冻结**：Manifest Schema · BIND-3 完整契约 ·
+Path B 最终接口 · Adapter 输入/输出 · Adapter 是否 bypass Resolver ·
+preprocessing evidence 可否直入 ResolvedRun · material/figure Carrier ·
+两条路径最终 convergence point。`Manifest → Adapter → ResolvedRun` = Candidate。
+
+### DG-5 逐项结果
+
+| ID | 结果 | 落点 |
+|---|---|---|
+| **A-04** | **RESOLVED** | `80 §4` Gate B2-B2 行补 scope 声明；`82 §4-C4` 同步 RESOLVED |
+| **A-05** | **RESOLVED** | `69` 三个 2026-09-11 带日期 Gate 块加 supersession banner → `82 §3`；正文原文保留 |
+| **A-06** | **RESOLVED** | `61:4` `IN PROGRESS` → `HISTORICAL`，指向 `PHASE_I3_CLOSURE.md` |
+| **A-08** | **RESOLVED** | `Status.md` 历史节加 retraction banner；权威 = `81 §6.2` / `80 §6.6` |
+| **A-09** | **RESOLVED** | `Status.md` 顶层 Status → 指针 `82 §3` |
+| **D-02** | **CLOSED** | 4×Closure **KEEP→L2**；`gate_b2a_three_task_report` **KEEP→L4**（本已 active）。零删除零归档 |
+| **D-03** | **CLOSED** | 三份全 **KEEP→L4**，零提升。`63` 三处自封 `Frozen Constraint` 改为「L4 非 L0 权威，升 L0 须走 L1」；`65` **不采纳**原「建议归 L2」（与 `69` 的 Evidence 定性矛盾，且重复 `63 §10.9/§10.10` + `81 §5.6`）；`68` 加 `69` Proposal 定性 |
+| **D-04** | **CLOSED** | `74` 六处自立规范 → 「report finding + 权威指针」（`75 §三 R4/R5` · `75 §4.4` · `75 §4.5` · `75 §九` · `81 §5.4` · `82 §5.0` · `20 §5.5`）；测量正文零改动 |
+| **D-05** | **CLOSED** | 控制已就位（`90 §4` + `82 §3.3`，均含「存量不强制回填」），**无需改文档** |
+
+### 机器源同步
+
+`i5g_emit_audit.py`：CLOSURE 分支 `L2-proposed`/`pending` → `L2`/`active`；
+A-04/05/06/08/09、C-01、D-01～D-05 的 status/summary 回写；
+**修正一处会误导的计数**——OPEN 计数原只匹配 `status == "OPEN"`，C-01 改
+`OPEN_PAUSED` 后会打印「OPEN candidates: 0」，现同时匹配两者 → 打印 `1 (P0 1)`。
+
+**层计数**：`L0=7 · L0-META=2 · L2=14（原 10，+4 Closure）· L3=2 · L4=15 · L5=4`。
+**UNASSIGNED = 0**（scan_report 写 `(none)`）。
+**84 台账**：A 类 **0 OPEN** · D 类 **0 OPEN**；剩余 3 项 = C-01（PAUSED）+ B-03/B-04（均非缺陷）。
+
+**本轮未做**：未改 L0 00–50 · 未改 L0 文件名 · 未改 90/91 治理原则 ·
+**未改写 82 的 BIND-1/2 裁决** · 未冻结 Manifest Schema · 未实现 Adapter ·
+未改 preprocessing · 未因 C-01 新建治理文档 · 未做架构设计。
+
+下一步：**preprocessing 独立收口**（AITutors-preprocessing 自身）。
+**不是继续整理文档，不是设计 Manifest Schema。**

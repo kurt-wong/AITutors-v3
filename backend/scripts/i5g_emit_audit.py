@@ -63,15 +63,15 @@ def level_of(path):
             return "L3", "Gate / governance report (allowlist, 90 section 1)", "NO", "active"
         return "L4", "Experiment / phase report (default for numbered phase docs)", "NO", "active"
     # Closure records were moved to Docs/REPORTS in DG-2, so they are detected by
-    # basename, not by a /Closure/ path segment. Proposed, not decided: L2 itself
-    # is a governance fact and cannot become fact without adjudication (84 D-02).
+    # basename, not by a /Closure/ path segment. D-02 adjudicated 2026-09-13:
+    # a formal phase closure record is a Decision Record (L2). It records a
+    # decision about a phase, it does not define new architecture facts (90 R2).
     if "CLOSURE" in base.upper():
         return (
-            "L2-proposed",
-            "formal phase closure record - PROPOSED L2, pending D-02 adjudication; "
-            "may not be cited as authority until decided",
+            "L2",
+            "formal phase closure record - L2 (D-02 adjudicated 2026-09-13)",
             "NO",
-            "pending",
+            "active",
         )
     if base in ("restart-prompt.md", "Status.md", "log.md", "bugs.md"):
         return "L5", "Status / log / restart", "NO", "active"
@@ -235,23 +235,23 @@ CANDIDATES = [
     {"id": "A-03", "type": "aggregation_error", "severity": "P0", "status": "INCORPORATED",
      "summary": "doc 81 claimed 'Gate B series CLOSED', overstating doc 80",
      "evidence": ["81:11", "80:421", "80:432", "80:437"]},
-    {"id": "A-04", "type": "status_ambiguity", "severity": "P1", "status": "OPEN",
-     "summary": "doc 80 records B2-B2 CLOSED while listing B2-B2 Unknown 125 triage as unresolved",
+    {"id": "A-04", "type": "status_ambiguity", "severity": "P1", "status": "RESOLVED",
+     "summary": "doc 80 records B2-B2 CLOSED while listing B2-B2 Unknown 125 triage as unresolved - RESOLVED 2026-09-13: scope declaration written into 80 section 4 B2-B2 line (closed scope = the 1178 measured MC targets; Unknown 125 is out of scope)",
      "evidence": ["80:426", "80:448"]},
-    {"id": "A-05", "type": "stale_snapshot", "severity": "P1", "status": "OPEN",
-     "summary": "doc 69 dated matrices still show B2-B as BLOCKED / WAIT",
+    {"id": "A-05", "type": "stale_snapshot", "severity": "P1", "status": "RESOLVED",
+     "summary": "doc 69 dated matrices still show B2-B as BLOCKED / WAIT - RESOLVED 2026-09-13: supersession banners added to all three 2026-09-11 dated Gate-state blocks; body text kept as history, 82 section 3 is the authority",
      "evidence": ["69:656", "69:756"]},
-    {"id": "A-06", "type": "status_drift", "severity": "P1", "status": "OPEN",
-     "summary": "doc 61 Status IN PROGRESS while PHASE_I3_CLOSURE records CLOSED",
+    {"id": "A-06", "type": "status_drift", "severity": "P1", "status": "RESOLVED",
+     "summary": "doc 61 Status IN PROGRESS while PHASE_I3_CLOSURE records CLOSED - RESOLVED 2026-09-13: 61 header now reads HISTORICAL and points at the closure record",
      "evidence": ["61:4", "Docs/REPORTS/PHASE_I3_CLOSURE.md:4"]},
     {"id": "A-07", "type": "status_drift", "severity": "P0", "status": "DECIDED",
      "summary": "doc 73 declares 157 targets UNRESOLVED while Gate C closed on C-2 - DECIDED as orthogonal: C-2 proves pipeline invariant, not semantic truth",
      "evidence": ["73:213", "80:439", "backend/tests/test_c2_evidence_authority_e2e.py"]},
-    {"id": "A-08", "type": "opposite_polarity", "severity": "P1", "status": "OPEN",
-     "summary": "Status.md holds both retracted and corrected Grammar input contract, retracted one unmarked",
+    {"id": "A-08", "type": "opposite_polarity", "severity": "P1", "status": "RESOLVED",
+     "summary": "Status.md holds both retracted and corrected Grammar input contract, retracted one unmarked - RESOLVED 2026-09-13: retraction banner added to the 2026-09-13 section, pointing at 81 section 6.2 as the invariant form",
      "evidence": ["Status.md:2309", "Status.md:2423"]},
-    {"id": "A-09", "type": "stale_header", "severity": "P2", "status": "OPEN",
-     "summary": "Status.md top-level Status line still reads implementation not started",
+    {"id": "A-09", "type": "stale_header", "severity": "P2", "status": "RESOLVED",
+     "summary": "Status.md top-level Status line still reads implementation not started - RESOLVED 2026-09-13: top-level Status is now a pointer to 82 section 3, it no longer self-describes",
      "evidence": ["Status.md"]},
     {"id": "B-01", "type": "term_name_drift", "severity": "P0", "status": "DECIDED",
      "summary": "'Evidence Contract' is an undeclared abbreviation of 'Evidence Promotion Contract' (doc 75); terminology note added to 75, no mass rename",
@@ -262,8 +262,8 @@ CANDIDATES = [
     {"id": "B-03", "type": "detector_limitation", "severity": "P2", "status": "MITIGATED",
      "summary": "detector missed table and state-machine definitions; fixed, all HIGH drift risks cleared",
      "evidence": ["20:288", "20:308"]},
-    {"id": "C-01", "type": "boundary_conflict", "severity": "P0", "status": "OPEN",
-     "summary": "line_refs carrier has four different answers across L0/L4/L2: FORBIDDEN_FIELDS, annotation payload, manifest, PENDING",
+    {"id": "C-01", "type": "boundary_conflict", "severity": "P0", "status": "OPEN_PAUSED",
+     "summary": "line_refs carrier: BIND-1 PASS/FROZEN, BIND-2 PASS/FROZEN, BIND-3 direction ACCEPTED but contract UNPROVEN - C-01 OPEN/PAUSED 2026-09-13, paused on missing upstream production facts (82 section 5.3.1), not on an architecture error; Manifest Schema NOT FROZEN, Adapter NOT STARTED",
      "evidence": ["20:117", "20:73", "67:114", "81:5.1", "82:5"]},
     {"id": "C-02", "type": "boundary_conflict", "severity": "P0", "status": "INCORPORATED",
      "summary": "doc 66 section 7 'Bypasses: Annotation, Resolver' contradicted IRBuilder.build signature; corrected to Resolver only",
@@ -271,22 +271,22 @@ CANDIDATES = [
     {"id": "CA-001", "type": "l0_change_audit", "severity": "P0", "status": "CLOSED",
      "summary": "doc 40 section 5 gained a mandatory measurement-semantics rule in 0dd954d with no Change Record - CLOSED as (b): ratified CHANGE-2 via 90 section 11 CR-001, text retained, no L0 content change, procedural gap cured",
      "evidence": ["40", "0dd954d", "90:CR-001"]},
-    {"id": "D-01", "type": "duplicate_number", "severity": "P0", "status": "OPEN",
-     "summary": "doc 71 exists twice with different content; root copy is older and sits in the L0 directory",
-     "evidence": ["Docs/V3_SPEC/71_B2B5_SUBJECTIVE_SUBQUESTION_ADJUDICATION.md",
-                  "backend/Docs/V3_SPEC/71_B2B5_SUBJECTIVE_SUBQUESTION_ADJUDICATION.md"]},
-    {"id": "D-02", "type": "unassigned_layer", "severity": "P0", "status": "OPEN",
-     "summary": "5 docs inside V3_SPEC trees have no L-level; PHASE_I3_CLOSURE even writes Gate PASS",
-     "evidence": ["Docs/REPORTS/PHASE_I3_CLOSURE.md:5"]},
-    {"id": "D-03", "type": "mislayered", "severity": "P1", "status": "OPEN",
-     "summary": "doc 63 self-declares Frozen Constraint from an L4 slot; doc 65 is a scope-freeze contract; doc 68 typed by doc 69",
+    {"id": "D-01", "type": "duplicate_number", "severity": "P0", "status": "CLOSED",
+     "summary": "doc 71 existed twice with different content - CLOSED 2026-09-13 (DG-3): root copy judged stale, git-mv to Docs/ARCHIVE/71_..._SUPERSEDED.md with a SUPERSEDED block; backend CORRECTED copy moved to Docs/DECISIONS/71_... as L2. Neither copy deleted.",
+     "evidence": ["Docs/ARCHIVE/71_B2B5_SUBJECTIVE_SUBQUESTION_ADJUDICATION_SUPERSEDED.md",
+                  "Docs/DECISIONS/71_B2B5_SUBJECTIVE_SUBQUESTION_ADJUDICATION.md"]},
+    {"id": "D-02", "type": "unassigned_layer", "severity": "P0", "status": "CLOSED",
+     "summary": "5 docs inside V3_SPEC trees had no L-level - CLOSED 2026-09-13: 4x Closure records adjudicated L2 (KEEP, formal phase closure = Decision Record); gate_b2a_three_task_report already L4 via the Docs/REPORTS default (KEEP). No doc deleted or archived.",
+     "evidence": ["Docs/REPORTS/PHASE_I3_CLOSURE.md:5", "Docs/REPORTS/gate_b2a_three_task_report.md"]},
+    {"id": "D-03", "type": "mislayered", "severity": "P1", "status": "CLOSED",
+     "summary": "3 mislayered docs - CLOSED 2026-09-13, all KEEP at L4 with explicit non-authority annotations: 63 no longer self-declares Frozen Constraint (promotion to L0 requires an L1 Change Record, 90 R1); 65 annotated as 69-typed Evidence with I-5 closed; 68 annotated as 69-typed Proposal. 65 NOT promoted to L2 - that would contradict 69 and duplicate rules already carried by 63 section 10.9/10.10 and 81 section 5.6.",
      "evidence": ["63:3", "65:95", "68"]},
-    {"id": "D-04", "type": "l3_self_rule", "severity": "P1", "status": "OPEN",
-     "summary": "L3 doc 74 asserts six rules on V3 rather than citing L0/L1",
+    {"id": "D-04", "type": "l3_self_rule", "severity": "P1", "status": "CLOSED",
+     "summary": "L3 doc 74 asserted six rules on V3 rather than citing L0/L1 - CLOSED 2026-09-13: all six sites rewritten from normative assertion to report finding plus a pointer at the L2 carrier in doc 75 (or 81 section 6.2 for the Grammar rule). Body content otherwise unchanged.",
      "evidence": ["74:224", "74:226", "74:283", "74:385", "74:395", "74:418"]},
-    {"id": "D-05", "type": "concentration", "severity": "P1", "status": "OPEN",
-     "summary": "Gate-status lines concentrate in Status.md (45) and doc 69 (42), the largest aggregation-error surfaces",
-     "evidence": ["Status.md", "69"]},
+    {"id": "D-05", "type": "concentration", "severity": "P1", "status": "CLOSED",
+     "summary": "Gate-status lines concentrate in Status.md and doc 69 - CLOSED 2026-09-13: the control is already in force (90 section 4 Status Header rule + 82 section 3.3 declaration template, both with an explicit no-mandatory-backfill clause). Stock rows are not backfilled (Reconcile, don't rewrite); A-05 handled the three actively-stale blocks in 69.",
+     "evidence": ["Status.md", "69", "90:4", "82:3.3"]},
     {"id": "E-01", "type": "false_positive", "severity": "none", "status": "FALSE_POSITIVE",
      "summary": "doc 81 mixed pipeline figure is two explicitly labelled branches, not an unlabelled mix",
      "evidence": ["81:208"]},
@@ -454,7 +454,10 @@ def main():
     by_level = {}
     for r in matrix:
         by_level.setdefault(r["level"], []).append(r["path"])
-    open_c = [c for c in CANDIDATES if c["status"] == "OPEN"]
+    # OPEN_PAUSED is still OPEN: it means "adjudication deferred for lack of
+    # upstream facts", not "resolved". Counting only exact "OPEN" would print
+    # "OPEN candidates: 0" while C-01 is still open, which reads as all-clear.
+    open_c = [c for c in CANDIDATES if c["status"] in ("OPEN", "OPEN_PAUSED")]
     p0 = [c for c in open_c if c["severity"] == "P0"]
 
     with open(os.path.join(OUT, "scan_report.md"), "w", encoding="utf-8") as fh:

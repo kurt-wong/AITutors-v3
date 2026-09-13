@@ -1,6 +1,17 @@
 # Phase I-5 Scope Freeze: Preprocessed Source Integration Feasibility
 
-Status: Experiment Constraint (NOT a Domain Contract modification)
+Authority Level: L4 — Experiment Report（D-03 归层 2026-09-13）
+Normative: NO
+Gate State Authority: NO（唯一权威 = 82 §3）
+Status: HISTORICAL — **69 号已定性为 Evidence**
+        （`69 §2`：`65 Path B | Experiment | 当前不需要 | Evidence`；
+         `69 §65`：`Current Status: Experiment / Evidence Record`）。
+        **Phase I-5 已 CLOSED**（69 裁决）。下方 §5 十二条是 **I-5 实验期 scope
+        freeze 契约**，随 I-5 结束而成为历史；其中仍然有效的架构约束现行载体是
+        **`63 §10.9`/`§10.10` 与 `81 §5.6`**，不是本文件。
+        （2026-09-13 84 D-03：**不升 L2**——升 L2 会与 69 定性矛盾，且会造成
+        第二来源。Disposition = **KEEP**。）
+Status（原文）: Experiment Constraint (NOT a Domain Contract modification)
 Applies From: Phase I-5 start until I-5-4 Decision
 Predecessor: 63_ARCHITECTURE_COMPLEXITY_GUARDRAILS.md (§10.9, §10.10), PHASE_I4_CLOSURE.md
 

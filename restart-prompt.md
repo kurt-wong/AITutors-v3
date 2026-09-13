@@ -1,13 +1,80 @@
-Version: v1.57
-Status: **Documentation Governance Stabilization（DG）ACTIVE** —
-**C-01 / BIND-1/2 已 PASS/FROZEN，BIND-3 UNPROVEN**（权威落点 `82 §5`）；
-**C-01 整体仍 OPEN，单一剩余阻塞 = BIND-3**（manifest schema 冻结）；
+Version: v1.58
+Status: **Documentation Governance Stabilization（DG）— DG-5 收口完成** —
+**C-01 = OPEN / PAUSED**（权威落点 `82 §5.3.1`）：暂停于**上游生产事实缺口**，
+**非架构错误**，也**不**意味着「应立即继续设计 Manifest Schema」；
+BIND-1 **PASS/FROZEN** · BIND-2 **PASS/FROZEN** · BIND-3 方向 ACCEPTED / 契约 UNPROVEN；
 Binding Carrier = PENDING；manifest-only 未冻结；
-DG-2 归位完成 + D-01 CLOSED；OPEN 10 项（P0：C-01 / D-02）；
+**84 台账：A 类 0 OPEN · D 类 0 OPEN**；剩余 3 项（C-01 PAUSED + B-03/B-04 非缺陷）；
 Gate A PASS / B **NOT CLOSED** / C CLOSED (Phase 1) / D CONTRACT CLOSED；
-**Adapter 未开工**（BIND-2 PASS 不构成开工授权；前置仍 `81 §5.4` 三项）；
-下一步：继续 **DG-5** 剩余项（A-04/A-05/A-06/A-08/A-09、D-02/D-03、D-04/D-05）
+**Adapter 未开工**（BIND-1/2 PASS 不构成开工授权；前置仍 `81 §5.4` 三项）；
+下一步：**preprocessing 独立收口**（AITutors-preprocessing 自身）——
+**不是**继续整理文档，**不是**设计 Manifest Schema
 Date: 2026-09-13
+
+## 0.0b C-01 PAUSE + DG-5 收口（2026-09-13 Owner 五次裁决，权威落点 `82 §5.3.1` + `84 §五次裁决`）
+
+**C-01 = OPEN / PAUSED。** 含义必须读准：
+
+> **不是发现了新的架构错误，而是缺乏必要的上游事实，因此暂缓架构裁决。**
+
+BIND-3 的契约验证暂停，因为 preprocessing **尚未形成可测量、可复现的生产级输出**
+（Source fidelity / line stability / role coverage / manifest 完整性 / 失败分布
+均未生产验证）。**trial 结果不能替代生产级事实。** 在不知道上游能稳定提供什么之前
+冻结 Manifest Schema = **从 V3 内部模型反向规定上游**。
+
+**明确否定的误读**：「BIND-3 UNPROVEN → 立即设计 Manifest Schema → C-01 CLOSED →
+Adapter」**只是架构假设链，不是已由事实证明的工程路线。**
+
+**BIND-1 / BIND-2 不因 PAUSE 改变**——它们是 V3 内部证据，不依赖 preprocessing。
+**不重开讨论。**
+
+**当前全部保持 Candidate，不冻结**：
+
+```text
+Manifest Schema · BIND-3 完整契约 · Path B 最终接口 · Adapter 输入/输出
+· Adapter 是否 bypass Resolver · preprocessing evidence 可否直入 ResolvedRun
+· material/figure Carrier · 两条路径最终 convergence point
+```
+
+`Manifest → Adapter → ResolvedRun` 目前**只能**是 **Candidate Architecture**。
+
+**执行顺序（状态机，冻结）**：
+
+```text
+DG-5 收口 ✅ → 治理体系稳定 ✅ → C-01 PAUSED ✅
+      → preprocessing 独立收口（下一步）
+      → 生产级真实输出 → 事实基线
+      → 重开 C-01 / BIND-3（按 82 §5.3.1 的 12 项逐条取证）
+      → 再裁决 Manifest Schema / Path B / Adapter / convergence point
+```
+
+**DG-5 本轮结果（逐项，非笼统「completed」）**：
+
+| ID | 结果 |
+|---|---|
+| **A-04** | **CLOSED / RESOLVED** — `80 §4` Gate B2-B2 行补入 scope 声明；`82 §4-C4` 同步 RESOLVED |
+| **A-05** | **CLOSED / RESOLVED** — `69` 三个 2026-09-11 带日期 Gate 块各加 supersession banner → `82 §3`；正文保留原文 |
+| **A-06** | **CLOSED / RESOLVED** — `61` 头行 `IN PROGRESS` → `HISTORICAL`，指向 `PHASE_I3_CLOSURE.md` |
+| **A-08** | **CLOSED / RESOLVED** — `Status.md` 历史节加 retraction banner；现行权威 = `81 §6.2` / `80 §6.6` |
+| **A-09** | **CLOSED / RESOLVED** — `Status.md` 顶层 Status 改为指针 → `82 §3`，不再自述 |
+| **D-02** | **CLOSED** — 4×Closure **KEEP → L2**；`gate_b2a_three_task_report` **KEEP → L4**（本已 active）。零删除零归档 |
+| **D-03** | **CLOSED** — 三份全部 **KEEP → L4**，零提升：`63` 3 处自封 `Frozen Constraint` 改为「L4 非 L0 权威，升 L0 须走 L1」；`65` **不采纳**原「建议归 L2」（与 `69` 的 Evidence 定性矛盾，且会重复 `63 §10.9/§10.10` + `81 §5.6`）；`68` 加 `69` 的 Proposal 定性注 |
+| **D-04** | **CLOSED** — `74` 六处自立规范全部改写为「report finding + 权威指针」，指向 `75 §三 R4/R5` · `75 §4.4` · `75 §4.5` · `75 §九` · `81 §5.4` · `82 §5.0` · `20 §5.5`；测量正文零改动 |
+| **D-05** | **CLOSED** — 控制已就位（`90 §4` + `82 §3.3`，均含「存量不强制回填」），**无需改文档** |
+
+**机器源同步**：`i5g_emit_audit.py` CLOSURE 分支 `L2-proposed`/`pending` → `L2`/`active`；
+A-04/05/06/08/09、C-01、D-01～D-05 的 status/summary 全部回写；
+**修正一处会误导的计数**——OPEN 计数原只匹配 `status == "OPEN"`，C-01 改为
+`OPEN_PAUSED` 后会打印「OPEN candidates: 0」，现改为同时匹配两者。
+
+**层计数**：`L0=7 · L0-META=2 · L2=14（原 10，+4 Closure）· L3=2 · L4=15 · L5=4`；
+**UNASSIGNED = 0**（scan_report 明确写 `(none)`）。
+
+**本轮未做**：未改 L0 00–50 · 未改 L0 文件名 · 未改 90/91 治理原则 ·
+**未改写 82 的 BIND-1/2 裁决** · 未冻结 Manifest Schema · 未实现 Adapter ·
+未改 preprocessing · 未因 C-01 新建治理文档 · 未做架构设计。
+
+**下一步**：preprocessing 独立收口。**不因 DG-5 完成而推进 C-01。**
 
 ## 0.0a C-01 / BIND-1/2/3 裁决（2026-09-13，权威落点 `82 §5`）
 
@@ -34,8 +101,9 @@ Date: 2026-09-13
 **本轮未做**：未新建文档 · 未改 L0 · 未改 67/81 正文 · 未冻结 manifest-only ·
 未发布 67 Errata · 未实现 Adapter。
 
-**下一步**：继续 DG-5 剩余项（A-04/A-05/A-06/A-08/A-09 状态对账、D-02/D-03 归层、
-D-04/D-05 L3 自立规范改写）。**不因 BIND-2 PASS 提前启动 Adapter。**
+**下一步**：~~继续 DG-5 剩余项~~ → **已完成，见 `§0.0b`**（2026-09-13）。
+C-01 已改判 **OPEN / PAUSED**（`82 §5.3.1`）。**不因 BIND-2 PASS 启动 Adapter，
+也不因 DG-5 完成而推进 C-01。**
 
 ## 0.0 当前结论（2026-09-13 CA-001 CLOSED + 91 号词汇宪法 + DG 阶段）
 

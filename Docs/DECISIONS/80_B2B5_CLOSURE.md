@@ -425,6 +425,9 @@ Gate B2-B1        : CLOSED — PASS / SCOPE-BOUNDED
                     非 HTML option region 结构提取 99.6% (1065/1069)；对抗抽样 98.0% (49/50)
 Gate B2-B2        : CLOSED — PASS / SCOPE-BOUNDED
                     MC answer extraction 99.8% (1176/1178)
+                    **closed scope = 已测的 1178 个 MC target。Unknown 125 在
+                    scope 外，属显式延期项，不计入本 Gate 分母。**
+                    （scope 声明 2026-09-13 补入，84 A-04 / 82 §4-C4 RESOLVED）
 Gate B2-B3-A      : CLOSED — Target Classification Audit
                     原 fill_in 70 → MC 误分类 36，真填空 34
 Gate B2-B3-B      : CLOSED — PASS / DETERMINISTIC
@@ -439,7 +442,7 @@ Gate B2-B5        : CLOSED — PASS / TEST-EVIDENCED / SCOPE-BOUNDED
 Gate C            : CLOSED (Phase 1 Evidence Authority Boundary Closure)
 Gate D            : CONTRACT CLOSED / IMPLEMENTATION NOT STARTED（81 号，2026-09-13）
 Adapter 实现       : NOT STARTED（阻塞于 81 §5.4 三项前置）
-Binding Carrier   : PENDING — BIND-1/2/3 未裁决（82 §5）
+Binding Carrier   : PENDING — C-01 OPEN / PAUSED（BIND-1/2 FROZEN；BIND-3 待上游事实，82 §5.3.1）
 Errata            : 暂缓 — 权威层级清理先行（82 号 ACTIVE）
 ```
 
@@ -447,9 +450,9 @@ Errata            : 暂缓 — 权威层级清理先行（82 号 ACTIVE）
 > 两处需注意：(1) 本文件 `Gate B1: CONDITIONAL PASS` 与 `B2-B3-C / B2-B4-C
 > DEFERRED` 意味着 **Gate B 整体 NOT CLOSED**——82 §3.2 聚合规则禁止把子项 PASS
 > 聚合成父 Gate PASS；(2) `B2-B2 CLOSED` 与下方延期项「B2-B2 Unknown 125 未清」
-> 并存，已登记为 82 §4-C4 **歧义**（非错误）：合理读法是 closed scope = 已测的
-> 1178 个 MC target，Unknown 125 在 scope 外，但本文件**未写明**——待 triage 完成后
-> 补 scope 声明。
+> 并存，原登记为 82 §4-C4 **歧义**（非错误）：closed scope = 已测的
+> 1178 个 MC target，Unknown 125 在 scope 外。**该 scope 声明已于 2026-09-13
+> 补入上表 Gate B2-B2 行（84 A-04）；82 §4-C4 现为 RESOLVED。**
 
 **显式延期项（不视为失败，不视为已完成）**：
 - B2-B3-C（F2 multi-blank / F4 / F9）→ Domain Contract

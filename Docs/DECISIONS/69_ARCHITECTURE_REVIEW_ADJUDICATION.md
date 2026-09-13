@@ -626,6 +626,12 @@ Level 5 — Semantic Validity    "内容语义正确（需独立证据）"
 
 ### Gate B 当前状态（2026-09-11 修正后更新）
 
+> ⚠️ **本节及以下两个带日期 Gate 状态块（「Phase I-5 状态矩阵」、「Gate 状态更新」）
+> 均为 2026-09-11 历史快照，已过时（84 A-05，2026-09-13）。** 其中 `Gate C: OPEN`、
+> `Gate D: OPEN`、`B2-B = BLOCKED / WAIT` 等表述**不再反映当前状态**。
+> **现行 Gate State Authority = `82 §3`**（2026-09-13 起唯一权威）。
+> 正文按「Reconcile, don't rewrite」保留为历史，**不得按本节判断当前状态**。
+
 ```text
 Gate A: PASS / TEST-EVIDENCED
 Gate B1: CONDITIONAL PASS / Corpus Substantially Valid
@@ -643,6 +649,9 @@ Errata: BLOCKED BY Gate B/C
 ```
 
 ### Phase I-5 状态矩阵（2026-09-11 修正后）
+
+> ⚠️ **2026-09-11 历史快照，已过时（84 A-05）。** 其中 `Gate B2-B = BLOCKED BY
+> contract 裁决` 等行不再反映当前状态。**现行权威 = `82 §3`。**
 
 | 项目 | 当前状态 |
 |------|---------|
@@ -754,6 +763,9 @@ Q4 = B
 ```
 
 #### Gate 状态更新（Contract Adjudication 后）
+
+> ⚠️ **2026-09-11 历史快照，已过时（84 A-05）。** `Gate B2-B = WAIT FOR MANIFEST
+> CONTRACT UPDATE` 不再反映当前状态。**现行权威 = `82 §3`。**
 
 ```text
 Gate B1: CONDITIONAL PASS — Region Binding Contract 基本成立

@@ -221,13 +221,15 @@ V3 当前:
                 Source
 ```
 
-V3 Native Path 必须自行保证 Source Evidence Binding 的安全性。
+**本报告的验证范围（report finding，非规范）**：本报告在 **V3 Native Path 自行
+保证 Source Evidence Binding 安全性**这一前提下完成测量——即测量对象是 Native
+Path 自身，不以外部系统为前置。
 
-如果未来 preprocessing 接入 V3, 它必须满足 V3 Evidence Contract,
-而不是反过来 V3 按照 preprocessing 的 contract 设计。
-
-preprocessing 的 role provenance 是未来 Adapter Contract (Gate D/I-5) 的
-integration 问题, 不是当前 Gate C 的前置条件。
+**规范载体指针（D-04，2026-09-13）**：「V3 先冻结自己要消费的契约、preprocessing
+再实现它，方向不可颠倒」**不是本 L3 报告定义的规则**，其权威出处为
+**`81 §5.4`**（V3 侧三项前置 + 方向不可颠倒）与 **`82 §5.0`**（分层原则）。
+未来 preprocessing 的 role provenance 属 Adapter Contract（Gate D / I-5）的
+integration 问题，不是 Gate C 的前置条件——此判断同样以 `81` / `82 §5` 为准。
 
 ---
 
@@ -278,6 +280,12 @@ Resolver 不能说: "521-522 在语义上一定是答案" — 这是两个完全
 不是 **semantic truth**: "这些行一定是正确答案"。
 
 ### 5.4 Contract 规则
+
+> **（D-04，2026-09-13）** 本节列出的是本报告**所测量的检查项**，不是本报告
+> 定义的规则。各检查项的规范出处：Region Production / Compiler Role Filter
+> 见 **`75 §九`**（Structural Consistency 是 Validation 的子检查
+> `role_region_consistency`）与 **`20 §5.5`**；span 不重叠的约束载体同样是
+> **`75 §九`**。本 L3 报告只陈述这些检查**在本次实验中如何被触发**。
 
 1. **Region Production**: Resolver 用确定性表头解析产出 structural region map
 2. **Gate Consistency Check**: answer span 不得与其他 structural region 重叠
@@ -377,6 +385,12 @@ gate_c_invalid_binding_corpus.json (157 targets)
 **C-1: V3 Evidence Promotion Contract** (先冻结设计, 再写代码)
 
 生命周期:
+
+> **（D-04，2026-09-13）** 下列生命周期与状态机是 **`75 §二` 状态机与 `75 §三`
+> 五条冻结规则（R5：Semantic IR 只能引用 ValidatedEvidence）的转述**，供本报告
+> 说明测量口径。**规范定义在 `75`，不在本 L3 报告。**「唯一允许进入 IR」与
+> 「禁止 CLAIMED/PROPOSED → IR」的权威出处 = `75 §三 R5` + `75 §4.5` + `75 §二·禁止转换`。
+
 ```
 Raw Source (不可引用)
     → Source Fragment (可定位, 不可解释)
@@ -415,6 +429,14 @@ Proposal 来源信任等级:
 | Human review | 高 |
 
 实现风险 (C-1 设计时必须防止):
+
+> **（D-04，2026-09-13）** 下列三条是本报告给 C-1 设计阶段的 **report finding /
+> 设计提醒**，不是本报告定义的规则。其中「Validation 必须产生 append-only
+> ValidationEvent」的规范出处 = **`75 §4.4`**（Evidence Validation：确定性、
+> append-only、event sourcing）与 **`75 §三 R4`**（只有 ValidationEvent 产生
+> Evidence Authority）。「Validation 不做 NLP」的出处 = **`75 §九`**（Structural
+> Consistency 只解决空间错误，不解决内容错误）。
+
 1. **字段堆积假安全**: 不要设计 {validated: true} 可修改字段。Validation 必须产生 append-only ValidationEvent。
 2. **Validation 不做 NLP**: 只负责 hash/span/role consistency/contract, 不判断答案内容真假。
 3. **Claim 来源分级**: 不是所有 Claim 平权, 来源信任等级影响 Validation 严格度。

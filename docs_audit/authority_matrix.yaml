@@ -140,32 +140,32 @@ documents:
     reason: Architecture Decision Record (allowlist, 90 section 1)
     status_field: "ACTIVE"
   - path: Docs/REPORTS/PHASE_I2C_CLOSURE.md
-    level: L2-proposed
-    classification_status: pending
+    level: L2
+    classification_status: active
     normative: NO
     gate_state_authority: NO
-    reason: formal phase closure record - PROPOSED L2, pending D-02 adjudication; may not be cited as authority until decided
+    reason: formal phase closure record - L2 (D-02 adjudicated 2026-09-13)
     status_field: "CLOSED"
   - path: Docs/REPORTS/PHASE_I2_REVISION_CLOSURE.md
-    level: L2-proposed
-    classification_status: pending
+    level: L2
+    classification_status: active
     normative: NO
     gate_state_authority: NO
-    reason: formal phase closure record - PROPOSED L2, pending D-02 adjudication; may not be cited as authority until decided
+    reason: formal phase closure record - L2 (D-02 adjudicated 2026-09-13)
     status_field: "CLOSED WITH NOTES"
   - path: Docs/REPORTS/PHASE_I3_CLOSURE.md
-    level: L2-proposed
-    classification_status: pending
+    level: L2
+    classification_status: active
     normative: NO
     gate_state_authority: NO
-    reason: formal phase closure record - PROPOSED L2, pending D-02 adjudication; may not be cited as authority until decided
+    reason: formal phase closure record - L2 (D-02 adjudicated 2026-09-13)
     status_field: "CLOSED"
   - path: Docs/REPORTS/PHASE_I4_CLOSURE.md
-    level: L2-proposed
-    classification_status: pending
+    level: L2
+    classification_status: active
     normative: NO
     gate_state_authority: NO
-    reason: formal phase closure record - PROPOSED L2, pending D-02 adjudication; may not be cited as authority until decided
+    reason: formal phase closure record - L2 (D-02 adjudicated 2026-09-13)
     status_field: "**CLOSED**"
   - path: Docs/REPORTS/74_B2B5_D_PROJECTION_SAFETY_REPORT.md
     level: L3
@@ -194,7 +194,7 @@ documents:
     normative: NO
     gate_state_authority: NO
     reason: Experiment / phase report (default for numbered phase docs)
-    status_field: "IN PROGRESS"
+    status_field: "HISTORICAL — Phase I-3 已由 `PHASE_I3_CLOSURE.md` 收口（CLOSED / Gate PASS）"
   - path: Docs/REPORTS/62_PHASE_I3_STORAGE_DECISION.md
     level: L4
     classification_status: active
@@ -208,7 +208,7 @@ documents:
     normative: NO
     gate_state_authority: NO
     reason: Experiment / phase report (default for numbered phase docs)
-    status_field: "Frozen Constraint"
+    status_field: "HISTORICAL — 本文件在 L4 位置自述的约束**不构成 L0 权威**"
   - path: Docs/REPORTS/64_PHASE_I4_EVIDENCE_EVALUATION.md
     level: L4
     classification_status: active
@@ -222,7 +222,7 @@ documents:
     normative: NO
     gate_state_authority: NO
     reason: Experiment / phase report (default for numbered phase docs)
-    status_field: "Experiment Constraint (NOT a Domain Contract modification)"
+    status_field: "HISTORICAL — **69 号已定性为 Evidence**"
   - path: Docs/REPORTS/66_PHASE_I5_1_BOUNDARY_ANALYSIS.md
     level: L4
     classification_status: active
@@ -236,7 +236,7 @@ documents:
     normative: NO
     gate_state_authority: NO
     reason: Experiment / phase report (default for numbered phase docs)
-    status_field: "Adjudicated — 经 Step B/B5/C 对抗性审查裁决（见 69 号裁决记录）"
+    status_field: "**69 号定性 = Proposal**（`69 §2`：`68 Question | Domain Definition |"
   - path: Docs/REPORTS/72_GATE_C_INVALID_BINDING_TEST_SPEC.md
     level: L4
     classification_status: active
@@ -292,7 +292,7 @@ documents:
     normative: NO
     gate_state_authority: NO
     reason: Status / log / restart
-    status_field: "V3 Spec Baseline — Frozen（实现未开始）"
+    status_field: "当前状态权威见 `Docs/DECISIONS/82_CONTRACT_AUTHORITY_RECONCILIATION.md` §3"
   - path: bugs.md
     level: L5
     classification_status: active
@@ -313,4 +313,4 @@ documents:
     normative: NO
     gate_state_authority: NO
     reason: Status / log / restart
-    status_field: "**Documentation Governance Stabilization（DG）ACTIVE** —"
+    status_field: "**Documentation Governance Stabilization（DG）— DG-5 收口完成** —"

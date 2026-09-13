@@ -3,8 +3,8 @@
   "_note": "drift_risk HIGH = many uses, zero prose definitions. Field-table definitions (e.g. ResolvedSpan in 20 section 5.5) are not detected; check B-03 before treating HIGH as a defect.",
   "terms": {
     "ResolvedSpan": {
-      "definition_sites": 5,
-      "use_sites": 122,
+      "definition_sites": 6,
+      "use_sites": 123,
       "definitions": [
         {
           "doc": "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
@@ -16,11 +16,15 @@
         },
         {
           "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
-          "line": 83
+          "line": 95
         },
         {
           "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
-          "line": 84
+          "line": 96
+        },
+        {
+          "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
+          "line": 183
         },
         {
           "doc": "log.md",
@@ -81,7 +85,7 @@
     },
     "ResolvedRun": {
       "definition_sites": 2,
-      "use_sites": 39,
+      "use_sites": 48,
       "definitions": [
         {
           "doc": "Docs/DECISIONS/81_GATE_D_ADAPTER_BOUNDARY.md",
@@ -223,11 +227,11 @@
         },
         {
           "doc": "Docs/DECISIONS/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
-          "line": 242
+          "line": 249
         },
         {
           "doc": "Status.md",
-          "line": 1541
+          "line": 1544
         }
       ],
       "uses_sample": [
@@ -373,15 +377,15 @@
         },
         {
           "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
-          "line": 83
+          "line": 95
         },
         {
           "doc": "Docs/REPORTS/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
-          "line": 385
+          "line": 399
         },
         {
           "doc": "Docs/REPORTS/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
-          "line": 406
+          "line": 420
         }
       ],
       "uses_sample": [
@@ -411,15 +415,15 @@
         },
         {
           "doc": "Docs/REPORTS/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
-          "line": 327
+          "line": 335
         },
         {
           "doc": "Docs/REPORTS/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
-          "line": 488
+          "line": 510
         },
         {
           "doc": "Docs/REPORTS/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
-          "line": 529
+          "line": 551
         },
         {
           "doc": "Docs/REPORTS/83_GOVERNANCE_AUDIT.md",
@@ -427,11 +431,11 @@
         },
         {
           "doc": "restart-prompt.md",
-          "line": 123
+          "line": 191
         },
         {
           "doc": "restart-prompt.md",
-          "line": 128
+          "line": 196
         }
       ],
       "drift_risk": "LOW"
@@ -442,11 +446,11 @@
       "definitions": [
         {
           "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
-          "line": 83
+          "line": 95
         },
         {
           "doc": "restart-prompt.md",
-          "line": 164
+          "line": 232
         },
         {
           "doc": "log.md",
@@ -472,15 +476,15 @@
         },
         {
           "doc": "restart-prompt.md",
-          "line": 124
+          "line": 192
         },
         {
           "doc": "Status.md",
-          "line": 2621
+          "line": 2629
         },
         {
           "doc": "Status.md",
-          "line": 2695
+          "line": 2703
         },
         {
           "doc": "log.md",
@@ -495,15 +499,15 @@
       "definitions": [
         {
           "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
-          "line": 83
+          "line": 95
         },
         {
           "doc": "restart-prompt.md",
-          "line": 164
+          "line": 232
         },
         {
           "doc": "Status.md",
-          "line": 2689
+          "line": 2697
         },
         {
           "doc": "log.md",
@@ -564,7 +568,7 @@
     },
     "Evidence Contract": {
       "definition_sites": 10,
-      "use_sites": 19,
+      "use_sites": 18,
       "definitions": [
         {
           "doc": "Docs/DECISIONS/75_EVIDENCE_PROMOTION_CONTRACT.md",
@@ -572,23 +576,23 @@
         },
         {
           "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
-          "line": 82
+          "line": 94
         },
         {
           "doc": "restart-prompt.md",
-          "line": 160
+          "line": 228
         },
         {
           "doc": "restart-prompt.md",
-          "line": 161
+          "line": 229
         },
         {
           "doc": "Status.md",
-          "line": 2088
+          "line": 2091
         },
         {
           "doc": "Status.md",
-          "line": 2620
+          "line": 2628
         },
         {
           "doc": "log.md",
@@ -634,19 +638,19 @@
         },
         {
           "doc": "Docs/REPORTS/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
-          "line": 226
+          "line": 243
         },
         {
           "doc": "Docs/REPORTS/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
-          "line": 241
+          "line": 540
         },
         {
           "doc": "Docs/REPORTS/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
-          "line": 518
+          "line": 569
         },
         {
-          "doc": "Docs/REPORTS/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
-          "line": 547
+          "doc": "Docs/REPORTS/83_GOVERNANCE_AUDIT.md",
+          "line": 110
         }
       ],
       "drift_risk": "LOW"
@@ -755,11 +759,11 @@
         },
         {
           "doc": "Docs/REPORTS/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
-          "line": 277
+          "line": 279
         },
         {
           "doc": "Docs/REPORTS/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
-          "line": 545
+          "line": 567
         },
         {
           "doc": "log.md",
@@ -774,7 +778,7 @@
     },
     "Binding Carrier": {
       "definition_sites": 4,
-      "use_sites": 18,
+      "use_sites": 20,
       "definitions": [
         {
           "doc": "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
@@ -782,11 +786,11 @@
         },
         {
           "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
-          "line": 85
+          "line": 97
         },
         {
           "doc": "Status.md",
-          "line": 2696
+          "line": 2704
         },
         {
           "doc": "log.md",
@@ -800,11 +804,11 @@
         },
         {
           "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
-          "line": 1181
+          "line": 1193
         },
         {
           "doc": "Docs/DECISIONS/80_B2B5_CLOSURE.md",
-          "line": 442
+          "line": 445
         },
         {
           "doc": "Docs/DECISIONS/81_GATE_D_ADAPTER_BOUNDARY.md",
@@ -816,38 +820,38 @@
         },
         {
           "doc": "Docs/DECISIONS/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
-          "line": 422
+          "line": 482
         },
         {
           "doc": "Docs/DECISIONS/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
-          "line": 443
+          "line": 503
         },
         {
           "doc": "Docs/DECISIONS/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
-          "line": 474
+          "line": 536
         },
         {
           "doc": "Docs/DECISIONS/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
-          "line": 525
+          "line": 587
         },
         {
           "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
-          "line": 151
+          "line": 163
+        },
+        {
+          "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
+          "line": 184
         },
         {
           "doc": "restart-prompt.md",
-          "line": 5
-        },
-        {
-          "doc": "restart-prompt.md",
-          "line": 125
+          "line": 6
         }
       ],
       "drift_risk": "LOW"
     },
     "line_refs": {
       "definition_sites": 5,
-      "use_sites": 191,
+      "use_sites": 190,
       "definitions": [
         {
           "doc": "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
@@ -867,7 +871,7 @@
         },
         {
           "doc": "Docs/DECISIONS/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
-          "line": 242
+          "line": 249
         }
       ],
       "uses_sample": [

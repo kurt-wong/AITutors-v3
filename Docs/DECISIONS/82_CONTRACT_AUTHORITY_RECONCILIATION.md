@@ -163,7 +163,7 @@ Change Record 沿用该版本递增形式。
 | **B1** Binding Integrity | **CONDITIONAL PASS** | Content 79.0%；Role：stem 97.3% / explanation 96.7% / **option 51.8%** / **answer 49.1%**；Structural **未评估**；Semantic **UNPROVEN** |
 | **B2-A** Clean Roles | **CLOSED — PASS** | stem-only three-task audit；Legacy 47.1% vs Path B 96.8% |
 | **B2-B1** | **CLOSED — PASS / SCOPE-BOUNDED** | 非 HTML option region 99.6%（1065/1069） |
-| **B2-B2** | **CLOSED — PASS / SCOPE-BOUNDED** | MC answer 99.8%（1176/1178）；**但 Unknown 125 triage 未清**（§4-C4） |
+| **B2-B2** | **CLOSED — PASS / SCOPE-BOUNDED** | MC answer 99.8%（1176/1178）；**closed scope = 已测 1178 个 MC target**，Unknown 125 在 scope 外（显式延期，§4-C4 **已 RESOLVED**） |
 | **B2-B3-A** | **CLOSED** | 原 fill_in 70 → MC 误分类 36 / 真填空 34 |
 | **B2-B3-B** | **CLOSED — PASS / DETERMINISTIC** | 34/34，fallback 0 |
 | **B2-B3-C** | **DEFERRED** | Domain Contract 依赖 F2/F4/F9 |
@@ -217,7 +217,7 @@ Gate B = NOT CLOSED
 | **C1** | Gate C：`74` 仍写 BLOCKED，`80` 已宣布 CLOSED，**无废止记录** | `74:5` / `74:363` / `74:537` = BLOCKED（C-1+C-2 未闭环）；`80:439` = CLOSED；C-1 实际完成=`75`，C-2=`76`/`77` | 🔴 P0 | **本节 §3.1 即废止记录**：C = CLOSED (Phase 1)，supersedes `74` 的 Gate C 状态行。`74` 保持原文（历史报告），其 Gate C 行视为 stale |
 | **C2** | `69 §8` 无日期路线图仍写「Errata Decision（Gate A-D 全部通过后）」 | `69:306`（§8「下一步顺序」代码块，**无日期标注**，读起来像现行规范） | 🔴 P0 | `69 §8` 加 supersede 指针 → 本文档 §8。**不改写历史正文** |
 | **C3** | `81` 声称「Gate B 系列 CLOSED」，但 `80` 自己写 B1 CONDITIONAL + 两项 DEFERRED | `81:11` vs `80:421`（B1 CONDITIONAL PASS）、`80:432`/`80:437`（B2-B3-C / B2-B4-C DEFERRED） | 🔴 P0 | **本轮已修正** `81:11`（§6）。属聚合规则 §3.2 的违反实例 |
-| **C4** | `80` 内部：B2-B2 同时 CLOSED 与「Unknown 125 仍未清」 | `80:426`（CLOSED — PASS / SCOPE-BOUNDED，99.8% = 1176/1178）vs `80:448`（B2-B2 Unknown 125 triage → 仍未清） | 🟠 P1 | **登记为歧义**，不判为错误。合理读法是「closed scope = 已测的 1178 个 MC target，Unknown 125 在 scope 外」，但 `80` **未写明**。待 B2-B2 triage 完成后补 scope 声明 |
+| **C4** | `80` 内部：B2-B2 同时 CLOSED 与「Unknown 125 仍未清」 | `80:426`（CLOSED — PASS / SCOPE-BOUNDED，99.8% = 1176/1178）vs `80:448`（B2-B2 Unknown 125 triage → 仍未清） | 🟠 P1 | **RESOLVED（2026-09-13，84 A-04）**。歧义非错误：closed scope = 已测的 1178 个 MC target，Unknown 125 在 scope 外。**scope 声明已补入 `80 §4` Gate B2-B2 行**，不再「待 triage 完成后补」。Unknown 125 仍属显式延期项，与 closed scope 不冲突 |
 | **C5** | `69` 带日期状态矩阵仍写 B2-B 为 BLOCKED / WAIT | `69:656`（`BLOCKED BY contract 裁决`）、`69:756`（`WAIT FOR MANIFEST CONTRACT UPDATE`）；而 `80:426` 起 B2-B1~B5 已 CLOSED | 🟠 P1 | 历史快照，**保留原文**。以 §3.1 为准。（注：全仓**无**「B2-B = NEXT」表述） |
 | **C6** | E1 性质：写入 20 §8.4 是 **Normative Addition** 而非澄清 | `20:662-679`（§8.4 现文）对 `answer_text` 来源**沉默**；约束已冻结在 `80 §6.6` / `81 §6.2` / `grammar.py` docstring | 🟠 P1 | 按 §2 归 **CHANGE-2**。**本轮不写入 20**；待 Authority 层清理完成后走 Change Record |
 | **C7** | 无 Authority Matrix / 无变更分类 | 全仓 grep「Authority Matrix / CHANGE-0 / Normative Addition」零命中 | 🔴 P0 | **本文档 §1/§2 即为建立** |
@@ -230,13 +230,20 @@ Gate B = NOT CLOSED
 
 ---
 
-## 5. Binding Authority — BIND-1/2/3 裁决（BIND-1/2 已定，BIND-3 待契约）
+## 5. Binding Authority — BIND-1/2/3 裁决（BIND-1/2 已 FROZEN；BIND-3 **PAUSED**）
 
 > **2026-09-13 Owner 裁决**：C-01 是**真实 Contract Carrier Conflict**，但一阶问题
 > 不是「`line_refs` 放 annotation 还是 manifest」，而是**谁拥有 binding claim、
 > 谁验证它、Native / Adapter 两条路径如何携带它**。
 > **BIND-1 = PASS / FROZEN · BIND-2 = PASS / FROZEN · BIND-3 = UNPROVEN。**
-> **C-01 整体仍 OPEN**，单一剩余阻塞 = BIND-3（manifest schema 冻结）。
+>
+> **2026-09-13 Owner 二次裁决 — C-01 = OPEN / PAUSED**：BIND-3 的契约验证**暂停**，
+> **不是因为发现新的架构错误，而是缺乏必要的上游事实**——preprocessing 尚未形成
+> 可测量、可复现的生产级输出（Source fidelity / line stability / role coverage /
+> manifest 完整性 / 失败分布均未生产验证）。在不知道上游能稳定提供什么之前冻结
+> Manifest Schema，等于**从 V3 内部模型反向规定上游**，违反「先事实 → 再契约 →
+> 再架构裁决」。BIND-1/BIND-2 的冻结**不因此改变**（它们是 V3 内部证据，不依赖
+> preprocessing）。详见 §5.3.1。
 
 `line_refs` 的规范载体是什么，是比「放 annotation 还是放 manifest」更根本的问题。
 `69 §9.三` 的三层 Identity 模型把 `line_refs` 定义为 **Source Binding Claim** 的组成
@@ -408,20 +415,73 @@ Manifest → External Claims → Adapter（validate / translate）→ V3 contrac
 （哪些字段、哪些校验、何种 fail-closed）**尚不存在规范**。这不是裁决缺口，是
 **前置依赖未就绪**：manifest schema 冻结属 `81 §5.4` 前置 2。
 
-**结论**：BIND-3 方向 **ACCEPTED**；**契约级验证 = UNPROVEN**，阻塞于 manifest
-schema 冻结。
+**结论**：BIND-3 方向 **ACCEPTED**；**契约级验证 = UNPROVEN**。
+
+#### 5.3.1 为什么 PAUSE 而不是继续设计（2026-09-13 Owner 二次裁决）
+
+BIND-3 的 UNPROVEN **此前被误读成「需要立即继续设计 Manifest Schema」**。这两个
+含义完全不同，本轮明确区分：
+
+| | 含义 | 当前 |
+|---|---|---|
+| ❌ 误读 | 「BIND-3 尚未完成 → 应立即继续设计」 | **不成立** |
+| ✅ 裁决 | 「BIND-3 缺必要上游事实 → **暂缓**架构裁决」 | **PAUSED** |
+
+**缺失的是上游生产事实，不是 V3 内部推理。** 以下均**尚未**在生产级 corpus 上验证：
+
+| # | 待验证事实 |
+|---|---|
+| 1 | 最终 Source Markdown 的 fidelity |
+| 2 | deterministic repair 后文本质量 |
+| 3 | line structure 的稳定性 |
+| 4 | LLM reslice 对真实数据的稳定性 |
+| 5 | unit / question / material / stem / options / answer / explanation / extra 实际覆盖率 |
+| 6 | composite question 的实际表达能力 |
+| 7 | figure / material 的引用与关联质量 |
+| 8 | answer region 是否始终覆盖评分依据 |
+| 9 | explanation region 是否稳定覆盖解析过程 |
+| 10 | 题号 / unit identity 与 source line 的长期稳定对应 |
+| 11 | 真实大规模 corpus 上的失败类型与失败比例 |
+| 12 | Manifest 在真实数据上的完整性、可追溯性与 fail-closed 行为 |
+
+preprocessing 的 **trial 结果不能替代生产级事实**。
+
+**因此当前显式不冻结**（全部保持 Candidate）：
+
+```text
+Manifest Schema · BIND-3 完整契约 · Path B 最终接口 · Adapter 输入/输出
+· Adapter 是否 bypass Resolver · preprocessing evidence 是否可直入 ResolvedRun
+· material / figure 的 Carrier 方式 · 两条路径的最终 convergence point
+```
+
+`Manifest → Adapter → ResolvedRun` 目前**只能**是 **Candidate Architecture**，
+**不得**作为 Frozen Architecture 引用。
+
+**正确顺序（冻结）**：
+
+```text
+Preprocessing 实际生产输出 → 发现它真实能提供什么 → 识别哪些是 External Claims
+  → 与 V3 Frozen Contract 对照 → 确定真正缺失的边界
+  → 决定是否需要 Adapter → 决定 Adapter 做什么
+```
+
+禁止倒置为「V3 内部希望得到什么 → 反推 preprocessing 必须提供什么 → 设计 Adapter
+把它转换出来」。
+
+**重开条件**：preprocessing 收口并形成可复现的生产级输出后，按 §5.3.1 表 12 项
+逐条取证，再重开 C-01 / BIND-3。
 
 ### 5.4 当前候选状态（更新）
 
 | 候选 | 状态 |
 |---|---|
-| `line_refs` = manifest-only | 🟡 **PROVISIONAL ARCHITECTURAL PREFERENCE**（BIND-1/2 均 PASS；BIND-3 契约验证 UNPROVEN → **仍不可冻结**）。**仅剩 manifest schema 冻结一项阻塞** |
+| `line_refs` = manifest-only | 🟡 **PROVISIONAL ARCHITECTURAL PREFERENCE**（BIND-1/2 均 PASS；BIND-3 契约验证 UNPROVEN → **仍不可冻结**）。**阻塞原因已改判：非「待设计」，而是「待上游生产事实」（§5.3.1）** |
 | `line_refs` = annotation 内 | 🔴 **REJECT as Native Path 规范输入**（BIND-2 已 PASS 证明 Native 不接受它作为输入；Resolver 产出它作为**输出**则合法）。不预先排除未来载体变更——那需独立 CHANGE + 四道门 |
 | 两者共存 | 🔴 **REJECT**（产生「哪个权威」歧义，削弱单一来源保证） |
 
-**`Binding Carrier Decision` 仍 = `PENDING`**（仅因 BIND-3 契约验证未完成）。
-manifest-only **未冻结**。**67 号 Errata 未发布。Adapter 未开工。**
-C-01 **整体 OPEN**；**单一剩余阻塞 = BIND-3**。
+**`Binding Carrier Decision` 仍 = `PENDING`。** manifest-only **未冻结**。
+**67 号 Errata 未发布。Adapter 未开工。**
+**C-01 = OPEN / PAUSED**——暂停于上游事实缺口，**不**暂停于架构错误。
 
 ---
 
@@ -442,6 +502,8 @@ C-01 **整体 OPEN**；**单一剩余阻塞 = BIND-3**。
 
 1. **不主张** Binding Carrier 已定——BIND-1 / BIND-2 均 PASS/FROZEN，BIND-3 方向
    ACCEPTED 但契约验证 UNPROVEN；Carrier 仍 PENDING。**不主张** manifest-only 已冻结。
+   **C-01 = OPEN / PAUSED**（§5.3.1）：暂停于**上游生产事实缺口**，不是架构错误，
+   也**不**意味着「应立即继续设计 Manifest Schema」。
 2. **不主张** Gate B 已关闭——整体 NOT CLOSED（§3.1）。
 3. **不主张** E1 可以写进 20——它是 CHANGE-2，需 Change Record（§2 / §4-C6）。
 4. **不主张** 本文档可修改 A 层语义——本文档只建立权威层级，不改任何 Frozen 契约。
@@ -515,37 +577,55 @@ Gate State Authority: <YES | NO>     # 仅 YES 时可定义 Gate 状态；现行
 ╔════════════════════════════════════════════════════════════╗
 ║              PHASE I-5 CURRENT BASELINE                    ║
 ╠════════════════════════════════════════════════════════════╣
-║ Scope Freeze (I-5-0)          CLOSED                       ║
-║ I-5-1 Feasibility             HISTORICAL / NON-REPRODUCIBLE║
-║ Gate A                        PASS / TEST-EVIDENCED        ║
-║ Gate B                        NOT CLOSED                   ║
-║ Gate C                        CLOSED — Phase 1             ║
-║ Gate D                        CONTRACT CLOSED              ║
-║ Adapter implementation        NOT STARTED                  ║
-║ Binding Carrier               PENDING (仅 BIND-3 契约)      ║
-║ BIND-1 Identity Join          PASS — ACCEPTED / FROZEN      ║
-║ BIND-2 Native Carrier         PASS — ACCEPTED / FROZEN      ║
-║ BIND-3 External Carrier       方向 ACCEPTED / 契约 UNPROVEN ║
-║ Errata 67                     NOT RELEASED (CHANGE-5)      ║
-║ E1 (Grammar → 20 §8.4)        PENDING — CHANGE-2           ║
-║ E2 (Adapter 边界 → 20 §3)      DEFERRED                     ║
-║ V3 Annotation Contract        NOT FROZEN                   ║
-║ Manifest Contract             NOT FROZEN                   ║
-║ Document Governance (I-5-G)   ← CURRENT WORK               ║
+║ Scope Freeze (I-5-0)         CLOSED                        ║
+║ I-5-1 Feasibility            HISTORICAL / NON-REPRODUCIBLE ║
+║ Gate A                       PASS / TEST-EVIDENCED         ║
+║ Gate B                       NOT CLOSED                    ║
+║ Gate C                       CLOSED — Phase 1              ║
+║ Gate D                       CONTRACT CLOSED               ║
+║ Adapter implementation       NOT STARTED                   ║
+║ Binding Carrier              PENDING — C-01 OPEN / PAUSED  ║
+║ BIND-1 Identity Join         PASS — ACCEPTED / FROZEN      ║
+║ BIND-2 Native Carrier        PASS — ACCEPTED / FROZEN      ║
+║ BIND-3 External Carrier      方向 ACCEPTED / 契约 UNPROVEN ║
+║                              （PAUSED — 待上游生产事实）   ║
+║ Errata 67                    NOT RELEASED (CHANGE-5)       ║
+║ E1 (Grammar → 20 §8.4)       PENDING — CHANGE-2            ║
+║ E2 (Adapter 边界 → 20 §3)    DEFERRED                      ║
+║ V3 Annotation Contract       NOT FROZEN                    ║
+║ Manifest Contract            NOT FROZEN                    ║
+║ Document Governance (I-5-G)  收口（8/10 全绿，2 项部分）   ║
+║ 下一步                       preprocessing 独立收口        ║
+║                              （不进 I-5-BIND — 见 §10）    ║
 ╚════════════════════════════════════════════════════════════╝
 
 **I-5-G 完成条件（10 项，全部满足才进入 I-5-BIND）**：
 
 1. Authority Matrix 建立 ✅（§1）
 2. Gate State Authority 建立 ✅（§3）
-3. Supersession 关系清理 — **进行中**（C1/C2/C3 已处理；G3 的 71 号双份待裁决）
-4. 所有 ACTIVE 文档 authority/status 明确 — **进行中**（§9 规范已立，存量待回填）
-5. 所有 normative-looking phase/report 文档完成分类 — **进行中**（83 号审计）
-6. Gate 状态不存在冲突 — **进行中**（以 §3 对账中）
+3. Supersession 关系清理 ✅ — C1/C2/C3 已处理；D-01（71 号双份）CLOSED；
+   A-01/A-02/A-05 的废止记录与 supersession banner 均已就位（2026-09-13 DG-5）
+4. 所有 ACTIVE 文档 authority/status 明确 ✅ — **UNASSIGNED = 0**；
+   D-02 归层（4×Closure → L2）+ D-03 去自封（63/65/68）已完成。
+   （`90 §4` Status Header **存量不强制回填**，增量补齐）
+5. 所有 normative-looking phase/report 文档完成分类 — **部分完成**：分层归属已全部
+   明确（同第 4 项）；`74` 的 6 处自立规范已改引用式（D-04）。**残留**：census 的
+   P1 overreach 候选（10 份 L4）——按 `91 §6.1` 扫描器是**候选生成器不是裁决器**，
+   待逐条人工裁决，非已确认违规
+6. Gate 状态不存在冲突 ✅ — A-04（B2-B2 scope）与 A-05（69 三个 stale 块）已处理；
+   全部 Gate 状态经 §3 唯一权威收口（2026-09-13 DG-5）
 7. Frozen Spec 不被后续报告隐式修改 ✅（§1.4 规则 1）
-8. CHANGE-0…5 覆盖所有现有 Contract Change 候选 — **进行中**
+8. CHANGE-0…5 覆盖所有现有 Contract Change 候选 — **进行中**（E1=CHANGE-2 已归类；
+   67=CHANGE-4/5 REJECT；其余候选待 Authority 层清理完成后走 Change Record）
 9. `67 / 69 / 74 / 80 / 81 / 82` 关系可解释 ✅（§1.2 + §4）
-10. 全仓不存在未分类的 normative contradiction — **进行中**（83 号）
+10. 全仓不存在**未分类的** normative contradiction ✅ — 84 台账 A 类 0 OPEN ·
+    D 类 0 OPEN；剩余 3 项**均已分类**：C-01 = OPEN/**PAUSED**（§5.3.1）、
+    B-03 = 检测器局限（非缺陷）、B-04 = 故意 PENDING（非缺陷）
+
+> ⚠️ **I-5-G 全绿 ≠ 可以进入 I-5-BIND。** 2026-09-13 Owner 五次裁决改变了顺序：
+> I-5-G 收口后**不进入 I-5-BIND**，而是 **C-01 PAUSED → preprocessing 独立收口 →
+> 以生产级真实输出重开 C-01/BIND-3**，之后才谈 I-5-BIND。见 §5.3.1 与 `84 §4`。
+> **治理完成不是架构开工的授权。**
 
 ---
 

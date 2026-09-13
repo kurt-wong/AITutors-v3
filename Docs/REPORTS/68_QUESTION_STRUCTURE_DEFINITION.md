@@ -1,6 +1,14 @@
 # Question 结构定义与 Composite 判定规则
 
-Status: Adjudicated — 经 Step B/B5/C 对抗性审查裁决（见 69 号裁决记录）
+Authority Level: L4 — Experiment Report（D-03 归层 2026-09-13）
+Normative: NO
+Gate State Authority: NO（唯一权威 = 82 §3）
+Status: **69 号定性 = Proposal**（`69 §2`：`68 Question | Domain Definition |
+        待验证 | Proposal`；`69 §68`：核心语义模型与 Frozen IR 一致，三个待裁决点
+        见 Step C）。**本文件是 Domain Definition Proposal，不是 Domain Contract，
+        也不是 L0 权威。** 下方「Adjudicated」指经 69 完成**兼容性审查**，不等于
+        本文件已获得规范地位。（2026-09-13 84 D-03：Disposition = **KEEP → L4**。）
+Status（原文）: Adjudicated — 经 Step B/B5/C 对抗性审查裁决（见 69 号裁决记录）
 Date: 2026-09-10
 Predecessors: 65_PHASE_I5_SCOPE_FREEZE.md, 66_PHASE_I5_1_BOUNDARY_ANALYSIS.md, 67_ANNOTATION_RESOLVER_BOUNDARY_ADJUSTMENT.md
 Context: Step 0.5 盲测后，从 Question-first 第一性原理重新定义结构模型

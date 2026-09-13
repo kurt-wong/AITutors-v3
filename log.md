@@ -2374,3 +2374,80 @@ Owner 复核九项证据后**确认 BIND-2 = PASS / ACCEPTED / FROZEN**，依据
 - 落笔：82 §5.2 升 PASS + 新增 §5.2.1 收敛结论；84 C-01 状态行与四次裁决表同步；
   restart-prompt → v1.57。
 - **授权 commit + push**（六项窄检查通过后直接提交，不再等待二次审批）。
+
+---
+
+## 2026-09-13 — C-01 OPEN/PAUSED + DG-5 收口（Owner 五次裁决）
+
+### 一、C-01 改判 OPEN / PAUSED
+
+权威落点 `82 §5.3.1`（新增）+ `84 §五次裁决`（新增表）+ `restart-prompt §0.0b`。
+
+**含义必须读准**：**不是发现了新的架构错误，而是缺乏必要的上游事实，因此暂缓
+架构裁决。** BIND-3 契约验证暂停的原因是 preprocessing **尚未形成可测量、可复现的
+生产级输出**——`82 §5.3.1` 列了 12 项待生产验证的事实（Source fidelity /
+text quality / line structure 稳定性 / LLM reslice 稳定性 / 8 类 role 实际覆盖率 /
+composite 表达能力 / figure·material 关联质量 / answer region 是否覆盖评分依据 /
+explanation region 是否覆盖解析 / 题号与 source line 长期稳定对应 / 大规模 corpus
+失败类型与比例 / manifest 完整性·可追溯性·fail-closed 行为）。**trial ≠ 生产级事实。**
+
+**明确否定的误读**：「BIND-3 UNPROVEN → 立即设计 Manifest Schema → C-01 CLOSED →
+Adapter」**只是架构假设链，不是已由事实证明的工程路线。** 在不知道上游能稳定提供
+什么之前冻结 Manifest Schema = **从 V3 内部模型反向规定上游**。
+
+**BIND-1 / BIND-2 不因 PAUSE 改变**——V3 内部证据，不依赖 preprocessing。未重开。
+
+**当前全部 Candidate，不冻结**：Manifest Schema · BIND-3 完整契约 · Path B 最终接口 ·
+Adapter 输入/输出 · Adapter 是否 bypass Resolver · preprocessing evidence 可否直入
+ResolvedRun · material/figure Carrier · 两条路径最终 convergence point。
+
+### 二、DG-5 逐项结果（九项，非笼统 completed）
+
+| ID | 结果 | 实际改动 |
+|---|---|---|
+| **A-04** | **RESOLVED** | `80 §4` Gate B2-B2 状态行写入 closed scope 定义（= 已测 1178 个 MC target；Unknown 125 在 scope 外，属显式延期项，不计入分母）；下方歧义注释改为「已补入」；`82 §4-C4` 处置 → RESOLVED；`82 §3.1` B2-B2 行同步 |
+| **A-05** | **RESOLVED** | `69` 三个 2026-09-11 带日期 Gate 状态块（`627`/`645`/`756`）各加 supersession banner → `82 §3`。**正文一字未改**（Reconcile, don't rewrite） |
+| **A-06** | **RESOLVED** | `61:4` `Status: IN PROGRESS` → `HISTORICAL` + 指向 `PHASE_I3_CLOSURE.md` + 声明本文件非当前状态权威 |
+| **A-08** | **RESOLVED** | `Status.md` 「### 1. 输入来源契约（实现层冻结）」节首加 retraction banner：「必须是 Resolver 产出」为**过窄表述**，已由 `81 §6.2` 改写为不变量形式（生产者可为 Resolver **或** Adapter）。正文保留为历史 |
+| **A-09** | **RESOLVED** | `Status.md:3` 顶层 `Status:` → **指针** `82 §3`，不再自述（原文「实现未开始」已 stale） |
+| **D-02** | **CLOSED** | **Disposition = KEEP，零删除零归档。** 4×Closure → **L2**（formal phase closure = Decision Record，`90 §2 R2`：不定义新架构事实），各加 `Authority Level` 头块；`PHASE_I3_CLOSURE` 另加澄清「`Gate: PASS` 指阶段出口，非项目级 Gate」。`gate_b2a_three_task_report` → **L4**（`Docs/REPORTS` 默认规则，本已 active）。机器源 `i5g_emit_audit.py` CLOSURE 分支 `L2-proposed`/`pending` → `L2`/`active` |
+| **D-03** | **CLOSED** | **三份全 KEEP → L4，零提升零删除。** ① `63`：3 处 `Status: Frozen Constraint`（`3`/`223`/`364`）全改——文首加 `Authority Level: L4 / Normative: NO` + 「升 L0 必须走 L1（`90 §2 R1`），不能靠改标签」；`§10`/`§10.9` 两处 → `L4 Experiment Constraint（非 L0 权威）`。② `65`：**不采纳原「建议归 L2」**——`69 §2` 已定性 **Evidence**、`69 §65` 写明 `Experiment / Evidence Record`，升 L2 会与 69 矛盾且重复 `63 §10.9/§10.10` + `81 §5.6` 已承载的约束（造成第二来源）；加 HISTORICAL + 定性注。③ `68`：加 `69` 定性注 = **Proposal**，非 Domain Contract、非 L0 权威 |
+| **D-04** | **CLOSED** | `74` 六处自立规范全部改写为「report finding + 权威指针」，测量正文零改动：`224`/`226` → `81 §5.4` + `82 §5.0`；`283` → `75 §九`（`role_region_consistency`）+ `20 §5.5`；`385`/`395-396` → `75 §三 R5` + `75 §4.5` + `75 §二·禁止转换`；`418` → `75 §4.4` + `75 §三 R4` |
+| **D-05** | **CLOSED** | **控制已就位，无需改文档。** `90 §4`（Status Header 强制）+ `82 §3.3`（状态声明模板）均已冻结，且两者都写明「存量文档不强制回填」。存量不回填；`69` 中实际已 stale 的三个块由 A-05 处理 |
+
+### 三、机器源与计数修正
+
+`backend/scripts/i5g_emit_audit.py`：
+
+1. CLOSURE 分支 `L2-proposed`/`pending` → `L2`/`active`（D-02 裁决落地）。
+2. `CANDIDATES` 中 A-04/05/06/08/09 → `RESOLVED`；C-01 → `OPEN_PAUSED`；D-01 → `CLOSED`；
+   D-02～D-05 → `CLOSED`，各 summary 写入裁决依据。
+3. **修正一处会误导的计数**：OPEN 计数原为 `c["status"] == "OPEN"`。C-01 改
+   `OPEN_PAUSED` 后会打印 **「OPEN candidates: 0」**，把「已暂停但仍 OPEN」误读成
+   「无未决项」。现改为 `in ("OPEN", "OPEN_PAUSED")` → 打印 `1 (P0 1)`。
+
+### 四、机器产物核对
+
+```text
+layers            L0=7 · L0-META=2 · L2=14（原 10，+4 Closure）· L3=2 · L4=15 · L5=4
+L2-proposed       0（已消亡）
+UNASSIGNED        0（scan_report 明确写 "(none)"；grep 命中 1 处为 YAML 图例行）
+OPEN candidates   1（P0 1）= C-01 OPEN_PAUSED
+birth_certificate 11/44（原 3/44；本轮加头块的副产物，非 DG-2 主线推进）
+```
+
+### 五、本轮未做（边界自检）
+
+未改 L0 00–50 · 未改 L0 文件名 · 未改 90/91 治理原则 ·
+**未改写 82 的 BIND-1/2 裁决**（仅加 PAUSED 状态标注与 §5.3.1 新节）·
+未冻结 Manifest Schema · 未实现 Adapter · 未改 preprocessing ·
+未因 C-01 新建治理文档 · 未顺手做架构设计。
+
+### 六、下一步
+
+**preprocessing 独立收口**（AITutors-preprocessing 自身），建立它自己的 production
+evidence：真实 corpus → OCR → Source Markdown → deterministic repair → LLM reslice
+→ Annotation/Manifest → deterministic validation → QC → render QC → human signoff。
+需要知道的不是「设计上应该输出什么」，而是**它实际上稳定输出了什么**。
+
+**不是继续整理文档。不是设计 Manifest Schema。不是实现 Adapter。**

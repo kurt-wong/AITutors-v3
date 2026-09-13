@@ -1,5 +1,10 @@
 # Phase I-2 Revision Closure
 
+Authority Level: L2 — Decision Record（formal phase closure；D-02 归层 2026-09-13）
+Document Type: Decision Record
+Normative: NO（记录阶段裁决，不定义新架构事实 — 90 §2 R2）
+Gate State Authority: NO（唯一权威 = 82 §3）
+
 Date: 2026-09-09
 Status: CLOSED WITH NOTES
 Tag: v3-phase-i2-closed
