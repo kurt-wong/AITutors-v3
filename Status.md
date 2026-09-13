@@ -1883,3 +1883,77 @@ GateService integration: per-run isolation + reference_ids linking
 全量测试: 640 passed
 下一步: C-2 157 E2E → Gate C Closure
 ```
+
+## 状态快照：架构审查裁决 — HIGH 修复通过，C-2 授权（2026-09-13）
+
+### 裁决结果
+
+**HIGH-1 / HIGH-2 修复通过。C-2 157 E2E 可以开始。**
+
+### 关键修正
+
+原报告声称"Evidence Authority Ledger 不可伪造、不可篡改、不可回滚"——**表述过度**。
+
+准确表述：
+
+> **Phase 1 Evidence Authority Ledger 已完成内存级不可绕过约束，满足进入 C-2
+> 157 E2E 的最低安全条件；但距离完整生产级不可伪造审计系统仍存在 Phase 2
+> 边界问题。**
+
+`__slots__` 是 application-level immutability，不是 cryptographic immutability。
+真正 immutable 需要 DB append-only table + permission control + audit hash chain（Phase 2）。
+
+### 五项 Gate C 前置要求状态
+
+| # | 要求 | 状态 |
+|---|------|------|
+| 1 | EventLog immutable | ✅ 基本完成（Phase 1 runtime model 下 externally non-mutable） |
+| 2 | append transition validation | ✅ 完成（最重要项） |
+| 3 | Event ↔ Reference 链接 | ✅ 完成（claim_id → EvidenceClaim → reference_ids → SourceFragment） |
+| 4 | structured check_id | ✅ 完成 |
+| 5 | proposer / claim creator 分离 | ⚠️ 延后 Phase 2（合理——OCR/LLM/Human adapter 进入后必须打开） |
+
+### C-2 157 E2E 新增审查维度
+
+不仅验证 Source → Resolver → Compiler → Gate → Admission，还需验证
+**Evidence Authority Lifecycle**：
+
+| 问题 | 必须结果 |
+|------|---------|
+| SourceFragment 来自哪里 | 有 hash/version |
+| Proposal 谁提出 | 有 producer |
+| Claim 谁提升 | 有 creator |
+| ValidationEvent 为什么通过 | 有 check_id |
+| ValidatedEvidence 对应哪些 span | 可追溯 |
+| **IR 是否只消费 validated** | **无 bypass** |
+
+**Semantic IR bypass test**（新增攻击向量）：
+
+```
+构造 EvidenceClaim → 不产生 ValidationEvent → 尝试 Compiler → 必须 rejected
+```
+
+核心原则：Only Validated Evidence may enter Semantic IR。
+
+### C-2 重点观察（3 项）
+
+1. 是否存在任何未经 ValidationEvent 的 Semantic IR 输入
+2. 是否存在 resolution_status=exact 导致 evidence promotion 的隐式路径
+3. 是否所有 rejection 都能追溯到结构化 check_id
+
+### 约束
+
+- **Evidence Contract 冻结**，C-2 不扩展
+- C-2 目标单一：验证真实 157 invalid binding cases 全过程 fail-closed
+
+### V3 状态重新评估
+
+| 模块 | 状态 |
+|------|------|
+| B2-B5-D 实验 | ✅ Complete |
+| Legal address ≠ legal evidence | ✅ Frozen principle |
+| Structural consistency | ✅ Complete |
+| Evidence Promotion Contract | ✅ Design accepted |
+| Evidence Authority Ledger Phase 1 | ✅ Ready |
+| C-2 157 E2E | ▶️ 可以开始 |
+| Gate C Closure | ⏳ 尚未 |

@@ -1,26 +1,24 @@
 # AI Tutor V3 — RESTART PROMPT
 
-Version: v1.39
-Status: **Evidence Promotion Phase 1 Hardened + HIGH Fix** —
-AppendOnlyEventLog (__slots__ + name mangling + state machine in append())；
-全量 640 passed；Gate B2-A 仍 pending 三项补强
+Version: v1.40
+Status: **架构审查裁决通过 — C-2 157 E2E 授权** —
+HIGH-1/HIGH-2 修复通过；Evidence Authority Ledger Phase 1 Ready；
+C-2 新增 Evidence Authority Lifecycle 审查维度 + Semantic IR bypass test
 Date: 2026-09-13
 
-## 0.0 当前结论（2026-09-13 Phase 1 Hardening 关闭）
+## 0.0 当前结论（2026-09-13 架构审查裁决）
 
-- **Evidence Promotion Contract Phase 1 Hardened**：
-  - AppendOnlyEventLog: `__slots__` + name mangling (`__events`) + state machine in `append()`
-  - GateService: per-run isolation + reference_ids linking + ProposerIdentity=llm
-  - CheckResult 结构化检查替代叙述性字符串
-  - validation_method 从 gate layers 推导
-- **HIGH 严重性缺陷（第二轮）已修复**：
-  - HIGH-1: `log._events = ()` → AttributeError（__slots__ + name mangling）
-  - HIGH-2: 直接 `log.append()` → ValueError（状态机在 ledger 层）
-- **全量测试：640 passed**
-- **下一步**：C-2 157 E2E → Gate C Closure
-- Gate B2-A 仍 pending 三项补强（审计 15 个 Legacy-only case + 独立抽样 + 排除 explanation）
-
-## 0.1 上一轮结论（2026-09-11 Gate A 关闭）
+- **HIGH-1 / HIGH-2 修复通过**。Evidence Authority Ledger Phase 1 完成内存级不可绕过约束。
+- **关键修正**："不可伪造/不可篡改/不可回滚"表述过度 → 准确表述为"Phase 1 内存级不可绕过约束，
+  满足进入 C-2 最低安全条件"。`__slots__` = application-level immutability，非 cryptographic。
+- **C-2 157 E2E 授权开始**。Evidence Contract 冻结，C-2 不扩展。
+- **C-2 新增审查维度**：Evidence Authority Lifecycle（SourceFragment hash/version →
+  Proposal producer → Claim creator → ValidationEvent check_id → ValidatedEvidence 可追溯 →
+  IR 只消费 validated）。Semantic IR bypass test：构造 Claim → 无 ValidationEvent →
+  尝试 Compiler → 必须 rejected。
+- **C-2 重点观察**：① 未经 ValidationEvent 的 Semantic IR 输入 ② resolution_status=exact
+  隐式 promotion ③ rejection 追溯到结构化 check_id。
+- **Gate B2-A 仍 pending 三项补强**。
 
 - **A–G / H Phase 1–8 / Phase 9 / Errata 维持 FINAL CLOSED**。
 - **Phase I-3 CLOSED**：Source Evidence Preservation Layer。
