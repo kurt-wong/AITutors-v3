@@ -285,34 +285,43 @@ ValidatedEvidence → QuestionType Contract → AnswerForm Validation
    到 pending_review，不会错准入。
 3. Q-B（Evidence Claim 显式 `answer_form`）留 Phase 2，本轮未做。
 
-### 6.6 输入来源契约（实现层冻结，2026-09-13）
+### 6.6 输入来源契约（实现层冻结，2026-09-13；Gate D §6.2 修订）
 
 `Grammar.verify()` 的 `answer_text` 参数有**来源约束**，此前未显式声明，本轮补上：
 
-> **AnswerTokenContract operates on the Resolver-produced normalized answer span.**
+> **AnswerTokenContract consumes the text slice of a `ResolvedSpan` in a**
+> **`ResolvedRun` with `role=answer`. That span MUST have `granularity` as a**
+> **character slice, `resolution_status ∈ {exact, normalized}`, and a**
+> **`text_hash` matching the SealedSource text.**
 > **It MUST NOT consume raw source / OCR text.**
-> **Question-number prefixes are Resolver boundary artifacts and SHALL NOT**
+> **Question-number prefixes are upstream boundary artifacts and SHALL NOT**
 > **participate in answer-token validation.**
 
 中文：
 
-> AnswerTokenContract 的输入**必须**是 Resolver 输出的标准化 answer span
-> （E 的 char-span 切片，`resolver.py::_answer_span` → `sp-{unit_id}.answer`，
-> 20 §5.5），**不得**消费裸 source / OCR 文本。题号前缀属于 Resolver 边界产物，
-> **不参与**答案 token 合法性判断。
+> AnswerTokenContract 的输入**必须**是某个 `ResolvedRun` 中 `role=answer` 的
+> `ResolvedSpan` 所承载的文本切片，且该 span 满足：`granularity` 为字符切片、
+> `resolution_status ∈ {exact, normalized}`、`text_hash` 与 SealedSource 原文
+> 一致。**不得**消费裸 source / OCR 文本。题号前缀属上游边界产物，**不参与**
+> 答案 token 合法性判断。
 
 **为什么需要这条**：`verify()` 的签名只有 `answer_text: str`，类型上无法区分
-「E 的 char-span 切片」与「裸 OCR 原文」。契约此前只靠唯一生产调用方
+「ResolvedSpan 的 char-span 切片」与「裸 OCR 原文」。契约此前只靠唯一生产调用方
 （`policy.py::_leaf_grammar` 传 `leaf.answer.text`）自觉遵守，没有声明。
+
+**Gate D 修订（2026-09-13，81 号 §3 发现 2 / §6）**：初版措辞写的是「必须
+Resolver 产出」。该措辞有两处错误——(1) `ResolvedSpan` 无生产者字段
+（`resolver/span.py:61-75`），「Resolver 产出」在数据上**不可验证**；
+(2) Adapter 路径按设计绕过 Resolver，照字面执行会**非法排除整条 Manifest Path**。
+根因是写了**机制**而非**不变量**。已改写为上表的不变量形式，生产者不作限定。
 
 **为什么 20 §8.4 不需要 Errata**：冻结文本 20 §8.4 规定了「允许 token 集与
 规范化」，但对 `answer_text` 的**来源完全沉默**——既未授权裸文本，也未要求
-Resolver 切片。它是**未规定**，不是**规定错误**，故不属于 Contract Change，
-不触发 `69 号` 的正式 Errata 四道门（该流程当前亦 `BLOCKED BY Gate D`）。
+ResolvedSpan 切片。它是**未规定**，不是**规定错误**，故不属于 Contract Change，
+不触发 `69 号` 的正式 Errata 四道门。Gate D 已过，Errata 现已 UNBLOCKED——
+若日后需写入 20 §8.4 正文，可启动该流程，已挂入 §4 显式延期项。
 
-**记录层级**：本约束冻结于**实现层**（`grammar.py` 模块 docstring + `verify()`
-docstring + 本文档）。若日后需写入 20 §8.4 正文，必须走正式 Errata 流程，已挂入
-§4 显式延期项。
+**权威文档**：本节的完整版见 `81_GATE_D_ADAPTER_BOUNDARY.md` §6。
 
 **顺带澄清（防过度承诺）**：grammar 只保证 **representation validity**（该答案
 表示形式对该 canonical type 合法），**不保证 semantic correctness**（该答案语义上
@@ -320,7 +329,7 @@ docstring + 本文档）。若日后需写入 20 §8.4 正文，必须走正式 
 
 | 层 | 能保证 |
 |---|---|
-| Resolver | 找到哪里 |
+| Resolver / Adapter | 找到哪里 |
 | Evidence Authority | 证明来源 |
 | Grammar | 表示形式合法 |
 | Gate | 结构规则 |
@@ -428,8 +437,9 @@ Gate B2-B4-B      : CLOSED — PASS / DETERMINISTIC
 Gate B2-B4-C      : DEFERRED — Domain/Material dependency (H4/H5/H6)
 Gate B2-B5        : CLOSED — PASS / TEST-EVIDENCED / SCOPE-BOUNDED
 Gate C            : CLOSED (Phase 1 Evidence Authority Boundary Closure)
-Gate D            : OPEN（原 BLOCKED BY Grammar Contract —— 现已冻结，可开始）
-Errata            : BLOCKED BY Gate D
+Gate D            : CONTRACT CLOSED / IMPLEMENTATION NOT STARTED（81 号，2026-09-13）
+Adapter 实现       : NOT STARTED（阻塞于 81 §5.4 三项前置）
+Errata            : UNBLOCKED（Gate D 已过；Decision 项见 81 §9.1）
 ```
 
 **显式延期项（不视为失败，不视为已完成）**：
@@ -437,8 +447,10 @@ Errata            : BLOCKED BY Gate D
 - B2-B4-C（H4 colspan/rowspan / H5 mixed / H6 html+image）→ Domain/Material
 - B2-B2 Unknown 125 triage → 仍未清
 - Q-B Evidence Claim 显式 `answer_form` → Phase 2
-- **Grammar 输入来源契约写入 20 §8.4 正文** → 正式 Errata（当前冻结在实现层，§6.6；
-  20 §8.4 对该点沉默而非写错，故不阻塞 Gate D）
+- **Grammar 输入来源契约写入 20 §8.4 正文** → 正式 Errata（当前冻结在实现层，
+  §6.6 / 81 号 §6；20 §8.4 对该点沉默而非写错，Errata 现已 UNBLOCKED）
+- **Adapter 实现** → 阻塞于 81 号 §5.4 三项前置（V3 annotation schema 对外发布 /
+  manifest schema 冻结 / SealedSource 版本绑定）
 
 ---
 
@@ -461,5 +473,7 @@ Errata            : BLOCKED BY Gate D
 
 ---
 
-**下一步**: Gate D（Adapter Boundary，Grammar Contract 已冻结故不再阻塞）→
-OQ-3 → OQ-2 → B2-B2 Unknown 125 triage → Errata Decision。
+**下一步**: **Errata Decision**（不进入 Adapter 实现）→ V3 Annotation Contract
+冻结 → Manifest Contract 冻结 → OQ-3 → OQ-2 → B2-B2 Unknown 125 triage →
+Phase 2 Evidence Ledger → Path B Full Closure E2E → Adapter 实现（最后，
+阻塞于 81 §5.4 三项前置，依赖链不可倒序）。

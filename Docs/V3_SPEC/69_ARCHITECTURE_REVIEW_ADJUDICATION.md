@@ -1161,8 +1161,13 @@ Gate B2-B5: CLOSED — PASS / TEST-EVIDENCED / SCOPE-BOUNDED（80 号，2026-09-
   D E2E projection safety 13 tests PASS
   Residual: Evidence Admission Boundary → CLOSED（BUG-V3-044，80 号 §6）
 Gate C: CLOSED (Phase 1 Evidence Authority Boundary Closure)
-Gate D: OPEN（Grammar Contract 已冻结，阻塞解除）
-Errata: BLOCKED BY Gate D
+Gate D: CONTRACT CLOSED / IMPLEMENTATION NOT STARTED（81 号，2026-09-13）
+  五条禁令全部维持；Bypasses 修正为 Resolver only（原「Annotation, Resolver」
+  与 IRBuilder.build 签名冲突）；Adapter 职责白名单 / 禁令黑名单 /
+  V3 侧三项前置已冻结；核心不变量「只允许机械投影，不允许提高信息量」。
+  本轮不实现。契约方向：V3 先冻结消费契约，preprocessing 再实现（不可颠倒）。
+Adapter 实现: NOT STARTED（阻塞于 81 §5.4 三项前置）
+Errata: UNBLOCKED（Gate D 已过；Decision 项见 81 §9.1）
 ```
 
 ### 禁止事项（正式声明）
@@ -1173,16 +1178,22 @@ Frozen contract → validator → 发现真实 mismatch → 判断是 validator 
 已经完成：validator bug → 修复；source-view bug → 修复。
 剩余：manifest structural semantics / contract gap → 需要裁决。
 
-### 下一步（按序执行，2026-09-13 二次更新）
+### 下一步（按序执行，2026-09-13 四次更新）
 
 > Grammar 契约裁决已完成（BUG-V3-044 Resolved，80 号 §6）。
+> Gate D 契约已冻结（81 号）。**不进入 Adapter 实现。**
 
-1. **Gate D**：Adapter Boundary（preprocessing 作为可选上游，Contract Translator
-   而非 Semantic Resolver）。Grammar Contract 已冻结，阻塞解除。
-2. **OQ-3 → OQ-2**：物化层 / Standalone+Material 裁决。
-3. **B2-B2 Unknown 125 triage**（仍未清）+ B2-B3-C / B2-B4-C 延期项。
-4. **Phase 2 Evidence Ledger**（含 Q-B Evidence Claim 显式 `answer_form`）。
-5. **Errata Decision**（Gate D 通过后）。
+1. **Errata Decision**（Gate D 已过，阻塞解除）。
+2. **V3 Annotation Contract 冻结**（V3 拥有，preprocessing 实现；81 §5.4）。
+3. **Manifest Contract 冻结**。
+4. **OQ-3 → OQ-2**：物化层 / Standalone+Material 裁决。
+5. **B2-B2 Unknown 125 triage**（仍未清）+ B2-B3-C / B2-B4-C 延期项。
+6. **Phase 2 Evidence Ledger**（含 Q-B Evidence Claim 显式 `answer_form`）。
+7. **Path B Full Closure E2E**（含 Provenance Golden Test + Replay 验证）。
+8. **I-5-2 Adapter 实现**：**最后**，且阻塞于 81 §5.4 三项前置（V3 annotation
+   schema 对外发布、manifest schema 冻结、SealedSource 版本绑定机制）。
+   **依赖链不可倒序**——Annotation / Manifest Contract 冻结前写 Adapter 会
+   让 Adapter 反过来定义契约。
 
 ### 重要措辞
 

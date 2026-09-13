@@ -1573,3 +1573,167 @@ grammar 保证 representation validity，**不保证** semantic correctness。
 `test_gate_grammar.py` + `test_bug044_adversarial_review.py` +
 `test_role_provenance.py` + `test_b2b5_d_projection_safety.py` →
 **205 passed**（本轮仅改 docstring 与文档，无生产逻辑变更）。
+
+---
+
+## 2026-09-13 — Gate D CLOSED：Adapter Boundary 契约冻结
+
+**权威文档**：`backend/Docs/V3_SPEC/81_GATE_D_ADAPTER_BOUNDARY.md`
+**出口标准（用户裁决）**：**本轮只冻结契约，不要求实现**。
+**全量 pytest**：802 passed，零失败（本轮无生产逻辑变更）。
+
+### 开题勘查
+
+| 检查项 | 结果 |
+|---|---|
+| adapter / preprocessing 代码 | 不存在 |
+| manifest 解析代码 | 不存在 |
+| I-5-1 的 14 项实验证据 | **全仓无脚本、无测试、git 历史零提交** |
+| 冻结的 manifest schema | V3 Spec 中无（属外部项目） |
+
+**Gate D 不是代码审查，是契约裁决。**
+
+### 四项发现（均有代码证据）
+
+**发现 1（🔴）— `Bypasses: Annotation` 与 `IRBuilder.build` 签名冲突**
+
+`IRBuilder.build(resolved_run, annotation_payload, ...)` 必需 annotation_payload，
+其 `semantic_units[]` / `unit_id` / `unit_type` / `content{}` 驱动全部语义结构；
+且 ResolvedSpan 的 span_id 约定 `sp-{unit_id}.{role}` 由 annotation 反推——
+绕过 Annotation 则连 span_id 都构造不出来，IRBuilder 更找不到该 span。
+**66 §7「Bypasses: Annotation, Resolver」在当前实现下结构上不可能。**
+
+**发现 2（🔴）— Grammar 输入来源契约过窄（本轮早前自引入，已修正）**
+
+早前措辞「必须 Resolver 产出」两处错误：(1) `ResolvedSpan` 无生产者字段
+（`span.py:61-75`），在数据上不可验证；(2) 与 Adapter 路径冲突，照字面执行
+非法排除整条 Manifest Path。**根因：写了机制，不是不变量。**
+
+**发现 3（🟠）— I-5-1 实验证据不可复现**
+
+66 §9 报告 14 项测试（含 21/21 ready IR）。全仓搜索：`backend/scripts/` 无脚本、
+`backend/tests/` 无测试、`git log --all --diff-filter=A` 对 `*i5*`/`*adapter*`
+零提交。**降级为方向性参考，不作 PASS 依据。**
+
+**发现 4（🟠）— 66 §10 结论与 66 §7 禁令自相矛盾**
+
+66 §10 要求「Adapter needs own parser」切分 option，而 66 §7 明令禁止
+「any content parsing or structural inference」。为让 Adapter 工作而加 parser，
+恰好违反它自己的禁令。
+
+### 用户裁决
+
+| 问题 | 裁决 |
+|---|---|
+| annotation_payload 从哪来？ | **preprocessing 产出 V3 形制 annotation** |
+| Gate D 出口标准？ | **只冻结契约，不要求实现** |
+
+### 冻结内容
+
+- **Bypasses: Resolver only**（原「Annotation, Resolver」为表述错误，66 §7 就地更正）
+- **数据流**：SealedSource → preprocessing → (annotation_payload + manifest)
+  → Adapter → ResolvedRun → IRBuilder → Compiler → Gate → Admission
+- **Native Path 不受影响**：preprocessing 缺席时 Source → Annotation → Resolver →
+  IRBuilder 照常。两条路径同构于 ResolvedRun。
+- **Adapter 职责白名单（5 项）**：line_ref 展开 / text_hash 计算 / 范围校验 /
+  ResolvedSpan 构造 / 结构一致性检查
+- **禁令黑名单（6 条）**：69 号五条 + 内容解析/结构推断
+- **判定原则**：每个输出字段必须能指出来源；指不出 = 违规
+- **preprocessing 三项前置**：V3 annotation schema 冻结并对外发布 /
+  manifest schema 冻结（含 answer_text 与 per-option span）/
+  SealedSource 版本绑定机制
+
+### Grammar 输入契约修订（81 号 §6.2 不变量版）
+
+> `answer_text` 必须是某个 `ResolvedRun` 中 `role=answer` 的 `ResolvedSpan`
+> 文本切片，且 `granularity` 为字符切片、`resolution_status ∈ {exact, normalized}`、
+> `text_hash` 与 SealedSource 一致。**生产者可以是 Resolver 或 Adapter**，
+> 二者在 20 §5.5 下同构，本模块不区分。
+
+明确**不给 ResolvedSpan 加生产者字段**（YAGNI；若 Replay 需要再走 Errata）。
+
+### Gate D 显式不主张
+
+Adapter 未实现；I-5-1 结论不成立（证据不可复现）；manifest schema 未冻结；
+Adapter 路径在前置满足前覆盖率接近零；preprocessing 是可选上游，不可强制启用。
+
+### 状态
+
+```text
+Gate A/B/C/D 全系列 CLOSED
+Errata: UNBLOCKED（待议：Grammar 契约写入 20 §8.4；ResolvedSpan 生产者字段）
+```
+
+### 产出
+
+`81_GATE_D_ADAPTER_BOUNDARY.md`（新建，权威）+ `grammar.py` 三处 docstring 修订
++ `66 号 §7` 就地更正 + `69 号` Gate D 状态块 + `80 号 §6.6/Gate D 状态/下一步`
++ `restart-prompt` v1.46 → v1.47。
+
+---
+
+## 2026-09-13 — Gate D 状态语言统一 + 契约方向澄清（架构复审）
+
+**触发**：外部架构复审确认 Gate D 四项发现全部成立，并要求补一处状态修正
+（「不是生产代码，只检查文档状态是否统一」）。
+
+### 修正内容
+
+1. **状态措辞**：`Gate D CLOSED — CONTRACT FROZEN / NOT IMPLEMENTED` →
+   **`Gate D CONTRACT CLOSED / IMPLEMENTATION NOT STARTED`**。
+   原因：本项目其它 Gate 的 `CLOSED` 表示「要求已满足并有测试证据」，而 Gate D
+   的要求是**契约裁决**，不是实现验收。裸用 `CLOSED` 会产生语义歧义。
+   新增独立状态行 `Adapter: NOT STARTED`（阻塞于 81 §5.4 三项前置）。
+
+2. **契约方向不可颠倒（81 §5.4 重写）**：V3 首先冻结它**自己要消费**的
+   Annotation / Manifest 契约，preprocessing 再**实现**它。**不是** preprocessing
+   自行设计 annotation 再由 V3 Adapter 适配——后者会把 preprocessing 变成事实上的
+   schema 制定者，违反 74 号「preprocessing 必须满足 V3 Evidence Contract」。
+   原「preprocessing 三项前置」改称「V3 侧三项前置」。
+
+3. **核心不变量上提（81 §5.6）**：**Adapter 只允许机械投影，不允许提高信息量**
+   （输出信息量 ≤ 输入）。此前它只是六条禁令之一的隐含含义，现提升为**高于
+   任一单项禁令**的最高优先级不变量。六条禁令都是它的具体化。
+
+4. **「绕过 Resolver」的准确含义（81 §5.2 扩写）**：绕过的是 Legacy Resolver 的
+   **search / resolve 机制**（以验证替代搜索），**不是绕过 Source Binding 本身**。
+   这是 Doc 67 的核心架构变化。新增红线条目：**Adapter 可以改变「如何得到
+   ResolvedSpan」，不能改变「ResolvedSpan 之后系统如何理解题目」**——下游
+   IRBuilder / Compiler / Gate 对两条路径完全一致。
+
+5. **I-5-1 不重做**：明确记录「不建议倒退回去重建 14 项实验」。正确的依赖链是
+   Errata → Annotation Contract → Manifest Contract → Adapter，而非复刻旧实验。
+
+### 依赖链冻结（81 §9.1 / restart-prompt 下一步）
+
+```text
+Errata Decision
+      ↓
+V3 Annotation Contract 冻结（V3 拥有，preprocessing 实现）
+      ↓
+Manifest Contract 冻结
+      ↓
+Adapter → ResolvedRun 机械映射定义
+      ↓
+最小 Adapter + 对抗性测试 → 真实 corpus E2E → Path B Full Closure
+```
+
+**不得倒序**：Annotation / Manifest Contract 冻结前写 Adapter，会让 Adapter
+反过来定义契约，重蹈 V2「代码先行、契约后补」。
+
+### 状态
+
+```text
+Gate A/B/C 系列 : CLOSED
+Gate D         : CONTRACT CLOSED / IMPLEMENTATION NOT STARTED
+Adapter 实现    : NOT STARTED（阻塞于 81 §5.4 三项前置）
+Errata         : UNBLOCKED
+下一步          : Errata Decision（不进入 Adapter 实现）
+```
+
+### 产出
+
+`81 号` §0 状态块 / §5.2 / §5.4 / §5.6 / §9 / §9.1（新建）/ 下一步；
+`restart-prompt` v1.47 → v1.48；`69 号` 正式状态 + 下一步（四次更新）；
+`80 号` 状态块 + 下一步；`Status.md` 最新节（状态行 + 契约摘要 + 下一步表）。
+**无生产代码变更**，pytest 维持 802 passed。

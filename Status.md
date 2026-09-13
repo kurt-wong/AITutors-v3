@@ -2352,3 +2352,102 @@ grammar 保证 representation validity，**不保证** semantic correctness。
 | 4 | OQ-3 → OQ-2 | 物化层 / Standalone+Material |
 | 5 | B2-B2 Unknown 125 triage | 仍未清 |
 | 6 | Errata Decision | Gate D 通过后 |
+
+---
+
+## 2026-09-13 — Gate D CONTRACT CLOSED / IMPLEMENTATION NOT STARTED：Adapter Boundary 契约冻结
+
+**权威**：`backend/Docs/V3_SPEC/81_GATE_D_ADAPTER_BOUNDARY.md`
+**出口标准（用户裁决）**：只冻结契约，不要求实现。
+**回归**：全量 pytest **802 passed**，零失败（无生产逻辑变更）。
+**状态措辞**：Gate D 的要求是**契约裁决**，不是实现验收，故不用裸 `CLOSED`。
+
+### 开题事实
+
+adapter / preprocessing 代码**不存在**；manifest 解析**不存在**；
+I-5-1 声称的 14 项实验**全仓无脚本、无测试、git 历史零提交**；
+冻结的 manifest schema **V3 Spec 中无**。
+**Gate D 是契约裁决，不是代码审查。**
+
+### 四项发现
+
+| # | 发现 | 级别 | 处置 |
+|---|---|---|---|
+| 1 | `Bypasses: Annotation` 与 `IRBuilder.build` 签名冲突 | 🔴 | 修正为 `Bypasses: Resolver only` |
+| 2 | Grammar 输入来源契约过窄（本轮早前自引入） | 🔴 | 改写为不变量形式 |
+| 3 | I-5-1 实验证据不可复现 | 🟠 | 降级为方向性参考 |
+| 4 | 66 §10 要求 Adapter 加 parser，违反 66 §7 自身禁令 | 🟠 | 记录，gap 判给 preprocessing |
+
+**发现 1 证据**：`ir.py:87` 的 `build(resolved_run, annotation_payload, ...)`
+必需 annotation_payload，其 `semantic_units[]`/`unit_id`/`unit_type`/`content{}`
+驱动全部语义结构；span_id 约定 `sp-{unit_id}.{role}`（`ir.py:64-76`）由 annotation
+反推。绕过 Annotation 则连 span_id 都构造不出来。
+
+**发现 2 根因**：写了**机制**（谁产出），不是**不变量**（该 span 具备哪些性质）。
+`ResolvedSpan`（`span.py:61-75`）无生产者字段，「Resolver 产出」在数据上不可验证，
+且会非法排除整条 Adapter 路径。
+
+### 用户裁决
+
+- annotation_payload 从哪来 → **preprocessing 产出 V3 形制 annotation**
+- Gate D 出口标准 → **只冻结契约，不要求实现**
+
+### 冻结的 Adapter Contract 摘要
+
+```text
+SealedSource → preprocessing → (annotation_payload + manifest)
+             → Adapter → ResolvedRun → IRBuilder → Compiler → Gate → Admission
+Bypasses: Resolver only
+```
+
+- Native Path（preprocessing 缺席）不受影响，两条路径同构于 ResolvedRun
+- **核心不变量（高于任一单项禁令）**：**Adapter 只允许机械投影，不允许提高
+  信息量**。输出的信息量 ≤ 输入（manifest ∪ SealedSource 确定切片）。六条禁令
+  都是它的具体化。
+- **「绕过 Resolver」的准确含义**：绕过其 search/resolve **机制**（以验证替代
+  搜索），**不是**绕过 Source Binding。下游 IRBuilder / Compiler / Gate 两条
+  路径完全一致。
+- Adapter 职责白名单 5 项：line_ref 展开 / text_hash 计算 / 范围校验 /
+  ResolvedSpan 构造 / 结构一致性检查
+- 禁令黑名单 6 条：第二事实来源 / 第二 Resolver / 隐式 fuzzy matching /
+  自主 Source 内容生成 / 独立 semantic decision / 内容解析与结构推断
+- 判定原则：每个输出字段必须能指出来源；**指不出 = 违规**
+- **契约方向不可颠倒**：V3 首先冻结它**自己要消费**的 Annotation / Manifest
+  契约，preprocessing 再**实现**它。不是 preprocessing 自行设计 annotation
+  再由 V3 适配（74 号）。
+- V3 侧三项前置：V3 annotation schema 对外发布 / manifest schema 冻结
+  （含 answer_text 与 per-option span）/ SealedSource 版本绑定
+
+### Grammar 输入契约修订（81 §6.2）
+
+`answer_text` 必须是 `ResolvedRun` 中 `role=answer` 的 `ResolvedSpan` 文本切片，
+且 `granularity` 为字符切片、`resolution_status ∈ {exact, normalized}`、
+`text_hash` 与 SealedSource 一致。**生产者可以是 Resolver 或 Adapter**。
+明确不给 `ResolvedSpan` 加生产者字段（YAGNI）。
+
+### Gate 系列最终状态
+
+```text
+Gate A   : PASS / TEST-EVIDENCED
+Gate B1  : CONDITIONAL PASS
+Gate B2-A: CLOSED — PASS
+Gate B2-B1~B2-B5: CLOSED（B2-B3-C / B2-B4-C DEFERRED）
+Gate C   : CLOSED (Phase 1)
+BUG-V3-044: CLOSED（含对抗性审查）
+Gate D   : CONTRACT CLOSED / IMPLEMENTATION NOT STARTED
+Adapter  : NOT STARTED（阻塞于 81 §5.4 三项前置）
+Errata   : UNBLOCKED
+```
+
+### 下一步优先级
+
+| 顺序 | 项目 | 状态 |
+|------|------|------|
+| 1 | **Errata Decision** | Gate D 已过，阻塞解除；**不进入 Adapter 实现** |
+| 2 | V3 Annotation Contract 冻结 | V3 拥有，preprocessing 实现（81 §5.4） |
+| 3 | Manifest Contract 冻结 | — |
+| 4 | OQ-3 → OQ-2 | 物化层 / Standalone+Material |
+| 5 | B2-B2 Unknown 125 triage | 仍未清 |
+| 6 | Phase 2 Evidence Ledger | 等真实 pipeline 压力 |
+| 7 | Path B Full Closure E2E | — |
+| 8 | I-5-2 Adapter 实现 | **最后**；阻塞于 81 §5.4 三项前置，依赖链不可倒序 |

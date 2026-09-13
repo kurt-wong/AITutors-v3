@@ -1,24 +1,51 @@
 # AI Tutor V3 — RESTART PROMPT
 
-Version: v1.46
-Status: **Grammar 输入来源契约已冻结** —
-Gate C CLOSED + Gate B2-B 全系列 CLOSED + AnswerTokenContract 封闭
-Evidence Admission Boundary + 输入来源约束落到实现层；
-下一步：Gate D
+Version: v1.48
+Status: **Gate D CONTRACT CLOSED / IMPLEMENTATION NOT STARTED** —
+Gate A/B/C 系列 CLOSED；Gate D 契约已冻结、Adapter 未实现；
+Errata UNBLOCKED；
+下一步：**Errata Decision**（不进入 Adapter 实现）
 Date: 2026-09-13
 
-## 0.0 当前结论（2026-09-13 Grammar 输入来源契约冻结）
+## 0.0 当前结论（2026-09-13 Gate D CONTRACT CLOSED / IMPLEMENTATION NOT STARTED）
 
-- **Grammar 输入来源契约（实现层冻结，80 号 §6.6）**：
-  - `Grammar.verify()` 的 `answer_text` **必须**是 Resolver 产出的标准化 answer span
-    （`resolver.py::_answer_span` 的 char-span 切片，20 §5.5），**禁止**裸 source/OCR 文本。
-  - 题号前缀属 Resolver 边界产物，由 `_clean_answer()` 剥除，**不参与** token 判定。
-  - **不走正式 Errata**：20 §8.4 对该点是**沉默**而非**写错**，不属 Contract Change；
-    已挂入 80 §4 显式延期项，若日后写入 20 §8.4 正文须走四道门。
-  - **分层职责**：Grammar 保证 representation validity，**不保证** semantic correctness。
-- **测试规范固化（40 §5 新增）**：度量实验的输入必须是上游组件的**真实输出切片**，
-  禁止近似文本；度量脚本须指出它复刻哪一段 pipeline，并有测试锁死该语义。
-  （反例：本轮覆盖率测量曾用「行内剩余文本」代替 E 的 char-span。）
+- **Gate D: CONTRACT CLOSED / IMPLEMENTATION NOT STARTED**（权威：`81 号`）。
+  - 状态措辞：Gate D 的要求是**契约裁决**，不是实现验收，故不用裸 `CLOSED`。
+    `CONTRACT CLOSED` = 边界契约已冻结；`IMPLEMENTATION NOT STARTED` =
+    `backend/app` 中无 Adapter 代码，且开工被 81 §5.4 三项前置阻塞。
+  - 出口标准（用户裁决）：**本轮只冻结契约，不要求实现**。
+  - 69 号五条禁令**全部维持**，未放宽任何一条。
+  - **Bypasses 修正**：66 §7 原文「Bypasses: Annotation, Resolver」是**表述错误**。
+    `IRBuilder.build()` 必需 `annotation_payload`，其 `semantic_units[]` /
+    `unit_id` / `unit_type` / `content{}` 驱动全部语义结构，且 ResolvedSpan 的
+    span_id 约定（`sp-{unit_id}.{role}`）由 annotation 反推——绕过 Annotation
+    则连 span_id 都构造不出来。正确表述：**Bypasses: Resolver only**。
+    「绕过 Resolver」= 绕过其 search/resolve **机制**（以验证替代搜索），
+    **不是**绕过 Source Binding 本身。下游 IRBuilder / Compiler / Gate 两条路径
+    完全一致。
+  - **annotation 归属裁决**：preprocessing 产出 **V3 形制 annotation_payload**
+    + line_refs manifest；V3 Adapter 只做机械 line_ref 展开与 hash 校验，不碰语义。
+    **契约方向不可颠倒**：V3 首先冻结它**自己要消费**的 Annotation / Manifest
+    契约，preprocessing 再**实现**它。不是 preprocessing 自行设计 annotation
+    再由 V3 适配（74 号：preprocessing 必须满足 V3 Evidence Contract）。
+  - **核心不变量（高于任一单项禁令）**：**Adapter 只允许机械投影，不允许提高
+    信息量**。输出的信息量 ≤ 输入（manifest ∪ SealedSource 确定切片）。六条禁令
+    都是它的具体化。判定原则：**指不出来源的输出 = 违规**。
+  - Adapter 职责白名单（5 项）/ 禁令黑名单（6 条）/ V3 侧三项前置已冻结。
+  - **显式不主张**：Adapter 未实现；I-5-1 的 14 项实验**不可复现**（无脚本、无测试、
+    git 历史零提交），降级为方向性参考，**且不建议重做**；manifest schema 未冻结；
+    Adapter 路径在前置满足前覆盖率接近零。
+- **Grammar 输入来源契约已修订（81 号 §6.2 不变量版）**：
+  - 原措辞「必须 Resolver 产出」**两处错误**：(1) `ResolvedSpan` 无生产者字段，
+    「Resolver 产出」在数据上不可验证；(2) 与 Adapter 路径冲突，会非法排除整条
+    Manifest Path。根因是写了**机制**而非**不变量**。
+  - 正确不变量：`answer_text` 必须是 `ResolvedRun` 中 `role=answer` 的
+    `ResolvedSpan` 文本切片，且 `granularity` 为字符切片、
+    `resolution_status ∈ {exact, normalized}`、`text_hash` 与 SealedSource 一致。
+    **生产者可以是 Resolver 或 Adapter**，本模块不区分。
+  - 明确不给 `ResolvedSpan` 加生产者字段（YAGNI；若 Replay 需要再走 Errata）。
+- **Errata: UNBLOCKED**（Gate D 已过）。待议两项：Grammar 输入来源契约写入
+  20 §8.4 正文；`ResolvedSpan` 生产者字段。
 
 - **BUG-V3-044: Resolved + 对抗性审查通过**（80 号 §6 实现 / §7 审查）。
   - 裁决：Q-A 白名单为主；Evidence Contract **不扩大**；Evidence Promotion
@@ -92,14 +119,19 @@ Date: 2026-09-13
   Schema Source of Truth = 20_Document_Pipeline.md；Resolver 不猜；
   实验结果 ≠ 实施授权；提议修改 ≠ 违反 Frozen Spec。
 - **下一步（按序执行）**：
-  1. **Gate D**：Adapter Boundary（preprocessing 为可选上游，Contract Translator
-     而非 Semantic Resolver；Grammar Contract 已冻结**且含输入来源约束**
-     —— Adapter 不得绕过 Resolver 直送裸文本给 grammar，见 80 §6.6，阻塞解除）
-  2. **OQ-3 → OQ-2**：物化层 / Standalone+Material 裁决
-  3. **B2-B2 Unknown 125 triage** + B2-B3-C / B2-B4-C 延期项
-  4. **Phase 2 Evidence Ledger**：等真实 pipeline 压力出现后再启动
-  5. **Errata Decision**（Gate D 通过后；含「Grammar 输入来源契约是否写入 20 §8.4 正文」）
-  6. **Path B Full Closure E2E**（含 Provenance Golden Test + Replay 验证）
+  1. **Errata Decision**（Gate D 已过，阻塞解除）。**不进入 Adapter 实现。**
+     待议：Grammar 输入来源契约写入 20 §8.4 正文；`ResolvedSpan` 生产者字段；
+     及下方依赖链中的 Annotation / Manifest Contract 冻结范围。
+  2. **V3 Annotation Contract 冻结**（V3 拥有，preprocessing 实现；81 §5.4）。
+  3. **Manifest Contract 冻结**。
+  4. **OQ-3 → OQ-2**：物化层 / Standalone+Material 裁决
+  5. **B2-B2 Unknown 125 triage** + B2-B3-C / B2-B4-C 延期项
+  6. **Phase 2 Evidence Ledger**：等真实 pipeline 压力出现后再启动
+  7. **Path B Full Closure E2E**（含 Provenance Golden Test + Replay 验证）
+  8. **I-5-2 Adapter 实现**：**最后**，且阻塞于 81 §5.4 三项前置（V3 annotation
+     schema 对外发布 / manifest schema 冻结 / SealedSource 版本绑定机制）。
+     **依赖链不可倒序**：在 Annotation / Manifest Contract 冻结前写 Adapter，
+     会让 Adapter 反过来定义契约，重蹈 V2「代码先行、契约后补」。
 - 重启后第一任务：读本文件 → Status.md 尾 → log.md 尾 → bugs.md →
   按上述 Step 顺序执行。
 - **对账教训（2026-09-13）**：B2-B1～B2-B5 的实验结果曾只写进 69 号与 docs 71–74，

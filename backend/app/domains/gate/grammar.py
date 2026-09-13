@@ -17,12 +17,19 @@ single_choice / multiple_choice 的答案文本必须完全落在白名单形态
 【解答】等标记、多余标点）→ None。此契约封闭了「从任意正文抽取 ASCII 字母」
 导致的 Evidence Admission Boundary 缺口，详见 `80_B2B5_CLOSURE.md` §3。
 
-**输入来源契约（2026-09-13 冻结，实现层）**：`verify()` 的 `answer_text` **必须**是
-Resolver 产出的标准化 answer span——E 的 char-span 切片（`resolver.py::_answer_span`
-→ `sp-{unit_id}.answer`，20 §5.5），**禁止**传入裸 source / OCR 文本。题号前缀
-（`1. A` 中的 `1.`）是 Resolver 边界产物，由 `_clean_answer()` 剥除，**不参与**
-答案 token 合法性判断。当前唯一生产调用点 `policy.py::_leaf_grammar` 传入
-`leaf.answer.text`，符合本契约。详见 `80_B2B5_CLOSURE.md` §6.6。
+**输入来源契约（2026-09-13 冻结，Gate D §6.2 不变量版）**：`verify()` 的
+`answer_text` **必须**是某个 `ResolvedRun` 中 `role=answer` 的 `ResolvedSpan`
+所承载的文本切片，且该 span 满足：`granularity` 为字符切片、
+`resolution_status ∈ {exact, normalized}`、`text_hash` 与 SealedSource 原文一致
+（20 §8.1 Provenance 层已校验）。**禁止**传入裸 source / OCR 文本。
+题号前缀属上游边界产物，由 `_clean_answer()` 剥除，**不参与**答案 token
+合法性判断。
+
+**生产者不作限定**（Gate D 修正）：该 span 可由 Resolver（Native Path，见
+`resolver.py::_answer_span`）或 Adapter（Manifest Path）构造。二者在 20 §5.5 下
+同构，本模块不区分、也不需要区分——`ResolvedSpan` 无生产者字段，故写「必须
+Resolver 产出」既不可验证又会非法排除整条 Adapter 路径。详见
+`81_GATE_D_ADAPTER_BOUNDARY.md` §6。
 
 **本模块不主张语义正确性**：grammar 只保证「答案表示形式对该 canonical type
 合法」（representation validity），**不保证**「该答案在语义上是对的」（semantic
@@ -52,9 +59,12 @@ _TRAIL_NOISE_RE = re.compile(r"[。．,，、\s]+$")
 # 数据流：ValidatedEvidence → QuestionType Contract → AnswerForm Validation
 #          → Grammar.verify() → Admission
 #
-# 输入来源契约（冻结）：`answer_text` 必须是 Resolver 产出的 answer span
-#      （`resolver.py::_answer_span` 的 char-span 切片），**禁止**裸 source/OCR
-#      文本。题号前缀是 Resolver 边界产物（20 §5.5），不参与 token 判定。
+# 输入来源契约（Gate D §6.2 不变量版）：`answer_text` 必须是 ResolvedRun 中
+#      role=answer 的 ResolvedSpan 文本切片（granularity=char_span、
+#      resolution_status ∈ {exact, normalized}、text_hash 一致），
+#      **禁止**裸 source/OCR 文本。生产者可以是 Resolver 或 Adapter——
+#      二者在 20 §5.5 下同构，本模块不区分。题号前缀是上游边界产物，
+#      不参与 token 判定。
 #
 # 原则：**白名单，非黑名单**。剥除题号前缀后，剩余文本必须只由答案 token
 #      及其允许的分隔符/括号/前缀/后缀构成；出现任何其他字符（汉字说明、
@@ -161,10 +171,13 @@ def verify(
 ) -> bool | None:
     """Allowed-Answer Grammar 单 leaf 判定。
 
-    **输入来源契约（冻结）**：`answer_text` 必须是 Resolver 产出的标准化 answer
-    span（char-span 切片，`sp-{unit_id}.answer`），**不是**裸 source / OCR 文本。
-    题号前缀属 Resolver 边界产物，由 `_clean_answer()` 剥除，不参与 token 判定。
-    误传裸文本会绕过 Resolver 的边界与溯源约束——见 `80_B2B5_CLOSURE.md` §6.6。
+    **输入来源契约（Gate D §6.2 冻结不变量）**：`answer_text` 必须是某个
+    `ResolvedRun` 中 `role=answer` 的 `ResolvedSpan` 文本切片，且该 span 满足
+    `granularity` 为字符切片、`resolution_status ∈ {exact, normalized}`、
+    `text_hash` 与 SealedSource 一致。**不是**裸 source / OCR 文本。
+    生产者可以是 Resolver（Native Path）或 Adapter（Manifest Path），
+    本函数不区分。题号前缀属上游边界产物，由 `_clean_answer()` 剥除。
+    误传裸文本会绕过上游的边界与溯源约束——见 `81_GATE_D_ADAPTER_BOUNDARY.md` §6。
 
     - single_choice   → AnswerTokenContract 白名单恰好一个字母 ∈ resolved labels。
     - multiple_choice → AnswerTokenContract 白名单非空字母集 ⊆ resolved labels。

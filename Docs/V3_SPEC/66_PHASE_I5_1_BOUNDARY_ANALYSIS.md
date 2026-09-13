@@ -243,7 +243,15 @@ Passed directly to `IRBuilder.build(resolved_run, annotation_payload, source_ver
 Seal → Adapter → ResolvedRun → IRBuilder → Compiler → Gate → Admission
 ```
 
-Bypasses: Annotation, Resolver
+Bypasses: Resolver
+
+> **更正（2026-09-13，Gate D 发现 1，见 81 号 §3/§5.2）**：原文写
+> 「Bypasses: Annotation, Resolver」，**表述错误**。`IRBuilder.build()`
+> 必需 `annotation_payload`，其 `semantic_units[]` / `unit_id` / `unit_type` /
+> `content{}` 驱动全部语义结构，且 ResolvedSpan 的 span_id 约定
+> （`sp-{unit_id}.{role}`）由 annotation 反推——绕过 Annotation 则连 span_id
+> 都构造不出来。正确表述：**Bypasses: Resolver only**；Annotation 的语义工作
+> 由 preprocessing 承担，产出 V3 形制 annotation_payload。
 
 ### Adapter responsibilities:
 - line_ref expansion, hash computation, range validation, span construction
