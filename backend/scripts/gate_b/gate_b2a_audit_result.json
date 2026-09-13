@@ -1,0 +1,270 @@
+{
+  "task_a_legacy_only_audit": {
+    "total": 20,
+    "categories": {
+      "no_pattern_match": 17,
+      "number_no_dot": 3
+    },
+    "details": [
+      {
+        "case_id": "2018北京春季高中会考语文（教师版）(1)",
+        "unit_id": "Q16",
+        "first_line": "从下面两个题目中任选一题作文，不少于700字。",
+        "category": "no_pattern_match",
+        "reason": "No stem pattern matched: '从下面两个题目中任选一题作文，不少于700字。'",
+        "legacy_detail": "1 stem spans",
+        "path_b_detail": "'从下面两个题目中任选一题作文，不少于700字。' doesn't match stem"
+      },
+      {
+        "case_id": "2019北京大学博雅计划模拟政治（教师版）(1)",
+        "unit_id": "Q1",
+        "first_line": "亚历山大·格申克龙在《经济落后的历史透视》一书中，在总结德国、意大利等国经济追赶成功经验的基础上，提出：",
+        "category": "no_pattern_match",
+        "reason": "No stem pattern matched: '亚历山大·格申克龙在《经济落后的历史透视》一书中，在总结德国、意大利等国经济追赶成功经验的基础上，提'",
+        "legacy_detail": "1 stem spans",
+        "path_b_detail": "'亚历山大·格申克龙在《经济落后的历史透视》一书中，在总结德国、意大利等国经济追赶成功经验的基础上，提出：' doesn't match stem"
+      },
+      {
+        "case_id": "2019北京大学博雅计划模拟政治（教师版）(1)",
+        "unit_id": "Q2",
+        "first_line": "货币贮藏中的蓄水池，对于流通中的货币来说，既是排水渠，又是引水渠。",
+        "category": "no_pattern_match",
+        "reason": "No stem pattern matched: '货币贮藏中的蓄水池，对于流通中的货币来说，既是排水渠，又是引水渠。'",
+        "legacy_detail": "1 stem spans",
+        "path_b_detail": "'货币贮藏中的蓄水池，对于流通中的货币来说，既是排水渠，又是引水渠。' doesn't match stem"
+      },
+      {
+        "case_id": "2019北京大学博雅计划模拟政治（教师版）(1)",
+        "unit_id": "Q3",
+        "first_line": "芝诺问他的学生：“一支射出的箭是动的还是不动的？”",
+        "category": "no_pattern_match",
+        "reason": "No stem pattern matched: '芝诺问他的学生：“一支射出的箭是动的还是不动的？”'",
+        "legacy_detail": "1 stem spans",
+        "path_b_detail": "'芝诺问他的学生：“一支射出的箭是动的还是不动的？”' doesn't match stem"
+      },
+      {
+        "case_id": "2020北京平谷高一（上）期末历史含答案",
+        "unit_id": "Q25",
+        "first_line": "25：“在此以后，外国渗透的方式从外贸领域扩大到投资、生产、销售、金融各个领域……”“这种情形出现在( )",
+        "category": "number_no_dot",
+        "reason": "Number without standard dot: '25：“在此以后，外国渗透的方式从外贸领域扩大到投资、生产、销售、金融各个领域……”“这种情形出现在'",
+        "legacy_detail": "1 stem spans",
+        "path_b_detail": "'25：“在此以后，外国渗透的方式从外贸领域扩大到投资、生产、销售、金融各个领域……”“这种情形出现在( )' doesn't match stem"
+      },
+      {
+        "case_id": "2019北京三十五中新高一分班考试英语含答案(1)",
+        "unit_id": "Q7",
+        "first_line": "（二）听对话和对话后的问题，选择正确的答案。（每段对话读两遍）（每小题1分，共5分）",
+        "category": "no_pattern_match",
+        "reason": "No stem pattern matched: '（二）听对话和对话后的问题，选择正确的答案。（每段对话读两遍）（每小题1分，共5分）'",
+        "legacy_detail": "1 stem spans",
+        "path_b_detail": "'（二）听对话和对话后的问题，选择正确的答案。（每段对话读两遍）（每小题1分，共5分）' doesn't match stem"
+      },
+      {
+        "case_id": "pac-c02-01",
+        "unit_id": "Q25",
+        "first_line": "（6分）如图19所示，在长为l的细绳下端拴一个质量为m的小球，捏住绳子的上端，使小球在水平面内做圆周运动，细绳就沿圆锥面旋转，这样就成了一个圆锥摆。",
+        "category": "no_pattern_match",
+        "reason": "No stem pattern matched: '（6分）如图19所示，在长为l的细绳下端拴一个质量为m的小球，捏住绳子的上端，使小球在水平面内做圆周'",
+        "legacy_detail": "1 stem spans",
+        "path_b_detail": "'（6分）如图19所示，在长为l的细绳下端拴一个质量为m的小球，捏住绳子的上端，使小球在水平面内做圆周运动，细绳就沿圆锥面' doesn't match stem"
+      },
+      {
+        "case_id": "pac-c05-02",
+        "unit_id": "Q17",
+        "first_line": "某电商平台联合手机厂家共同推出“分期购”服务，付款方式分为四个档次：1期、2期、3期和4期。记随机变量  $ x_{1} $、 $ x_{2} $ 分别表示顾客",
+        "category": "no_pattern_match",
+        "reason": "No stem pattern matched: '某电商平台联合手机厂家共同推出“分期购”服务，付款方式分为四个档次：1期、2期、3期和4期。记随机变'",
+        "legacy_detail": "1 stem spans",
+        "path_b_detail": "'某电商平台联合手机厂家共同推出“分期购”服务，付款方式分为四个档次：1期、2期、3期和4期。记随机变量  $ x_{1}' doesn't match stem"
+      },
+      {
+        "case_id": "pac-c13-01",
+        "unit_id": "Q3",
+        "first_line": "《两小儿辩日》中有这样的描述，一儿曰：“日初出大如车盖，及日中则如盘盂，……”一儿曰：“日初出沧沧凉凉，及其日中如探汤，……”据此，回答第3题。",
+        "category": "no_pattern_match",
+        "reason": "No stem pattern matched: '《两小儿辩日》中有这样的描述，一儿曰：“日初出大如车盖，及日中则如盘盂，……”一儿曰：“日初出沧沧凉'",
+        "legacy_detail": "1 stem spans",
+        "path_b_detail": "'《两小儿辩日》中有这样的描述，一儿曰：“日初出大如车盖，及日中则如盘盂，……”一儿曰：“日初出沧沧凉凉，及其日中如探汤，' doesn't match stem"
+      },
+      {
+        "case_id": "pac-c13-01",
+        "unit_id": "Q4",
+        "first_line": "图1是“中国局部地区太阳年辐射总量分布图”。读图，回答第4题。",
+        "category": "no_pattern_match",
+        "reason": "No stem pattern matched: '图1是“中国局部地区太阳年辐射总量分布图”。读图，回答第4题。'",
+        "legacy_detail": "1 stem spans",
+        "path_b_detail": "'图1是“中国局部地区太阳年辐射总量分布图”。读图，回答第4题。' doesn't match stem"
+      },
+      {
+        "case_id": "pac-c13-01",
+        "unit_id": "Q7",
+        "first_line": "2018 年 2 月 19 日，印度尼西亚的锡纳朋火山发生喷发，火山灰冲天如蘑菇云，遮天蔽日。图 3 为 “近地面大气受热过程示意图”，读图，回答第 7 题。",
+        "category": "number_no_dot",
+        "reason": "Number without standard dot: '2018 年 2 月 19 日，印度尼西亚的锡纳朋火山发生喷发，火山灰冲天如蘑菇云，遮天蔽日。图 3'",
+        "legacy_detail": "1 stem spans",
+        "path_b_detail": "'2018 年 2 月 19 日，印度尼西亚的锡纳朋火山发生喷发，火山灰冲天如蘑菇云，遮天蔽日。图 3 为 “近地面大气受' doesn't match stem"
+      },
+      {
+        "case_id": "2019北京人大附中高一（上）期中地理含答案",
+        "unit_id": "Q3",
+        "first_line": "《两小儿辩日》中有这样的描述，一儿曰：“日初出大如车盖，及日中则如盘盂，……”一儿曰：“日初出沧沧凉凉，及其日中如探汤，……”据此，回答第3题。",
+        "category": "no_pattern_match",
+        "reason": "No stem pattern matched: '《两小儿辩日》中有这样的描述，一儿曰：“日初出大如车盖，及日中则如盘盂，……”一儿曰：“日初出沧沧凉'",
+        "legacy_detail": "1 stem spans",
+        "path_b_detail": "'《两小儿辩日》中有这样的描述，一儿曰：“日初出大如车盖，及日中则如盘盂，……”一儿曰：“日初出沧沧凉凉，及其日中如探汤，' doesn't match stem"
+      },
+      {
+        "case_id": "2019北京人大附中高一（上）期中地理含答案",
+        "unit_id": "Q4",
+        "first_line": "图1是“中国局部地区太阳年辐射总量分布图”。读图，回答第4题。",
+        "category": "no_pattern_match",
+        "reason": "No stem pattern matched: '图1是“中国局部地区太阳年辐射总量分布图”。读图，回答第4题。'",
+        "legacy_detail": "1 stem spans",
+        "path_b_detail": "'图1是“中国局部地区太阳年辐射总量分布图”。读图，回答第4题。' doesn't match stem"
+      },
+      {
+        "case_id": "2019北京人大附中高一（上）期中地理含答案",
+        "unit_id": "Q7",
+        "first_line": "2018 年 2 月 19 日，印度尼西亚的锡纳朋火山发生喷发，火山灰冲天如蘑菇云，遮天蔽日。图 3 为 “近地面大气受热过程示意图”，读图，回答第 7 题。",
+        "category": "number_no_dot",
+        "reason": "Number without standard dot: '2018 年 2 月 19 日，印度尼西亚的锡纳朋火山发生喷发，火山灰冲天如蘑菇云，遮天蔽日。图 3'",
+        "legacy_detail": "1 stem spans",
+        "path_b_detail": "'2018 年 2 月 19 日，印度尼西亚的锡纳朋火山发生喷发，火山灰冲天如蘑菇云，遮天蔽日。图 3 为 “近地面大气受' doesn't match stem"
+      },
+      {
+        "case_id": "2018北京师大附中高一（下）期中政治含答案(1)",
+        "unit_id": "Q22",
+        "first_line": "会向大会作了题为《决胜全面建成小康社会夺取新时代中国特色社会主义伟大胜利》的报告。据此完成22题。",
+        "category": "no_pattern_match",
+        "reason": "No stem pattern matched: '会向大会作了题为《决胜全面建成小康社会夺取新时代中国特色社会主义伟大胜利》的报告。据此完成22题。'",
+        "legacy_detail": "1 stem spans",
+        "path_b_detail": "'会向大会作了题为《决胜全面建成小康社会夺取新时代中国特色社会主义伟大胜利》的报告。据此完成22题。' doesn't match stem"
+      },
+      {
+        "case_id": "2018北京五十六中高二（下）期中数学（理）（教师版）(1)",
+        "unit_id": "Q15",
+        "first_line": "在数列$\\{a_n\\}$中，$a_1=1$，$a_{n+1}=\\frac{a_n}{3a_n+1}$，$n=1,2,3,\\cdots$",
+        "category": "no_pattern_match",
+        "reason": "No stem pattern matched: '在数列$\\{a_n\\}$中，$a_1=1$，$a_{n+1}=\\frac{a_n}{3a_n+1}$'",
+        "legacy_detail": "1 stem spans",
+        "path_b_detail": "'在数列$\\{a_n\\}$中，$a_1=1$，$a_{n+1}=\\frac{a_n}{3a_n+1}$，$n=1,2,3,' doesn't match stem"
+      },
+      {
+        "case_id": "2018北京五十六中高二（下）期中数学（理）（教师版）(1)",
+        "unit_id": "Q16",
+        "first_line": "已知函数  $ f(x)=ax^3+bx^2+cx $ 在点  $ x_0 $ 处取得极大值 5，其导函数  $ y=f'(x) $ 的图象经过点  $ (1,",
+        "category": "no_pattern_match",
+        "reason": "No stem pattern matched: '已知函数  $ f(x)=ax^3+bx^2+cx $ 在点  $ x_0 $ 处取得极大值 5，其'",
+        "legacy_detail": "1 stem spans",
+        "path_b_detail": "'已知函数  $ f(x)=ax^3+bx^2+cx $ 在点  $ x_0 $ 处取得极大值 5，其导函数  $ y=f' doesn't match stem"
+      },
+      {
+        "case_id": "2018北京五十六中高二（下）期中数学（理）（教师版）(1)",
+        "unit_id": "Q17",
+        "first_line": "已知函数  $ f(x) = -x^{3} - 3x^{2} + 9x + a $.",
+        "category": "no_pattern_match",
+        "reason": "No stem pattern matched: '已知函数  $ f(x) = -x^{3} - 3x^{2} + 9x + a $.'",
+        "legacy_detail": "1 stem spans",
+        "path_b_detail": "'已知函数  $ f(x) = -x^{3} - 3x^{2} + 9x + a $.' doesn't match stem"
+      },
+      {
+        "case_id": "2018北京五十六中高二（下）期中数学（理）（教师版）(1)",
+        "unit_id": "Q18",
+        "first_line": "已知函数  $ f(x)=x^{3}+3ax^{2}+3bx+c $ 在 x=2 处有极值，其图象在 x=1 处的切线与直线  $ 6x+2y+5=0 $ 平行",
+        "category": "no_pattern_match",
+        "reason": "No stem pattern matched: '已知函数  $ f(x)=x^{3}+3ax^{2}+3bx+c $ 在 x=2 处有极值，其图象在'",
+        "legacy_detail": "1 stem spans",
+        "path_b_detail": "'已知函数  $ f(x)=x^{3}+3ax^{2}+3bx+c $ 在 x=2 处有极值，其图象在 x=1 处的切线与' doesn't match stem"
+      },
+      {
+        "case_id": "2018北京五十六中高二（下）期中数学（理）（教师版）(1)",
+        "unit_id": "Q19",
+        "first_line": "函数  $ f(x)=\\frac{1}{3}x^{3}-kx $ ，其中实数 k 为常数.",
+        "category": "no_pattern_match",
+        "reason": "No stem pattern matched: '函数  $ f(x)=\\frac{1}{3}x^{3}-kx $ ，其中实数 k 为常数.'",
+        "legacy_detail": "1 stem spans",
+        "path_b_detail": "'函数  $ f(x)=\\frac{1}{3}x^{3}-kx $ ，其中实数 k 为常数.' doesn't match stem"
+      }
+    ]
+  },
+  "task_b_sampling": {
+    "population": 2268,
+    "sample_size": 150,
+    "seed": 42,
+    "pattern_distribution": {
+      "number_dot": 127,
+      "number_escaped_dot": 17,
+      "paren": 3,
+      "heading": 2,
+      "bracket": 1
+    },
+    "inspection_samples": [
+      {
+        "case_id": "2022北京首都师大附中高三9月月考物理（教师版）(1)",
+        "unit_id": "Q6",
+        "first_line": "6. 如图所示，小铁块从一台阶顶端以初速度  $ v_{0}=4~m/s $ 水平抛出，如果每级台阶的高度和宽度均为 1m，台阶数量足够多，重力加速度 g 取 "
+      },
+      {
+        "case_id": "2020北京高中合格考生物（第二次）（教师版）(1)",
+        "unit_id": "Q23",
+        "first_line": "23\\. 下列元素中，构成有机物基本骨架的是"
+      },
+      {
+        "case_id": "2017-2019北京高三数学上学期期末汇编：立体几何（教师版）(1)",
+        "unit_id": "Q37",
+        "first_line": "37. （2019 秋•大兴区期末）如图，在四棱锥  $ C-ABEF $ 中，平面  $ ABEF \\perp $ 平面  $ ABC $， $ \\trian"
+      },
+      {
+        "case_id": "2012-2021高考真题生物汇编：基因工程（1）（教师版）(1)",
+        "unit_id": "Q11",
+        "first_line": "11. （2015•北京）在应用农杆菌侵染植物叶片获得转基因植株的常规实验步骤中，不需要的是（）"
+      },
+      {
+        "case_id": "2017-2019北京高三化学上学期期末汇编：化学实验（教师版）(1)",
+        "unit_id": "Q80",
+        "first_line": "80. （2017 秋·大兴区期末）烟气（成分：95% NO、少量 $NO_{2}$、$SO_{2}$ 等）是大气的主要污染物之一，直接排放会对环境造成恶劣的影"
+      },
+      {
+        "case_id": "2018北京昌平临川学校高二（下）期中英语（教师版）(1)",
+        "unit_id": "Q4",
+        "first_line": "4. What time is it now?"
+      },
+      {
+        "case_id": "2021北京顺义一中高一（下）期中数学（教师版）(1)",
+        "unit_id": "Q11",
+        "first_line": "11.  $ \\sin\\frac{11\\pi}{6} $ 的值为 ___"
+      },
+      {
+        "case_id": "2021北京石景山高三一模物理（教师版）(1)",
+        "unit_id": "Q5",
+        "first_line": "5. 如图所示，一束平行光经玻璃三棱镜折射后分解为互相分离的 a、b、c 三束单色光。比较 a、b、c 三束光，可知"
+      },
+      {
+        "case_id": "2018北京夏季高中会考历史（教师版）(1)",
+        "unit_id": "Q14",
+        "first_line": "14. 麦迪逊指出，美国1787年宪法达成了一套“地域和体制的双向平衡机制”。当时这种平衡机制主要表现在"
+      },
+      {
+        "case_id": "2021全国II卷新高考真题数学（教师版）(1)",
+        "unit_id": "Q5",
+        "first_line": "5. 正四棱台上、下底面的边长分别为2，4，侧棱长为2，则其体积为（）"
+      }
+    ]
+  },
+  "task_c_stem_only_metric": {
+    "total_stem_targets": 2342,
+    "legacy_resolved": 1104,
+    "legacy_rate": 0.4714,
+    "path_b_validated": 2268,
+    "path_b_rate": 0.9684,
+    "agreement": {
+      "both_ok": 1084,
+      "legacy_only": 20,
+      "path_b_only": 1184,
+      "neither": 54
+    },
+    "improvement": 1164,
+    "coverage_ratio": 2.05
+  }
+}

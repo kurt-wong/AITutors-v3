@@ -2013,3 +2013,58 @@ Source → Evidence Authority → Semantic IR → Knowledge Reasoning
 | 2 | **Gate B2-A 三项补强** | Path B 主线真实阻塞 |
 | 3 | Gate B2-B | 结构化内容定位 |
 | 4 | Phase 2 Evidence Ledger | 等真实 pipeline 压力 |
+
+---
+
+## 2026-09-13 — Gate B2-A 三项补强审计
+
+### 结果
+
+| 项目 | 结果 |
+|------|------|
+| Total stem targets | 2342 |
+| Legacy resolved | 1104 (47.1%) |
+| Path B validated | 2268 (96.8%) |
+| Path B improvement | +1164 targets, 2.1x coverage |
+
+### Task A: Legacy-only Cases 分类
+
+**20 个**（非之前报告的 15 个——那是 stem+explanation 混合统计）。
+
+| Category | Count | 根因 |
+|----------|-------|------|
+| `no_pattern_match` | 17 | stem 以普通中文文本开头（作文题/材料题/公式开头），无结构标记 |
+| `number_no_dot` | 3 | OCR 变体：`25：` 全角冒号 / `2018 年` 年份误匹配 |
+
+**裁决**: 全部为 Pattern Coverage Gap，非 Path B 验证错误。
+Path B fail-closed 行为正确——reject 而非 validate。
+
+### Task B: 独立抽样验证
+
+- Population: 2268, Sample: 150 (seed=42)
+- Pattern 分布: number_dot 84.7% + number_escaped_dot 11.3% = **96% 标准题号格式**
+- 目视检查 10 个随机样本：全部为合法 stem
+
+**裁决**: Path B validated 结果可信。
+
+### Task C: Stem-Only Comparative Metric
+
+| | Legacy | Path B |
+|---|---|---|
+| Rate | 47.1% | **96.8%** |
+| Agreement | Both OK 1084 / Legacy only 20 / Path B only 1184 / Neither 54 |
+
+**Explanation 不纳入 comparative metric**（Legacy 覆盖率 0%，对比无意义）。
+
+### Gate B2-A 补强后裁决
+
+**Gate B2-A: PASS / TEST-EVIDENCED（stem-only, three-task audit complete）**
+
+### 下一步优先级
+
+| 顺序 | 项目 | 状态 |
+|------|------|------|
+| 1 | ~~Gate C Closure~~ | ✅ 完成 |
+| 2 | ~~Gate B2-A 三项补强~~ | ✅ 本轮完成 |
+| 3 | **Gate B2-B** | 结构化内容定位（option/answer table/fill-in/HTML） |
+| 4 | Phase 2 Evidence Ledger | 等真实 pipeline 压力 |

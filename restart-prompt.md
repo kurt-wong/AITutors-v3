@@ -1,24 +1,20 @@
 # AI Tutor V3 — RESTART PROMPT
 
-Version: v1.41
-Status: **Gate C CLOSED (Phase 1 Evidence Authority Boundary Closure)** —
-B2-B5-D 通过；Evidence Promotion Contract Phase 1 通过；C-2 157 E2E 通过；
-下一步：Gate B2-A 三项补强
+Version: v1.42
+Status: **Gate B2-A 三项补强完成** —
+Gate C CLOSED (Phase 1) + Gate B2-A three-task audit PASS；
+下一步：Gate B2-B（结构化内容定位）
 Date: 2026-09-13
 
-## 0.0 当前结论（2026-09-13 Gate C Closure）
+## 0.0 当前结论（2026-09-13 Gate B2-A 三项补强完成）
 
+- **Gate B2-A: PASS / TEST-EVIDENCED（stem-only, three-task audit）**。
+  - Task A: 20 Legacy-only cases 全部为 pattern coverage gap，非验证错误。
+  - Task B: 150 抽样中 96% 标准题号格式，验证结果可信。
+  - Task C: Legacy 47.1% vs Path B 96.8%，+49.7pp，2.1x coverage。
 - **Gate C CLOSED（Phase 1 Evidence Authority Boundary Closure）**。
-  Evidence Promotion Contract / C-2 157 E2E / Semantic IR bypass / Invalid Binding
-  fail-closed 全部 PASS。
-- **Deferred Phase 2**：Proposal/Claim creator separation、Persistent Evidence Ledger、
-  Cryptographic audit chain、INVALIDATED lifecycle。
-- **核心跃迁**：从"相信 Resolver 输出"升级为"不相信任何模块输出，
-  只相信经过 Authority Ledger 授权的 Evidence"。
-- **分层边界**：Evidence Validity ≠ Semantic Correctness。
-  Evidence 只证明"文本可合法作为输入"，不证明"文本一定正确"。
-- **下一步 = Gate B2-A 三项补强**（Path B 主线阻塞项）：
-  a. 审计 15 个 Legacy-only cases b. 独立抽样 1820 c. 排除 explanation。
+- **Evidence Validity ≠ Semantic Correctness**。
+- **下一步 = Gate B2-B**：结构化内容定位（option/answer table/fill-in/HTML table）。
 
 - **A–G / H Phase 1–8 / Phase 9 / Errata 维持 FINAL CLOSED**。
 - **Phase I-3 CLOSED**：Source Evidence Preservation Layer。
@@ -72,12 +68,8 @@ Date: 2026-09-13
   Schema Source of Truth = 20_Document_Pipeline.md；Resolver 不猜；
   实验结果 ≠ 实施授权；提议修改 ≠ 违反 Frozen Spec。
 - **下一步（按序执行）**：
-  1. **Gate B2-A 三项补强**（Path B 主线阻塞项）：
-     a. 审计 15 个 Legacy-only cases（逐个分类）
-     b. 独立抽样验证 Path B 成功结果（1820 个中抽 100-200 个）
-     c. 正式报告中把 explanation 从 comparative metric 中排除
-  2. **Gate B2-B**：结构化内容定位（option/answer table/fill-in/HTML）
-  3. **Phase 2 Evidence Ledger**：等真实 pipeline 压力出现后再启动
+  1. **Gate B2-B**：结构化内容定位（option/answer table/fill-in/HTML table）
+  2. **Phase 2 Evidence Ledger**：等真实 pipeline 压力出现后再启动
   4. **OQ-3 → OQ-2**：物化层 / Standalone+Material 裁决
   5. **Errata Decision**（Gate B/C/D 通过后）
   6. **I-5-2 Adapter**（Gate D 约束：Contract Translator，非 Semantic Resolver）
