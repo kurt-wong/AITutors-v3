@@ -2896,3 +2896,34 @@ Status=状态快照 / log=时间线 / bugs=问题列表 / restart-prompt=Agent �
 OPEN 10（P0：C-01 / D-02）· 已处置 9 · UNASSIGNED 归零
 802 passed · L0 内容零改动 · L0 文件名零改动
 ```
+
+## 2026-09-13 — C-01 / BIND-1/2/3 部分裁决
+
+**权威落点**：`82 §5`（BIND 定义本源）。**未新建文档。**
+
+| BIND | 状态 |
+|---|---|
+| BIND-1 Identity Join | **ACCEPTED / FROZEN** |
+| BIND-2 Native Carrier | 证据支持 **PASS**，**待 Owner 确认** |
+| BIND-3 External Carrier | 方向 **ACCEPTED** / 契约验证 **UNPROVEN** |
+
+**C-01 整体仍 OPEN** · Binding Carrier = **PENDING** · manifest-only **未冻结** ·
+**Adapter 未开工** · 67 Errata **未发布** · L0 **零改动**。
+
+下一步：确认 BIND-2 = PASS，或继续 DG-5（A-04/A-05/A-06/A-08/A-09、D-02/D-03、D-04/D-05）。
+
+## 2026-09-13 — BIND-2 = PASS（Owner 确认）
+
+| BIND | 状态 |
+|---|---|
+| BIND-1 Identity Join | **PASS — ACCEPTED / FROZEN** |
+| BIND-2 Native Carrier | **PASS — ACCEPTED / FROZEN** |
+| BIND-3 External Carrier | 方向 ACCEPTED / 契约 **UNPROVEN** |
+
+**核心收益**：Native Path 不需要 preprocessing 提供 `line_refs`；Manifest 不需为
+兼容 Native 而把 `line_refs` 塞进 Annotation。C-01 收敛为**单一剩余阻塞 = BIND-3**。
+
+**C-01 整体仍 OPEN** · Carrier = **PENDING** · manifest-only **未冻结** ·
+**Adapter 未开工**（BIND-2 PASS 不构成开工授权）· L0 **零改动**。
+
+下一步：继续 DG-5（A-04/A-05/A-06/A-08/A-09、D-02/D-03、D-04/D-05）。

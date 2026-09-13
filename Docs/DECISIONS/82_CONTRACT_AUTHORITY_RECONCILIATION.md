@@ -230,7 +230,13 @@ Gate B = NOT CLOSED
 
 ---
 
-## 5. Binding Authority — 三个未决问题（**登记，不裁决**）
+## 5. Binding Authority — BIND-1/2/3 裁决（BIND-1/2 已定，BIND-3 待契约）
+
+> **2026-09-13 Owner 裁决**：C-01 是**真实 Contract Carrier Conflict**，但一阶问题
+> 不是「`line_refs` 放 annotation 还是 manifest」，而是**谁拥有 binding claim、
+> 谁验证它、Native / Adapter 两条路径如何携带它**。
+> **BIND-1 = PASS / FROZEN · BIND-2 = PASS / FROZEN · BIND-3 = UNPROVEN。**
+> **C-01 整体仍 OPEN**，单一剩余阻塞 = BIND-3（manifest schema 冻结）。
 
 `line_refs` 的规范载体是什么，是比「放 annotation 还是放 manifest」更根本的问题。
 `69 §9.三` 的三层 Identity 模型把 `line_refs` 定义为 **Source Binding Claim** 的组成
@@ -252,21 +258,170 @@ LLM line_refs → Resolver 验证 → ResolvedSpan ← 不违规
 
 因此「manifest-only 更干净」**不等于「manifest-only 已被证明正确」**。
 
-| ID | 未决问题 | 为何必须先答 |
-|---|---|---|
-| **BIND-1** | Annotation 的 semantic unit 与 Manifest 的 binding unit 之间，是否存在**确定性 identity join**？ | 若 join 依赖顺序 / 题号 / 模糊匹配 / 文本相似度，则**重新引入 Resolver-like 问题**，直接违反 81 §5.6「不得隐式 fuzzy matching」与核心不变量「只允许机械投影」。**这是本轮最值得新增的审查点** |
-| **BIND-2** | Native Path 能否完全脱离 `annotation.line_refs`？ | 若 Native Path 仍需 annotation 携带位置信息，则 manifest-only 不能成为**唯一**载体，`20:117` 的 `FORBIDDEN_FIELDS` 也不能整体维持 |
-| **BIND-3** | Manifest 中的 role declaration（stem/options/answer/explanation）只是 **External Claim**，还是 V3 **Semantic Authority**？ | 若是后者，等于把「V3 可以接受 preprocessing 的结果」偷换成「V3 相信 preprocessing 的语义判断」，违反 `00` 的 Source-as-Fact-Source。**初步倾向：External Claim Producer**，但未裁决 |
+### 5.0 分层原则（冻结）
 
-### 5.1 当前候选状态
+> **Annotation = semantic structure**
+> **Binding = source-reference claim**
+> **Identity Join = deterministic relation between the two**
+
+**不预先决定** Binding 必须存在于 Annotation 或 Manifest 中——那是 BIND-2 / BIND-3
+各自要证明的。本轮冻结的是**分层本身**：语义结构与来源引用是两个不同的层，
+二者之间只允许确定性 identity join。
+
+**不采用**「为消灭不一致而宣布 Annotation 必须重新包含 `line_refs`」——那会把
+semantic annotation 与 source binding 重新耦合。**也不采用**「Annotation 永远
+禁止携带任何 binding information」——那是过度约束，BIND-2 未证明前无权预先排除。
+
+两条路径在 `ResolvedRun` 汇合（下游 IRBuilder / Compiler / Gate 完全一致）：
+
+```text
+                 ┌─ Native ──── Resolver ────┐
+Annotation ──────┤                            ├── ResolvedRun
+                 └─ Adapter / Manifest ──────┘
+```
+
+### 5.1 BIND-1 Identity Join — **ACCEPTED / FROZEN**
+
+> **Annotation semantic unit 与 binding unit 必须存在确定性的、可验证的
+> identity join；不得依赖 fuzzy matching、文本相似度或重新执行 Resolver
+> 来建立身份关系。**
+
+| | |
+|---|---|
+| 裁决 | **ACCEPT**（2026-09-13 Owner） |
+| 含义 | **Binding Unit ≠ Semantic Unit**。二者可通过确定性 ID 关联，但不能因「ID 一样」就自动获得 Source authority |
+| 若违反 | join 依赖顺序 / 题号 / 模糊匹配 / 文本相似度 → 重新引入 Resolver-like 问题，违反 `81 §5.6`「不得隐式 fuzzy matching」与核心不变量「只允许机械投影」 |
+| 边界 | BIND-1 **只解决**「两个东西怎么确定性地对应起来」；**不解决**「Manifest 中声明的 span 是否真的对应 Source」——后者属 Evidence Authority / Resolver / Adapter validation 边界 |
+
+**⚠️ BIND-1 ACCEPT ≠ Adapter 可开工。** 开工前置仍为 `81 §5.4` 三项，本节不放宽任何一项。
+
+### 5.2 BIND-2 Native Carrier — **PASS / ACCEPTED / FROZEN**
+
+> **Owner 裁决（2026-09-13）**：BIND-2 = **PASS**。依据达**契约证明**级别，
+> 不需再为形式增加实验。
+
+**问题**：Native Path 能否完全脱离 `annotation.line_refs`？
+
+**裁决结论**：
+
+> **Native Path 在当前 Frozen L0 下不依赖 `annotation.line_refs`，且 `line_refs`
+> 的合法来源是 Resolver 输出，而不是 Annotation 输入。**
+
+即明确区分：
+
+```text
+line_refs as INPUT    ❌ 禁止（20 §4.3 FORBIDDEN_FIELDS）
+line_refs as OUTPUT   ✅ 合法（Resolver 产出 ResolvedSpan.line_refs）
+```
+
+**证据（2026-09-13，代码 + 测试，非架构推论）**：
+
+| # | 证据 | 出处 |
+|---|---|---|
+| 1 | `FORBIDDEN_FIELDS` 含 `line_refs`，递归校验，任意 depth 出现 → 整体 invalid | `20 §4.3`；`annotation/__init__.py:9-21` |
+| 2 | 硬边界：Annotation 只携带 claim 与 Semantic Reference，**不携带 resolved span / line_ref** | `20:73` |
+| 3 | **Semantic Reference 是 L0 规定的位置指认机制**：`start_marker` / `end_marker`（kind + granularity + text），**不含行号** | `20 §4.4` |
+| 4 | Resolver 消费 `annotation_payload`，读取 `t.start_marker` / `t.end_marker` | `resolver.py:264`、`468-469` |
+| 5 | Resolver **产出** `ResolvedSpan.line_refs`（输出，非输入） | `resolver.py:150, 177, 206, 226` |
+| 6 | payload 含 `line_refs` → 校验违规（测试锁死） | `test_annotation.py:54-57` |
+| 7 | valid payload 不含任何 FORBIDDEN key（测试锁死） | `test_annotation.py:85-89` |
+| 8 | 全部 resolver 测试以 `start_marker` / `end_marker` 为输入，断言 `span.line_refs` 为**输出** | `test_resolver.py` 全文件 |
+| 9 | 全量回归 | **802 passed**（2026-09-13） |
+
+**证明性质**：不是「我们认为 Native 应该不需要 line_refs」，而是
+**当前 L0 + 当前实现 + 当前测试共同证明 Native 不接受 line_refs 作为 Annotation 输入。**
+
+**已知残留（登记，不构成反证）**：`gate/service.py:82-98`
+`_confidence_only_projection` 在 `resolver_input_hash` 中**保留** `line_refs`，
+注释引 OQ-1 §6.2 规则 3「Resolver 需要知道 LLM 声称的位置才能验证」。该设计源自
+OQ-1（70 号）对 67 号提案的**预期**。在现行 L0 下（FORBIDDEN_FIELDS 禁止
+`line_refs` 进入 payload），该 projection 对 `line_refs` 是**不可达的防御性历史逻辑**。
+
+- 它**不能**证明「Resolver requires `annotation.line_refs`」；**最多**证明
+  「旧设计曾经考虑过 `annotation.line_refs`」——两个命题完全不同。
+- **不得**援引该历史 / 防御性代码作为 BIND-2 反证。
+- **不判为代码错误，也不要求现在删除**——那会把治理裁决扩大成新的代码清理任务。
+  仅当 FORBIDDEN_FIELDS 被放宽（CHANGE-5，未发生）时它才会生效。
+
+### 5.2.1 BIND-1 + BIND-2 的收敛结论（本轮 C-01 核心收益）
+
+两个 PASS 合起来正式得到：
+
+```text
+Annotation
+    │  semantic structure
+    ▼
+Resolver
+    │  consumes semantic references
+    ▼
+ResolvedRun
+    │  produces source binding
+    ▼
+line_refs
+```
+
+由此两条**正式成立**：
+
+1. **Native Path 不需要 preprocessing 提供 `line_refs`。**
+2. **preprocessing 的 Manifest 不需要为了兼容 Native Path 而把 `line_refs`
+   强行塞进 Annotation。**
+
+第 2 条是本轮 C-01 的核心收益：preprocessing 侧的契约设计**解除了一项本不存在的
+兼容性负担**。C-01 因此从「四方概念冲突」收敛为一个具体的工程契约问题——
+**仅剩 BIND-3 的 manifest schema 冻结**。
+
+### 5.3 BIND-3 External Carrier — 方向 ACCEPTED，契约验证 UNPROVEN
+
+**问题**：Manifest 中的 role declaration 是 External Claim 还是 V3 Semantic Authority？
+
+**裁决方向（2026-09-13 Owner）**：
+
+> **Manifest role declarations = External Claims**，不是 Semantic Authority。
+> **External Claim 可以被 Adapter / Binding layer 转换为 V3 所需结构，但必须经过
+> V3 自己的 contract validation；不能直接绕过 V3 的 semantic / evidence gates。**
+
+**禁止**：
+
+```text
+Manifest → "V3 已经相信它" → IR        ← 违规（产生第二个 Semantic Authority）
+```
+
+**要求**：
+
+```text
+Manifest → External Claims → Adapter（validate / translate）→ V3 contract → ResolvedRun
+```
+
+**支撑证据（既有，本轮未新增）**：
+
+| # | 证据 | 出处 |
+|---|---|---|
+| 1 | `annotation_payload` 驱动 IRBuilder 全部语义结构；`Bypasses: Annotation` 结构上不可能 | `81` 发现 1；`ir.py:87` |
+| 2 | `Bypasses: Resolver only` | `81 §5.2` |
+| 3 | V3 先冻结消费契约，preprocessing 再实现（方向不可颠倒） | `81 §5.4` |
+| 4 | Adapter 白名单仅五项机械操作 | `81 §5.5` |
+| 5 | 核心不变量「Adapter 只允许机械投影，不允许提高信息量」+「指不出来源的输出 = 违规」 | `81 §5.6` |
+| 6 | ResolvedSpan 生产者不变量：Resolver 与 Adapter 产出同构，下游不区分 | `81 §6.2` |
+
+**UNPROVEN 部分**：「必须经过 V3 自己的 contract validation」目前**无可指向的
+契约**——manifest schema **未冻结**（§1.3），因此 External Claim 的验证内容
+（哪些字段、哪些校验、何种 fail-closed）**尚不存在规范**。这不是裁决缺口，是
+**前置依赖未就绪**：manifest schema 冻结属 `81 §5.4` 前置 2。
+
+**结论**：BIND-3 方向 **ACCEPTED**；**契约级验证 = UNPROVEN**，阻塞于 manifest
+schema 冻结。
+
+### 5.4 当前候选状态（更新）
 
 | 候选 | 状态 |
 |---|---|
-| `line_refs` = manifest-only | 🟡 **PROVISIONAL ARCHITECTURAL PREFERENCE**（须 BIND-1/2/3 全 PASS 才可冻结） |
-| `line_refs` = annotation 内 | 🔴 **不得作为新规范继续推进**（与 81 §5.1 冲突；若采纳需先裁决） |
+| `line_refs` = manifest-only | 🟡 **PROVISIONAL ARCHITECTURAL PREFERENCE**（BIND-1/2 均 PASS；BIND-3 契约验证 UNPROVEN → **仍不可冻结**）。**仅剩 manifest schema 冻结一项阻塞** |
+| `line_refs` = annotation 内 | 🔴 **REJECT as Native Path 规范输入**（BIND-2 已 PASS 证明 Native 不接受它作为输入；Resolver 产出它作为**输出**则合法）。不预先排除未来载体变更——那需独立 CHANGE + 四道门 |
 | 两者共存 | 🔴 **REJECT**（产生「哪个权威」歧义，削弱单一来源保证） |
 
-**在 BIND-1/2/3 裁决前，`Binding Carrier Decision = PENDING`。**
+**`Binding Carrier Decision` 仍 = `PENDING`**（仅因 BIND-3 契约验证未完成）。
+manifest-only **未冻结**。**67 号 Errata 未发布。Adapter 未开工。**
+C-01 **整体 OPEN**；**单一剩余阻塞 = BIND-3**。
 
 ---
 
@@ -285,13 +440,14 @@ LLM line_refs → Resolver 验证 → ResolvedSpan ← 不违规
 
 ## 7. 显式不主张
 
-1. **不主张** BIND-1/2/3 已解决——只登记，未裁决。
-2. **不主张** manifest-only 正确——只是候选方向。
-3. **不主张** Gate B 已关闭——整体 NOT CLOSED（§3.1）。
-4. **不主张** E1 可以写进 20——它是 CHANGE-2，需 Change Record（§2 / §4-C6）。
-5. **不主张** 本文档可修改 A 层语义——本文档只建立权威层级，不改任何 Frozen 契约。
-6. **不主张** C 层报告的历史正文已全部去规范性化——C1/C2/C5 只登记与废止，
+1. **不主张** Binding Carrier 已定——BIND-1 / BIND-2 均 PASS/FROZEN，BIND-3 方向
+   ACCEPTED 但契约验证 UNPROVEN；Carrier 仍 PENDING。**不主张** manifest-only 已冻结。
+2. **不主张** Gate B 已关闭——整体 NOT CLOSED（§3.1）。
+3. **不主张** E1 可以写进 20——它是 CHANGE-2，需 Change Record（§2 / §4-C6）。
+4. **不主张** 本文档可修改 A 层语义——本文档只建立权威层级，不改任何 Frozen 契约。
+5. **不主张** C 层报告的历史正文已全部去规范性化——C1/C2/C5 只登记与废止，
    未逐句改写历史报告。
+6. **不主张** BIND-1 ACCEPT 等于 Adapter 可开工——开工前置仍为 `81 §5.4` 三项。
 
 ---
 
@@ -366,7 +522,10 @@ Gate State Authority: <YES | NO>     # 仅 YES 时可定义 Gate 状态；现行
 ║ Gate C                        CLOSED — Phase 1             ║
 ║ Gate D                        CONTRACT CLOSED              ║
 ║ Adapter implementation        NOT STARTED                  ║
-║ Binding Carrier               PENDING (BIND-1/2/3)         ║
+║ Binding Carrier               PENDING (仅 BIND-3 契约)      ║
+║ BIND-1 Identity Join          PASS — ACCEPTED / FROZEN      ║
+║ BIND-2 Native Carrier         PASS — ACCEPTED / FROZEN      ║
+║ BIND-3 External Carrier       方向 ACCEPTED / 契约 UNPROVEN ║
 ║ Errata 67                     NOT RELEASED (CHANGE-5)      ║
 ║ E1 (Grammar → 20 §8.4)        PENDING — CHANGE-2           ║
 ║ E2 (Adapter 边界 → 20 §3)      DEFERRED                     ║

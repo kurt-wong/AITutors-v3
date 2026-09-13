@@ -44,6 +44,19 @@
 |---|---|
 | **CA-001** | **CLOSED — (b)**：保留 `40 §5` 文本，**不回滚、不改 L0 内容**；认定 **CHANGE-2 Normative Addition**；补建 Change Record **`90 §11 CR-001`**，Review **ACCEPTED / EFFECTIVE**。四道门不需要。procedural gap 已 cure |
 
+### 2026-09-13 四次裁决（用户）— C-01 / BIND-1/2/3
+
+| 项 | 裁决 |
+|---|---|
+| **C-01 性质** | **真实 Contract Carrier Conflict**，但一阶问题不是「line_refs 放哪」，而是**谁拥有 binding claim、谁验证它、两条路径如何携带**。**整体仍 OPEN** |
+| **BIND-1** | **PASS — ACCEPTED / FROZEN** — annotation semantic unit 与 binding unit 必须有确定性可验证 identity join；禁止 fuzzy matching / 文本相似度 / 重跑 Resolver 建立身份。**⚠️ PASS ≠ Adapter 可开工** |
+| **BIND-2** | **PASS — ACCEPTED / FROZEN**（2026-09-13 Owner 确认）。九项代码+测试证据（`82 §5.2`）。`line_refs` 作为 Annotation **输入**禁止，作为 Resolver **输出**合法。`gate/service.py` 历史残留**不构成反证，登记即可** |
+| **BIND-3** | 方向 **ACCEPTED**：Manifest role declarations = **External Claims**（非 Semantic Authority），且必须过 V3 自己的 contract validation。**契约验证 = UNPROVEN**，阻塞于 manifest schema 未冻结 |
+| **收敛结论** | **Native Path 不需要 preprocessing 提供 `line_refs`**；preprocessing 的 Manifest **不需要**为兼容 Native 而把 `line_refs` 塞进 Annotation（`82 §5.2.1`）。C-01 从「四方概念冲突」收敛为**单一工程契约问题** |
+| **分层原则** | 冻结：Annotation = semantic structure · Binding = source-reference claim · Identity Join = deterministic relation。**不预先决定载体位置** |
+| **落笔约束** | 裁决写入既有 `82 §5`，**不新建 C-01 专题治理文档** |
+| **未变** | manifest-only 未冻结 · 67 Errata 未发布 · Adapter 未开工 · L0 零改动 |
+
 ---
 
 ## A 类 — 状态漂移（Gate / Phase 状态在文档间不一致）
@@ -77,7 +90,7 @@
 
 | ID | 冲突 | 证据 | 级别 | 状态 | 备注 |
 |---|---|---|---|---|---|
-| **C-01** | **`line_refs` 载体四方不一致** | L0 `20:117` FORBIDDEN_FIELDS 含 `line_refs`；`20:73` 硬边界 #2「不携带 resolved span / line_ref」；`67:114` 提议放进 annotation payload；`81 §5.1` 定在独立 manifest；`82 §5` 判 `PENDING` | 🔴 | **OPEN** | **本轮最重的架构未决项**。四个层级给出四种答案。须经 **BIND-1/2/3**（`82 §5`）裁决后走 L1。**在裁决前，manifest-only 只是 🟡 PROVISIONAL** |
+| **C-01** | **`line_refs` 载体四方不一致** | L0 `20:117` FORBIDDEN_FIELDS 含 `line_refs`；`20:73` 硬边界 #2「不携带 resolved span / line_ref」；`67:114` 提议放进 annotation payload；`81 §5.1` 定在独立 manifest；`82 §5` 判 `PENDING` | 🔴 | **OPEN（BIND-1/2 已 PASS）** | 裁决见 `82 §5`：BIND-1 **PASS/FROZEN**；BIND-2 **PASS/FROZEN**（Owner 确认 2026-09-13）；BIND-3 方向 ACCEPTED / 契约 UNPROVEN。**manifest-only 仍 🟡 PROVISIONAL**，Carrier = PENDING。**单一剩余阻塞 = BIND-3**（manifest schema 冻结后完成契约验证） |
 | **C-02** | `66 §7` `Bypasses: Annotation, Resolver` 与 `IRBuilder.build` 签名冲突 | `66 §7` vs `ir.py:87` `build(resolved_run, annotation_payload, ...)` 必需 annotation_payload；span_id `sp-{unit_id}.{role}` 由 annotation 反推 | 🔴 | **INCORPORATED** | 已修正为 `Bypasses: Resolver only`；`66 §7` 就地更正；裁决见 `81 §5.2` |
 
 ---

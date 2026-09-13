@@ -1,12 +1,41 @@
-Version: v1.55
+Version: v1.57
 Status: **Documentation Governance Stabilization（DG）ACTIVE** —
-**DG-2 归位完成 + DG-3 71 号去重完成（D-01 CLOSED）**；
-目录模型已冻结（V3_SPEC / DECISIONS / REPORTS / ARCHIVE）；
-出生证明 **3/44**；OPEN 10 项（P0：C-01 / D-02）；
+**C-01 / BIND-1/2 已 PASS/FROZEN，BIND-3 UNPROVEN**（权威落点 `82 §5`）；
+**C-01 整体仍 OPEN，单一剩余阻塞 = BIND-3**（manifest schema 冻结）；
+Binding Carrier = PENDING；manifest-only 未冻结；
+DG-2 归位完成 + D-01 CLOSED；OPEN 10 项（P0：C-01 / D-02）；
 Gate A PASS / B **NOT CLOSED** / C CLOSED (Phase 1) / D CONTRACT CLOSED；
-**DG 全绿前不得进入 Binding Authority Decision，更不得实现 Adapter**；
-下一步：**裁决 C-01**（line_refs，须走 BIND-1/2/3）
+**Adapter 未开工**（BIND-2 PASS 不构成开工授权；前置仍 `81 §5.4` 三项）；
+下一步：继续 **DG-5** 剩余项（A-04/A-05/A-06/A-08/A-09、D-02/D-03、D-04/D-05）
 Date: 2026-09-13
+
+## 0.0a C-01 / BIND-1/2/3 裁决（2026-09-13，权威落点 `82 §5`）
+
+**一阶问题重定性**：C-01 **不是**「line_refs 放 annotation 还是 manifest」的二选一。
+真正的一阶问题是**谁拥有 binding claim · 谁验证它 · 两条路径如何携带**。
+
+**分层原则（冻结，`82 §5.0`）**：
+`Annotation = semantic structure` · `Binding = source-reference claim` ·
+`Identity Join = deterministic relation`。**不预先决定载体位置。**
+
+| BIND | 状态 | 要点 |
+|---|---|---|
+| **BIND-1** Identity Join | **PASS — ACCEPTED / FROZEN** | 确定性可验证 join；禁 fuzzy / 相似度 / 重跑 Resolver |
+| **BIND-2** Native Carrier | **PASS — ACCEPTED / FROZEN** | `line_refs` 作为 Annotation **输入**禁止、作为 Resolver **输出**合法。九项证据 + **802 passed**。`gate/service.py` 历史残留不构成反证 |
+| **BIND-3** External Carrier | 方向 ACCEPTED / 契约 **UNPROVEN** | Manifest role declarations = **External Claims**（非 Semantic Authority），须过 V3 contract validation。UNPROVEN 因 manifest schema 未冻结 |
+
+**收敛结论（`82 §5.2.1`，本轮核心收益）**：
+**Native Path 不需要 preprocessing 提供 `line_refs`**；preprocessing 的 Manifest
+**不需要**为兼容 Native 而把 `line_refs` 塞进 Annotation。C-01 从「四方概念冲突」
+收敛为**单一工程契约问题**。
+
+**⚠️ BIND-2 PASS ≠ Adapter 可开工。** 开工前置仍为 `81 §5.4` 三项。
+
+**本轮未做**：未新建文档 · 未改 L0 · 未改 67/81 正文 · 未冻结 manifest-only ·
+未发布 67 Errata · 未实现 Adapter。
+
+**下一步**：继续 DG-5 剩余项（A-04/A-05/A-06/A-08/A-09 状态对账、D-02/D-03 归层、
+D-04/D-05 L3 自立规范改写）。**不因 BIND-2 PASS 提前启动 Adapter。**
 
 ## 0.0 当前结论（2026-09-13 CA-001 CLOSED + 91 号词汇宪法 + DG 阶段）
 
@@ -203,6 +232,11 @@ Date: 2026-09-13
   - P1 三条：C4（`80:426` B2-B2 CLOSED vs `80:448` Unknown 125 未清，**歧义非错误**，
     待 triage 补 scope 声明）/ C5（`69:656`/`69:756` 历史快照仍写 B2-B BLOCKED/WAIT；
     全仓**无**「NEXT」措辞）/ C6（E1 属 **CHANGE-2 Normative Addition**，非澄清）。
+> ⚠️ **以下 Binding Carrier 段落已过时（2026-09-13）**——它记录的是 BIND-1/2/3
+> **登记未裁决**时的历史状态。**现行权威见本文 `§0.0a` 与 `82 §5`**：
+> BIND-1 = **PASS/FROZEN** · BIND-2 = **PASS/FROZEN** · BIND-3 = **UNPROVEN**
+> （方向 ACCEPTED）。正文保留为历史，**不得按此段判断当前状态**。
+
 - **Binding Carrier Decision = PENDING**（82 §5）——三个未决问题**登记未裁决**：
   - **BIND-1** Annotation semantic unit ↔ Manifest binding unit 是否存在**确定性
     identity join**？若依赖顺序/题号/模糊匹配 → 重新引入 Resolver-like 问题，

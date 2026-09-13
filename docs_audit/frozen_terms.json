@@ -4,11 +4,11 @@
   "terms": {
     "ResolvedSpan": {
       "definition_sites": 5,
-      "use_sites": 118,
+      "use_sites": 122,
       "definitions": [
         {
           "doc": "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
-          "line": 383
+          "line": 426
         },
         {
           "doc": "Docs/DECISIONS/75_EVIDENCE_PROMOTION_CONTRACT.md",
@@ -16,11 +16,11 @@
         },
         {
           "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
-          "line": 70
+          "line": 83
         },
         {
           "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
-          "line": 71
+          "line": 84
         },
         {
           "doc": "log.md",
@@ -38,7 +38,7 @@
         },
         {
           "doc": "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
-          "line": 372
+          "line": 415
         },
         {
           "doc": "Docs/DECISIONS/67_ANNOTATION_RESOLVER_BOUNDARY_ADJUSTMENT.md",
@@ -81,7 +81,7 @@
     },
     "ResolvedRun": {
       "definition_sites": 2,
-      "use_sites": 35,
+      "use_sites": 39,
       "definitions": [
         {
           "doc": "Docs/DECISIONS/81_GATE_D_ADAPTER_BOUNDARY.md",
@@ -99,23 +99,23 @@
         },
         {
           "doc": "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
-          "line": 372
+          "line": 415
         },
         {
           "doc": "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
-          "line": 421
+          "line": 464
         },
         {
           "doc": "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
-          "line": 422
+          "line": 465
         },
         {
           "doc": "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
-          "line": 425
+          "line": 468
         },
         {
           "doc": "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
-          "line": 428
+          "line": 471
         },
         {
           "doc": "Docs/DECISIONS/67_ANNOTATION_RESOLVER_BOUNDARY_ADJUSTMENT.md",
@@ -146,7 +146,7 @@
     },
     "annotation_payload": {
       "definition_sites": 2,
-      "use_sites": 53,
+      "use_sites": 55,
       "definitions": [
         {
           "doc": "log.md",
@@ -168,7 +168,7 @@
         },
         {
           "doc": "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
-          "line": 428
+          "line": 471
         },
         {
           "doc": "Docs/DECISIONS/67_ANNOTATION_RESOLVER_BOUNDARY_ADJUSTMENT.md",
@@ -223,7 +223,7 @@
         },
         {
           "doc": "Docs/DECISIONS/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
-          "line": 236
+          "line": 242
         },
         {
           "doc": "Status.md",
@@ -284,7 +284,7 @@
     },
     "FORBIDDEN_FIELDS": {
       "definition_sites": 2,
-      "use_sites": 22,
+      "use_sites": 26,
       "definitions": [
         {
           "doc": "log.md",
@@ -298,11 +298,11 @@
       "uses_sample": [
         {
           "doc": "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
-          "line": 318
+          "line": 361
         },
         {
           "doc": "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
-          "line": 373
+          "line": 416
         },
         {
           "doc": "Docs/DECISIONS/67_ANNOTATION_RESOLVER_BOUNDARY_ADJUSTMENT.md",
@@ -353,15 +353,15 @@
       "definitions": [
         {
           "doc": "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
-          "line": 149
+          "line": 192
         },
         {
           "doc": "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
-          "line": 174
+          "line": 217
         },
         {
           "doc": "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
-          "line": 403
+          "line": 446
         },
         {
           "doc": "Docs/DECISIONS/75_EVIDENCE_PROMOTION_CONTRACT.md",
@@ -373,7 +373,7 @@
         },
         {
           "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
-          "line": 70
+          "line": 83
         },
         {
           "doc": "Docs/REPORTS/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
@@ -387,7 +387,7 @@
       "uses_sample": [
         {
           "doc": "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
-          "line": 142
+          "line": 185
         },
         {
           "doc": "Docs/DECISIONS/75_EVIDENCE_PROMOTION_CONTRACT.md",
@@ -427,11 +427,11 @@
         },
         {
           "doc": "restart-prompt.md",
-          "line": 94
+          "line": 123
         },
         {
           "doc": "restart-prompt.md",
-          "line": 99
+          "line": 128
         }
       ],
       "drift_risk": "LOW"
@@ -442,11 +442,11 @@
       "definitions": [
         {
           "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
-          "line": 70
+          "line": 83
         },
         {
           "doc": "restart-prompt.md",
-          "line": 135
+          "line": 164
         },
         {
           "doc": "log.md",
@@ -456,11 +456,11 @@
       "uses_sample": [
         {
           "doc": "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
-          "line": 153
+          "line": 196
         },
         {
           "doc": "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
-          "line": 404
+          "line": 447
         },
         {
           "doc": "Docs/DECISIONS/75_EVIDENCE_PROMOTION_CONTRACT.md",
@@ -472,7 +472,7 @@
         },
         {
           "doc": "restart-prompt.md",
-          "line": 95
+          "line": 124
         },
         {
           "doc": "Status.md",
@@ -495,11 +495,11 @@
       "definitions": [
         {
           "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
-          "line": 70
+          "line": 83
         },
         {
           "doc": "restart-prompt.md",
-          "line": 135
+          "line": 164
         },
         {
           "doc": "Status.md",
@@ -563,8 +563,8 @@
       "drift_risk": "LOW"
     },
     "Evidence Contract": {
-      "definition_sites": 9,
-      "use_sites": 18,
+      "definition_sites": 10,
+      "use_sites": 19,
       "definitions": [
         {
           "doc": "Docs/DECISIONS/75_EVIDENCE_PROMOTION_CONTRACT.md",
@@ -572,15 +572,15 @@
         },
         {
           "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
-          "line": 69
+          "line": 82
         },
         {
           "doc": "restart-prompt.md",
-          "line": 131
+          "line": 160
         },
         {
           "doc": "restart-prompt.md",
-          "line": 132
+          "line": 161
         },
         {
           "doc": "Status.md",
@@ -602,7 +602,7 @@
       "uses_sample": [
         {
           "doc": "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
-          "line": 157
+          "line": 200
         },
         {
           "doc": "Docs/DECISIONS/75_EVIDENCE_PROMOTION_CONTRACT.md",
@@ -711,7 +711,7 @@
         },
         {
           "doc": "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
-          "line": 373
+          "line": 416
         },
         {
           "doc": "Docs/DECISIONS/80_B2B5_CLOSURE.md",
@@ -774,15 +774,15 @@
     },
     "Binding Carrier": {
       "definition_sites": 4,
-      "use_sites": 15,
+      "use_sites": 18,
       "definitions": [
         {
           "doc": "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
-          "line": 175
+          "line": 218
         },
         {
           "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
-          "line": 72
+          "line": 85
         },
         {
           "doc": "Status.md",
@@ -796,7 +796,7 @@
       "uses_sample": [
         {
           "doc": "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
-          "line": 416
+          "line": 459
         },
         {
           "doc": "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
@@ -816,46 +816,46 @@
         },
         {
           "doc": "Docs/DECISIONS/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
-          "line": 269
+          "line": 422
         },
         {
           "doc": "Docs/DECISIONS/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
-          "line": 318
+          "line": 443
         },
         {
           "doc": "Docs/DECISIONS/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
-          "line": 369
+          "line": 474
+        },
+        {
+          "doc": "Docs/DECISIONS/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
+          "line": 525
         },
         {
           "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
-          "line": 138
+          "line": 151
         },
         {
           "doc": "restart-prompt.md",
-          "line": 96
+          "line": 5
         },
         {
           "doc": "restart-prompt.md",
-          "line": 206
-        },
-        {
-          "doc": "Status.md",
-          "line": 2498
+          "line": 125
         }
       ],
       "drift_risk": "LOW"
     },
     "line_refs": {
       "definition_sites": 5,
-      "use_sites": 152,
+      "use_sites": 191,
       "definitions": [
         {
           "doc": "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
-          "line": 74
+          "line": 117
         },
         {
           "doc": "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
-          "line": 384
+          "line": 427
         },
         {
           "doc": "Docs/DECISIONS/70_OQ1_IDENTITY_LAYERING.md",
@@ -867,7 +867,7 @@
         },
         {
           "doc": "Docs/DECISIONS/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
-          "line": 236
+          "line": 242
         }
       ],
       "uses_sample": [
@@ -885,11 +885,11 @@
         },
         {
           "doc": "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
-          "line": 318
+          "line": 361
         },
         {
           "doc": "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
-          "line": 371
+          "line": 414
         },
         {
           "doc": "Docs/DECISIONS/67_ANNOTATION_RESOLVER_BOUNDARY_ADJUSTMENT.md",

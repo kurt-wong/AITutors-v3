@@ -2328,3 +2328,49 @@ UNASSIGNED 归零 · 802 passed · L0 内容零改动 · L0 文件名零改动
 §1.3 状态文件职责 + §1.1 恢复；emitter 路径映射 + Closure 检测改按文件名 +
 REPORTS 未编号默认 L4 + 84/71 归 L2；`84` D-01 → DECIDED；归档 71 加 SUPERSEDED
 声明。**无生产代码变更。**
+
+## 2026-09-13 — C-01 / BIND-1/2/3 部分裁决（落 82 §5，不新建文档）
+
+Owner 裁决：C-01 是真实 Contract Carrier Conflict，但一阶问题不是「line_refs 放哪」，
+而是**谁拥有 binding claim · 谁验证它 · 两条路径如何携带**。
+
+- **BIND-1 → ACCEPTED / FROZEN**：确定性可验证 identity join；禁 fuzzy / 相似度 /
+  重跑 Resolver。**ACCEPT ≠ Adapter 可开工**（前置仍 81 §5.4 三项）。
+- **BIND-2 → 用户裁 UNPROVEN；本轮提交九项代码+测试证据，证据支持 PASS，待 Owner 确认。**
+  证据链：20 §4.3 FORBIDDEN_FIELDS 禁 line_refs → 20 §4.4 Semantic Reference 是
+  L0 规定的位置机制（start/end_marker，不含行号）→ resolver.py:264,468 消费 marker、
+  :150,177,206,226 **产出** ResolvedSpan.line_refs → test_annotation.py:54,85 锁死
+  禁字段 → test_resolver.py 全文件用 marker 输入断言 line_refs 为输出 → **802 passed**。
+  登记残留：gate/service.py:82-98 _confidence_only_projection 保留 line_refs，系 OQ-1
+  对 67 号提案的预期性设计，在现行 L0 下对 line_refs 是 no-op，非矛盾，不得援引为
+  「代码其实需要 annotation.line_refs」的证据。
+- **BIND-3 → 方向 ACCEPTED / 契约验证 UNPROVEN**：Manifest role declarations =
+  External Claims（非 Semantic Authority），必须过 V3 自己的 contract validation。
+  UNPROVEN 因 manifest schema 未冻结（81 §5.4 前置 2），属前置依赖未就绪。
+- **分层原则冻结**（82 §5.0）：Annotation = semantic structure / Binding =
+  source-reference claim / Identity Join = deterministic relation。不预先决定载体位置。
+- **落笔**：82 §5 重写 + §7/§10 同步；84 加四次裁决表 + C-01 状态行更新；
+  restart-prompt → v1.56。**未新建文档。**
+- **未做**：L0 零改动 · 67/81 正文未改 · manifest-only 未冻结 · 67 Errata 未发布 ·
+  Adapter 未开工 · **未 commit**（等用户显式授权）。
+
+## 2026-09-13 — BIND-2 = PASS（Owner 确认）
+
+Owner 复核九项证据后**确认 BIND-2 = PASS / ACCEPTED / FROZEN**，依据达契约证明级别，
+不需再为形式增加实验。
+
+裁决原文结论：**Native Path 在当前 Frozen L0 下不依赖 `annotation.line_refs`，
+且 `line_refs` 的合法来源是 Resolver 输出，而不是 Annotation 输入。**
+即 `line_refs as INPUT ❌` / `line_refs as OUTPUT ✅`。
+
+- `gate/service.py:82-98` 历史残留裁决为**不可达的防御性历史逻辑**：不能证明
+  「Resolver requires annotation.line_refs」，最多证明「旧设计曾考虑过」。
+  **登记即可，不判代码错误，不要求现在删除**——避免把治理裁决扩大成代码清理任务。
+- **收敛结论（82 §5.2.1，本轮核心收益）**：Native Path 不需要 preprocessing 提供
+  line_refs；preprocessing 的 Manifest 不需要为兼容 Native 而把 line_refs 塞进
+  Annotation。C-01 从「四方概念冲突」收敛为单一工程契约问题。
+- **C-01 整体仍 OPEN，单一剩余阻塞 = BIND-3**（manifest schema 冻结）。
+- **⚠️ BIND-2 PASS ≠ Adapter 可开工**；前置仍 81 §5.4 三项。
+- 落笔：82 §5.2 升 PASS + 新增 §5.2.1 收敛结论；84 C-01 状态行与四次裁决表同步；
+  restart-prompt → v1.57。
+- **授权 commit + push**（六项窄检查通过后直接提交，不再等待二次审批）。
