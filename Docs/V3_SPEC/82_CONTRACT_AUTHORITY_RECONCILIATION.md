@@ -1,9 +1,23 @@
 # 82 — Contract Authority Reconciliation：规范权威层级与 Gate 状态权威
 
-**Status**: **ACTIVE — 本文档是文档权威层级与 Gate 状态的唯一现行权威**
+**Status**: **ACTIVE — Gate State Authority（本文档 §3 是唯一权威）**
 **Date**: 2026-09-13
 **触发**: 外部对抗性审查（2026-09-13）指出 Frozen Spec / Gate 裁决 / Phase 报告 /
 Status 文档之间出现多个层级的规范性声明，且无废止关系记录。
+
+> ⚠️ **降级为治理执行记录（2026-09-13，90 号生效）**
+> 治理元规范已提升至 **`90 号`**（L0-META）。本文档 **§1 Authority Matrix**、
+> **§2 CHANGE 分类**、**§9 Status Header**、**§11 读取顺序** **被 90 号吸收**，
+> 此处保留为历史，**以 90 号为准**。
+>
+> 本文档**继续持有**且仍是唯一权威的部分：
+> - **§3 Gate State Authority**（唯一；每次 Gate 状态变更须同 commit 更新）
+> - §4 Conflict Register → **后继为 `84 号` Conflict Ledger**（全集）
+> - §5 Binding Authority BIND-1/2/3（PENDING）
+> - §10 Phase I-5 CURRENT BASELINE
+>
+> **最高规则（90 §2）**：L3/L4/L5 永远不得改变 L0/L1；L2 只能解释与裁决，
+> 不得修改 L0。本文档是 **L2**，同样受此约束。
 
 ---
 
@@ -74,8 +88,14 @@ Errata Decision 的前置不是「再裁决一次 67」，而是**先把谁有�
 
 **C 层 — Phase / Work Report（Informative）**
 
-`60`–`66`、`68`、`71`–`74`、`76`–`79`。
-其中 `74` 的 Gate C 状态行已 stale（§4-C1）。
+`60`–`66`、`68`、`71`–`74`、`76`–`79`、`83`。
+其中 `74` 的 Gate C 状态行已 stale（§4-C1）；`83` 是 I-5-G 全仓审计结果，
+其 §6 六项待裁决未决前，G1–G6 均为**登记状态**。
+
+> ⚠️ **待归层（83 号 G1/G3，未裁决）**：`Closure/PHASE_I2C|I2_REVISION|I3|I4_CLOSURE.md`
+> 四份正式关闭记录（建议 **B**）、`gate_b2a_three_task_report.md`（建议 **C**）、
+> `63`（自述 Frozen Constraint，**A 或 B 待裁决**）、`65`（scope freeze 契约，
+> 建议 **B**）。在裁决前，**不得**按路径直觉把它们当 A 层用。
 
 **D 层 — Status / Restart（Informative）**
 
@@ -300,3 +320,88 @@ Errata Decision
 
 非 Path B 侧（不阻塞于上表）：OQ-3 → OQ-2 → B2-B2 Unknown 125 triage（补 C4 scope
 声明）→ Phase 2 Evidence Ledger。
+
+---
+
+## 9. Status Header 规范（83 号起强制）
+
+**每份新文档必须以如下块开头**，使 Agent 无需猜测权威层级：
+
+```text
+Document Type:  <Frozen Spec | Decision Record | Governance Record |
+                 Phase Report | Status | Experimental>
+Authority Level: <A | B | C | D | E>
+Status:         <ACTIVE | SUPERSEDED | HISTORICAL | DRAFT | CLOSED>
+Normative:      <YES | NO>
+Supersedes:     <doc list 或 —>
+Superseded By:  <doc 或 —>
+Gate State Authority: <YES | NO>     # 仅 YES 时可定义 Gate 状态；现行唯一为 82 §3
+```
+
+**81 号 / 82 号 回填示例**
+
+| | 81 | 82 |
+|---|---|---|
+| Document Type | Decision Record | Governance / Authority Record |
+| Authority Level | B | B（**治理根**） |
+| Status | ACTIVE | ACTIVE |
+| Normative | NO（裁决范围内的契约描述，**不是 Frozen Spec**） | NO（治理规则，不改 A 层语义） |
+| Gate State Authority | NO | **YES** |
+
+**既有文档不强制回填**（Reconcile, don't rewrite）；下次实质性修订时补上。
+
+---
+
+## 10. Phase I-5 CURRENT BASELINE（2026-09-13 冻结）
+
+> **本表优先于任何 Phase Report。** 与本表冲突的文档一律 stale。
+
+╔════════════════════════════════════════════════════════════╗
+║              PHASE I-5 CURRENT BASELINE                    ║
+╠════════════════════════════════════════════════════════════╣
+║ Scope Freeze (I-5-0)          CLOSED                       ║
+║ I-5-1 Feasibility             HISTORICAL / NON-REPRODUCIBLE║
+║ Gate A                        PASS / TEST-EVIDENCED        ║
+║ Gate B                        NOT CLOSED                   ║
+║ Gate C                        CLOSED — Phase 1             ║
+║ Gate D                        CONTRACT CLOSED              ║
+║ Adapter implementation        NOT STARTED                  ║
+║ Binding Carrier               PENDING (BIND-1/2/3)         ║
+║ Errata 67                     NOT RELEASED (CHANGE-5)      ║
+║ E1 (Grammar → 20 §8.4)        PENDING — CHANGE-2           ║
+║ E2 (Adapter 边界 → 20 §3)      DEFERRED                     ║
+║ V3 Annotation Contract        NOT FROZEN                   ║
+║ Manifest Contract             NOT FROZEN                   ║
+║ Document Governance (I-5-G)   ← CURRENT WORK               ║
+╚════════════════════════════════════════════════════════════╝
+
+**I-5-G 完成条件（10 项，全部满足才进入 I-5-BIND）**：
+
+1. Authority Matrix 建立 ✅（§1）
+2. Gate State Authority 建立 ✅（§3）
+3. Supersession 关系清理 — **进行中**（C1/C2/C3 已处理；G3 的 71 号双份待裁决）
+4. 所有 ACTIVE 文档 authority/status 明确 — **进行中**（§9 规范已立，存量待回填）
+5. 所有 normative-looking phase/report 文档完成分类 — **进行中**（83 号审计）
+6. Gate 状态不存在冲突 — **进行中**（以 §3 对账中）
+7. Frozen Spec 不被后续报告隐式修改 ✅（§1.4 规则 1）
+8. CHANGE-0…5 覆盖所有现有 Contract Change 候选 — **进行中**
+9. `67 / 69 / 74 / 80 / 81 / 82` 关系可解释 ✅（§1.2 + §4）
+10. 全仓不存在未分类的 normative contradiction — **进行中**（83 号）
+
+---
+
+## 11. Agent 读取顺序（强制）
+
+为防上下文污染——把旧结论、新结论、实验结论与用户最新要求「综合理解」后
+自行创造一个不存在的 Contract（C3 即此类产物）——Agent 读取顺序强制为：
+
+```text
+1. 82 号（Authority + Gate State + Baseline）
+2. Frozen Spec 00–50
+3. 相关 Decision Record
+4. 82 §3 当前 Gate 状态
+5. Experimental 证据
+6. 历史文档
+```
+
+**禁止**「grep 到什么读什么」。

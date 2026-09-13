@@ -1818,3 +1818,167 @@ Errata   : 暂缓
 `81 号` 前置声明修正（C3）+ `69 号` §8 supersede 指针 + 状态块更新 +
 `80 号` 状态块加 82 指针与 C4 说明 + `74 号` 三处 supersede 标注 +
 `restart-prompt` v1.48 → v1.49。**无生产代码变更。**
+
+---
+
+## 2026-09-13 — Phase I-5-G Document Governance Audit（83 号，处置待裁决）
+
+**触发**：用户把文档治理提升为当前阶段最高优先级，且明确「先 commit/push 82 →
+再做一次全仓 Document Governance Audit → 清理/标记 stale normative language →
+建立当前文档基线 → 最后才进入 Binding Authority Decision」。
+
+**方法**：机械扫描（`backend/scripts/i5g_normative_scan.py`，只读），
+**Reconcile, don't rewrite**——不逐句改写历史报告，只登记 + 标记 supersede。
+
+### 分层合计
+
+| 层 | 文档数 | 行数 | 命中 | 密度 |
+|---|---|---|---|---|
+| A Frozen Spec | 7 | 3163 | 410 | 13.0% |
+| B Decision Record | 7 | 3445 | 512 | 14.9% |
+| C Phase Report | 17 | 4672 | 291 | 6.2% |
+| D Status | 3 | 4558 | 842 | 18.5% |
+| **UNCATEGORISED** | **5** | **837** | **61** | 7.3% |
+
+**关键限定**：标记词命中 ≠ 违规。A 层**应该**高密度；「只能证明 / 本实验采用」是
+报告的正确写法。要找的是**在错误层级自立规则**。
+
+### 六项发现（全部只登记，未处置）
+
+- **G2 🔴 最重：71 号同号双份且内容不同。**
+  `Docs/V3_SPEC/71_…`（6914 B，Sep 12 21:33，「裁决记录」）vs
+  `backend/Docs/V3_SPEC/71_…`（7783 B，23:05，「(CORRECTED)」），`diff -q` 判 DIFFERENT。
+  比 C1 更糟——C1 是同一文档状态被两处误读，这是两个文件抢同一编号且无废止声明；
+  且**旧的那份在 A 层目录里**，路径直觉会把它当更权威。
+- **G1 🔴 5 份文档在 V3_SPEC 树内但未分类**（837 行）：4×`Closure/PHASE_I*_CLOSURE.md`
+  （正式关闭记录，`PHASE_I3_CLOSURE.md:5` 直接写 `Gate: PASS` 却不在 82 §3 表内）
+  + `gate_b2a_three_task_report.md`。
+- **G3 🟠 分层错误 3 份**：`63` 自述 `Status: Frozen Constraint`（A 或 B 待裁决，
+  升 A 须 Change Record）；`65` 是 scope freeze 契约（`65:95-106` 十二条禁令）；
+  `68` 保持 C 但须注明 69 的定性。
+- **G4 🟠 C 层自立规范**：`74` 对 V3 立规（`224`/`226`/`283`/`385`/`395-396`/`418`）。
+  对照 `74:94`「这个结果只能证明」是正确用法——同文档两种用法并存，说明缺的是
+  分类约束而非写作能力。
+- **G5 🟠 Gate 状态行集中面**：`Status.md` 45 行 / `69` 42 行 是聚合错误最大温床
+  （C3 即此类产物）。新增行须用 82 §3.3 模板。
+- **G6 🟡** `restart-prompt` 密度 36.6% 全仓最高——不压缩，改由 82 §11 读取顺序约束。
+
+### I-5-G 完成条件对账（82 §10）
+
+✅3 项（Authority Matrix / Gate State Authority / Frozen Spec 不被隐式修改 /
+67-82 关系可解释 —— 计 4 项已实质达成）· 🟠6 项进行中 · 🔴1 项被 G2 阻塞
+（第 10 项「无未分类的 normative contradiction」）。
+
+**结论：I-5-G 未完成，不得进入 I-5-BIND。**
+
+### 82 号新增章节
+
+- **§9 Status Header 规范**（83 号起强制）：Document Type / Authority Level /
+  Status / Normative / Supersedes / Superseded By / Gate State Authority。
+  存量不强制回填，下次实质修订时补。
+- **§10 Phase I-5 CURRENT BASELINE**：14 行状态表 + I-5-G 10 项完成条件逐项对账。
+  **本表优先于任何 Phase Report。**
+- **§11 Agent 强制读取顺序**：82 → 00–50 → Decision Record → 82 §3 →
+  Experimental → 历史文档。**禁止「grep 到什么读什么」**——防上下文污染后
+  自行创造不存在的 Contract（C3 即此类产物）。
+
+### 本轮明确不做
+
+**不改 20；不发 67；不冻结 manifest-only；不写 Errata Decision；不实现 Adapter；
+不逐句改写历史报告；不删除 71 号任一份。**
+
+### 状态
+
+```text
+Phase I-5-G : ACTIVE（审计完成，处置待裁决）
+I-5-BIND    : BLOCKED BY I-5-G
+下一步       : 裁决 83 §6 六项（G2 优先）
+```
+
+### 产出
+
+`83_GOVERNANCE_AUDIT.md`（新建，C 层）+ `backend/scripts/i5g_normative_scan.py`
+（只读扫描脚本）+ `82 号` §9/§10/§11 新增 + §1.2 补登 83 号与待归层警告 +
+`restart-prompt` v1.49 → v1.50。**无生产代码变更。**
+
+---
+
+## 2026-09-13 — 治理元规范 90 号 + Conflict Ledger 84 号 + docs_audit 产物
+
+**触发**：用户裁决「新增最高级治理文档…它不是业务 Spec，而是"规范管理规范"」，
+并要求生成 `docs_audit/` 机器可读产物与 Conflict Ledger。
+**L0 六册零字节改动。84 台账 15 项 OPEN 全部未裁决。**
+
+### 90 号 — 治理元规范（L0-META）
+
+不是业务 Spec，规定「规范如何被管理」。**吸收并取代 82 §1/§2/§9/§11**；
+82 降为 L2 治理执行记录，**继续持有 §3 Gate State Authority（唯一）**。
+
+- **L0–L5 等级**：L0 Frozen Spec / **L1 Contract Change Record（修改 L0 的
+  唯一入口，当前为空）** / L2 Decision Record / L3 Gate Report / L4 Experiment
+  Report / L5 Status。旧 A–E 的 C 拆为 L3+L4——Gate 报告与实验报告权限不同。
+- **最高规则**：**L3/L4/L5 永远不得改变 L0/L1；L2 只能解释与裁决，不得修改 L0。**
+- **R1–R6**：L0 只能经 L1 改 / L2 不得产生新架构事实 / L3 只能证明状态且必须
+  引用 82 §3 / L4 不得把实验结论升为事实 / L5 不得与 82 §3 矛盾 / 术语必须有
+  冻结定义。
+- **细化用户 Rule 2**：`CLOSED`/`PASS` **不整体禁止**——L3 本职就是报告状态；
+  规则是**必须引用 82 §3**，而非禁用词本身。
+- CHANGE-0…5 + Status Header 规范 + 扫描规则 Rule 1–4 + 强制读取顺序。
+
+### 84 号 — Conflict Ledger（L3 台账，取代 82 §4）
+
+**15 项 OPEN / 4 项已处置 / 3 项误报**，每条带 `file:line` 证据。
+
+本轮**新增**核验发现（上一轮扫描未覆盖）：
+
+- **A-07 🔴**：`73:213` 声明 157 targets `UNRESOLVED / REVIEW REQUIRED`
+  （`NOT proven: All 157 are correct bindings`），而 Gate C 以 C-2「157 E2E」关闭。
+  **A-01 同类**——疑虑或已解决但**无文件声明 73 已关闭**。可能动摇 Gate C 证据基础。
+- **B-01 🔴**：**`Evidence Contract` 零定义却被 ≥4 份文档用来立规**（13 处使用，
+  定义 grep 零命中）。多处写「preprocessing **必须满足** V3 Evidence Contract」。
+  违反 90 §2 R6。实际指向 `75 号`，但从未显式等同。
+- **B-02 🔴**：三近义词仅一个有宪法地位——`Validated Evidence`（10 处，**全在 L3
+  `74`**，L0/L2 零定义）/ `Verified Evidence`（全仓零使用）/ `verified_correct`
+  （L0 `20 §8.3`）。
+- **A-06 🟠**：`61:4` `IN PROGRESS` vs `Closure/PHASE_I3_CLOSURE.md:4-5` CLOSED——
+  Phase I-3 关闭后 61 从未回写。
+- **A-08 🟠**：`Status.md:2309`（已撤回的 Grammar 契约，**未标记**）vs
+  `Status.md:2423`（不变量版）——对立极性同主题。
+
+### 三处误报（记入 84 E 类，防重复排查）
+
+- **E-01**：`81:208-211` 管线图判 MIXED——**误报**，是两条**显式标注**的分支
+  （`Native Resolver（search/resolve）` / `Path B Adapter（verify only）`）。
+- **E-02**：`10:777` 引用 `20 §12.1` 判悬空——**误报**，该行是 **changelog**，
+  记录「从 20 §12.1 **改为** 20 §8.5」的旧值。
+- **E-03**：「Gate B2-B = NEXT」——**不成立**，全仓无「NEXT」措辞。
+
+### docs_audit/ 机器可读产物
+
+`backend/scripts/i5g_emit_audit.py`（只读扫描，唯一写入目标 `docs_audit/`）：
+
+| 产物 | 内容 |
+|---|---|
+| `authority_matrix.yaml` | 全仓归层：**L0=7 / L0-META=1 / L2=11 / L3=3 / L4=16 / L5=4 / UNASSIGNED=1** |
+| `contradiction_candidates.json` | 84 台账机器形式 + **196 条 Gate 状态行** |
+| `frozen_terms.json` | 14 个关键术语定义/使用分布 |
+| `scan_report.md` | 人读汇总 |
+
+**归层说明**：4×`Closure/PHASE_I*_CLOSURE.md` 在机器产物中**暂定 L2**
+（reason 字段标 `pending D-02 adjudication`）——这是**提案非裁决**，
+D-02 仍在 84 台账 OPEN。`gate_b2a_three_task_report.md` 仍 UNASSIGNED。
+
+**高术语漂移风险**（检测器局限须一并读）：`annotation_payload` 51 用 0 定义、
+`FORBIDDEN_FIELDS` 20 用 0 定义——**二者实由 L0 `20 §4.1`/`§4.3` 表格定义**，
+检测器只匹配散文定义句（同 B-03）。
+
+### 本轮明确不做
+
+**L0 六册零字节改动；不发 67；不冻结 manifest-only；不写 Errata Decision；
+不实现 Adapter；不逐句改写历史报告；不删除 71 号任一份；不对 84 任何条目裁决。**
+
+### 产出
+
+`90_DOCUMENT_GOVERNANCE.md`（新建，L0-META）+ `84_CONFLICT_LEDGER.md`（新建，L3）+
+`docs_audit/` 四件产物 + `backend/scripts/i5g_emit_audit.py` +
+`82 号` 降级指针 + `restart-prompt` v1.50 → v1.51。**无生产代码变更。**

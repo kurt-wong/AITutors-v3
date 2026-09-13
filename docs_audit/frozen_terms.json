@@ -1,0 +1,759 @@
+{
+  "_generated_by": "backend/scripts/i5g_emit_audit.py",
+  "_note": "drift_risk HIGH = many uses, zero prose definitions. Field-table definitions (e.g. ResolvedSpan in 20 section 5.5) are not detected; check B-03 before treating HIGH as a defect.",
+  "terms": {
+    "ResolvedSpan": {
+      "definition_sites": 1,
+      "use_sites": 116,
+      "definitions": [
+        {
+          "doc": "backend/Docs/V3_SPEC/84_CONFLICT_LEDGER.md",
+          "line": 56
+        }
+      ],
+      "uses_sample": [
+        {
+          "doc": "Docs/V3_SPEC/20_Document_Pipeline.md",
+          "line": 288
+        },
+        {
+          "doc": "Docs/V3_SPEC/20_Document_Pipeline.md",
+          "line": 322
+        },
+        {
+          "doc": "Docs/V3_SPEC/65_PHASE_I5_SCOPE_FREEZE.md",
+          "line": 84
+        },
+        {
+          "doc": "Docs/V3_SPEC/66_PHASE_I5_1_BOUNDARY_ANALYSIS.md",
+          "line": 22
+        },
+        {
+          "doc": "Docs/V3_SPEC/66_PHASE_I5_1_BOUNDARY_ANALYSIS.md",
+          "line": 30
+        },
+        {
+          "doc": "Docs/V3_SPEC/66_PHASE_I5_1_BOUNDARY_ANALYSIS.md",
+          "line": 41
+        },
+        {
+          "doc": "Docs/V3_SPEC/66_PHASE_I5_1_BOUNDARY_ANALYSIS.md",
+          "line": 42
+        },
+        {
+          "doc": "Docs/V3_SPEC/66_PHASE_I5_1_BOUNDARY_ANALYSIS.md",
+          "line": 43
+        },
+        {
+          "doc": "Docs/V3_SPEC/66_PHASE_I5_1_BOUNDARY_ANALYSIS.md",
+          "line": 44
+        },
+        {
+          "doc": "Docs/V3_SPEC/66_PHASE_I5_1_BOUNDARY_ANALYSIS.md",
+          "line": 45
+        },
+        {
+          "doc": "Docs/V3_SPEC/66_PHASE_I5_1_BOUNDARY_ANALYSIS.md",
+          "line": 77
+        },
+        {
+          "doc": "Docs/V3_SPEC/66_PHASE_I5_1_BOUNDARY_ANALYSIS.md",
+          "line": 79
+        }
+      ],
+      "drift_risk": "LOW"
+    },
+    "ResolvedRun": {
+      "definition_sites": 2,
+      "use_sites": 35,
+      "definitions": [
+        {
+          "doc": "backend/Docs/V3_SPEC/81_GATE_D_ADAPTER_BOUNDARY.md",
+          "line": 382
+        },
+        {
+          "doc": "log.md",
+          "line": 1716
+        }
+      ],
+      "uses_sample": [
+        {
+          "doc": "Docs/V3_SPEC/20_Document_Pipeline.md",
+          "line": 549
+        },
+        {
+          "doc": "Docs/V3_SPEC/60_PHASE_I2C_RESOLVER.md",
+          "line": 46
+        },
+        {
+          "doc": "Docs/V3_SPEC/66_PHASE_I5_1_BOUNDARY_ANALYSIS.md",
+          "line": 21
+        },
+        {
+          "doc": "Docs/V3_SPEC/66_PHASE_I5_1_BOUNDARY_ANALYSIS.md",
+          "line": 236
+        },
+        {
+          "doc": "Docs/V3_SPEC/66_PHASE_I5_1_BOUNDARY_ANALYSIS.md",
+          "line": 243
+        },
+        {
+          "doc": "Docs/V3_SPEC/67_ANNOTATION_RESOLVER_BOUNDARY_ADJUSTMENT.md",
+          "line": 13
+        },
+        {
+          "doc": "Docs/V3_SPEC/67_ANNOTATION_RESOLVER_BOUNDARY_ADJUSTMENT.md",
+          "line": 154
+        },
+        {
+          "doc": "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
+          "line": 181
+        },
+        {
+          "doc": "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
+          "line": 230
+        },
+        {
+          "doc": "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
+          "line": 231
+        },
+        {
+          "doc": "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
+          "line": 234
+        },
+        {
+          "doc": "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
+          "line": 237
+        }
+      ],
+      "drift_risk": "LOW"
+    },
+    "annotation_payload": {
+      "definition_sites": 0,
+      "use_sites": 51,
+      "definitions": [],
+      "uses_sample": [
+        {
+          "doc": "Docs/V3_SPEC/10_Data_Model.md",
+          "line": 296
+        },
+        {
+          "doc": "Docs/V3_SPEC/10_Data_Model.md",
+          "line": 677
+        },
+        {
+          "doc": "Docs/V3_SPEC/66_PHASE_I5_1_BOUNDARY_ANALYSIS.md",
+          "line": 21
+        },
+        {
+          "doc": "Docs/V3_SPEC/66_PHASE_I5_1_BOUNDARY_ANALYSIS.md",
+          "line": 239
+        },
+        {
+          "doc": "Docs/V3_SPEC/66_PHASE_I5_1_BOUNDARY_ANALYSIS.md",
+          "line": 250
+        },
+        {
+          "doc": "Docs/V3_SPEC/66_PHASE_I5_1_BOUNDARY_ANALYSIS.md",
+          "line": 254
+        },
+        {
+          "doc": "Docs/V3_SPEC/67_ANNOTATION_RESOLVER_BOUNDARY_ADJUSTMENT.md",
+          "line": 128
+        },
+        {
+          "doc": "Docs/V3_SPEC/67_ANNOTATION_RESOLVER_BOUNDARY_ADJUSTMENT.md",
+          "line": 216
+        },
+        {
+          "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+          "line": 89
+        },
+        {
+          "doc": "Docs/V3_SPEC/70_OQ1_IDENTITY_LAYERING.md",
+          "line": 28
+        },
+        {
+          "doc": "Docs/V3_SPEC/70_OQ1_IDENTITY_LAYERING.md",
+          "line": 40
+        },
+        {
+          "doc": "Docs/V3_SPEC/70_OQ1_IDENTITY_LAYERING.md",
+          "line": 51
+        }
+      ],
+      "drift_risk": "HIGH"
+    },
+    "Source Binding Claim": {
+      "definition_sites": 2,
+      "use_sites": 41,
+      "definitions": [
+        {
+          "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+          "line": 404
+        },
+        {
+          "doc": "Docs/V3_SPEC/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
+          "line": 222
+        }
+      ],
+      "uses_sample": [
+        {
+          "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+          "line": 60
+        },
+        {
+          "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+          "line": 64
+        },
+        {
+          "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+          "line": 93
+        },
+        {
+          "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+          "line": 102
+        },
+        {
+          "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+          "line": 103
+        },
+        {
+          "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+          "line": 331
+        },
+        {
+          "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+          "line": 333
+        },
+        {
+          "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+          "line": 339
+        },
+        {
+          "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+          "line": 340
+        },
+        {
+          "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+          "line": 376
+        },
+        {
+          "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+          "line": 386
+        },
+        {
+          "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+          "line": 604
+        }
+      ],
+      "drift_risk": "LOW"
+    },
+    "FORBIDDEN_FIELDS": {
+      "definition_sites": 0,
+      "use_sites": 20,
+      "definitions": [],
+      "uses_sample": [
+        {
+          "doc": "Docs/V3_SPEC/67_ANNOTATION_RESOLVER_BOUNDARY_ADJUSTMENT.md",
+          "line": 37
+        },
+        {
+          "doc": "Docs/V3_SPEC/67_ANNOTATION_RESOLVER_BOUNDARY_ADJUSTMENT.md",
+          "line": 112
+        },
+        {
+          "doc": "Docs/V3_SPEC/67_ANNOTATION_RESOLVER_BOUNDARY_ADJUSTMENT.md",
+          "line": 126
+        },
+        {
+          "doc": "Docs/V3_SPEC/67_ANNOTATION_RESOLVER_BOUNDARY_ADJUSTMENT.md",
+          "line": 128
+        },
+        {
+          "doc": "Docs/V3_SPEC/67_ANNOTATION_RESOLVER_BOUNDARY_ADJUSTMENT.md",
+          "line": 130
+        },
+        {
+          "doc": "Docs/V3_SPEC/67_ANNOTATION_RESOLVER_BOUNDARY_ADJUSTMENT.md",
+          "line": 216
+        },
+        {
+          "doc": "Docs/V3_SPEC/67_ANNOTATION_RESOLVER_BOUNDARY_ADJUSTMENT.md",
+          "line": 267
+        },
+        {
+          "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+          "line": 46
+        },
+        {
+          "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+          "line": 393
+        },
+        {
+          "doc": "Docs/V3_SPEC/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
+          "line": 126
+        },
+        {
+          "doc": "Docs/V3_SPEC/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
+          "line": 244
+        },
+        {
+          "doc": "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
+          "line": 127
+        }
+      ],
+      "drift_risk": "HIGH"
+    },
+    "Validated Evidence": {
+      "definition_sites": 2,
+      "use_sites": 11,
+      "definitions": [
+        {
+          "doc": "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
+          "line": 212
+        },
+        {
+          "doc": "backend/Docs/V3_SPEC/84_CONFLICT_LEDGER.md",
+          "line": 55
+        }
+      ],
+      "uses_sample": [
+        {
+          "doc": "backend/Docs/V3_SPEC/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
+          "line": 201
+        },
+        {
+          "doc": "backend/Docs/V3_SPEC/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
+          "line": 327
+        },
+        {
+          "doc": "backend/Docs/V3_SPEC/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
+          "line": 385
+        },
+        {
+          "doc": "backend/Docs/V3_SPEC/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
+          "line": 406
+        },
+        {
+          "doc": "backend/Docs/V3_SPEC/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
+          "line": 488
+        },
+        {
+          "doc": "backend/Docs/V3_SPEC/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
+          "line": 529
+        },
+        {
+          "doc": "backend/Docs/V3_SPEC/75_EVIDENCE_PROMOTION_CONTRACT.md",
+          "line": 194
+        },
+        {
+          "doc": "backend/Docs/V3_SPEC/80_B2B5_CLOSURE.md",
+          "line": 111
+        },
+        {
+          "doc": "backend/Docs/V3_SPEC/83_GOVERNANCE_AUDIT.md",
+          "line": 112
+        },
+        {
+          "doc": "Status.md",
+          "line": 1936
+        },
+        {
+          "doc": "log.md",
+          "line": 1412
+        }
+      ],
+      "drift_risk": "LOW"
+    },
+    "Verified Evidence": {
+      "definition_sites": 1,
+      "use_sites": 1,
+      "definitions": [
+        {
+          "doc": "backend/Docs/V3_SPEC/84_CONFLICT_LEDGER.md",
+          "line": 55
+        }
+      ],
+      "uses_sample": [
+        {
+          "doc": "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
+          "line": 213
+        }
+      ],
+      "drift_risk": "LOW"
+    },
+    "verified_correct": {
+      "definition_sites": 1,
+      "use_sites": 29,
+      "definitions": [
+        {
+          "doc": "backend/Docs/V3_SPEC/84_CONFLICT_LEDGER.md",
+          "line": 55
+        }
+      ],
+      "uses_sample": [
+        {
+          "doc": "Docs/V3_SPEC/00_Master_Spec.md",
+          "line": 319
+        },
+        {
+          "doc": "Docs/V3_SPEC/10_Data_Model.md",
+          "line": 329
+        },
+        {
+          "doc": "Docs/V3_SPEC/10_Data_Model.md",
+          "line": 463
+        },
+        {
+          "doc": "Docs/V3_SPEC/10_Data_Model.md",
+          "line": 640
+        },
+        {
+          "doc": "Docs/V3_SPEC/10_Data_Model.md",
+          "line": 705
+        },
+        {
+          "doc": "Docs/V3_SPEC/20_Document_Pipeline.md",
+          "line": 365
+        },
+        {
+          "doc": "Docs/V3_SPEC/20_Document_Pipeline.md",
+          "line": 461
+        },
+        {
+          "doc": "Docs/V3_SPEC/20_Document_Pipeline.md",
+          "line": 588
+        },
+        {
+          "doc": "Docs/V3_SPEC/20_Document_Pipeline.md",
+          "line": 593
+        },
+        {
+          "doc": "Docs/V3_SPEC/20_Document_Pipeline.md",
+          "line": 637
+        },
+        {
+          "doc": "Docs/V3_SPEC/20_Document_Pipeline.md",
+          "line": 640
+        },
+        {
+          "doc": "Docs/V3_SPEC/20_Document_Pipeline.md",
+          "line": 646
+        }
+      ],
+      "drift_risk": "LOW"
+    },
+    "Evidence Contract": {
+      "definition_sites": 2,
+      "use_sites": 16,
+      "definitions": [
+        {
+          "doc": "backend/Docs/V3_SPEC/84_CONFLICT_LEDGER.md",
+          "line": 54
+        },
+        {
+          "doc": "backend/Docs/V3_SPEC/84_CONFLICT_LEDGER.md",
+          "line": 127
+        }
+      ],
+      "uses_sample": [
+        {
+          "doc": "backend/Docs/V3_SPEC/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
+          "line": 165
+        },
+        {
+          "doc": "backend/Docs/V3_SPEC/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
+          "line": 226
+        },
+        {
+          "doc": "backend/Docs/V3_SPEC/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
+          "line": 241
+        },
+        {
+          "doc": "backend/Docs/V3_SPEC/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
+          "line": 518
+        },
+        {
+          "doc": "backend/Docs/V3_SPEC/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
+          "line": 547
+        },
+        {
+          "doc": "backend/Docs/V3_SPEC/80_B2B5_CLOSURE.md",
+          "line": 181
+        },
+        {
+          "doc": "backend/Docs/V3_SPEC/80_B2B5_CLOSURE.md",
+          "line": 207
+        },
+        {
+          "doc": "backend/Docs/V3_SPEC/81_GATE_D_ADAPTER_BOUNDARY.md",
+          "line": 221
+        },
+        {
+          "doc": "backend/Docs/V3_SPEC/83_GOVERNANCE_AUDIT.md",
+          "line": 110
+        },
+        {
+          "doc": "restart-prompt.md",
+          "line": 99
+        },
+        {
+          "doc": "restart-prompt.md",
+          "line": 120
+        },
+        {
+          "doc": "Status.md",
+          "line": 1946
+        }
+      ],
+      "drift_risk": "LOW"
+    },
+    "canonical_question_type": {
+      "definition_sites": 0,
+      "use_sites": 9,
+      "definitions": [],
+      "uses_sample": [
+        {
+          "doc": "Docs/V3_SPEC/10_Data_Model.md",
+          "line": 333
+        },
+        {
+          "doc": "Docs/V3_SPEC/10_Data_Model.md",
+          "line": 387
+        },
+        {
+          "doc": "Docs/V3_SPEC/20_Document_Pipeline.md",
+          "line": 118
+        },
+        {
+          "doc": "Docs/V3_SPEC/20_Document_Pipeline.md",
+          "line": 185
+        },
+        {
+          "doc": "Docs/V3_SPEC/20_Document_Pipeline.md",
+          "line": 404
+        },
+        {
+          "doc": "Docs/V3_SPEC/20_Document_Pipeline.md",
+          "line": 452
+        },
+        {
+          "doc": "Docs/V3_SPEC/20_Document_Pipeline.md",
+          "line": 486
+        },
+        {
+          "doc": "Docs/V3_SPEC/20_Document_Pipeline.md",
+          "line": 664
+        },
+        {
+          "doc": "bugs.md",
+          "line": 257
+        }
+      ],
+      "drift_risk": "HIGH"
+    },
+    "STRICT_AUTO_TYPES": {
+      "definition_sites": 0,
+      "use_sites": 6,
+      "definitions": [],
+      "uses_sample": [
+        {
+          "doc": "Docs/V3_SPEC/20_Document_Pipeline.md",
+          "line": 667
+        },
+        {
+          "doc": "Docs/V3_SPEC/20_Document_Pipeline.md",
+          "line": 676
+        },
+        {
+          "doc": "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
+          "line": 182
+        },
+        {
+          "doc": "backend/Docs/V3_SPEC/80_B2B5_CLOSURE.md",
+          "line": 403
+        },
+        {
+          "doc": "log.md",
+          "line": 1526
+        },
+        {
+          "doc": "bugs.md",
+          "line": 401
+        }
+      ],
+      "drift_risk": "MEDIUM"
+    },
+    "structural_regions": {
+      "definition_sites": 0,
+      "use_sites": 9,
+      "definitions": [],
+      "uses_sample": [
+        {
+          "doc": "backend/Docs/V3_SPEC/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
+          "line": 6
+        },
+        {
+          "doc": "backend/Docs/V3_SPEC/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
+          "line": 49
+        },
+        {
+          "doc": "backend/Docs/V3_SPEC/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
+          "line": 277
+        },
+        {
+          "doc": "backend/Docs/V3_SPEC/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
+          "line": 545
+        },
+        {
+          "doc": "backend/Docs/V3_SPEC/75_EVIDENCE_PROMOTION_CONTRACT.md",
+          "line": 289
+        },
+        {
+          "doc": "backend/Docs/V3_SPEC/75_EVIDENCE_PROMOTION_CONTRACT.md",
+          "line": 407
+        },
+        {
+          "doc": "backend/Docs/V3_SPEC/75_EVIDENCE_PROMOTION_CONTRACT.md",
+          "line": 414
+        },
+        {
+          "doc": "log.md",
+          "line": 1442
+        },
+        {
+          "doc": "log.md",
+          "line": 1443
+        }
+      ],
+      "drift_risk": "HIGH"
+    },
+    "Binding Carrier": {
+      "definition_sites": 1,
+      "use_sites": 14,
+      "definitions": [
+        {
+          "doc": "backend/Docs/V3_SPEC/84_CONFLICT_LEDGER.md",
+          "line": 57
+        }
+      ],
+      "uses_sample": [
+        {
+          "doc": "Docs/V3_SPEC/69_ARCHITECTURE_REVIEW_ADJUDICATION.md",
+          "line": 1181
+        },
+        {
+          "doc": "Docs/V3_SPEC/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
+          "line": 255
+        },
+        {
+          "doc": "Docs/V3_SPEC/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
+          "line": 304
+        },
+        {
+          "doc": "Docs/V3_SPEC/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
+          "line": 355
+        },
+        {
+          "doc": "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
+          "line": 225
+        },
+        {
+          "doc": "backend/Docs/V3_SPEC/80_B2B5_CLOSURE.md",
+          "line": 442
+        },
+        {
+          "doc": "backend/Docs/V3_SPEC/81_GATE_D_ADAPTER_BOUNDARY.md",
+          "line": 389
+        },
+        {
+          "doc": "backend/Docs/V3_SPEC/81_GATE_D_ADAPTER_BOUNDARY.md",
+          "line": 402
+        },
+        {
+          "doc": "backend/Docs/V3_SPEC/84_CONFLICT_LEDGER.md",
+          "line": 108
+        },
+        {
+          "doc": "restart-prompt.md",
+          "line": 6
+        },
+        {
+          "doc": "restart-prompt.md",
+          "line": 69
+        },
+        {
+          "doc": "Status.md",
+          "line": 2498
+        }
+      ],
+      "drift_risk": "LOW"
+    },
+    "line_refs": {
+      "definition_sites": 2,
+      "use_sites": 153,
+      "definitions": [
+        {
+          "doc": "Docs/V3_SPEC/82_CONTRACT_AUTHORITY_RECONCILIATION.md",
+          "line": 222
+        },
+        {
+          "doc": "Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md",
+          "line": 74
+        }
+      ],
+      "uses_sample": [
+        {
+          "doc": "Docs/V3_SPEC/20_Document_Pipeline.md",
+          "line": 117
+        },
+        {
+          "doc": "Docs/V3_SPEC/20_Document_Pipeline.md",
+          "line": 309
+        },
+        {
+          "doc": "Docs/V3_SPEC/20_Document_Pipeline.md",
+          "line": 507
+        },
+        {
+          "doc": "Docs/V3_SPEC/66_PHASE_I5_1_BOUNDARY_ANALYSIS.md",
+          "line": 22
+        },
+        {
+          "doc": "Docs/V3_SPEC/66_PHASE_I5_1_BOUNDARY_ANALYSIS.md",
+          "line": 30
+        },
+        {
+          "doc": "Docs/V3_SPEC/66_PHASE_I5_1_BOUNDARY_ANALYSIS.md",
+          "line": 41
+        },
+        {
+          "doc": "Docs/V3_SPEC/66_PHASE_I5_1_BOUNDARY_ANALYSIS.md",
+          "line": 43
+        },
+        {
+          "doc": "Docs/V3_SPEC/66_PHASE_I5_1_BOUNDARY_ANALYSIS.md",
+          "line": 269
+        },
+        {
+          "doc": "Docs/V3_SPEC/67_ANNOTATION_RESOLVER_BOUNDARY_ADJUSTMENT.md",
+          "line": 37
+        },
+        {
+          "doc": "Docs/V3_SPEC/67_ANNOTATION_RESOLVER_BOUNDARY_ADJUSTMENT.md",
+          "line": 90
+        },
+        {
+          "doc": "Docs/V3_SPEC/67_ANNOTATION_RESOLVER_BOUNDARY_ADJUSTMENT.md",
+          "line": 112
+        },
+        {
+          "doc": "Docs/V3_SPEC/67_ANNOTATION_RESOLVER_BOUNDARY_ADJUSTMENT.md",
+          "line": 114
+        }
+      ],
+      "drift_risk": "LOW"
+    }
+  }
+}

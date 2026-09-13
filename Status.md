@@ -2523,3 +2523,138 @@ Errata   : 暂缓（67 号 CHANGE-5 不得发布，Gate B NOT CLOSED）
 | — | 非 Path B：OQ-3 → OQ-2；B2-B2 Unknown 125 triage（补 C4 scope）；Phase 2 Evidence Ledger |
 
 **Gate 状态变更必须同 commit 更新 82 §3。**
+
+---
+
+## 2026-09-13 — Phase I-5-G Document Governance Audit（83 号）
+
+**权威**：`backend/Docs/V3_SPEC/83_GOVERNANCE_AUDIT.md`（C 层）
+**方法**：`backend/scripts/i5g_normative_scan.py` 机械扫描，只读；**Reconcile, don't rewrite**
+**本轮不做**：不改 20；不发 67；不冻结 manifest-only；不写 Errata Decision；不实现 Adapter
+
+### 分层合计
+
+| 层 | 文档数 | 行数 | 命中 | 密度 |
+|---|---|---|---|---|
+| A Frozen Spec | 7 | 3163 | 410 | 13.0% |
+| B Decision Record | 7 | 3445 | 512 | 14.9% |
+| C Phase Report | 17 | 4672 | 291 | 6.2% |
+| D Status | 3 | 4558 | 842 | 18.5% |
+| **UNCATEGORISED** | **5** | **837** | **61** | 7.3% |
+
+**限定**：标记词命中 ≠ 违规。A 层应高密度；「只能证明 / 本实验采用」是正确写法。
+
+### 六项发现（全部只登记，未处置）
+
+| ID | 发现 | 级别 |
+|---|---|---|
+| **G2** | **71 号同号双份且内容不同**：root 6914 B（21:33，「裁决记录」）vs backend 7783 B（23:05，「(CORRECTED)」），`diff` 判 DIFFERENT。**旧的那份在 A 层目录**，路径直觉会当更权威。比 C1 更糟——两个文件抢同一编号且无废止声明 | 🔴 |
+| **G1** | **5 份文档未分类**（837 行）：4×`Closure/PHASE_I*_CLOSURE.md`（`PHASE_I3_CLOSURE.md:5` 直接写 `Gate: PASS` 却不在 82 §3 表内）+ `gate_b2a_three_task_report.md` | 🔴 |
+| **G3** | **分层错误 3 份**：`63` 自述 `Frozen Constraint`（A/B 待裁决，升 A 须 Change Record）；`65` 是 scope freeze 契约（`65:95-106` 十二条禁令）；`68` 保持 C 但须注明 69 定性 | 🟠 |
+| **G4** | **C 层自立规范**：`74` 对 V3 立规（`224`/`226`/`283`/`385`/`395-396`/`418`）。对照 `74:94`「这个结果只能证明」是正确用法——缺的是分类约束 | 🟠 |
+| **G5** | **Gate 状态行集中面**：`Status.md` 45 行 / `69` 42 行，聚合错误最大温床（C3 即此类产物） | 🟠 |
+| **G6** | `restart-prompt` 密度 36.6% 全仓最高——不压缩，改由 82 §11 读取顺序约束 | 🟡 |
+
+### I-5-G 完成条件对账（82 §10）
+
+**✅ 达成 4 项**：Authority Matrix / Gate State Authority / Frozen Spec 不被隐式修改 /
+67-82 关系可解释。
+**🟠 进行中 5 项**：归层 / 分类 / Gate 状态对账 / CHANGE 覆盖 / supersession。
+**🔴 阻塞 1 项**：第 10 项「无未分类的 normative contradiction」——**G2 未解决**。
+
+> **结论：I-5-G 未完成（不得进入 I-5-BIND）。**
+
+### 82 号新增
+
+- **§9 Status Header 规范**（83 号起强制）：Document Type / Authority Level /
+  Status / Normative / Supersedes / Superseded By / Gate State Authority
+- **§10 Phase I-5 CURRENT BASELINE**：14 行状态表，**优先于任何 Phase Report**
+- **§11 Agent 强制读取顺序**：82 → 00–50 → Decision Record → 82 §3 →
+  Experimental → 历史文档。**禁止「grep 到什么读什么」**
+
+### 下一步
+
+| 顺序 | 项目 |
+|------|------|
+| 1 | **裁决 83 §6 六项**（**G2 的 71 号双份优先**） |
+| 2 | G1 归层 → 写入 82 §1.2，不改写正文 |
+| 3 | G3-a 裁决（`63` 是 A 还是 B）+ G3-b（`65` 归 B） |
+| 4 | G4 处置（`74` 逐条：指针 / 引用式改写） |
+| 5 | 重跑 `i5g_normative_scan.py` 全仓复查 |
+| 6 | I-5-G 10 项全绿 → Current Baseline declared |
+| 7 | **I-5-BIND**（BIND-1 优先） |
+| 8 | Annotation Contract → Manifest Contract → Change Records → Errata Decision → Adapter |
+
+**Gate 状态变更必须同 commit 更新 82 §3；新增 Gate 状态行须用 82 §3.3 模板。**
+
+---
+
+## 2026-09-13 — 治理元规范 90 号 + Conflict Ledger 84 号 + docs_audit
+
+**权威链**：`90`（元规范，L0-META）→ `82 §3`（Gate State Authority，**唯一**）→
+`84`（Conflict Ledger）→ `docs_audit/`（机器可读）
+**本轮不做**：L0 六册零改动；不发 67；不冻结 manifest-only；不写 Errata Decision；
+不实现 Adapter；**不对 84 任何条目裁决**
+
+### 90 号 — 治理元规范（吸收 82 §1/§2/§9/§11；82 降为 L2 执行记录）
+
+| Level | 类型 | 权限 | 禁止 |
+|---|---|---|---|
+| **L0** | Frozen Spec `00`–`50` | 定义系统事实；Schema SoT = `20` | 不得被 L2–L5 隐式修改 |
+| **L1** | Contract Change Record | **修改 L0 的唯一入口**（当前为空） | 未走完流程不得生效 |
+| **L2** | Decision Record | 解释与裁决 | **不得产生新架构事实**；不得改 L0 |
+| **L3** | Gate Report | 证明状态 | 不得定义规则；Gate 状态只能**引用 82 §3** |
+| **L4** | Experiment Report | 提供证据 | 不得单独支撑 PASS；不得把实验结论升为事实 |
+| **L5** | Status / log / restart | 项目管理 | 不得与 82 §3 矛盾 |
+
+**最高规则**：**L3/L4/L5 永远不得改变 L0/L1；L2 只能解释与裁决，不得修改 L0。**
+旧 A–E 的 C 拆为 L3+L4——Gate 报告与实验报告权限不同。
+
+### 84 号 Conflict Ledger：15 OPEN / 4 已处置 / 3 误报
+
+**本轮新增核验发现**：
+
+| ID | 发现 | 级别 |
+|---|---|---|
+| **A-07** | `73:213` 声明 157 targets `UNRESOLVED / REVIEW REQUIRED`（`NOT proven: All 157 are correct bindings`），而 Gate C 以 C-2「157 E2E」关闭。**A-01 同类**——无文件声明 73 已关闭。**可能动摇 Gate C 证据基础** | 🔴 |
+| **B-01** | **`Evidence Contract` 零定义却被 ≥4 份文档用来立规**（13 处使用，定义 grep 零命中）。违反 90 §2 R6 | 🔴 |
+| **B-02** | 三近义词仅一个有宪法地位：`Validated Evidence`（10 处，**全在 L3 `74`**）/ `Verified Evidence`（零使用）/ `verified_correct`（L0 `20 §8.3`） | 🔴 |
+| **A-06** | `61:4` `IN PROGRESS` vs `Closure/PHASE_I3_CLOSURE.md` CLOSED——Phase I-3 关闭后 61 从未回写 | 🟠 |
+| **A-08** | `Status.md:2309`（已撤回 Grammar 契约，未标记）vs `:2423`（不变量版） | 🟠 |
+
+**三处误报已记录（84 E 类）**：E-01 `81:208-211` 管线图是**两条显式标注分支**非 MIXED；
+E-02 `10:777→20 §12.1` 是 **changelog** 记录已修正的旧值；E-03「B2-B = NEXT」全仓不存在。
+
+### docs_audit/ 机器可读产物（`i5g_emit_audit.py`，只读扫描）
+
+| 产物 | 内容 |
+|---|---|
+| `authority_matrix.yaml` | **L0=7 / L0-META=1 / L2=11 / L3=3 / L4=16 / L5=4 / UNASSIGNED=1** |
+| `contradiction_candidates.json` | 84 台账机器形式 + **196 条 Gate 状态行** |
+| `frozen_terms.json` | 14 个关键术语定义/使用分布 |
+| `scan_report.md` | 人读汇总（OPEN 15，P0 六项） |
+
+**归层说明**：4×Closure 在机器产物中**暂定 L2**（reason 标 `pending D-02 adjudication`）
+——**提案非裁决**，D-02 仍 OPEN。`gate_b2a_three_task_report.md` 仍 UNASSIGNED。
+
+### Gate 系列状态（依据 82 §3，未变）
+
+```text
+Gate A  : PASS          Gate B  : NOT CLOSED
+Gate C  : CLOSED(P1)    Gate D  : CONTRACT CLOSED / IMPLEMENTATION NOT STARTED
+Adapter : NOT STARTED   Binding Carrier : PENDING
+Errata  : 暂缓          Documentation Governance Pass : 未完成
+```
+
+### 下一步
+
+| 顺序 | 项目 |
+|------|------|
+| 1 | **裁决 84 台账 15 项 OPEN**：D-01 → A-07 → C-01 → B-01 → B-02 → D-02/D-03 → A-04/06/08/09 → D-04/D-05 |
+| 2 | 重跑 `i5g_emit_audit.py` 复核 `docs_audit/`，diff 看治理漂移 |
+| 3 | 90 §10 十项全绿 → Current Baseline declared |
+| 4 | **I-5-BIND**（BIND-1 优先；`82 §5`） |
+| 5 | Annotation Contract → Manifest Contract → Change Records → Errata Decision → Adapter |
+
+**权威链**：90 → 82 §3 → 84 → docs_audit/。**Agent 读取顺序（90 §7）强制：
+90 → 82 §3/§10 → L0 → L1/L2 → L3 → L4 → L5。禁止「grep 到什么读什么」。**
