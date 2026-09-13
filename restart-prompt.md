@@ -1,15 +1,67 @@
-# AI Tutor V3 — RESTART PROMPT
-
-Version: v1.52
-Status: **Phase I-5-G Document Governance ACTIVE** —
-**CA-001 OPEN（`40` 被新增 CHANGE-2 强制规则，无 Change Record）**；
-OPEN 12 项（P0：CA-001 / D-01 / C-01 / D-02）；
-Gate A PASS / Gate B **NOT CLOSED** / Gate C CLOSED (Phase 1) /
-Gate D CONTRACT CLOSED / Adapter NOT STARTED / Binding Carrier PENDING；
-下一步：**裁决 CA-001**（追认 / 撤回 / 挂起）
+Version: v1.54
+Status: **Documentation Governance Stabilization（DG）ACTIVE** —
+**CA-001 CLOSED（CR-001，CHANGE-2 追认 ACCEPTED/EFFECTIVE）**；
+91 号词汇宪法已立；DG-1 IN PROGRESS / DG-5 IN PROGRESS；
+出生证明 **3/44**；OPEN 11 项（P0：D-01 / C-01 / D-02）；
+Gate A PASS / B **NOT CLOSED** / C CLOSED (Phase 1) / D CONTRACT CLOSED；
+**DG 全绿前不得进入 Binding Authority Decision，更不得实现 Adapter**；
+下一步：**裁决 D-01**（71 号双份）
 Date: 2026-09-13
 
-## 0.0 当前结论（2026-09-13 CA-001 L0 修改审计 + P0 三项裁决）
+## 0.0 当前结论（2026-09-13 CA-001 CLOSED + 91 号词汇宪法 + DG 阶段）
+
+- **✅ CA-001 → CLOSED（Owner 裁决 (b)，2026-09-13）。**
+  `40 §5` 的测量语义规则**保留，不回滚、不改 L0 内容**；正式认定 **CHANGE-2
+  Normative Addition**；补建 Change Record **`90 §11 CR-001`**，Review
+  **ACCEPTED / EFFECTIVE**。四道门不需要。procedural gap（先改 L0 后补手续）
+  **已 cure**。
+  - **不新建文件**——CR 落在 `90 §11`（避免「为治理文档又建治理文档」）。
+  - **关键区分**：Change Record 批准前「**文本已存在 ≠ CHANGE-2 已完成生效**」；
+    CR-001 Accepted 起该条才具完整 L0 效力。provenance 链闭合：
+    `40 §5 新增 → CA-001 → CR-001 → Review → Accepted`。
+  - **不为流程洁癖把正确规则撤掉再重加一遍。**
+- **当前阶段正式命名 = `Documentation Governance Stabilization`（DG）。**
+  **不叫** `Gate E` / `Step X` / `Phase Y`——Gate 是验证门槛、Step 是执行顺序、
+  Phase 是生命周期，三者都不是「治理工作包」的正确量词（`91 §6`）。
+  - **DG-1** Document Census — 进行中（`docs_audit/document_census.json`）
+  - **DG-2** 出生证明回填 — 未开始（当前 **3/44**）
+  - **DG-3** 术语冻结 — 基础已立（`91 §1–§3`）
+  - **DG-4** 状态统一 — 未开始
+  - **DG-5** 冲突清零 — 未开始（含 **CA-001**）
+- **`91 号` = 项目词汇宪法（L0-META，与 90 同级互补）。**
+  `90` 回答「谁说了算」，`91` 回答「这些词是什么意思」。**都不含业务语义。**
+  - **实测发现 `Phase` 有 16 种形态、三套编号体系并存**：罗马 `I-2C`/`I-3`/`I-4`/`I-5`
+    + 阿拉伯 `1`/`2`/`3`/`4`/`9` + 单字母 `R`/`B`。
+  - **`Phase B` / `Step B` / `Path B` / `Gate B` 四个共存**——同一字母 B 在四个
+    维度各指一件事。历史保留；**新文档禁止再用单字母命名 Phase/Step**。
+  - **两套 Phase 体系须区分**：项目生命周期（`Phase I-n`，规范形态）vs Evidence
+    Promotion 内部子阶段（`Phase 1` 44 处 / `Phase 2` 25 处，**建议新文档改称
+    `EP-Stage n`**，待裁决）。
+  - **`Path` 永久冻结为两条**：`Path A` = Native（search/resolve）；`Path B` =
+    Adapter/Manifest（verify only）。
+  - **状态词冻结集**（`91 §3.1`）：OPEN / PENDING / CONDITIONAL PASS / CLOSED
+    （须带范围限定）/ NOT STARTED / DEFERRED / SUPERSEDED / RETRACTED / ACTIVE /
+    HISTORICAL。**禁用** COMPLETE（现存量 6 份）/ DONE / FINISHED / NEXT /
+    REVIEWED——**历史保留，新文档禁用**。
+  - **`Contract` 一词有使用门槛**：只有满足 `90 §2 R7` 引用闭包的约束才能称
+    Contract；L4 实验约定只能叫 `Experiment Convention`。
+  - **新文档出生证明**（`91 §5`）：在 `90 §4` Status Header 基础上扩展
+    `Purpose` / `Derives From`（R7 闭包的可机检落点）/ `May Change` /
+    `Must Not Change`。**存量不强制回填。**
+- **DG-1 Census 首轮结果**（候选生成器，非裁决器）：
+  - 出生证明 **3/44**
+  - P1 越权候选 **13 份**（L3/L4 使用规则语言但全文不引 L0）
+  - P2 隐含修改 L0 **1 份**（`69:48`）
+  - P3 禁用状态词 **11 份**
+  - P4 重复阶段名 **47 组**
+  - **须注意误报**：`Gate X`（来自 `82 §3.3` 模板文本）、`91` 自身的禁用词表
+    等。census 是**候选**，须人工核。
+- **检测器两处修正**：(1) `Gate Policy`/`Gate State`/`Gate Report` 曾被截成
+  `Gate P`/`Gate S`/`Gate R` 幻影，已加 `(?![a-z])`；(2) 禁用词表不再自我标记
+  （加 BAN_CONTEXT 排除「禁用/禁止」语境）。
+- **CA-001 仍 OPEN，未裁决。** `40 §5` 被 `0dd954d` 新增 CHANGE-2 强制规则而无
+  Change Record。选项 (a) 追认 / (b) 撤回重走 L1 / (c) 挂起。见 `90 §11`。
+- **本轮未改任何 L0 内容；未裁决 CA-001 / D-01 / C-01 / D-02。**
 
 - **🔴 CA-001 — L0 完整性问题，当前最高优先级。**
   `40_Development_Rules.md §5` 在 `0dd954d`（09-13 14:43）被新增一条**强制**规则
@@ -272,28 +324,31 @@ Date: 2026-09-13
 - **红线（不变）**：HTTP retry ≠ LLM retry ≠ fallback；先冻结 Spec 再改代码；
   Schema Source of Truth = 20_Document_Pipeline.md；Resolver 不猜；
   实验结果 ≠ 实施授权；提议修改 ≠ 违反 Frozen Spec。
-- **下一步（按序执行；90 §10 全绿前不得进入 I-5-BIND）**：
-  1. **裁决 CA-001**（`90 §11`）——**L0 完整性问题，最高优先级**。
-     `40 §5` 被 `0dd954d` 新增 CHANGE-2 强制规则而无 Change Record。
-     选项：(a) 追认 / (b) 撤回重走 L1 / (c) 挂起。
-  2. **裁决 D-01**（71 号双份不同内容）——阻塞 `90 §10` 第 10 项。建议 root 版
+- **下一步（Documentation Governance Stabilization，按序；DG 全绿前不得进入
+  Binding Authority Decision，更不得实现 Adapter）**：
+  1. **裁决 D-01**（71 号双份不同内容）——阻塞 `90 §10` 第 10 项。建议 root 版
      判 stale + supersede 指针 → backend CORRECTED 版；**不删除任一份**。
-  3. **裁决 C-01**（`line_refs` 四方不一致）——须走 BIND-1/2/3（`82 §5`）。
-  4. **裁决 D-02 / D-03**（归层：4×Closure 现为 `L2-proposed`；`63` 升 L0 须走 L1）。
-  5. **A-04 / A-06 / A-08 / A-09** 状态对账；**D-04 / D-05** L3 自立规范改写。
-  6. **重跑 `i5g_emit_audit.py`** 复核 `docs_audit/`，diff 看治理漂移。
-  7. **90 §10 十项全绿 → Current Baseline declared**。
-  8. **I-5-BIND — Binding Authority Decision**（BIND-1 优先）。
+  2. **裁决 `91 §1.2` 的 `EP-Stage` 改称**（Evidence Promotion 内部的 `Phase 1`
+     44 处 / `Phase 2` 25 处是否改称，避免与项目生命周期 `Phase I-n` 混淆）。
+  3. **裁决 C-01**（`line_refs`，须走 BIND-1/2/3）→ **D-02 / D-03**（归层）。
+  4. **DG-1 收尾**：人工核 `docs_audit/document_census.json` 四类候选，排除误报
+     （如 `Gate X` 来自 `82 §3.3` 模板）。**扫描器是候选生成器，不是裁决器**
+     （`91 §6.1`）。
+  5. **DG-2 出生证明回填**（`91 §5`，当前 3/44）。
+  6. **DG-4 状态统一**（`91 §3.1` 冻结集）→ **DG-5 冲突清零**（`84` OPEN 归零）。
+  7. **重跑 `i5g_emit_audit.py`** 复核；`90 §10` 全绿 → Current Baseline declared。
+  8. **I-5-BIND — Binding Authority Decision**（BIND-1 优先；`82 §5`）。
   9. 之后才依次：V3 Annotation Contract → Manifest Contract → Change Records
      （E1=CHANGE-2；67=CHANGE-4/5 REJECT）→ Errata Decision → 最小 Adapter。
-  - **非 Path B 侧**：OQ-3 → OQ-2；B2-B2 Unknown 125 triage；B2-B3-C / B2-B4-C；
-    Phase 2 Evidence Ledger。
-  - **L0 修改强制登记**：任何 L0 改动必须在 `90 §11` 登记，否则违规。
+  - **L0 修改强制登记于 `90 §11`，否则违规。**（CR-001 是首例，已 ACCEPTED）
+  - **文档创建门槛（`91 §5.1`，DG 根因）**：新建任何文档前必须答四项——
+    为什么现有文档承载不了 / 出生证明齐备 / 权威归属明确 / `May Change` +
+    `Must Not Change`（至少含 L0）。**DG 期间冻结新建治理文档。**
   - **每次 Gate 状态变更必须同 commit 更新 `82 §3`。**
-  - **Agent 读取顺序强制（90 §7）**：90 → 82 §3/§10 → L0 00–50 → L1/L2 → L3 →
-    L4 → L5。**禁止「grep 到什么读什么」。**
-  - **权威链**：`90`（元规范）→ `82 §3`（Gate State Authority，唯一）→
-    `84`（Conflict Ledger）→ `docs_audit/`（机器可读）。
+  - **Agent 读取顺序强制（90 §7）**：90 → 91 → 82 §3/§10 → L0 00–50 → L1/L2 →
+    L3 → L4 → L5。**禁止「grep 到什么读什么」。**
+  - **权威链**：`90`（谁说了算）+ `91`（词是什么意思）→ `82 §3`（Gate State
+    Authority，唯一）→ `84`（Conflict Ledger）→ `docs_audit/`（机器可读）。
 - 重启后第一任务：读本文件 → Status.md 尾 → log.md 尾 → bugs.md →
   按上述 Step 顺序执行。
 - **对账教训（2026-09-13）**：B2-B1～B2-B5 的实验结果曾只写进 69 号与 docs 71–74，

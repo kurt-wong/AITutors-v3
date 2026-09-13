@@ -2731,3 +2731,116 @@ Gate 系列未变：A PASS / B NOT CLOSED / C CLOSED(P1) / D CONTRACT CLOSED
 | 7 | I-5-BIND |
 
 **L0 修改强制登记于 90 §11，否则违规。**
+
+---
+
+## 2026-09-13 — 91 号词汇宪法 + Documentation Governance Stabilization（DG）
+
+**触发**：用户判定「文档体系缺少生成约束」是进入下一阶段前的最高优先级治理问题。
+
+### 91 号 — 项目词汇宪法（L0-META，与 90 同级互补）
+
+`90` = 谁说了算；`91` = 这些词是什么意思。**实测用法为基础**：
+
+| 词 | 形态数 | 发现 |
+|---|---|---|
+| `Phase` | **16** | **三套编号并存**：罗马 `I-2C`/`I-3`/`I-4`/`I-5` + 阿拉伯 `1`(44)/`2`(25)/`3`/`4`/`9` + 单字母 `R`/`B` |
+| `Step` | 8 | 字母数字混用 |
+| `Path` | 2 | `Path B`(106)/`Path A`(3)——**永久冻结两条** |
+| `Gate` | 11 | 状态一律以 `82 §3` 为准 |
+
+**最尖锐冲突**：`Phase B` / `Step B` / `Path B` / `Gate B` **四共存**——同一字母
+B 在四维度各指一事。历史保留；**新文档禁止再用单字母命名 Phase/Step**。
+
+**两套 Phase 须区分**：项目生命周期 `Phase I-n`（规范）vs Evidence Promotion
+内部 `Phase 1`(44)/`Phase 2`(25)——**建议新文档改称 `EP-Stage n`，待裁决**。
+
+**状态词冻结集**：OPEN / PENDING / CONDITIONAL PASS / CLOSED（须带范围）/
+NOT STARTED / DEFERRED / SUPERSEDED / RETRACTED / ACTIVE / HISTORICAL。
+**禁用** COMPLETE(6 份)/DONE/FINISHED/NEXT/REVIEWED(3)——历史保留，新文档禁用。
+
+**`Contract` 门槛**：只有满足 `90 R7` 引用闭包的约束才能称 Contract。
+**出生证明**：`90 §4` 扩展 `Purpose`/`Derives From`(R7 可机检落点)/`May Change`/
+`Must Not Change`。
+
+### 当前阶段 = Documentation Governance Stabilization（DG）
+
+**不叫** Gate E / Step X / Phase Y。
+
+| 编号 | 内容 | 状态 |
+|---|---|---|
+| DG-1 | Document Census | **进行中** |
+| DG-2 | 出生证明回填 | 未开始（**3/44**） |
+| DG-3 | 术语冻结 | 基础已立 |
+| DG-4 | 状态统一 | 未开始 |
+| DG-5 | 冲突清零（含 CA-001） | 未开始 |
+
+**DG 全绿前不得进入 Binding Authority Decision，更不得实现 Adapter。**
+
+### DG-1 Census 首轮（候选生成器，非裁决器）
+
+出生证明 **3/44** · P1 越权候选 **13 份** · P2 隐含修改 L0 **1 份**（`69:48`）·
+P3 禁用状态词 **11 份** · P4 重复阶段名 **47 组**。
+
+**误报须注意**：`Gate X` 来自 `82 §3.3` 模板文本；`91` 自身禁用词表。须人工核。
+
+### 检测器修正
+
+`Gate Policy`/`Gate State`/`Gate Report` 曾被截成 `Gate P`/`Gate S`/`Gate R`
+幻影——加 `(?![a-z])`；禁用词表加 BAN_CONTEXT 不再自我标记。
+
+### 状态
+
+```text
+OPEN 12（P0：CA-001 / D-01 / C-01 / D-02）· 已处置 7 · 误报 3 · MITIGATED 1
+Gate: A PASS / B NOT CLOSED / C CLOSED(P1) / D CONTRACT CLOSED
+```
+
+**CA-001 仍未裁决。本轮未改任何 L0 内容。**
+
+---
+
+## 2026-09-13 — CA-001 CLOSED（CR-001）+ 91 号 Path 登记制 + 文档创建门槛
+
+### CA-001 → CLOSED（Owner 裁决 (b)）
+
+| 项 | 裁决 |
+|---|---|
+| `40 §5` 规则 | **保留**，不回滚 |
+| 分类 | **CHANGE-2 Normative Addition** |
+| 补救 | Change Record **`90 §11 CR-001`**，Review **ACCEPTED / EFFECTIVE** |
+| 四道门 / 改 90 / 改 L0 内容 | **均不需要** |
+| 缺陷性质 | procedural gap，**已 cure** |
+
+**不新建文件**——CR 落在 `90 §11`。**关键区分**：Change Record 批准前
+「文本已存在 ≠ CHANGE-2 已生效」；CR-001 Accepted 起才具完整 L0 效力。
+
+provenance 链闭合：`40 §5 新增 → CA-001 → CR-001 → Review → Accepted`。
+
+### 91 号两处修正
+
+1. **Path 改登记制**（去掉「永久冻结两条」）：`Path` 保留给架构/数据流分支；
+   当前已登记 A=Native、B=Adapter/Manifest；**新增 Path 标识符须经显式治理审查**。
+2. **§5.1 文档创建门槛**——DG 的**根因**。四项必须答：为什么现有文档承载不了 /
+   出生证明齐备 / 权威归属明确（不得自创层级）/ `May Change`+`Must Not Change`
+   （至少含 L0）。**DG 期间冻结新建治理文档。**
+3. **§6.1 扫描器永远是候选生成器，不是裁决器**——禁止 `Scanner → Violation`。
+
+### DG 状态
+
+```text
+DG-1 Census              IN PROGRESS
+DG-2 Birth Records       NOT STARTED（3/44）
+DG-3 Terminology Freeze  BASELINE ESTABLISHED
+DG-4 Status Normalization NOT STARTED
+DG-5 Conflict Resolution IN PROGRESS（CA-001 CLOSED）
+```
+
+DG-5 顺序：~~CA-001~~ → D-01 → C-01 → D-02。
+
+### 重跑 audit
+
+```text
+OPEN 11（P0：C-01 / D-01 / D-02）· 已处置 8 · 误报 3 · MITIGATED 1
+归层未变 · 无新增 authority drift · L0 内容零改动
+```

@@ -48,7 +48,7 @@ def level_of(path):
     norm = path.replace("\\", "/")
     if path in A_LAYER.values() or base == "README.md":
         return "L0", "Frozen Spec volume", "YES", "active"
-    if base == "90_DOCUMENT_GOVERNANCE.md":
+    if base in ("90_DOCUMENT_GOVERNANCE.md", "91_PROJECT_TERMINOLOGY.md"):
         return "L0-META", "governance meta-spec (90 section 1)", "YES", "active"
     m = re.match(r"^(\d+)_", base)
     if m:
@@ -247,9 +247,9 @@ CANDIDATES = [
     {"id": "C-02", "type": "boundary_conflict", "severity": "P0", "status": "INCORPORATED",
      "summary": "doc 66 section 7 'Bypasses: Annotation, Resolver' contradicted IRBuilder.build signature; corrected to Resolver only",
      "evidence": ["66:7", "backend/app/domains/compile/ir.py:87"]},
-    {"id": "CA-001", "type": "l0_change_audit", "severity": "P0", "status": "OPEN",
-     "summary": "doc 40 section 5 gained a mandatory measurement-semantics rule in 0dd954d with no Change Record; classified CHANGE-2 Normative Addition; options ratify / revert / hold",
-     "evidence": ["40", "0dd954d"]},
+    {"id": "CA-001", "type": "l0_change_audit", "severity": "P0", "status": "CLOSED",
+     "summary": "doc 40 section 5 gained a mandatory measurement-semantics rule in 0dd954d with no Change Record - CLOSED as (b): ratified CHANGE-2 via 90 section 11 CR-001, text retained, no L0 content change, procedural gap cured",
+     "evidence": ["40", "0dd954d", "90:CR-001"]},
     {"id": "D-01", "type": "duplicate_number", "severity": "P0", "status": "OPEN",
      "summary": "doc 71 exists twice with different content; root copy is older and sits in the L0 directory",
      "evidence": ["Docs/V3_SPEC/71_B2B5_SUBJECTIVE_SUBQUESTION_ADJUDICATION.md",
@@ -276,6 +276,89 @@ CANDIDATES = [
      "summary": "no document says 'B2-B = NEXT'; residue is BLOCKED / WAIT only",
      "evidence": []},
 ]
+
+
+# ---------------------------------------------------------------------------
+# DG-1 Document Census (91 section 6). Per-document view, complementary to the
+# per-conflict view in contradiction_candidates.json.
+# ---------------------------------------------------------------------------
+
+RULE_WORDS = re.compile(r"(必须|不得|禁止|只能|应当|shall|must(?:\s+not)?|MUST)", re.IGNORECASE)
+L0_CITE = re.compile(r"\b(00|10|20|30|40|50)\s*§\s*[0-9]+")
+# Label must be a whole token: "Gate Policy" must not yield "Gate P". The
+# negative lookahead excludes a following lowercase letter, which is what made
+# Gate State / Gate Report / Gate Policy register as phantom gates.
+STAGE_NAMES = re.compile(
+    r"\b(Phase|Step|Path|Gate)\s+([A-Z0-9](?:[A-Z0-9.\-]*[A-Z0-9])?)(?![a-z])"
+)
+BANNED_STATUS = re.compile(r"\b(COMPLETE|DONE|FINISHED|REVIEWED)\b")
+# A line that *bans* a word is not a use of it. Without this, 91's own ban table
+# flags itself.
+BAN_CONTEXT = re.compile(r"(禁用|禁止|不得使用|banned|ban\b|forbid)", re.IGNORECASE)
+
+
+def census(docs):
+    """Per-document census. Problem classes follow 91 section 6 / the review."""
+    rows = []
+    stage_index = {}
+    for d in docs:
+        text = read(os.path.join(ROOT, d))
+        lines = text.splitlines()
+        level, reason, normative, lstatus = level_of(d)
+        nlines = len(lines)
+
+        # P1 overreach: normative tone in a layer that may not define rules
+        rule_lines = [i + 1 for i, ln in enumerate(lines) if RULE_WORDS.search(ln)]
+        cites_l0 = any(L0_CITE.search(ln) for ln in lines)
+        overreach = []
+        if level in ("L3", "L4"):
+            # A rule line that does not cite L0 anywhere in the document is a
+            # candidate overreach. Listed, not judged.
+            if rule_lines and not cites_l0:
+                overreach = rule_lines[:12]
+
+        # P2 implicit L0 modification: phrases that retire an existing design
+        implicit = []
+        for i, ln in enumerate(lines, 1):
+            if re.search(r"(不再适用|原设计|已被取代|no longer applies|superseded by the)", ln):
+                if level not in ("L0", "L0-META", "L1"):
+                    implicit.append(i)
+
+        # P4 duplicate stage names
+        for m in STAGE_NAMES.finditer(text):
+            key = f"{m.group(1)} {m.group(2)}"
+            stage_index.setdefault(key, []).append(d)
+
+        banned = [
+            i + 1
+            for i, ln in enumerate(lines)
+            if BANNED_STATUS.search(ln) and not BAN_CONTEXT.search(ln)
+        ]
+
+        rows.append(
+            {
+                "path": d,
+                "level": level,
+                "classification_status": lstatus,
+                "lines": nlines,
+                "normative_rule_lines": len(rule_lines),
+                "cites_l0": cites_l0,
+                "birth_certificate": any(
+                    k in text for k in ("Document Type:", "Authority Level:", "Derives From:")
+                ),
+                "overreach_candidates": overreach,
+                "implicit_l0_modification": implicit[:8],
+                "banned_status_words": banned[:8],
+            }
+        )
+
+    # P4 report: a stage name used in more than one document
+    stage_dupes = {
+        k: sorted(set(v))
+        for k, v in stage_index.items()
+        if len(set(v)) > 1 and len(k.split()[1]) <= 3
+    }
+    return rows, stage_dupes
 
 
 def main():
@@ -329,6 +412,24 @@ def main():
             fh, ensure_ascii=False, indent=2,
         )
 
+    census_rows, stage_dupes = census(docs)
+    with open(os.path.join(OUT, "document_census.json"), "w", encoding="utf-8") as fh:
+        json.dump(
+            {
+                "_generated_by": "backend/scripts/i5g_emit_audit.py",
+                "_governed_by": "Docs/V3_SPEC/91_PROJECT_TERMINOLOGY.md section 6 (DG-1)",
+                "_problem_classes": {
+                    "overreach_candidates": "L3/L4 document uses rule language but never cites L0",
+                    "implicit_l0_modification": "non-L0 document retires an existing design",
+                    "banned_status_words": "COMPLETE/DONE/FINISHED/REVIEWED per 91 section 3.2",
+                    "duplicate_stage_names": "same Phase/Step/Path/Gate label across documents",
+                },
+                "documents": census_rows,
+                "duplicate_stage_names": stage_dupes,
+            },
+            fh, ensure_ascii=False, indent=2,
+        )
+
     by_level = {}
     for r in matrix:
         by_level.setdefault(r["level"], []).append(r["path"])
@@ -365,11 +466,48 @@ def main():
         for d, n in sorted(conc.items(), key=lambda kv: -kv[1])[:10]:
             fh.write(f"- {n:>3}  `{d}`\n")
 
+        # DG-1 census summary (91 section 6)
+        with_bc = sum(1 for r in census_rows if r["birth_certificate"])
+        over = [r for r in census_rows if r["overreach_candidates"]]
+        impl = [r for r in census_rows if r["implicit_l0_modification"]]
+        banned = [r for r in census_rows if r["banned_status_words"]]
+        fh.write("\n## DG-1 Document Census\n\n")
+        fh.write(f"Birth certificate present: {with_bc} / {len(census_rows)}\n")
+        fh.write("(birth certificate = Document Type + Authority Level + Derives From, ")
+        fh.write("per 91 section 5)\n\n")
+        fh.write("### P1 overreach candidates (L3/L4 rule language, no L0 citation)\n\n")
+        if over:
+            for r in over:
+                fh.write(f"- `{r['path']}` ({r['level']}): lines {r['overreach_candidates']}\n")
+        else:
+            fh.write("(none)\n")
+        fh.write("\n### P2 implicit L0 modification\n\n")
+        if impl:
+            for r in impl:
+                fh.write(f"- `{r['path']}` ({r['level']}): lines {r['implicit_l0_modification']}\n")
+        else:
+            fh.write("(none)\n")
+        fh.write("\n### P3 banned status words (91 section 3.2)\n\n")
+        if banned:
+            for r in banned:
+                fh.write(f"- `{r['path']}`: lines {r['banned_status_words']}\n")
+        else:
+            fh.write("(none)\n")
+        fh.write("\n### P4 duplicate stage names (short labels only)\n\n")
+        if stage_dupes:
+            for k in sorted(stage_dupes)[:30]:
+                fh.write(f"- `{k}` in {len(stage_dupes[k])} docs\n")
+        else:
+            fh.write("(none)\n")
+
     print(f"wrote {OUT}")
     print("  layers: " + ", ".join(f"{k}={len(v)}" for k, v in sorted(by_level.items())))
     print(f"  OPEN candidates: {len(open_c)} (P0 {len(p0)})")
     print(f"  gate-state lines: {len(gates)}")
     print(f"  terms tracked: {len(terms)}")
+    print(f"  census: birth_certificate {sum(1 for r in census_rows if r['birth_certificate'])}"
+          f"/{len(census_rows)}; overreach {len(over)}; implicit_l0 {len(impl)};"
+          f" banned_status {len(banned)}; dup_stage {len(stage_dupes)}")
 
 
 if __name__ == "__main__":

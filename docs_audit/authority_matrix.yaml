@@ -62,6 +62,13 @@ documents:
     gate_state_authority: NO
     reason: governance meta-spec (90 section 1)
     status_field: "ACTIVE"
+  - path: Docs/V3_SPEC/91_PROJECT_TERMINOLOGY.md
+    level: L0-META
+    classification_status: active
+    normative: YES
+    gate_state_authority: NO
+    reason: governance meta-spec (90 section 1)
+    status_field: "ACTIVE"
   - path: Docs/V3_SPEC/67_ANNOTATION_RESOLVER_BOUNDARY_ADJUSTMENT.md
     level: L2
     classification_status: active
@@ -299,7 +306,7 @@ documents:
     normative: NO
     gate_state_authority: NO
     reason: Status / log / restart
-    status_field: "**Phase I-5-G Document Governance ACTIVE（90 号元规范已立）** —"
+    status_field: "**Documentation Governance Stabilization（DG）ACTIVE** —"
   - path: backend/Docs/V3_SPEC/gate_b2a_three_task_report.md
     level: UNASSIGNED
     classification_status: active

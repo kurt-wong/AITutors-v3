@@ -184,7 +184,7 @@ I-5-1 的「21/21 ready IR」是 **Historical / Directional**，**不可复现**
 
 | ID | 文件 | 提交 | 时间 | 修改内容 | 分类 | Decision |
 |---|---|---|---|---|---|---|
-| **CA-001** | `40_Development_Rules.md` §5 | `0dd954d` | 2026-09-13 14:43 | 新增一条**强制**规则：「测量语义必须复刻真实 pipeline…**禁止**用近似文本代替…度量脚本必须能指出它复刻哪一段 pipeline，并有测试锁死该复刻语义」 | **CHANGE-2 Normative Addition** | **PENDING** |
+| **CA-001** | `40_Development_Rules.md` §5 | `0dd954d` | 2026-09-13 14:43 | 新增一条**强制**规则：「测量语义必须复刻真实 pipeline…**禁止**用近似文本代替…度量脚本必须能指出它复刻哪一段 pipeline，并有测试锁死该复刻语义」 | **CHANGE-2 Normative Addition** | **CLOSED — (b) ratified via CR-001** |
 
 ### CA-001 详情
 
@@ -217,13 +217,73 @@ I-5-1 的「21/21 ready IR」是 **Historical / Directional**，**不可复现**
 「行内剩余文本」代替 E 的 char-span 切片，导致同时高估回归与低估收益，
 据此得出的裁决全部作废。**内容可辩护，但缺少 Change Record 是事实。**
 
-**可选处置（待裁决，本节不自行决定）**：
+**可选处置（已裁决，见下方 CR-001）**：
 
 | 选项 | 内容 | 代价 |
 |---|---|---|
-| **(a) 追认** | 补一份 Change Record，追认 CA-001 生效 | 承认流程违规但保留正确规则 |
-| **(b) 撤回重走** | 回滚 `40` 该条，经 L1 正式流程重新加入 | 流程干净，但产生一次无谓回滚 |
-| **(c) 挂起** | 标记 `PENDING RATIFICATION`，在下次 L0 修订时一并处理 | 规则暂处灰色地带 |
+| ~~(a) 追认~~ | 补一份 Change Record，追认 CA-001 生效 | 未采纳 |
+| **(b) 追认 CHANGE-2 + 补建 Change Record** | **保留 `40 §5` 现有文本，不回滚、不改 L0 内容** | **已采纳** |
+| ~~(c) 挂起~~ | 标记 `PENDING RATIFICATION` | 未采纳 |
+
+### CR-001 — Change Record（CHANGE-2 Normative Addition）
+
+> **本记录是 `40 §5` 测量语义规则的正式 Change Record。**
+> 按 `90 §3`，CHANGE-2 需 Change Record + 评审，**不需四道门**。
+
+```text
+Change Record ID : CR-001
+Target           : L0 Docs/V3_SPEC/40_Development_Rules.md §5
+Change Class     : CHANGE-2 — Normative Addition
+Source Commit    : 0dd954d（2026-09-13 14:43）
+Audit ID         : CA-001
+Date             : 2026-09-13
+```
+
+**变更内容**（`40 §5` 新增一条）：
+
+> - **测量语义必须复刻真实 pipeline（2026-09-13 教训，BUG-V3-044 对抗性审查）**：
+>   覆盖率 / 回归 / 通过率等**度量实验**的输入，必须是上游组件的**真实输出切片**，
+>   禁止用近似文本代替。反例：测 grammar 覆盖率时用「行内全部剩余文本」，而真实
+>   pipeline 走的是 E 的 char-span 切片（本题号起点 → 下一题号起点，20 §5.5）——
+>   两者不是同一个问题，会同时高估回归与低估收益，据此得出的裁决全部作废。
+>   度量脚本必须能指出它复刻的是哪一段 pipeline，并有测试锁死该复刻语义。
+
+**变更前**：`40 §5` 无此条。
+
+**分类依据**：新增「指出复刻哪一段 pipeline」与「有测试锁死该复刻语义」两项
+此前不存在的可验证要求 → 规范语义有变化 → **不是** CHANGE-1 Clarification。
+按 `90 §3` 判定规则「拿不准往高里归」，归 CHANGE-2。
+
+**正当性**：源自真实教训——BUG-V3-044 轮次的覆盖率测量曾用「行内剩余文本」
+代替 E 的 char-span 切片，同时高估回归与低估收益，据此得出的裁决全部作废。
+规则符合 V3 的证据哲学（测量必须复刻真实 pipeline 的数据语义）。
+
+**流程缺陷（已确认）**：先改了 L0，后补治理手续。属 **procedural gap**，
+非内容错误。
+
+**Owner Decision（2026-09-13）**：
+
+| 项 | 裁决 |
+|---|---|
+| `40 §5` 新增规则 | **保留** |
+| CHANGE 类型 | **CHANGE-2 — Normative Addition** |
+| 现状 | **未按流程生效 / procedural gap** |
+| 补救 | **创建本 Change Record** |
+| 四道门 | **不需要**（CHANGE-2 不属放宽/删除） |
+| 修改 90 | **不需要** |
+| 修改 Frozen Spec 内容 | **不需要** |
+| 回滚 40 | **不回滚** |
+
+**Review（2026-09-13，项目负责人）**：**ACCEPTED / EFFECTIVE**。
+
+> 理由：规则本身正确且必要；为流程洁癖把正确规则撤掉再重加一遍没有意义。
+> 正确做法是补齐 provenance：`40 §5 新增 → CA-001 → CR-001 → Review → Accepted`。
+
+**生效后的治理效力**：`40 §5` 该条**自本记录 Accepted 起**具有完整 L0 效力。
+在此之前「文本已存在 ≠ CHANGE-2 已完成生效」——这一区分用于避免倒置治理顺序。
+
+**登记义务**：`90 §11` 自此对任何 L0 修改强制生效。**90 生效后的 L0 修改若
+不在此登记，即为违规。**
 
 ### 审计范围声明
 
@@ -395,13 +455,27 @@ Native 下游消费 ResolvedRun  /  Adapter 下游消费 annotation_payload
 
 | 文档 | 定位（90 生效后） |
 |---|---|
-| **90（本文档）** | **治理元规范**。定义 L0–L5、核心规则、CHANGE 分类、扫描规则、读取顺序 |
-| **82** | **治理执行记录**。保留 **§3 Gate State Authority（唯一）** + §4 Conflict Register + §5 BIND-1/2/3 + §10 Phase Baseline。§1/§2/§9/§11 **被 90 吸收** |
+| **90（本文档）** | **治理元规范**。定义 L0–L5、核心规则、CHANGE 分类、扫描规则、读取顺序。回答「**谁说了算**」 |
+| **91** | **项目词汇宪法**（L0-META，与 90 同级互补）。定义 Phase/Step/Gate/Path、Contract 使用门槛、状态词冻结集、新文档出生证明。回答「**这些词是什么意思**」。**不修改业务语义，不改变 90 的权威层级** |
+| **82** | **治理执行记录**。保留 **§3 Gate State Authority（唯一）** + §5 BIND-1/2/3 + §10 Phase Baseline。§1/§2/§9/§11 **被 90 吸收** |
 | **83** | L4 全仓形式扫描结果（G1–G6） |
 | **84** | **Conflict Ledger**——全部争议点 / 交叉约束 / 潜在冲突的裁决台账 |
-| `docs_audit/` | 机器可读扫描产物（`authority_matrix.yaml` / `contradiction_candidates.json` / `frozen_terms.json` / `scan_report.md`） |
+| `docs_audit/` | 机器可读扫描产物（`authority_matrix.yaml` / `contradiction_candidates.json` / `frozen_terms.json` / `document_census.json` / `scan_report.md`） |
 
-**L3/L4/L5 永远不得改变 L0/L1；L2 不得修改 L0。** 本规则对 82/83/84 同样适用。
+**L3/L4/L5 永远不得改变 L0/L1；L2 不得修改 L0。** 本规则对 82/83/84/91 同样适用。
+
+### 8.1 当前阶段：Documentation Governance Stabilization（DG）
+
+**不叫** `Gate E` / `Step X` / `Phase Y`——见 `91 §6`。
+**DG 全绿前不得进入 Binding Authority Decision，更不得实现 Adapter。**
+
+| 编号 | 内容 | 状态 |
+|---|---|---|
+| **DG-1** | Document Census——全仓归层 + 四类问题扫描 | **进行中**（`docs_audit/document_census.json`） |
+| **DG-2** | 权威归属标注——每份 ACTIVE 文档补齐出生证明（`91 §5`） | 未开始（当前 **3/44**） |
+| **DG-3** | 术语冻结——`91 §1–§3` 生效；`84` 重复概念项清零 | 基础已立 |
+| **DG-4** | 状态统一——状态词收敛到 `91 §3.1` 冻结集 | 未开始 |
+| **DG-5** | 冲突清零——`84` OPEN 项归零（含 **CA-001**） | 未开始 |
 
 ---
 
