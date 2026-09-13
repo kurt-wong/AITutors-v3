@@ -1004,7 +1004,7 @@ Capability Evidence 记录，不作为 Strategy Comparison 指标。
 
 **关键发现**：原 65% fill-in extraction rate 正式失效。`detect_answer_type` 在"MC 答案 + 解释文本"场景存在 classification boundary defect，导致 MC targets 污染 fill-in evaluation set。此 defect 记录为独立 preprocessing defect，不纳入 Source Binding 架构结论。
 
-冻结文件：`Docs/V3_SPEC/gate_b2b3_frozen_testset.json`
+冻结文件：`backend/Docs/V3_SPEC/gate_b2b3_frozen_testset.json`
 
 ---
 
@@ -1080,7 +1080,7 @@ B2-B3-C  Domain-dependent          DEFERRED（F2/F4/F9 → Domain Contract）
 - H4_complex_structure: 化学 22 > 数学 16 > 英语 7
 - H2_multi_table: 化学 16 > 数学 12 > 生物 4
 
-冻结文件：`Docs/V3_SPEC/gate_b2b4_frozen_testset.json`
+冻结文件：`backend/Docs/V3_SPEC/gate_b2b4_frozen_testset.json`
 
 ---
 
@@ -1143,7 +1143,7 @@ B2-B4-C  Domain/Material-dependent    DEFERRED（H4/H5/H6）
 
 #### Gate B 当前状态（B2-B5 关闭后，2026-09-13 对账更新）
 
-> 本块以 `backend/Docs/V3_SPEC/80_B2B5_CLOSURE.md` 为权威来源。
+> 本块以 `Docs/DECISIONS/80_B2B5_CLOSURE.md` 为权威来源。
 > B2-B1～B2-B5 的实验在 2026-09-11/12 完成；此前本块漏记 B2-B5 系列结果，
 > 现按 80 号裁决回写。
 

@@ -4,6 +4,10 @@ Authority Level: L2 — Decision Record（formal phase closure；D-02 归层 202
 Document Type: Decision Record
 Normative: NO（记录阶段裁决，不定义新架构事实 — 90 §2 R2）
 Gate State Authority: NO（唯一权威 = 82 §3）
+> 📌 **路径修正（残余审计 A-11，2026-09-13）**：本文末尾相关文档表内的
+> `Docs/V3_SPEC/64_PHASE_I4_EVIDENCE_EVALUATION.md` 与
+> `Docs/V3_SPEC/63_ARCHITECTURE_COMPLEXITY_GUARDRAILS.md` 是 **DG-2 迁移前**路径，
+> 已失效；现行均在 `Docs/REPORTS/`。表体保留为历史，不改写。
 
 Status: **CLOSED**
 Date: 2026-09-10

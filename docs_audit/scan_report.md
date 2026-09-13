@@ -49,16 +49,16 @@ Birth certificate present: 12 / 45
 
 ### P1 overreach candidates (L3/L4 rule language, no L0 citation)
 
-- `Docs/REPORTS/60_PHASE_I2C_RESOLVER.md` (L4): lines [24, 25]
+- `Docs/REPORTS/60_PHASE_I2C_RESOLVER.md` (L4): lines [26, 27]
 - `Docs/REPORTS/61_PHASE_I3_SOURCE_PROVIDER.md` (L4): lines [25, 32]
 - `Docs/REPORTS/63_ARCHITECTURE_COMPLEXITY_GUARDRAILS.md` (L4): lines [8, 21, 50, 67, 73, 85, 87, 97, 99, 101, 132, 144]
-- `Docs/REPORTS/65_PHASE_I5_SCOPE_FREEZE.md` (L4): lines [106, 107, 108, 109, 116, 117, 192, 198, 220, 307, 334]
+- `Docs/REPORTS/65_PHASE_I5_SCOPE_FREEZE.md` (L4): lines [110, 111, 112, 113, 120, 121, 196, 202, 224, 311, 338]
 - `Docs/REPORTS/66_PHASE_I5_1_BOUNDARY_ANALYSIS.md` (L4): lines [158, 195, 204, 214, 268, 304, 315, 319]
 - `Docs/REPORTS/73_B2B5_GATE_C_ADVERSARIAL_REVIEW.md` (L4): lines [12, 41]
 - `Docs/REPORTS/76_EVIDENCE_PROMOTION_PHASE1_REPORT.md` (L4): lines [126]
 - `Docs/REPORTS/77_EVIDENCE_PROMOTION_PHASE1_HARDENING.md` (L4): lines [11]
 - `Docs/REPORTS/79_PHASE1_HIGH_SEVERITY_FIXES.md` (L4): lines [87]
-- `Docs/REPORTS/83_GOVERNANCE_AUDIT.md` (L3): lines [29, 34, 95, 98, 99, 109, 110, 111, 113, 114, 116, 153]
+- `Docs/REPORTS/83_GOVERNANCE_AUDIT.md` (L3): lines [36, 41, 102, 105, 106, 116, 117, 118, 120, 121, 123, 160]
 - `Docs/ARCHIVE/71_B2B5_SUBJECTIVE_SUBQUESTION_ADJUDICATION_SUPERSEDED.md` (L4): lines [3, 15, 38, 58, 59]
 
 ### P2 implicit L0 modification
@@ -74,7 +74,7 @@ Birth certificate present: 12 / 45
 - `Docs/REPORTS/76_EVIDENCE_PROMOTION_PHASE1_REPORT.md`: lines [5, 175, 176, 178, 179, 212]
 - `Docs/REPORTS/77_EVIDENCE_PROMOTION_PHASE1_HARDENING.md`: lines [4]
 - `Docs/REPORTS/78_PHASE1_HARDENING_ADVERSARIAL_REVIEW.md`: lines [4]
-- `Docs/REPORTS/83_GOVERNANCE_AUDIT.md`: lines [64]
+- `Docs/REPORTS/83_GOVERNANCE_AUDIT.md`: lines [71]
 - `Docs/REPORTS/gate_b2a_three_task_report.md`: lines [4]
 - `Status.md`: lines [176, 204, 222, 242, 264, 285, 1895]
 - `log.md`: lines [315, 348, 354, 377, 412, 438]

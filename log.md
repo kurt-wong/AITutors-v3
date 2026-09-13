@@ -2561,3 +2561,94 @@ supersede-archive 修复（git mv + 空目录移除）· 机器源 ARCHIVE 分�
 
 **方法已验证。** 是否继续审计其余残余（同类双份/孤立旧案卷/失效指针），
 等 Owner 明示。**不自动扩大扫描范围。**
+
+---
+
+## 2026-09-13 — Residual Audit Phase-2：DG-2 入站引用未回写（A-11）
+
+按 Owner 认可的三个搜索目标跑 Phase-2（**非全库关键词扫描**）：
+孤立旧目录 · 失效 provenance · 双份 Closure/Report。
+
+### 目标 1 — 孤立旧目录：`docs_archive/` **不是**孤立目录
+
+```text
+docs_archive/2026-08-10        docs_archive/2026-08-10-2   docs_archive/2026-08-24
+docs_archive/2026-08-29        docs_archive/2026-09-03     docs_archive/2026-09-05_v2_legacy
+docs_archive/2026-09-05_v3_draft                          docs_archive/status
+```
+
+它被 **L0 显式声明为归档落点**：`00_Master_Spec.md:396/404`、`50_Migration_Assets.md §6`、
+`README.md:6`。逐一验证 **7 份起草输入全部在声明落点内**（`2026-09-05_v3_draft/` 7/7）。
+`Docs/` 下无残留 `V3_*.md`。**Provenance 自洽，不是断链。**
+
+⚠️ **值得记一笔的观察（不改，L0 禁改）**：`10_Data_Model.md:7` 与 `20_Document_Pipeline.md:8`
+把 `docs_archive/2026-09-03/*_v0.3.md` 称作「字段权威**参考**」，而 `20:7` 另把 `10_Data_Model.md`
+定为「字段**权威**」，`50:159` 再限定「唯一遗留参考 · **不指导新实现**」。
+措辞有分层、结论不冲突——**不是 Duplicate Authority**。
+但 `docs_archive/` **不在 scanner 的 SCAN_BASES 内**，因此「L0 的引用是否仍可解析」
+目前**无机器校验**。这是**工具覆盖缺口**，不是文档缺陷。未擅自扩大 scanner 范围。
+
+### 目标 3 — 双份 Closure/Report：受治理树内**无残留**
+
+`*_Closure / *_Report / *_Review / *_Decision` 归集后计数全为 1。唯一的多版本漂移
+（Phase I-2 Revision Closure）已在案例 1（A-10）处置。
+
+### 目标 2 — 失效 provenance：**20 条，单一根因**
+
+```text
+受治理活文档（DECISIONS/REPORTS/ARCHIVE）内指向不存在文件的路径引用 = 20
+根因 = DG-2 迁移未回写入站引用
+```
+
+| 源 | 条数 | 性质 |
+|---|---|---|
+| `69` | 3 | **唯一属 L2 现行文档**；`69:1146` 把已迁址的 80 号称作「本块权威来源」 |
+| `83` | 7 | 审计当时的快照表 |
+| `65` | 4 | HISTORICAL 表体 |
+| `PHASE_I3_CLOSURE` | 3 | 相关文档表 |
+| `PHASE_I4_CLOSURE` | 2 | 相关文档表 |
+| `60` | 1 | 头部 `Closure:` 字段 |
+
+**另注**：`gate_b2b3/b4_frozen_testset.json` 的旧路径 `Docs/V3_SPEC/…` **在 DG-2 之前就错**，
+实际一直在 `backend/Docs/V3_SPEC/`（scanner 的 `SCAN_BASES` 注释也写着 "legacy location;
+holds the frozen test corpora"）。
+
+**排除项（不是断链）**：`Docs/reference/` 400+ 条 V2 时代内部引用（范围外）·
+`docs_archive/` 内 V2 文档互引（冻结历史）· L0 各册 `Supersedes: Docs/V3_*.md`
+（起草输入，落点已验证 7/7）· `50 §6` 迁移映射表本身。
+
+### 处置（分两类，不逐行改写历史表体）
+
+1. **`69` 三处直接修正路径**——L2 现行文档，权威来源指针必须可解析：
+   - `1146` `backend/Docs/V3_SPEC/80_B2B5_CLOSURE.md` → `Docs/DECISIONS/80_B2B5_CLOSURE.md`
+   - `1007`/`1083` → `backend/Docs/V3_SPEC/gate_b2b3/b4_frozen_testset.json`
+   - **正文论证零改动**
+2. **其余 5 份各加一条 📌 路径说明 banner**，声明文件内 `Docs/V3_SPEC/…` 是 DG-2 前路径
+   并给出现行落点；**表体与测量数据零改动**。沿用 A-05 / A-08 / A-10 的 banner-only 先例；
+   **83 是审计当时的快照，逐行改写等于伪造审计记录。**
+
+`84` 加 **A-11**；`i5g_emit_audit.py` `CANDIDATES` 同步。
+
+### 边界自检
+
+**做了**：三个搜索目标的定向检索 · `69` 活指针修正 · 5 份历史文档 banner · 84/机器源/L5 落点。
+
+**没做**：未全库关键词扫描（must/required/forbidden 等）· 未重建 birth certificate ·
+未重扫 DG-5 已关三类（Duplicate Authority / Normative Leakage / State Drift）·
+未动 `Docs/reference` · 未改 L0 00–50 · 未改 90/91 · 未调整任何已有 authority level ·
+未新建治理文档 · 未新建四类审计报告 · 未改 C-01（仍 OPEN/PAUSED）·
+未动 Manifest Schema / Adapter · **未擅自把 `docs_archive/` 纳入 scanner 范围**。
+
+### 验收
+
+```text
+layers: L0=7 · L0-META=2 · L2=13 · L3=2 · L4=17 · L5=4     （与案例 1 修正后一致）
+UNASSIGNED = 0        OPEN candidates: 1 (P0 1) = C-01 OPEN/PAUSED
+802 passed, 8 warnings in 40.54s
+```
+
+### 下一步
+
+三个搜索目标已跑完一轮。**剩余可选项只有一条**：是否把「L0 出站引用可解析性」
+做成 scanner 的一项检查（不把 `docs_archive/` 纳入 census，只验引用是否解析）。
+**这属于新增 scanner 能力，等 Owner 明示，不自动做。**

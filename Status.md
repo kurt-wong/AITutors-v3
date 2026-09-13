@@ -3055,3 +3055,53 @@ UNASSIGNED = 0
 未动 Manifest Schema / Adapter · 未改 L0 / 90 / 91 · 未调整任何已有 authority level。
 
 下一步：**方法已验证**。是否继续审计其余残余同类项，**等 Owner 明示**，不自动扩大范围。
+
+---
+
+## 2026-09-13 — Residual Audit Phase-2（A-11）：DG-2 入站引用未回写
+
+按三个搜索目标跑完一轮（**非全库关键词扫描**）：孤立旧目录 · 失效 provenance · 双份 Closure/Report。
+
+| 目标 | 结果 |
+|---|---|
+| **孤立旧目录** | `docs_archive/`（8 个日期子目录）**不是孤立**——被 L0 显式声明为归档落点（`00:396/404`、`50 §6`、`README:6`）；7 份起草输入**全部在声明落点内 7/7**。Provenance 自洽 |
+| **双份 Closure/Report** | 受治理树内**无残留**（计数全为 1）；唯一多版本漂移已在 A-10 处置 |
+| **失效 provenance** | **20 条，单一根因 = DG-2 迁移未回写入站引用** → **A-11 RESOLVED** |
+
+### A-11 处置（分两类，不逐行改写历史表体）
+
+1. **`69` 三处直接修正路径**（唯一属 **L2 现行文档**；`69:1146` 原把已迁址的 80 号称作
+   「本块权威来源」）→ 现指 `Docs/DECISIONS/80_B2B5_CLOSURE.md`；
+   `1007`/`1083` → `backend/Docs/V3_SPEC/gate_b2b*_frozen_testset.json`。**正文零改动。**
+2. **`65` / `83` / `60` / `PHASE_I3_CLOSURE` / `PHASE_I4_CLOSURE` 各加一条 📌 路径说明 banner**，
+   声明文件内 `Docs/V3_SPEC/…` 是 DG-2 前路径并给出现行落点。**表体与测量数据零改动**
+   （83 是审计当时的快照，逐行改写 = 伪造审计记录）。
+
+**排除项（不是断链）**：`Docs/reference/` 400+ 条 V2 内部引用（范围外）· `docs_archive/` 内 V2 互引（冻结历史）·
+L0 各册 `Supersedes: Docs/V3_*.md`（起草输入，落点已验 7/7）· `50 §6` 迁移映射表。
+
+### 值得记一笔的观察（未改，L0 禁改）
+
+`10:7` / `20:8` 把 `docs_archive/2026-09-03/*_v0.3.md` 称作「字段权威**参考**」，而 `20:7`
+另把 `10_Data_Model.md` 定为「字段**权威**」，`50:159` 再限定「唯一遗留参考 · **不指导新实现**」。
+措辞有分层、**不冲突**——不是 Duplicate Authority。
+但 **`docs_archive/` 不在 scanner `SCAN_BASES` 内**，故「L0 出站引用是否仍可解析」**无机器校验**。
+这是**工具覆盖缺口**，非文档缺陷。**未擅自扩大 scanner 范围。**
+
+### 验收
+
+```text
+layers: L0=7 · L0-META=2 · L2=13 · L3=2 · L4=17 · L5=4   （与 A-10 修正后一致，未再变）
+UNASSIGNED = 0        OPEN candidates: 1 (P0 1) = C-01 OPEN/PAUSED
+802 passed, 8 warnings in 40.54s
+```
+
+### 边界
+
+**没做**：未全库关键词扫描 · 未重建 birth certificate · 未重扫 DG-5 已关三类 ·
+未动 `Docs/reference` · 未改 L0 00–50 · 未改 90/91 · 未调整任何已有 authority level ·
+未新建治理文档 · 未新建四类审计报告 · 未改 C-01 · 未动 Manifest Schema / Adapter ·
+未把 `docs_archive/` 纳入 scanner。
+
+下一步：三个搜索目标已跑完一轮。**唯一剩余可选项** = 是否给 scanner 加「L0 出站引用可解析性」检查
+（不把 `docs_archive/` 纳入 census，只验引用）。**属新增 scanner 能力，等 Owner 明示。**

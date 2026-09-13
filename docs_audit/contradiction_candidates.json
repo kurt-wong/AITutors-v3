@@ -119,6 +119,21 @@
       ]
     },
     {
+      "id": "A-11",
+      "type": "provenance_missing",
+      "severity": "P1",
+      "status": "RESOLVED",
+      "summary": "DG-2 relocated Closure records and numbered reports into Docs/REPORTS (and 71 into DECISIONS + ARCHIVE) but inbound citations still used the old paths - 20 dead path references in governed active docs. Single root cause. RESOLVED 2026-09-13 (residual audit): the 3 citations in doc 69 (an active L2) were corrected in place because 69:1146 named a nonexistent file as its authority source, and 69:1007/1083 pointed gate_b2b3/b4 frozen testsets at Docs/V3_SPEC/ when they have always lived in backend/Docs/V3_SPEC/. The other 5 documents (65, 83, 60, PHASE_I3_CLOSURE, PHASE_I4_CLOSURE) each got one provenance banner declaring their internal Docs/V3_SPEC/... paths as pre-DG-2, with the current locations - historical tables and measurement data left untouched (83 is the audit's as-of snapshot; rewriting it would falsify the audit). No birth certificates rebuilt, Docs/reference untouched, L0 untouched.",
+      "evidence": [
+        "Docs/DECISIONS/69_ARCHITECTURE_REVIEW_ADJUDICATION.md:1146",
+        "Docs/REPORTS/83_GOVERNANCE_AUDIT.md",
+        "Docs/REPORTS/65_PHASE_I5_SCOPE_FREEZE.md",
+        "Docs/REPORTS/PHASE_I3_CLOSURE.md",
+        "Docs/REPORTS/PHASE_I4_CLOSURE.md",
+        "Docs/REPORTS/60_PHASE_I2C_RESOLVER.md"
+      ]
+    },
+    {
       "id": "B-01",
       "type": "term_name_drift",
       "severity": "P0",
@@ -1012,7 +1027,7 @@
     },
     {
       "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
-      "line": 144,
+      "line": 145,
       "gate": "B2-B",
       "state": "NEXT",
       "text": "| **E-03** | 「Gate B2-B = NEXT」 | **不成立**。全仓无「NEXT」措辞；实际残留是 A-05 的 BLOCKED / WAIT | **误报** |"
@@ -1075,98 +1090,98 @@
     },
     {
       "doc": "restart-prompt.md",
-      "line": 176,
+      "line": 230,
       "gate": "C",
       "state": "CLOSED",
       "text": "- **A-07 → DECIDED：语义A 成立，Gate C CLOSED 不动摇。**"
     },
     {
       "doc": "restart-prompt.md",
-      "line": 227,
+      "line": 281,
       "gate": "C",
       "state": "CLOSED",
       "text": "**无文件声明 73 已关闭**。可能动摇 Gate C CLOSED 的证据基础。"
     },
     {
       "doc": "restart-prompt.md",
-      "line": 288,
+      "line": 342,
       "gate": "B",
       "state": "NOT CLOSED",
       "text": "- **Gate B 整体 = NOT CLOSED**（依据 82 §3）：B1 CONDITIONAL PASS（option Role"
     },
     {
       "doc": "restart-prompt.md",
-      "line": 293,
+      "line": 347,
       "gate": "C",
       "state": "BLOCKED",
       "text": "- **C1** `74:5/363/537` 仍写 Gate C BLOCKED，`80:439` 已 CLOSED，**无废止记录** →"
     },
     {
       "doc": "restart-prompt.md",
-      "line": 297,
+      "line": 351,
       "gate": "B",
       "state": "CLOSED",
       "text": "- **C3** `81:11` 曾称「Gate B 系列 CLOSED」，**过度陈述 80 号**（80:421 自己写"
     },
     {
       "doc": "restart-prompt.md",
-      "line": 320,
+      "line": 374,
       "gate": "D",
       "state": "CLOSED",
       "text": "- **Gate D: CONTRACT CLOSED / IMPLEMENTATION NOT STARTED**（权威：`81 号`）。"
     },
     {
       "doc": "restart-prompt.md",
-      "line": 321,
+      "line": 375,
       "gate": "D",
       "state": "CLOSED",
       "text": "- 状态措辞：Gate D 的要求是**契约裁决**，不是实现验收，故不用裸 `CLOSED`。"
     },
     {
       "doc": "restart-prompt.md",
-      "line": 377,
+      "line": 431,
       "gate": "B2-B5",
       "state": "CLOSED",
       "text": "- **Gate B2-B5: CLOSED — PASS / TEST-EVIDENCED / SCOPE-BOUNDED**"
     },
     {
       "doc": "restart-prompt.md",
-      "line": 379,
+      "line": 433,
       "gate": "B",
       "state": "CONDITIONAL",
       "text": "- **Gate B 全系列关闭或显式延期**：B1 CONDITIONAL PASS / B2-A PASS /"
     },
     {
       "doc": "restart-prompt.md",
-      "line": 381,
+      "line": 435,
       "gate": "B2-A",
       "state": "PASS",
       "text": "- **Gate B2-A: PASS / TEST-EVIDENCED（stem-only, three-task audit）**。"
     },
     {
       "doc": "restart-prompt.md",
-      "line": 385,
+      "line": 439,
       "gate": "C",
       "state": "CLOSED",
       "text": "- **Gate C CLOSED（Phase 1 Evidence Authority Boundary Closure）**。"
     },
     {
       "doc": "restart-prompt.md",
-      "line": 394,
+      "line": 448,
       "gate": "A",
       "state": "PASS",
       "text": "- **Gate A（Identity Closure）**：**PASS / TEST-EVIDENCED**。"
     },
     {
       "doc": "restart-prompt.md",
-      "line": 409,
+      "line": 463,
       "gate": "A",
       "state": "BLOCKED",
       "text": "- 67 Contract Change: **CONDITIONALLY ACCEPTED**（Gate A/B/C 通过；Errata BLOCKED BY Gate D）"
     },
     {
       "doc": "restart-prompt.md",
-      "line": 415,
+      "line": 469,
       "gate": "B1",
       "state": "CONDITIONAL",
       "text": "- **Gate B1 = CONDITIONAL PASS / Corpus Substantially Valid**"

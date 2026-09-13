@@ -9,6 +9,13 @@
 **Gate State Authority**: NO（唯一权威仍是 82 §3）
 
 **Date**: 2026-09-13
+> 📌 **路径说明（残余审计 A-11，2026-09-13）**：本文件表格内的
+> `Docs/V3_SPEC/Closure/…`、`Docs/V3_SPEC/6x_…`、`Docs/V3_SPEC/71_…`、
+> `backend/Docs/V3_SPEC/71_…` 等路径是 **DG-2 迁移前**的路径，现已失效——
+> 本文件是**审计当时的快照**，记录的是彼时的仓库布局，**不改写**（Reconcile, don't rewrite）。
+> 现行落点：Closure 与编号报告 → `Docs/REPORTS/`；71 号 → `Docs/DECISIONS/`（权威份）
+> 与 `Docs/ARCHIVE/71_…_SUPERSEDED.md`（废止份）；`gate_b2a_three_task_report` → `Docs/REPORTS/`。
+> 判断当前状态一律以 `82 §3` 为准。
 **方法**: 机械扫描，**不重写任何文档**（Reconcile, don't rewrite）。
 **脚本**: `backend/scripts/i5g_normative_scan.py`（只读；不 import `app/`，不碰 DB）
 

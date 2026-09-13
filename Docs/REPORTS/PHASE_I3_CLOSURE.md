@@ -6,6 +6,9 @@ Normative: NO（记录阶段裁决，不定义新架构事实 — 90 §2 R2）
 Gate State Authority: NO（唯一权威 = 82 §3）
 > 注：下方 `Gate: PASS` 指 **Phase I-3 阶段出口**，非项目级 Gate。
 > 项目级 Gate 状态一律以 `82 §3` 为准。
+> 📌 **路径修正（残余审计 A-11，2026-09-13）**：本文末尾相关文档表内的
+> `Docs/V3_SPEC/61_…`、`62_…`、`63_…` 是 **DG-2 迁移前**路径，已失效；
+> 现行均在 `Docs/REPORTS/`。表体保留为历史，不改写。
 
 Date: 2026-09-09
 Status: CLOSED

@@ -1,15 +1,61 @@
-Version: v1.59
-Status: **Documentation Governance Stabilization（DG）— DG-5 已收口；Residual Audit 案例 1 完成** —
+Version: v1.60
+Status: **Documentation Governance Stabilization（DG）— DG-5 已收口；Residual Audit 案例 1 + Phase-2 完成** —
 **C-01 = OPEN / PAUSED**（权威落点 `82 §5.3.1`）：暂停于**上游生产事实缺口**，
 **非架构错误**，也**不**意味着「应立即继续设计 Manifest Schema」；
 BIND-1 **PASS/FROZEN** · BIND-2 **PASS/FROZEN** · BIND-3 方向 ACCEPTED / 契约 UNPROVEN；
 Binding Carrier = PENDING；manifest-only 未冻结；
-**84 台账：A 类 0 OPEN · D 类 0 OPEN**（A-10 已 RESOLVED）；剩余 3 项（C-01 PAUSED + B-03/B-04 非缺陷）；
+**84 台账：A 类 0 OPEN · D 类 0 OPEN**（A-10 / A-11 均 RESOLVED）；剩余 3 项（C-01 PAUSED + B-03/B-04 非缺陷）；
 Gate A PASS / B **NOT CLOSED** / C CLOSED (Phase 1) / D CONTRACT CLOSED；
 **Adapter 未开工**（BIND-1/2 PASS 不构成开工授权；前置仍 `81 §5.4` 三项）；
 下一步：**preprocessing 独立收口**（AITutors-preprocessing 自身）——
 **不是**继续整理文档，**不是**设计 Manifest Schema
 Date: 2026-09-13
+
+## 0.0d Residual Audit Phase-2：三个搜索目标跑完一轮（A-11，2026-09-13）
+
+按 Owner 认可的三个目标做**定向检索**（**非全库关键词扫描**）：
+孤立旧目录 · 失效 provenance · 双份 Closure/Report。
+
+| 目标 | 结果 |
+|---|---|
+| **孤立旧目录** | `docs_archive/`（8 个日期子目录）**不是孤立**——L0 显式声明为归档落点（`00:396/404`、`50 §6`、`README:6`）；7 份起草输入**在声明落点内 7/7** |
+| **双份 Closure/Report** | 受治理树内**无残留**（计数全为 1）；唯一多版本漂移已在 A-10 处置 |
+| **失效 provenance** | **20 条，单一根因 = DG-2 迁移未回写入站引用** → **A-11 RESOLVED** |
+
+### A-11 处置（分两类，不逐行改写历史表体）
+
+1. **`69` 三处直接修正路径**（唯一属 **L2 现行文档**；`69:1146` 原把已迁址的 80 号称作
+   「本块权威来源」）→ `Docs/DECISIONS/80_B2B5_CLOSURE.md`；
+   `1007`/`1083` → `backend/Docs/V3_SPEC/gate_b2b*_frozen_testset.json`。**正文零改动。**
+2. **`65` / `83` / `60` / `PHASE_I3_CLOSURE` / `PHASE_I4_CLOSURE` 各加一条 📌 路径 banner**，
+   声明内含 `Docs/V3_SPEC/…` 是 DG-2 前路径并给出现行落点。**表体零改动**
+   （83 是审计当时的快照，逐行改写 = 伪造审计记录）。
+
+**排除项（不是断链）**：`Docs/reference/` 400+ 条 V2 内部引用（范围外）· `docs_archive/` 内 V2 互引 ·
+L0 各册 `Supersedes: Docs/V3_*.md`（起草输入，落点已验）· `50 §6` 迁移映射表。
+
+### 观察（未改，L0 禁改）
+
+`10:7`/`20:8` 称 `docs_archive/2026-09-03/*_v0.3.md` 为「字段权威**参考**」；`20:7` 另称
+`10_Data_Model.md` 为「字段**权威**」；`50:159` 限定「唯一遗留参考 · **不指导新实现**」。
+措辞分层、**不冲突**。但 **`docs_archive/` 不在 scanner `SCAN_BASES` 内**，故
+「L0 出站引用是否可解析」**无机器校验**——工具覆盖缺口，非文档缺陷。**未擅自扩大 scanner 范围。**
+
+### 验收
+
+```text
+layers: L0=7 · L0-META=2 · L2=13 · L3=2 · L4=17 · L5=4   （与 A-10 修正后一致）
+UNASSIGNED = 0        OPEN candidates: 1 (P0 1) = C-01 OPEN/PAUSED
+802 passed, 8 warnings in 40.54s
+```
+
+**没做**：未全库关键词扫描 · 未重建 birth certificate · 未重扫 DG-5 已关三类 ·
+未动 `Docs/reference` · 未改 L0 00–50 / 90 / 91 · 未调整任何已有 authority level ·
+未新建治理文档 · 未新建四类审计报告 · 未改 C-01 · 未动 Manifest Schema / Adapter。
+
+**下一步**：三个搜索目标已跑完一轮。唯一剩余可选项 = 是否给 scanner 加
+「L0 出站引用可解析性」检查（不把 `docs_archive/` 纳入 census，只验引用）。
+**属新增 scanner 能力，等 Owner 明示，不自动做。**
 
 ## 0.0c Residual Audit 案例 1 + 机器源 ARCHIVE 分类缺陷修复（2026-09-13）
 

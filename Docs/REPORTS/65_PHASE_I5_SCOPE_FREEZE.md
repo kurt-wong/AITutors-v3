@@ -11,6 +11,10 @@ Status: HISTORICAL — **69 号已定性为 Evidence**
         **`63 §10.9`/`§10.10` 与 `81 §5.6`**，不是本文件。
         （2026-09-13 84 D-03：**不升 L2**——升 L2 会与 69 定性矛盾，且会造成
         第二来源。Disposition = **KEEP**。）
+> 📌 **路径修正（残余审计 A-11，2026-09-13）**：本文 §- 表内
+> `Docs/V3_SPEC/Closure/PHASE_I4_CLOSURE.md`、`Docs/V3_SPEC/63_…`、
+> `Docs/V3_SPEC/64_…`、`Docs/V3_SPEC/65_…` 是 **DG-2 迁移前**路径，已失效；
+> 现行均在 `Docs/REPORTS/`。正文保留为历史，不改写。
 Status（原文）: Experiment Constraint (NOT a Domain Contract modification)
 Applies From: Phase I-5 start until I-5-4 Decision
 Predecessor: 63_ARCHITECTURE_COMPLEXITY_GUARDRAILS.md (§10.9, §10.10), PHASE_I4_CLOSURE.md

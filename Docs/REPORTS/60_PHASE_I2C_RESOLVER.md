@@ -3,7 +3,9 @@
 Date: 2026-09-09
 Status: **CLOSED**
 Prerequisite: v3-phase-i2-closed
-Closure: `Docs/V3_SPEC/Closure/PHASE_I2C_CLOSURE.md`
+Closure: `Docs/REPORTS/PHASE_I2C_CLOSURE.md`
+  <!-- 路径修正（残余审计 A-11，2026-09-13）：原写 `Docs/V3_SPEC/Closure/PHASE_I2C_CLOSURE.md`，
+       是 DG-2 迁移前的路径，已失效。正文其余部分未改。 -->
 
 ---
 

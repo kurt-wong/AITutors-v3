@@ -16,15 +16,15 @@
         },
         {
           "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
-          "line": 96
-        },
-        {
-          "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
           "line": 97
         },
         {
           "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
-          "line": 184
+          "line": 98
+        },
+        {
+          "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
+          "line": 185
         },
         {
           "doc": "log.md",
@@ -377,7 +377,7 @@
         },
         {
           "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
-          "line": 96
+          "line": 97
         },
         {
           "doc": "Docs/REPORTS/74_B2B5_D_PROJECTION_SAFETY_REPORT.md",
@@ -427,15 +427,15 @@
         },
         {
           "doc": "Docs/REPORTS/83_GOVERNANCE_AUDIT.md",
-          "line": 112
+          "line": 119
         },
         {
           "doc": "restart-prompt.md",
-          "line": 191
+          "line": 245
         },
         {
           "doc": "restart-prompt.md",
-          "line": 196
+          "line": 250
         }
       ],
       "drift_risk": "LOW"
@@ -446,11 +446,11 @@
       "definitions": [
         {
           "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
-          "line": 96
+          "line": 97
         },
         {
           "doc": "restart-prompt.md",
-          "line": 232
+          "line": 286
         },
         {
           "doc": "log.md",
@@ -476,7 +476,7 @@
         },
         {
           "doc": "restart-prompt.md",
-          "line": 192
+          "line": 246
         },
         {
           "doc": "Status.md",
@@ -499,11 +499,11 @@
       "definitions": [
         {
           "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
-          "line": 96
+          "line": 97
         },
         {
           "doc": "restart-prompt.md",
-          "line": 232
+          "line": 286
         },
         {
           "doc": "Status.md",
@@ -576,15 +576,15 @@
         },
         {
           "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
-          "line": 95
+          "line": 96
         },
         {
           "doc": "restart-prompt.md",
-          "line": 228
+          "line": 282
         },
         {
           "doc": "restart-prompt.md",
-          "line": 229
+          "line": 283
         },
         {
           "doc": "Status.md",
@@ -650,7 +650,7 @@
         },
         {
           "doc": "Docs/REPORTS/83_GOVERNANCE_AUDIT.md",
-          "line": 110
+          "line": 117
         }
       ],
       "drift_risk": "LOW"
@@ -786,7 +786,7 @@
         },
         {
           "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
-          "line": 98
+          "line": 99
         },
         {
           "doc": "Status.md",
@@ -836,11 +836,11 @@
         },
         {
           "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
-          "line": 164
+          "line": 165
         },
         {
           "doc": "Docs/DECISIONS/84_CONFLICT_LEDGER.md",
-          "line": 185
+          "line": 186
         },
         {
           "doc": "restart-prompt.md",
