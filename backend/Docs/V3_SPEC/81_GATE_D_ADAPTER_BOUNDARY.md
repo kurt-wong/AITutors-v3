@@ -8,7 +8,21 @@
 > 测试证据」。Gate D 的要求是**契约裁决**，不是实现验收，故不用裸 `CLOSED`。
 > `CONTRACT CLOSED` = 边界契约已冻结；`IMPLEMENTATION NOT STARTED` = `backend/app`
 > 中无 Adapter 代码，且开工被 §5.4 三项前置阻塞。两者必须分开表述。
-**前置**: Gate A PASS / Gate B 系列 CLOSED（80 号）/ Gate C CLOSED / BUG-V3-044 CLOSED
+**前置**: Gate A PASS / Gate C CLOSED / BUG-V3-044 CLOSED / Gate B 见下
+**Gate B 实际状态（依据 82 §3，2026-09-13）**:
+- B1 **CONDITIONAL PASS**（option Role Validity 51.8% / answer 49.1%；Structural 未评估）
+- B2-A **CLOSED — PASS**（stem-only）
+- B2-B1 / B2-B2 / B2-B3-A/B / B2-B4-A/B / B2-B5 **CLOSED — PASS / SCOPE-BOUNDED**
+- B2-B3-C / B2-B4-C **DEFERRED**（Domain / Material 依赖）
+- **Gate B 整体 = NOT CLOSED**
+
+> ⚠️ **更正（2026-09-13，82 号 §4-C3）**：本行此前写的是「Gate B 系列 CLOSED
+> （80 号）」，**过度陈述了 80 号**。`80:421` 自己写 `B1 CONDITIONAL PASS`，
+> `80:432`/`80:437` 写两项 DEFERRED。按 82 §3.2 聚合规则——**存在 CONDITIONAL
+> 或 DEFERRED 子项时，父 Gate 不得记为 PASS 或 CLOSED**——Gate B 整体 NOT CLOSED。
+> Gate D 是**契约裁决**，其成立不依赖 Gate B 整体关闭；但**发布 67 号等
+> CHANGE-4/5 变更依赖**（见 82 §2）。
+
 **出口标准（用户裁决 2026-09-13）**: **本轮只冻结契约，不要求实现**。
 
 ---
@@ -346,16 +360,24 @@ Errata            : UNBLOCKED（Gate D 已过；Decision 项见 §9.1）
 Adapter 实现       : NOT STARTED（阻塞于 §5.4 三项前置）
 ```
 
-### 9.1 Errata Decision 待议项（Gate D 后）
+### 9.1 下一步（已被 82 号 supersede，2026-09-13）
 
-按用户裁决，Gate D 后**不进入 Adapter 实现**，先进入 Errata Decision。依赖链：
+> ⚠️ 本节原写「Gate D 后先进入 Errata Decision」。**该顺序已作废**——外部对抗性
+> 审查发现文档权威层级漂移（P0），已建 `82 号` Contract Authority Reconciliation。
+> **Errata Decision 暂缓**；`20` 不改；manifest-only 不冻结。权威顺序见 **82 §8**。
 
 ```text
-Errata Decision
+Contract Authority Reconciliation（82 号）  ← 已建，ACTIVE
+      ↓
+Binding Authority Decision（BIND-1 优先；82 §5）
       ↓
 V3 Annotation Contract 冻结（V3 拥有，preprocessing 实现）
       ↓
 Manifest Contract 冻结
+      ↓
+Change Records（E1 = CHANGE-2；67 = CHANGE-4/5 → REJECT，Gate B NOT CLOSED）
+      ↓
+Errata Decision
       ↓
 Adapter → ResolvedRun 机械映射定义
       ↓
@@ -364,7 +386,7 @@ Adapter → ResolvedRun 机械映射定义
 Path B Full Closure
 ```
 
-**不得倒序**：在 Annotation / Manifest Contract 冻结前写 Adapter，会让 Adapter
+**不得倒序**：Authority 层与 Binding Carrier 未定前改 20 或写 Adapter，会让实现
 反过来定义契约，重新制造 V2 式「代码先行、契约后补」。
 
 ### 已证明
@@ -377,11 +399,13 @@ Path B Full Closure
 
 ### 未证明
 
-见 §7。
+见 §7。另见 82 §5：**BIND-1/2/3 未裁决**，Binding Carrier = PENDING。
 
 ---
 
-**下一步**: **Errata Decision**（不进入 Adapter 实现）→ V3 Annotation Contract
-冻结 → Manifest Contract 冻结 → Adapter 机械映射定义 → 最小 Adapter +
-对抗性测试 → 真实 corpus E2E。非 Path B 侧：OQ-3 → OQ-2 → B2-B2 Unknown 125
-triage → Phase 2 Evidence Ledger。
+**下一步**（权威顺序见 **82 §8**）: Binding Authority Decision（BIND-1 优先）→
+V3 Annotation Contract 冻结 → Manifest Contract 冻结 → Change Records →
+Errata Decision → 最小 Adapter + 对抗性测试 → 真实 corpus E2E → Path B Full Closure。
+非 Path B 侧：OQ-3 → OQ-2 → B2-B2 Unknown 125 triage → Phase 2 Evidence Ledger。
+
+**Gate 状态权威 = 82 §3。** 本文件 §9 状态块为回声。

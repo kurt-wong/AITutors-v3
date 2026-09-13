@@ -5,6 +5,13 @@
 **Status**: B2-B5-D COMPLETED | Gate C BLOCKED (C-1 Evidence Promotion Contract design freeze + C-2 full E2E)
 **架构审查**: 经四次裁决，修正 preprocessing 依赖 + Evidence Admission Boundary + structural_regions + Proposal→Claim 分离
 
+> ⚠️ **SUPERSEDED ON GATE C（2026-09-13，82 号 §4-C1）**：本文件的 Gate C 状态行
+> （含 §8.1 与第九节汇总表）**已作废，不得当作现行状态**。C-1 已由 `75 号`
+> 完成（Evidence Promotion Contract，REVIEWED），C-2 已由 `76 号`/`77 号` 完成。
+> **Gate C 现行状态 = CLOSED (Phase 1)**，唯一权威见 **`82 号 §3.1`**。
+> 本文件正文**保留为历史报告**，不改写——此前无任何文件声明其被废止，正是
+> 82 号登记的 P0 冲突 C1。
+
 ---
 
 ## 一、测试覆盖
@@ -362,6 +369,9 @@ gate_c_invalid_binding_corpus.json (157 targets)
 
 > **Gate C: BLOCKED — V3 Source Evidence Binding Contract + full 157 E2E 尚未完成闭环**
 
+> ⚠️ **本行已作废（82 号 §4-C1，2026-09-13）**。C-1=`75 号`、C-2=`76 号`/`77 号`
+> 已完成。**现行状态 = CLOSED (Phase 1)**，见 `82 号 §3.1`。保留原文作历史。
+
 ### 8.2 未完成项
 
 **C-1: V3 Evidence Promotion Contract** (先冻结设计, 再写代码)
@@ -534,7 +544,7 @@ preprocessing 是可替换的上游实现, 不能反过来成为 V3 架构成立
 | Evidence Admission Boundary | **Unclosed** — Grammar 输入前置条件未被证明 |
 | Structural consistency check | **IMPLEMENTED** — structural_regions, Necessary but not Sufficient |
 | Evidence Promotion Negative Tests (C-3) | **IMPLEMENTED** — 7 attacks 全部 fail-closed |
-| Gate C | **BLOCKED** — C-1 (五层 Evidence Contract) + C-2 (157 E2E) 未闭环 |
+| Gate C | **BLOCKED** — C-1 (五层 Evidence Contract) + C-2 (157 E2E) 未闭环 ／ **⚠️ 已作废，82 号 §4-C1；现行 = CLOSED (Phase 1)** |
 | preprocessing 依赖 | **移除** — 不是 V3 Gate C 前置条件 |
 
 ---

@@ -1,14 +1,54 @@
 # AI Tutor V3 — RESTART PROMPT
 
-Version: v1.48
-Status: **Gate D CONTRACT CLOSED / IMPLEMENTATION NOT STARTED** —
-Gate A/B/C 系列 CLOSED；Gate D 契约已冻结、Adapter 未实现；
-Errata UNBLOCKED；
-下一步：**Errata Decision**（不进入 Adapter 实现）
+Version: v1.49
+Status: **Contract Authority Reconciliation ACTIVE（82 号）** —
+Gate A PASS / Gate B **NOT CLOSED** / Gate C CLOSED (Phase 1) /
+Gate D CONTRACT CLOSED / Adapter NOT STARTED；
+Errata Decision **暂缓**（权威层级清理先行）；
+下一步：**Binding Authority Decision（BIND-1/2/3）**
 Date: 2026-09-13
 
-## 0.0 当前结论（2026-09-13 Gate D CONTRACT CLOSED / IMPLEMENTATION NOT STARTED）
+## 0.0 当前结论（2026-09-13 Contract Authority Reconciliation — 82 号 ACTIVE）
 
+- **权威层级已建立（82 号，ACTIVE）**——本文档是外部对抗性审查后的产物。审查发现
+  Frozen Spec / Gate 裁决 / Phase 报告 / Status 之间出现多个层级的规范性声明且无
+  废止关系，故**暂缓任何对 20 的修改**，也**暂缓把 manifest-only 正式冻结**。
+  - **五层权威矩阵**（82 §1）：A Frozen Spec（Normative）/ B Decision Record（仅其
+    裁决范围）/ C Phase Report（Informative，**禁用规范性语言**）/ D Status
+    （不得与 82 §3 矛盾）/ E Experimental（**不得单独支撑 PASS**）。
+  - **规范变更分类 CHANGE-0…5**（82 §2）：四道门**仅适用** CHANGE-4 放宽 /
+    CHANGE-5 删除。**新增强制 invariant = CHANGE-2**，需 Change Record 但不走四道门。
+    拿不准时往高里归。
+  - **Gate State Authority = 82 §3**（唯一权威）。任何 Gate 状态变更须同 commit 更新。
+  - **聚合规则冻结**：存在 CONDITIONAL 或 DEFERRED 子项时，父 Gate **不得**记为
+    PASS/CLOSED。「大部分子项 PASS → 可发布 Contract Change」是**禁止的逻辑偷换**。
+- **Gate B 整体 = NOT CLOSED**（依据 82 §3）：B1 CONDITIONAL PASS（option Role
+  Validity 51.8% / answer 49.1%；Structural 未评估）；B2-B3-C / B2-B4-C DEFERRED。
+  **因此 67 号 Errata（CHANGE-5，删 `FORBIDDEN_FIELDS` 的 `line_refs`，`20:117`）
+  不得发布。**
+- **已核验冲突 7 条（82 §4，含 file:line）**，P0 四条：
+  - **C1** `74:5/363/537` 仍写 Gate C BLOCKED，`80:439` 已 CLOSED，**无废止记录** →
+    82 §3.1 即废止记录（C-1=`75`，C-2=`76`/`77` 确已完成）。
+  - **C2** `69:306` 无日期路线图仍写「Errata Decision（Gate A-D 全部通过后）」→
+    已加 supersede 指针，正文保留为历史。
+  - **C3** `81:11` 曾称「Gate B 系列 CLOSED」，**过度陈述 80 号**（80:421 自己写
+    B1 CONDITIONAL）→ **本轮已修正**。
+  - **C7** 无 Authority Matrix / 无变更分类 → 82 §1/§2 即为建立。
+  - P1 三条：C4（`80:426` B2-B2 CLOSED vs `80:448` Unknown 125 未清，**歧义非错误**，
+    待 triage 补 scope 声明）/ C5（`69:656`/`69:756` 历史快照仍写 B2-B BLOCKED/WAIT；
+    全仓**无**「NEXT」措辞）/ C6（E1 属 **CHANGE-2 Normative Addition**，非澄清）。
+- **Binding Carrier Decision = PENDING**（82 §5）——三个未决问题**登记未裁决**：
+  - **BIND-1** Annotation semantic unit ↔ Manifest binding unit 是否存在**确定性
+    identity join**？若依赖顺序/题号/模糊匹配 → 重新引入 Resolver-like 问题，
+    违反 81 §5.6 与「只允许机械投影」。**本轮最值得新增的审查点。**
+  - **BIND-2** Native Path 能否完全脱离 `annotation.line_refs`？
+  - **BIND-3** Manifest 的 role declaration 是 **External Claim** 还是 V3
+    **Semantic Authority**？（初步倾向 External Claim Producer，未裁决）
+  - 候选状态：manifest-only = 🟡 PROVISIONAL ARCHITECTURAL PREFERENCE（须 BIND-1/2/3
+    全 PASS 才可冻结）；annotation 内 = 🔴 不得继续推进；两者共存 = 🔴 REJECT。
+  - **关键澄清**：`line_refs` 在 annotation 中**不自动违反** Source-as-Fact-Source。
+    违规的是「LLM line_refs → 直接相信 → ResolvedSpan」；「→ Resolver 验证 →」不违规。
+    **「更干净」≠「已证明正确」。**
 - **Gate D: CONTRACT CLOSED / IMPLEMENTATION NOT STARTED**（权威：`81 号`）。
   - 状态措辞：Gate D 的要求是**契约裁决**，不是实现验收，故不用裸 `CLOSED`。
     `CONTRACT CLOSED` = 边界契约已冻结；`IMPLEMENTATION NOT STARTED` =
@@ -118,20 +158,22 @@ Date: 2026-09-13
 - **红线（不变）**：HTTP retry ≠ LLM retry ≠ fallback；先冻结 Spec 再改代码；
   Schema Source of Truth = 20_Document_Pipeline.md；Resolver 不猜；
   实验结果 ≠ 实施授权；提议修改 ≠ 违反 Frozen Spec。
-- **下一步（按序执行）**：
-  1. **Errata Decision**（Gate D 已过，阻塞解除）。**不进入 Adapter 实现。**
-     待议：Grammar 输入来源契约写入 20 §8.4 正文；`ResolvedSpan` 生产者字段；
-     及下方依赖链中的 Annotation / Manifest Contract 冻结范围。
+- **下一步（按序执行，权威顺序见 82 号 §8）**：
+  1. **Binding Authority Decision**（BIND-1 / BIND-2 / BIND-3，82 §5）。
+     **BIND-1 优先**：Annotation ↔ Manifest 的确定性 identity join 未定义前，
+     manifest-only 只能是候选方向，不得冻结。
   2. **V3 Annotation Contract 冻结**（V3 拥有，preprocessing 实现；81 §5.4）。
   3. **Manifest Contract 冻结**。
-  4. **OQ-3 → OQ-2**：物化层 / Standalone+Material 裁决
-  5. **B2-B2 Unknown 125 triage** + B2-B3-C / B2-B4-C 延期项
-  6. **Phase 2 Evidence Ledger**：等真实 pipeline 压力出现后再启动
-  7. **Path B Full Closure E2E**（含 Provenance Golden Test + Replay 验证）
-  8. **I-5-2 Adapter 实现**：**最后**，且阻塞于 81 §5.4 三项前置（V3 annotation
-     schema 对外发布 / manifest schema 冻结 / SealedSource 版本绑定机制）。
-     **依赖链不可倒序**：在 Annotation / Manifest Contract 冻结前写 Adapter，
-     会让 Adapter 反过来定义契约，重蹈 V2「代码先行、契约后补」。
+  4. **Change Records**：E1 = **CHANGE-2 Normative Addition**（需 Change Record，
+     不走四道门）；67 = CHANGE-4/5 → **REJECT / WITHDRAW**（Gate B NOT CLOSED）。
+  5. **Errata Decision**（前置全部满足后才做）。
+  6. **最小 Adapter + 对抗性测试 → 真实 corpus E2E → Path B Full Closure**。
+     阻塞于 81 §5.4 三项前置；**依赖链不可倒序**。
+  - **非 Path B 侧（不阻塞于上表）**：OQ-3 → OQ-2；B2-B2 Unknown 125 triage
+    （完成时补 `80:426` 的 scope 声明，消 82 §4-C4 歧义）；B2-B3-C / B2-B4-C 延期项；
+    Phase 2 Evidence Ledger（含 Q-B Evidence Claim 显式 `answer_form`）。
+  - **每次 Gate 状态变更，必须在同一 commit 内更新 `82 §3`。** 其他文档的 Gate 状态
+    均为回声；与 82 §3 矛盾即该文档 stale。
 - 重启后第一任务：读本文件 → Status.md 尾 → log.md 尾 → bugs.md →
   按上述 Step 顺序执行。
 - **对账教训（2026-09-13）**：B2-B1～B2-B5 的实验结果曾只写进 69 号与 docs 71–74，

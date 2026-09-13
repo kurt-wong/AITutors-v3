@@ -2451,3 +2451,75 @@ Errata   : UNBLOCKED
 | 6 | Phase 2 Evidence Ledger | 等真实 pipeline 压力 |
 | 7 | Path B Full Closure E2E | — |
 | 8 | I-5-2 Adapter 实现 | **最后**；阻塞于 81 §5.4 三项前置，依赖链不可倒序 |
+
+---
+
+## 2026-09-13 — Contract Authority Reconciliation（82 号 ACTIVE）
+
+**权威**：`Docs/V3_SPEC/82_CONTRACT_AUTHORITY_RECONCILIATION.md`
+**触发**：外部对抗性审查收紧上一轮结论——文档权威层级漂移是 P0，须先治理再谈 Errata。
+**本轮不做**：不改 20；不冻结 manifest-only；不写 Errata Decision；不实现 Adapter。
+
+### 核验结果（不靠推测，逐条到 file:line）
+
+| ID | 冲突 | 证据 | 处置 |
+|---|---|---|---|
+| **C1** 🔴 | Gate C：74 仍 BLOCKED，80 已 CLOSED，**无废止记录** | `74:5/363/537` vs `80:439`；C-1=`75`、C-2=`76/77` 已完成 | 82 §3.1 即废止记录；74 三处加 supersede 标注 |
+| **C2** 🔴 | 69 §8 无日期路线图仍写「Errata Decision（Gate A-D 全部通过后）」 | `69:306` | 加 supersede 指针 → 82 §8 |
+| **C3** 🔴 | 81:11 称「Gate B 系列 CLOSED」，**过度陈述 80**（本轮自引入） | `81:11` vs `80:421` B1 CONDITIONAL、`80:432/437` DEFERRED | **已修正**，改列 Gate B 真实状态 |
+| **C4** 🟠 | 80 内部 B2-B2 同时 CLOSED 与 Unknown 125 未清 | `80:426` vs `80:448` | **歧义非错误**，待 triage 补 scope 声明 |
+| **C5** 🟠 | 69 历史矩阵仍写 B2-B BLOCKED/WAIT | `69:656`、`69:756` | 历史快照，保留；以 82 §3 为准 |
+| **C6** 🟠 | E1 性质 | `20:662-679` 对 answer_text 来源**沉默** | 归 **CHANGE-2 Normative Addition**，不写入 20 |
+| **C7** 🔴 | 无 Authority Matrix / 无变更分类 | 全仓 grep 零命中 | 82 §1/§2 建立 |
+| — | 「Gate B2-B = NEXT」 | 全仓 grep | ❌ **不成立**（无「NEXT」措辞） |
+
+### 82 号建立的治理机制
+
+1. **五层权威矩阵**：A Frozen Spec（Normative）/ B Decision Record（仅裁决范围，
+   不得覆盖 A）/ C Phase Report（Informative，**禁用规范性语言**）/ D Status
+   （不得与 82 §3 矛盾）/ E Experimental（**不得单独支撑 PASS**）。
+2. **CHANGE-0…5 分类**：四道门**仅适用** CHANGE-4 放宽 / CHANGE-5 删除。
+   **新增强制 invariant = CHANGE-2**，需 Change Record 但不走四道门。拿不准往高里归。
+3. **Gate State Authority = 82 §3**（唯一权威）。**聚合规则冻结**：存在 CONDITIONAL
+   或 DEFERRED 子项时父 Gate 不得记 PASS/CLOSED。
+
+### Gate 系列状态（依据 82 §3）
+
+```text
+Gate A   : PASS / TEST-EVIDENCED
+Gate B   : NOT CLOSED
+           B1 CONDITIONAL PASS（option Role 51.8% / answer 49.1%；Structural 未评估）
+           B2-A / B2-B1 / B2-B2 / B2-B3-A,B / B2-B4-A,B / B2-B5 : PASS / SCOPE-BOUNDED
+           B2-B3-C / B2-B4-C : DEFERRED
+Gate C   : CLOSED (Phase 1)（supersedes 74）
+Gate D   : CONTRACT CLOSED / IMPLEMENTATION NOT STARTED
+Adapter  : NOT STARTED（阻塞于 81 §5.4）
+BUG-V3-044: CLOSED
+Binding Carrier : PENDING（BIND-1/2/3 未裁决）
+Errata   : 暂缓（67 号 CHANGE-5 不得发布，Gate B NOT CLOSED）
+```
+
+### Binding Authority 三个未决问题（82 §5，登记未裁决）
+
+- **BIND-1**：Annotation semantic unit ↔ Manifest binding unit 是否存在**确定性
+  identity join**？若依赖顺序/题号/模糊匹配 → 重新引入 Resolver-like 问题，违反
+  81 §5.6。**本轮最值得新增的审查点。**
+- **BIND-2**：Native Path 能否完全脱离 `annotation.line_refs`？
+- **BIND-3**：Manifest 的 role declaration 是 External Claim 还是 Semantic Authority？
+- 候选：manifest-only = 🟡 PROVISIONAL；annotation 内 = 🔴 不得推进；共存 = 🔴 REJECT。
+- **关键澄清**：`line_refs` 在 annotation 中**不自动违反** Source-as-Fact-Source。
+  违规的是「LLM line_refs → 直接相信 → ResolvedSpan」；「→ Resolver 验证 →」不违规。
+
+### 下一步
+
+| 顺序 | 项目 |
+|------|------|
+| 1 | **Binding Authority Decision**（BIND-1 优先） |
+| 2 | V3 Annotation Contract 冻结（V3 拥有，preprocessing 实现） |
+| 3 | Manifest Contract 冻结 |
+| 4 | Change Records（E1=CHANGE-2；67=CHANGE-4/5 REJECT） |
+| 5 | Errata Decision（前置全满足后） |
+| 6 | 最小 Adapter + 对抗性测试 → 真实 corpus E2E → Path B Full Closure |
+| — | 非 Path B：OQ-3 → OQ-2；B2-B2 Unknown 125 triage（补 C4 scope）；Phase 2 Evidence Ledger |
+
+**Gate 状态变更必须同 commit 更新 82 §3。**

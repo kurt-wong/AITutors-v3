@@ -439,8 +439,17 @@ Gate B2-B5        : CLOSED — PASS / TEST-EVIDENCED / SCOPE-BOUNDED
 Gate C            : CLOSED (Phase 1 Evidence Authority Boundary Closure)
 Gate D            : CONTRACT CLOSED / IMPLEMENTATION NOT STARTED（81 号，2026-09-13）
 Adapter 实现       : NOT STARTED（阻塞于 81 §5.4 三项前置）
-Errata            : UNBLOCKED（Gate D 已过；Decision 项见 81 §9.1）
+Binding Carrier   : PENDING — BIND-1/2/3 未裁决（82 §5）
+Errata            : 暂缓 — 权威层级清理先行（82 号 ACTIVE）
 ```
+
+> **Gate State Authority = `82 §3`（2026-09-13 起）**。上表为回声。
+> 两处需注意：(1) 本文件 `Gate B1: CONDITIONAL PASS` 与 `B2-B3-C / B2-B4-C
+> DEFERRED` 意味着 **Gate B 整体 NOT CLOSED**——82 §3.2 聚合规则禁止把子项 PASS
+> 聚合成父 Gate PASS；(2) `B2-B2 CLOSED` 与下方延期项「B2-B2 Unknown 125 未清」
+> 并存，已登记为 82 §4-C4 **歧义**（非错误）：合理读法是 closed scope = 已测的
+> 1178 个 MC target，Unknown 125 在 scope 外，但本文件**未写明**——待 triage 完成后
+> 补 scope 声明。
 
 **显式延期项（不视为失败，不视为已完成）**：
 - B2-B3-C（F2 multi-blank / F4 / F9）→ Domain Contract
@@ -473,7 +482,9 @@ Errata            : UNBLOCKED（Gate D 已过；Decision 项见 81 §9.1）
 
 ---
 
-**下一步**: **Errata Decision**（不进入 Adapter 实现）→ V3 Annotation Contract
-冻结 → Manifest Contract 冻结 → OQ-3 → OQ-2 → B2-B2 Unknown 125 triage →
-Phase 2 Evidence Ledger → Path B Full Closure E2E → Adapter 实现（最后，
-阻塞于 81 §5.4 三项前置，依赖链不可倒序）。
+**下一步**（权威顺序见 **82 号 §8**；**Errata Decision 暂缓**）: Binding Authority
+Decision（BIND-1/2/3）→ V3 Annotation Contract 冻结 → Manifest Contract 冻结 →
+Change Records（E1=CHANGE-2；67=CHANGE-4/5 REJECT，Gate B NOT CLOSED）→
+Errata Decision → 最小 Adapter + 对抗性测试 → 真实 corpus E2E → Path B Full Closure。
+非 Path B 侧：OQ-3 → OQ-2 → B2-B2 Unknown 125 triage（补 scope 声明）→
+Phase 2 Evidence Ledger。

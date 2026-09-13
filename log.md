@@ -1737,3 +1737,84 @@ Errata         : UNBLOCKED
 `restart-prompt` v1.47 → v1.48；`69 号` 正式状态 + 下一步（四次更新）；
 `80 号` 状态块 + 下一步；`Status.md` 最新节（状态行 + 契约摘要 + 下一步表）。
 **无生产代码变更**，pytest 维持 802 passed。
+
+---
+
+## 2026-09-13 — Contract Authority Reconciliation（82 号新建，Errata Decision 暂缓）
+
+**触发**：外部对抗性审查收紧上一轮结论。审查判定「现在不是某一份后续文档写错了，
+而是 Frozen Spec → Gate 裁决 → Phase 文档 → Status 之间出现多个层级的权威声明，
+直接写 Errata Decision 会把未解决的架构冲突正式化」。
+
+### 用户撤回的三点
+
+| 上一轮判断 | 收紧后 |
+|---|---|
+| 67 不发布 | 仍然成立，且更强：**任何 67 等价 Contract Change 都不发** |
+| line_refs 采用 manifest-only | **只能是候选方向**，BIND-1/2/3 未证明前不得冻结 |
+| E1 直接写入 20 §8.4 | **不改 20**；须先 reconcile，且 E1 属 CHANGE-2 需 Change Record |
+
+### 逐条核验结果（红线：不靠推测）
+
+审查方四项冲突指控，核到 `file:line` 后 **3 项成立、1 项措辞不符**，另核出
+**1 项是本轮自己造成的**：
+
+| ID | 冲突 | 证据 | 裁决 |
+|---|---|---|---|
+| **C1** | Gate C：`74` 仍 BLOCKED，`80` 已 CLOSED，**无废止记录** | `74:5/363/537` vs `80:439`；C-1=`75`、C-2=`76/77` 确已完成 | 🔴 P0 成立 → 82 §3.1 即废止记录；74 加 supersede 标注（正文保留） |
+| **C2** | `69 §8` 无日期路线图仍写「Errata Decision（Gate A-D 全部通过后）」 | `69:306` | 🔴 P0 成立 → 加 supersede 指针 |
+| **C3** | `81:11` 称「Gate B 系列 CLOSED」，过度陈述 80 | `81:11` vs `80:421`（B1 CONDITIONAL）、`80:432/437`（两项 DEFERRED） | 🔴 P0 成立，**本轮自引入，已修正** |
+| **C4** | `80` 内部 B2-B2 同时 CLOSED 与 Unknown 125 未清 | `80:426` vs `80:448` | 🟠 P1 成立 → **登记为歧义非错误**，待 triage 补 scope 声明 |
+| **C5** | `69` 历史矩阵仍写 B2-B BLOCKED/WAIT | `69:656`、`69:756` | 🟠 P1 成立（历史快照，保留） |
+| **C6** | E1 性质 | `20:662-679` 对 answer_text 来源**沉默** | 🟠 P1 → 归 **CHANGE-2 Normative Addition** |
+| **C7** | 无 Authority Matrix / 无变更分类 | 全仓 grep 零命中 | 🔴 P0 成立 → 82 §1/§2 建立 |
+| — | 「Gate B2-B = NEXT」 | 全仓 grep | ❌ **不成立**，无「NEXT」措辞 |
+
+### 82 号建立的三件事
+
+1. **五层权威矩阵**（§1）：A Frozen Spec（Normative）/ B Decision Record（仅裁决
+   范围，不得覆盖 A）/ C Phase Report（Informative，**禁用规范性语言**）/
+   D Status（不得与 82 §3 矛盾）/ E Experimental（**不得单独支撑 PASS**）。
+2. **规范变更分类 CHANGE-0…5**（§2）：四道门**仅适用** CHANGE-4 放宽 / CHANGE-5
+   删除。**新增强制 invariant = CHANGE-2**，需 Change Record 但不走四道门。
+   判定规则：**拿不准往高里归**。
+3. **Gate State Authority = 82 §3**（唯一权威）。**聚合规则冻结**：存在 CONDITIONAL
+   或 DEFERRED 子项时父 Gate 不得记 PASS/CLOSED。「大部分子项 PASS → 可发布
+   Contract Change」是禁止的逻辑偷换。**Gate B 整体 = NOT CLOSED**，故 67 号
+   （CHANGE-5，删 `20:117` FORBIDDEN_FIELDS 的 line_refs）**不得发布**。
+
+### Binding Carrier Decision = PENDING（82 §5，登记未裁决）
+
+- **BIND-1**：Annotation semantic unit ↔ Manifest binding unit 是否存在**确定性
+  identity join**？若依赖顺序/题号/模糊匹配 → 重新引入 Resolver-like 问题，违反
+  81 §5.6 与「只允许机械投影」。**本轮最值得新增的审查点。**
+- **BIND-2**：Native Path 能否完全脱离 `annotation.line_refs`？
+- **BIND-3**：Manifest 的 role declaration 是 External Claim 还是 Semantic Authority？
+- 候选：manifest-only = 🟡 PROVISIONAL；annotation 内 = 🔴 不得推进；共存 = 🔴 REJECT。
+- **关键澄清**：`line_refs` 在 annotation 中**不自动违反** Source-as-Fact-Source。
+  违规的是「LLM line_refs → 直接相信 → ResolvedSpan」；「→ Resolver 验证 →」不违规。
+  **「更干净」≠「已证明正确」。**
+
+### 本轮明确不做
+
+**不修改 20；不冻结 manifest-only；不写 Errata Decision；不实现 Adapter；不发布 67 号 Errata。**
+
+### 状态
+
+```text
+Gate A   : PASS
+Gate B   : NOT CLOSED（B1 CONDITIONAL + B2-B3-C/B2-B4-C DEFERRED）
+Gate C   : CLOSED (Phase 1)
+Gate D   : CONTRACT CLOSED / IMPLEMENTATION NOT STARTED
+Adapter  : NOT STARTED
+Binding Carrier : PENDING
+Errata   : 暂缓
+下一步    : Binding Authority Decision（BIND-1 优先）
+```
+
+### 产出
+
+`82_CONTRACT_AUTHORITY_RECONCILIATION.md`（新建，ACTIVE，Gate State Authority）+
+`81 号` 前置声明修正（C3）+ `69 号` §8 supersede 指针 + 状态块更新 +
+`80 号` 状态块加 82 指针与 C4 说明 + `74 号` 三处 supersede 标注 +
+`restart-prompt` v1.48 → v1.49。**无生产代码变更。**
