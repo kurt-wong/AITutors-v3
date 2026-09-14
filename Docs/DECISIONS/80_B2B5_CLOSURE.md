@@ -195,6 +195,29 @@ Evidence Promotion Phase 1 是 **additive-only**（其自身文档明确「不�
 
 ### 6.1 架构定位
 
+> ⚠️ **范围澄清（Step 3，2026-09-13；对抗性审查 F-2 / `bugs.md` BUG-V3-048）**
+>
+> 下方表格里 `Evidence Authority Boundary ✅ Gate C Phase 1 已解决` 的**准确含义是**
+> **Evidence 层内部自洽**：事件记录机制 + Promotion 服务均已验证，invalid binding
+> 确实不产生 validated evidence。
+>
+> 它**不**表示 admission enforcement 已闭环。实测（`tests/adversarial/spec_gap/`，
+> module 级 xfail）：`admission.py` 零处引用 `EvidencePromotion` / `ValidationEvent` /
+> `is_evidence_validated`；后者在 `backend/app` 下**零生产调用方**。
+> 实际链路是 `Annotation → Resolver → Gate → Admission`，
+> 缺 `Evidence Validation → ValidatedEvidence` 环节；门控 admission 的是 `gate_decision`。
+>
+> **待裁决的架构问题**：Evidence 是 A) 审计记录，还是 B) 准入前置条件？
+> 代码选 A，Spec（`75 §三 R4/R5`）更接近 B。这是**架构决策未决，不是实现 bug**，
+> 故**不编码、不 reopen Gate C**。
+>
+> **Gate C 的 CLOSED 状态不变**——其 C-2 实现部分（157 E2E、fail-closed、IR bypass
+> 阻断）可能仍然成立，变的是**结论范围**：从「Evidence Authority 已强制执行」收敛为
+> 「Evidence ledger 与 promotion mechanism 已验证；admission enforcement 是否依赖
+> validated evidence 仍是未闭合架构边界」。
+>
+> 本澄清只加 banner，**下方正文零改动**（沿用 A-05 / A-08 / A-10 先例）。
+
 修复属于**Semantic Answer Contract** 层，是 Gate C 已解决的两层之下的第三层：
 
 ```text

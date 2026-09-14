@@ -3156,3 +3156,44 @@ tests/adversarial/spec_gap/…                     3 XFAIL   F-2×2 · F-4，不
 **已做**：F-1~F-6 登记 `bugs.md` 045–050 · 测试四分层 · L5 三处同步。
 **未做（等授权）**：Step 2 修 045/046/047 · Step 3 只改 C-2 表述不编码 ·
 Step 4 单独处理 TEST-INFRA-01。**未改任何产品代码。**
+
+---
+
+## 2026-09-13 — Step 3：C-2 结论范围收敛（只改文字，零编码）
+
+对抗性审查 F-2（`bugs.md` BUG-V3-048）实测出 `80 §6.1` 存在**过度陈述**：
+
+```text
+旧：Evidence Authority Boundary ✅ Gate C Phase 1 已解决
+    → 暗示 admission enforcement 已闭环
+
+新：Evidence 层内部自洽（事件记录 + Promotion 服务已验证）
+    —— 但 admission enforcement 是否依赖 validated evidence
+    仍是未闭合架构边界（F-2）
+```
+
+逻辑跳跃在于：「不会产生 validated evidence」**≠**「系统不会继续接受该对象」。
+
+**改动**：`80 §6.1` 标题后加范围澄清 banner（正文与 `Gate B2-B5: CLOSED` 结论零改动）+
+本文件 / `log.md` / `restart-prompt.md` 同步。
+
+**未做**（按裁决禁止项）：未 reopen C-2 · 未改 L0 · 未改 75 Spec · 未改 Gate 代码 ·
+未新建 decision 文档 · 未新建 F-2 专题文档 · **未动 `82 §3` 的 Gate C 状态行**。
+
+**Gate C 的 CLOSED 状态不变**——变的是结论范围，不是实现判定。
+
+### 当前节奏
+
+```text
+870b447  审计基线冻结（F-1~F-6）
+   ↓
+（本轮）Step 3  C-2 措辞校准
+   ↓
+   push 两个 commit
+   ↓
+Step 2  F-5(046) → F-3(045) → F-6(047)
+Step 4  TEST-INFRA-01 单独，不插入主线
+```
+
+**BUG-V3-050 编号保持**（Owner 裁决：改编号制造纯治理 churn，独立处理意图已由
+`Type: Test Infrastructure` + `Status: Open — 单独立项` 表达）。

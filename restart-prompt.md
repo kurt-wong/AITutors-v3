@@ -1,14 +1,63 @@
-Version: v1.61
-Status: **Documentation Governance 稳定；转入代码与架构对抗性审查（Step 1 已冻结）** —
+Version: v1.62
+Status: **Documentation Governance 稳定；代码对抗性审查 Step 1+3 已完成，待 push** —
 **C-01 = OPEN / PAUSED**（权威落点 `82 §5.3.1`）：暂停于**上游生产事实缺口**，**非架构错误**；
 BIND-1 **PASS/FROZEN** · BIND-2 **PASS/FROZEN** · BIND-3 方向 ACCEPTED / 契约 UNPROVEN；
 **84 台账 A 类 0 OPEN · D 类 0 OPEN**；
-**本轮对抗性审查新增 6 项发现（`bugs.md` 045–050）**，Owner 四分类：
-产品实现缺陷 **045/046/047 应修** · 架构契约未闭环 **048 不编码** ·
-输入鲁棒性 **049 延后 preprocessing** · 测试基础设施 **050 单独立项**；
-下一步 = **Step 2 修 045/046/047**（需 Owner 明示开工）——
-**不是**设计 Manifest Schema，**不是**实现 Adapter
+**对抗性审查 6 项发现（`bugs.md` 045–050）**：产品缺陷 **045/046/047 应修** ·
+架构契约未闭环 **048 不编码** · 输入鲁棒性 **049 延后 preprocessing** ·
+测试基础设施 **050 单独立项（编号保持，不改 051）**；
+**Step 3 已完成**：`80 §6.1` 加范围澄清 banner，Gate C CLOSED 状态不变；
+下一步 = **push `870b447` + Step 3 commit**，然后 **Step 2 修 045/046/047**
+（顺序 F-5 → F-3 → F-6）——**不是**设计 Manifest Schema，**不是**实现 Adapter
 Date: 2026-09-13
+
+## 0.0f Step 3：C-2 结论范围收敛（2026-09-13，只改文字零编码）
+
+**性质**：审计闭环的文档语义校准。**不是** reopen C-2，**不是**修代码。
+
+### 改了什么
+
+`80 §6.1` 原写 `Evidence Authority Boundary ✅ Gate C Phase 1 已解决`——**过度陈述**：
+把「Evidence 层自洽」说成了「权威边界已被强制执行」。
+逻辑跳跃：「不会产生 validated evidence」**≠**「系统不会继续接受该对象」。
+
+```text
+旧：Evidence Authority Boundary ✅ Gate C Phase 1 已解决
+    → 暗示 admission enforcement 已闭环
+
+新：Evidence 层内部自洽（事件记录 + Promotion 服务已验证）
+    —— 但 admission enforcement 是否依赖 validated evidence
+    仍是未闭合架构边界（F-2 / BUG-V3-048）
+    待裁决：Evidence 是 A) 审计记录 还是 B) 准入前置条件？
+```
+
+依据实测：`admission.py` 零处引用 `EvidencePromotion` / `ValidationEvent` /
+`is_evidence_validated`；后者在 `backend/app` 下**零生产调用方**。
+
+### 严格限范围（按 Owner 禁止项）
+
+**未做**：未 reopen C-2 · 未改 L0 · 未改 75 Spec · 未改 Gate 代码 ·
+未新建 decision 文档 · 未新建 F-2 专题文档 · **未动 `82 §3` 的 Gate C 状态行**。
+
+**改动只有**：`80 §6.1` 加 banner（正文与 `Gate B2-B5: CLOSED` 结论零改动）+
+`Status.md` 尾 + `log.md` 尾 + 本文件。
+
+**Gate C 的 CLOSED 状态不变**——变的是结论范围，不是实现判定。
+
+### 节奏
+
+```text
+870b447  审计基线冻结（F-1~F-6）
+   ↓
+（本轮）Step 3  C-2 措辞校准
+   ↓
+   push 两个 commit
+   ↓
+Step 2  F-5(046) → F-3(045) → F-6(047)
+Step 4  TEST-INFRA-01 单独，不插入主线
+```
+
+**BUG-V3-050 编号保持不变**（Owner 裁决：改编号制造纯治理 churn）。
 
 ## 0.0e 代码与架构对抗性审查 · Step 1 冻结（2026-09-13）
 

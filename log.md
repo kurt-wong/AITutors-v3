@@ -2724,3 +2724,60 @@ tests/adversarial/spec_gap/test_spec_gap_...py   3  XFAIL （F-2 ×2 · F-4，�
 
 **未做（等 Owner 明示）**：Step 2 修 045/046/047 · Step 3 只改 C-2 表述不编码 ·
 Step 4 单独处理 TEST-INFRA-01。**未改任何产品代码。**
+
+---
+
+## 2026-09-13 — Step 3：C-2 结论范围收敛（只改文字，零编码）
+
+**性质**：审计闭环的文档语义校准。**不是** reopen C-2，**不是**修代码。
+
+### 背景
+
+对抗性审查 F-2（`bugs.md` BUG-V3-048）实测：`admission.py` 零处引用
+`EvidencePromotion` / `ValidationEvent` / `is_evidence_validated`；后者在 `backend/app`
+下**零生产调用方**。门控 admission 的是 `gate_decision`，不是 evidence ledger。
+
+于是 `80 §6.1` 的 `Evidence Authority Boundary ✅ Gate C Phase 1 已解决`
+构成**过度陈述**——它把「Evidence 层自洽」说成了「权威边界已被强制执行」。
+逻辑跳跃在于：「不会产生 validated evidence」**≠**「系统不会继续接受该对象」。
+
+### 改动（严格限范围）
+
+| 允许项 | 实际动作 |
+|---|---|
+| 对应裁决记录 | `80 §6.1` 标题后加**范围澄清 banner**，正文与 `Gate B2-B5: CLOSED` 结论**零改动** |
+| `Status.md` 尾 | 追加 Step 3 节 |
+| `log.md` 尾 | 本节 |
+| `restart-prompt.md` | v1.61 → v1.62，顶部 Status + §0.0f |
+
+### 明确未做（按裁决禁止项）
+
+**未 reopen C-2** · **未改 L0** · **未改 75 Spec** · **未改 Gate 代码** ·
+**未新建 decision 文档** · **未新建 F-2 专题文档** · **未动 `82 §3` 的 Gate C 状态行**
+（动它会构成 reopen 的外观）。
+
+### 措辞变化
+
+```text
+旧：Evidence Authority Boundary ✅ Gate C Phase 1 已解决
+    （暗示 admission enforcement 已闭环）
+
+新：Evidence 层内部自洽（事件记录 + Promotion 服务已验证）
+    —— 但 admission enforcement 是否依赖 validated evidence
+    仍是未闭合架构边界（F-2）。
+    待裁决：Evidence 是 A) 审计记录 还是 B) 准入前置条件？
+```
+
+**Gate C 的 CLOSED 状态不变。** 变的是结论范围：C-2 的实现部分（157 E2E、fail-closed、
+IR bypass 阻断）可能仍然成立，不再主张它等同于「Evidence Authority 已强制执行」。
+
+### 下一步（按 Owner 顺序）
+
+```text
+Step 3 完成 → commit → 与 870b447 一起 push → 再进 Step 2
+Step 2 顺序：F-5(046) → F-3(045) → F-6(047)
+Step 4（TEST-INFRA-01 / BUG-V3-050）单独处理，不插入主线
+```
+
+**BUG-V3-050 编号保持不变**（Owner 裁决：编号本身不改变治理语义，改它会制造纯治理 churn；
+「独立处理」的意图已由 `Type: Test Infrastructure` + `Status: Open — 单独立项` 表达）。
