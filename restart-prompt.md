@@ -1,14 +1,35 @@
-Version: v1.64
-Status: **Phase 0 + 0.2 消费验证实验完成（85 号 §9/§10）** —
-核心结论：preprocessing Source Span 定位模型与 V3 完全兼容，
-冲突在 Annotation Representation 不在 Source Resolution；
-Phase 0.2：647/871 ready（74.3%）· 44 auto_approve · 0 rejected；
-正确方向 = SpanAdapter 入口（Path B）；
-preprocessing 定位 = V3 Source Intelligence Layer；
+Version: v1.65
+Status: **Phase 0.2-R2 + 0.3-B Evidence-Faithful 完成（85 号 §11/§12）** —
+evidence-faithful baseline = 289/871（33.2%）· 0 auto_approve · 0 rejected；
+647/871（74.3%）= provisional/contaminated（synthetic option fabrication）；
+Phase 0.3-B：527/548 choice units resolved（96.2%）via Source-grounded label detection；
+架构结论 = Producer 提供 Evidence Region，Canonical Resolver 负责 per-label resolution；
+Producer Contract 不需要强制 per-option spans；
 **新增强制规则：文档创建禁令（restart-prompt §3）**；
 C-01 = OPEN / PAUSED；BIND-1/2 PASS/FROZEN · BIND-3 UNPROVEN；
-下一步 = SpanAdapter 正式设计 → Admission 物化验证 → preprocessing 修复后重跑
+下一步 = correctness sampling → Phase 0.3-C Admission Boundary → 32 结构缺失调查
 Date: 2026-09-14
+
+## 0.0h Phase 0.2-R2 + 0.3-B Evidence-Faithful 实验（2026-09-14）
+
+### Phase 0.2-R2
+
+移除 synthetic per-label option fabrication 后重跑：**289/871 ready（33.2%）**，
+0 auto_approve，0 rejected。647/871（74.3%）降级为 provisional。
+
+### 582 Skipped 归因
+
+548（94.2%）= choice-type with options_region · 32（5.5%）= preprocessing 结构缺失 · 2（0.3%）= material detection。
+
+### Phase 0.3-B
+
+548 个真实 skipped choice units → Source marker detection → **527 resolved（96.2%）**，
+5 incomplete，16 no_labels（Resolver marker-grammar coverage gap）。
+
+### 架构结论
+
+**Producer 提供 Evidence Region；Canonical Resolver 负责 per-label resolution。**
+Producer Contract 不需要强制 per-option spans。不改 L0 Frozen Spec。
 
 ## 0.0g Phase 0 + 0.2 消费验证实验完成（2026-09-14）
 

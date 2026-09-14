@@ -11,7 +11,6 @@ V3 禁止 payload 含 line_refs，所以只转角色声明，不含行号。
 from .manifest_reader import Manifest, ManifestUnit
 
 
-_OPTION_LABELS = ["A", "B", "C", "D", "E", "F"]
 _CHOICE_TYPES = {"single_choice", "multiple_choice", "true_false"}
 
 
@@ -33,12 +32,11 @@ def _build_standalone(unit: ManifestUnit) -> dict:
             "role": "explanation",
             "explanation_zone": "inline_explanation",
         }
-    # options: 选择题需要 per-label 声明（IRBuilder 按 label 查 span）
-    if unit.options_lines and unit.original_question_type in _CHOICE_TYPES:
-        content["options"] = [
-            {"label": lbl, "role": "option", "question_label": _qn(unit)}
-            for lbl in _OPTION_LABELS[:4]
-        ]
+    # options: 不再 fabricate per-label 声明。
+    # preprocessing 提供 options_lines 是事实，但不提供 per-label 粒度。
+    # V3 IRBuilder 按 label 查 span（sp-Q1.option.A），我们没有这个粒度的数据。
+    # 不声明 options → choice-type 单元会因 "options missing" 变 incomplete，
+    # 这是诚实结果：暴露 V3 格式与 preprocessing 证据粒度的真实 gap。
     return {
         "unit_id": unit.unit_id,
         "unit_type": "standalone_question",

@@ -2890,3 +2890,46 @@ resolved_span_adapter / runner（Phase 0）/ runner_b2（Phase 0.2）+ 2 份 con
 1. SpanAdapter 正式设计（Path B ResolvedSpan Producer 契约）
 2. Admission approve() 物化验证（Candidate → Question/Instance）
 3. preprocessing 答案污染修复后重跑 Phase 0.2
+
+---
+
+### 2026-09-14 — Phase 0.2-R2 + Phase 0.3-B Evidence-Faithful 实验
+
+**背景**：Phase 0.2 的 647 ready 包含 synthetic per-label option fabrication（均分假设）。
+实验 harness 不能制造它正在验证的证据。用户裁决：立即移除，重跑。
+
+**Phase 0.2-R2**（`runner_b2.py` 修改 + 重跑）：
+- annotation_adapter 移除 per-label option 声明
+- runner_b2 `_try_options` → `_try_options_region`（单个 options region span）
+- 结果：289/871 ready（33.2%），0 auto_approve，0 rejected
+- 647/871（74.3%）降级为 provisional
+
+**582 Skipped 归因分析**：
+- 548（94.2%）= choice-type with options_region（V3 IR 要求 per-label vs preprocessing 提供 region）
+- 32（5.5%）= preprocessing 结构缺失（共享题干组）
+- 2（0.3%）= composite material detection edge case
+
+**`_locate_options()` 纯度审计**：
+- 无 LLM、无推测、无 fallback
+- Source-grounded deterministic resolver（行首 `A.` / `(A)` 等显式 marker）
+- 找不到 → incomplete/ambiguous，不制造事实
+- 结论：PASS，可复用
+
+**Phase 0.3-B**（`runner_b3.py` 新建）：
+- 548 个真实 skipped choice units
+- Source marker detection（行首 + inline）→ labels → per-label spans
+- 首轮 97.1% resolved，但 correctness sampling 发现 195 个 less_than_4_labels 是 detection false positive（单行多选项只检测到 A）
+- 修复 detection 加 inline 检测后：527/548 resolved（96.2%），5 incomplete，16 no_labels
+- 16 no_labels = Resolver marker-grammar coverage gap（HTML table/div、首 label 缺标点、inline 混排）
+
+**架构结论**：
+- Producer 提供 Evidence Region；Canonical Resolver 负责 per-label resolution
+- Producer Contract 不需要强制 per-option spans
+- 不改 L0 Frozen Spec
+
+**新增文件**：`runner_b3.py` · `consumer-report-b2-r2.json` · `consumer-report-b3.json`
+
+**下一步**：
+1. correctness sampling 深度验证
+2. Phase 0.3-C Admission Boundary
+3. 32 个结构缺失 units 调查

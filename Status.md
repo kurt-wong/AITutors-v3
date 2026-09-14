@@ -3307,3 +3307,61 @@ composite 格式映射不完整 · answer_evidence 与 explanation 行重叠 · 
 1. SpanAdapter 正式设计（Path B 契约）
 2. Admission approve() 物化验证
 3. preprocessing 答案污染修复后重跑
+
+---
+
+## 2026-09-14 — Phase 0.2-R2 + Phase 0.3-B Evidence-Faithful 结果
+
+### Phase 0.2-R2：Evidence-Faithful Re-run
+
+移除 synthetic per-label option fabrication（均分假设）后重跑完整链：
+
+| 指标 | Phase 0.2 (synthetic) | **Phase 0.2-R2 (evidence-faithful)** |
+|---|---|---|
+| Ready | 647 (74.3%) | **289 (33.2%)** |
+| auto_approve | 44 | **0** |
+| rejected | 0 | 0 |
+| pending_review | 603 | 289 |
+
+**289/871 = 33.2% 是当前真实的 evidence-faithful compatibility baseline。**
+647/871 = 74.3% 降级为 provisional / contaminated by synthetic option fabrication。
+
+### 582 Skipped 归因
+
+| 类别 | 数量 | 占比 | 根因 |
+|---|---|---|---|
+| Choice-type, options_region 存在 | 548 | 94.2% | V3 IR 要求 per-label，preprocessing 提供 region |
+| Choice-type, 结构缺失 | 32 | 5.5% | stem=None, options=None（共享题干组） |
+| Composite, material 缺失 | 2 | 0.3% | 英语翻译题 |
+
+### Phase 0.3-B：Source-Grounded Option Label Resolution
+
+用 548 个真实 skipped choice units 验证：`options_region` → Source marker detection → per-label spans。
+
+| 分类 | 数量 | 占比 |
+|---|---|---|
+| **resolved** | **527** | **96.2%** |
+| no_labels | 16 | 2.9% |
+| incomplete | 5 | 0.9% |
+
+16 no_labels = Resolver marker-grammar coverage gap（HTML table/div 7+3、首 label 缺标点 5、inline 混排 1）。
+5 incomplete = inline 检测从化学式误检 H/G marker。
+
+### 架构结论
+
+**Producer 提供 Evidence Region；Canonical Resolver 负责从 Source 中解析 per-label Evidence。**
+
+- Producer Contract 不需要强制 per-option spans
+- `options_region` + Source-grounded label detection + existing Resolver = 96.2% 自动解析
+- 21 units → pending_review（不猜、不均分、不按题型制造）
+- 不改 L0 Frozen Spec（L2 实现/兼容性决策）
+
+### 实验资产
+
+`runner_b2.py`（Phase 0.2-R2）· `runner_b3.py`（Phase 0.3-B）· `consumer-report-b2-r2.json` · `consumer-report-b3.json` · 85 号 §11/§12
+
+### 下一步
+
+1. 532 resolved 的 correctness sampling 深度验证
+2. Phase 0.3-C Admission Boundary（Evidence Authority → Admission enforcement）
+3. 32 个结构缺失 units 的 preprocessing 侧调查

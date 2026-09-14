@@ -1,7 +1,7 @@
 # 85 — Preprocessing Consumer Phase 0：消费验证实验
 
 **Date**: 2026-09-14
-**Status**: **Phase 0 + 0.2 CLOSED — 结论见 §9/§10**
+**Status**: **Phase 0 + 0.2-R2 + 0.3-B CLOSED — 见 §9/§11/§12**
 **权威范围**: V3 消费 preprocessing 产出的架构边界与 Phase 0 实验设计。
 
 > **定位**：Phase 0 是 contract validation harness（契约验证器），不是生产集成。
@@ -259,7 +259,7 @@ Phase 0 失败 ≠ 项目失败。回滚动作：
 | Span 失败 / Unresolved | **0** |
 | Bad Reference | **0** |
 
-**preprocessing 的 Source Span 定位模型与 V3 sealed source 完全兼容。**
+**preprocessing 的 Resolved Evidence 模型与 V3 sealed source 完全兼容。**
 preprocessing 产生的 span reference 信息熵低于 V3 Resolver（确定位置 vs 搜索猜测），
 是更强的定位源。
 
@@ -292,7 +292,7 @@ Track A 不是证明 Resolver 不行，而是证明「把高精度 annotation �
 
 ```
 LLM Annotation → SourceResolver → ResolvedSpan     （现有 Path A）
-Preprocessing Manifest → SpanAdapter → ResolvedSpan （新增 Path B）
+Preprocessing Manifest → EvidenceAdapter → ResolvedSpan （新增 Path B）
 ```
 
 preprocessing manifest 属于 **Source Evidence Layer**（不是 Annotation Layer）：
@@ -307,6 +307,9 @@ preprocessing manifest 属于 **Source Evidence Layer**（不是 Annotation Laye
 ---
 
 ## 10. Phase 0.2 结果（2026-09-14，已完成）
+
+> **⚠ Phase 0.2 为含 synthetic option boundaries 的 provisional run。**
+> 最终 baseline 以 §11 Phase 0.2-R2 为准。
 
 ### 总体
 
@@ -330,19 +333,165 @@ preprocessing manifest 属于 **Source Evidence Layer**（不是 Annotation Laye
 
 ### 核心结论
 
-**preprocessing 的 Source Span 定位模型与 V3 完全兼容。冲突在 Annotation Representation，不在 Source Resolution。**
+**preprocessing 的 Resolved Evidence 模型与 V3 完全兼容。冲突在 Annotation Representation，不在 Source Resolution。**
 
-正确方向：增加 SpanAdapter 入口（Path B），让 preprocessing 的 ResolvedSpan 直接进入 IR。
+正确方向：增加 EvidenceAdapter 入口（Path B），让 preprocessing 的 ResolvedSpan 直接进入 IR。
 
 ### Skipped 原因（224 个）
 
 composite 格式映射不完整（语文/英语阅读理解）· answer_evidence 与 explanation 行重叠 · options 均分假设 · 题型边缘情况。**均属 adapter 调优范畴，非架构障碍。**
 
+> **⚠ Provisional**: Phase 0.2 的 647 ready 包含实验性 per-label option inference（均分假设）。
+> 不应作为最终 adapter compatibility baseline。见 §11 Phase 0.2-R2。
+
 ---
 
-## 11. 前置依赖
+## 11. Phase 0.2-R2 — Evidence-Faithful Re-run（2026-09-14，已完成）
+
+### 背景
+
+Phase 0.2 的 647 ready 中，choice-type 单元的 options 依赖均分假设（伪造 per-label A/B/C/D span）。
+实验 harness 不能制造它正在验证的证据。移除 synthetic option boundaries 后重跑。
+
+### 变更
+
+| 变更 | 内容 |
+|---|---|
+| annotation_adapter | 移除 per-label option 声明（不再 fabricate A/B/C/D） |
+| runner_b2 | `_try_options` → `_try_options_region`（单个 options region span） |
+| 输出 | `consumer-report-b2-r2.json` |
+
+### 结果
+
+| 指标 | Phase 0.2 (synthetic) | **Phase 0.2-R2 (evidence-faithful)** |
+|---|---|---|
+| Ready | 647 (74.3%) | **289 (33.2%)** |
+| Skipped | 224 | **582** |
+| auto_approve | 44 | **0** |
+| pending_review | 603 | **289** |
+| rejected | 0 | **0** |
+| Compiled leaves | 647 | **289** |
+
+### 关键结论
+
+1. **-358 ready**：全部来自 choice-type 的 per-label option fabrication。这些单元的 options 是 preprocessing 的 region-level 事实，V3 IRBuilder 要求 per-label 粒度——这是真实的 Evidence Semantics gap。
+2. **auto_approve 44 → 0**：证实之前的 auto_approve 是 synthetic evidence 产物，不是真实兼容性。
+3. **289 ready = 真实兼容 baseline**：这些单元（fill_in, short_answer, essay 等非 choice-type）的 Resolved Evidence 与 V3 完全兼容，无需合成假设。
+4. **0 rejected**：Gate 对真实证据仍然不会 reject——它只是标记不确定性。
+
+### 三个数字的分层含义
+
+| 数字 | 含义 | 回答的问题 |
+|---|---|---|
+| 100% span 构造 | 事实层 | preprocessing 的定位模型能否被 V3 理解？**能。** |
+| 33.2% IR ready | 结构表达层 | preprocessing 的证据粒度能否满足 V3 格式？**非 choice 可以，choice 不行（需要 options 语义解决）。** |
+| 0 auto_approve | Gate 策略层 | Gate 是否对真实证据有信心？**保守，正确。语义不确定性走人工。** |
+
+### Phase 0.3 Mandate（Evidence Producer Contract Freeze Candidate）
+
+Phase 0.3 分三步（先设计后编码）：
+
+| 子任务 | 问题 | 输出 |
+|---|---|---|
+| **0.3-A: Evidence Schema** | preprocessing 到底交付什么？ | Source identity / Evidence span / Role / Boundary / Relation / Grouping / Producer provenance / Manifest version |
+| **0.3-B: Evidence Semantics** | 哪些是事实？哪些是推断？ | Evidence vs Claim vs Classification vs Relation 的边界定义 |
+| **0.3-C: Admission Boundary** | 什么条件下 preprocessing evidence 可成为 Admission 有效事实？ | EvidenceAdapter → ResolvedRun → IR → Gate → Admission 的完整边界 |
+
+**Phase 0.3 完成后进行 Document Birth 判定**（90/91 治理）：
+
+```
+现有 L0 能承载？
+  ├─ YES → 修改现有 L0（必要时走 L1）
+  └─ NO → 是 V3 normative 架构事实？
+             ├─ YES → 新 L0（走 L1 批准）
+             └─ NO → L2 Decision / integration contract
+```
+
+当前名称：**Evidence Producer Contract Candidate**（不是 Contract——90 规定 authority closure 完成后才能叫 Contract）。
+
+---
+
+## 12. Phase 0.3-B — Source-Grounded Option Label Resolution（2026-09-14，已完成）
+
+### 实验设计
+
+用 548 个真实 skipped choice-type units 验证：`options_region` → Source marker detection → labels → per-label spans。
+
+**规则（冻结）**：
+1. 输入仅为 preprocessing 已提供的 `options_region`
+2. 不从 question_type 生成 labels
+3. labels 必须来自该 region 的实际 Source marker（行首 `A.` / `(A)` 等）
+4. 复用现有 `option_tokens` / `_LABEL_RE` 检测逻辑
+5. 不允许 equal split / 长度猜测 / LLM
+6. 无法确定 → unresolved / ambiguous
+7. 不修改 V3 production code
+
+### 结果
+
+| 分类 | 数量 | 占比 |
+|---|---|---|
+| **resolved** | **527** | **96.2%** |
+| no_labels | 16 | 2.9% |
+| incomplete | 5 | 0.9% |
+| ambiguous | 0 | 0% |
+| invalid_order | 0 | 0% |
+| out_of_region | 0 | 0% |
+
+resolved 细分：
+- 517 units 检测到恰好 4 labels（A/B/C/D），全部定位成功
+- 5 units 检测到 3 labels
+- 3 units 检测到 1 label
+- 2 units 检测到 5 labels
+
+### Correctness Sampling
+
+抽查验证（多行 / 单行 / 公式 / inline）：
+
+- **多行**（357 units）：`A.` `B.` `C.` `D.` 各占一行，行首 marker 精确定位 ✓
+- **单行**（160 units）：`A. NaOH B. Mg(OH)₂ C. Al(OH)₃ D. KOH` → A 行首 ok，B/C/D inline with character offsets ✓
+- **含公式**（113 units）：`$ H_2 $` 等 LaTeX 不干扰 label detection ✓
+
+### 16 个 no_labels 归因
+
+| 格式类型 | 数量 | 说明 |
+|---|---|---|
+| HTML table 内嵌 | 7 | label 在 `<td>` 内，不在行首 |
+| 单行首 label 缺标点 | 5 | `A 反映了... B. ...` — `A` 无句号 |
+| HTML div 包裹 | 3 | `<div>A.</div>` — 行首是 `<div` |
+| 行内混排 | 1 | label 在正文后 |
+
+**定性：Current Resolver marker-grammar coverage gap**（不是 preprocessing bug）。
+
+### 5 个 incomplete 归因
+
+inline 检测从化学式等正文误检到 `H` / `G` label marker。正确归类为 incomplete（保守 pending_review）。
+
+### 架构结论
+
+**PASS — 实验验证支持 Source-grounded option resolution 路线。**
+
+> Producer 提供 Evidence Region（`options_region`）；
+> Canonical Resolver 负责从 Source Evidence Region 中解析更细粒度的 per-label Evidence。
+
+```
+Preprocessing → options_region → EvidenceAdapter
+  → Source-grounded label detection → Canonical Resolver
+  → per-label Resolved Evidence → V3 IR
+```
+
+**Producer Contract 不需要强制 per-option spans。** preprocessing 继续提供 `options_region` 即可。
+
+**16 + 5 = 21 units → pending_review。** 不猜、不均分、不按题型制造 A/B/C/D。
+
+**不改 L0 Frozen Spec。** 本实验证明既有架构可以这样工作，属于 L2 实现/兼容性决策。
+
+---
+
+## 13. 前置依赖
 
 - [x] preprocessing P2.1-c 收口（38 卷，97.44% parse）
 - [x] V3 Gate pipeline 稳定（Step 2 三 BUG 已修，810 passed）
 - [x] Phase 0 双轨实验完成（§9）
-- [x] Phase 0.2 完整链验证完成（§10）
+- [x] Phase 0.2 完整链验证完成（§10，含 synthetic evidence，provisional）
+- [x] Phase 0.2-R2 evidence-faithful re-run 完成（§11）
+- [x] Phase 0.3-B Source-Grounded Option Label Resolution 完成（§12）

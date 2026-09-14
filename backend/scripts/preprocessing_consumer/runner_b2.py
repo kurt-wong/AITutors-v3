@@ -102,23 +102,12 @@ def _build_resolved_run(
         if s is not None:
             spans.append(s)
 
-    def _try_options(unit: ManifestUnit):
-        """把 options_lines 区间均分成 per-label 子区间。"""
+    def _try_options_region(unit: ManifestUnit):
+        """options_lines → 单个 options_region span（不制造 per-label A/B/C/D）。"""
         if not unit.options_lines:
             return
         start, end = unit.options_lines
-        n_lines = end - start + 1
-        labels = ["A", "B", "C", "D"]
-        if n_lines >= len(labels):
-            # 均分：每 label 分到 n_lines // 4 行
-            per = n_lines // len(labels)
-            for i, lbl in enumerate(labels):
-                lbl_start = start + i * per
-                lbl_end = lbl_start + per - 1 if i < len(labels) - 1 else end
-                _try(unit.unit_id, "option", (lbl_start, lbl_end), sv_id, label=lbl)
-        else:
-            # 行数不够均分，整个区间作为 option.A
-            _try(unit.unit_id, "option", (start, end), sv_id, label="A")
+        _try(unit.unit_id, "options", (start, end), sv_id)
 
     def _answer_span(unit: ManifestUnit) -> tuple[int, int] | None:
         """answer_lines 优先；fallback 到 answer_evidence_lines（v2.4+）。"""
@@ -129,7 +118,7 @@ def _build_resolved_run(
             _try(unit.unit_id, "stem", unit.stem_lines, sv_id)
             _try(unit.unit_id, "answer", _answer_span(unit), sv_id)
             _try(unit.unit_id, "explanation", unit.explanation_lines, sv_id)
-            _try_options(unit)
+            _try_options_region(unit)
         else:
             _try(unit.unit_id, "material", unit.material_lines, sv_id)
             sub_id = f"{unit.unit_id}.sub"
@@ -266,7 +255,7 @@ async def _run_full_chain(
                 unit_type=unit_type,
                 source_version_id=sv_id,
                 annotation_id=ann.id,
-                build_versions={"phase0_2": "v0.1"},
+                build_versions={"phase0_2_r2": "v0.2"},
                 input_identity={"source": "preprocessing_manifest"},
                 payload=payload_dict,
                 gate_decision=gate,
@@ -305,7 +294,7 @@ async def run_corpus(corpus_root: Path, output_path: Path):
 
     report: dict = {
         "dataset": str(corpus_root),
-        "version": "phase0.2-v0.1",
+        "version": "phase0.2-r2-evidence-faithful",
         "total_manifests": len(manifests),
         "total_units": 0,
         "summary": {
@@ -386,7 +375,7 @@ def main():
     parser.add_argument("--corpus", type=Path,
                         default=Path(r"D:\Project\Papers\Ocr-markdown\reslice-p2-b1"))
     parser.add_argument("--output", type=Path,
-                        default=Path(__file__).parent / "consumer-report-b2.json")
+                        default=Path(__file__).parent / "consumer-report-b2-r2.json")
     args = parser.parse_args()
     asyncio.run(run_corpus(args.corpus, args.output))
 
