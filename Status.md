@@ -3197,3 +3197,113 @@ Step 4  TEST-INFRA-01 单独，不插入主线
 
 **BUG-V3-050 编号保持**（Owner 裁决：改编号制造纯治理 churn，独立处理意图已由
 `Type: Test Infrastructure` + `Status: Open — 单独立项` 表达）。
+
+---
+
+## 2026-09-14 — Step 2 三 BUG 闭环 + preprocessing 全景审查 + Phase 0 消费验证决策
+
+### Step 2 收口（BUG-V3-045/046/047）
+
+- 三个产品缺陷全部修复并推送：`11b4369`（F-3 gate binding）/ `20bd1de`（F-5 annotation sealed）/
+  `9797dd5`（F-6 source mutation boundary）+ `d1322d5`（bugs.md 状态更新）。
+- 全量 pytest **810 passed + 3 xfailed**；origin/main == local main。
+- **V3 达到干净工程停点**：不继续做安全增强（F-2/F-4/TEST-INFRA-01 均按裁决延后）。
+
+### preprocessing 全景审查（只读）
+
+对 `D:\Project\Papers` 做了完整文档 + 代码结构审查：
+
+- **项目阶段**：Phase P2 知识生产（P2.1-c 答案证据契约已收口）。
+- **P2.1-c 成绩**：38/39 卷 parse 97.44% / answer_rate 100% / admission_ready 100%。
+- **71/71 人工标注完成**（`data/p2_1_c_suspect_labels.json`）：KEEP 52 / SPLIT 17 / LOST 2 / UNCERTAIN 0。
+  SPLIT 17 条实为**答案区间污染**（整表污染 / 相邻串题 / 题干混入），非真实拆分需求。
+  用户裁定：不改 V3 Question 模型，只修 answer_lines 边界精度。
+- **DSH 正在修复答案污染**（prompt 收紧 + 最小确定性校验 + 问题卷重跑）。
+- **产出盘点**：`reslice-p2-b1/` 38 卷（v2.3）+ `reslice-p2-fix1/` 5 卷（v2.5，含 answer_evidence）。
+
+### 架构决策：三层模型 + Phase 0 消费验证
+
+**用户裁定（2026-09-14）**：
+
+1. **三层架构**：preprocessing = 文档事实生产层（Document Fact Extraction System）；
+   V3 = 知识资产准入层（Knowledge Asset Admission System）。preprocessing 不是 V3 的
+   OCR 模块，是上游事实生产系统。
+2. **当前不集成代码**：两侧演进速度不同（preprocessing prompt/QC 高频 vs V3 domain model
+   低频）。核心原则：领域模型稳定，外围生产策略可迭代。
+3. **但不等 preprocessing 完全成熟再验证**：现在就用 `reslice-p2-b1` 38 卷做消费实验，
+   提前暴露 contract gap。
+4. **Phase 0 = contract validation harness**，不是生产集成。双轨实验：
+   - Track A：manifest → V3 annotation payload → GateService（验证是否可表达为 V3 annotation）
+   - Track B：manifest → ResolvedSpan → Gate（验证行号直通模式）
+5. **决策文档**：`docs/DECISIONS/85_PREPROCESSING_CONSUMER_PHASE0.md`。
+
+### 两侧接口关键差异（实测）
+
+| | preprocessing manifest | V3 annotation |
+|---|---|---|
+| 定位方式 | 行号区间 `[85, 92]` | 角色声明 + Resolver 搜索 |
+| answer 表达 | `answer_lines` | `answer_zone` 枚举 |
+| line_refs | 核心定位手段 | **禁止**（任何深度） |
+
+V3 Gate 输入：`GateService.run(source_version_id, annotation_id)` 从 DB 加载
+sealed SourceVersion + SourceLines + SemanticAnnotation payload。
+V3 无 manifest 导入通道；唯一入库路径 = 文件上传 → 自有 OCR/LLM annotation 链。
+
+### 下一步
+
+1. **Phase 0 adapter 实验**（`scripts/preprocessing_consumer/`，只读 38 卷，临时 DB，
+   不改生产代码）→ consumer-report.json
+2. preprocessing 侧 DSH 修完答案污染后，用修复后卷重跑 Phase 0
+3. 根据 Track A/B 结果决定：正式 ManifestAdmissionImporter 或 V3 需增加
+   external authoritative span source
+
+---
+
+## 2026-09-14 — Phase 0 + 0.2 消费验证实验完成
+
+### Phase 0 双轨结果
+
+| 轨 | 结果 | 结论 |
+|---|---|---|
+| Track A（annotation 适配） | 871 units → 1 candidate（0.11%） | **有损转换不可行**——高精度行号降级为角色声明后 Resolver 无法恢复 |
+| Track B（ResolvedSpan 直通） | 2934/2934 spans 构造成功，0 unresolved | **定位层完全兼容**——preprocessing 行号引用与 V3 sealed source 零冲突 |
+
+### Phase 0.2 完整链结果（IR → Compiler → Gate → Candidate）
+
+| 指标 | 值 |
+|---|---|
+| 卷级完成 | **38/38（0 错误）** |
+| Ready units | **647 / 871（74.3%）** |
+| **Gate auto_approve** | **44** |
+| **Gate rejected** | **0** |
+| Gate pending_review | 603 |
+| Compiled leaves | 647 |
+
+迭代：181（20.8%）→ 修正 annotation 格式 → 632（72.6%）→ 修正 answer_evidence → **647（74.3%）**。
+
+### 核心架构结论
+
+**preprocessing 的 Source Span 定位模型与 V3 完全兼容。冲突在 Annotation Representation，不在 Source Resolution。**
+
+- Source 层：完全兼容 · Span 层：完全兼容 · IR/Compiler 层：兼容（74.3%）· Gate 层：兼容（0 rejected）
+- preprocessing manifest 属于 **Source Evidence Layer**，不是 Annotation Layer
+- 正确方向：增加 SpanAdapter 入口（Path B），让 preprocessing ResolvedSpan 直接进入 IR
+- preprocessing 定位升级：~~上游 OCR 工具~~ → **V3 的 Source Intelligence Layer**
+
+### Skipped 224 units 原因
+
+composite 格式映射不完整 · answer_evidence 与 explanation 行重叠 · options 均分假设 · 题型边缘情况。均属 adapter 调优范畴，非架构障碍。
+
+### 新增强制规则
+
+**文档创建禁令**：任何新建文档必须符合 91 §5.1 四项门槛，且必须经用户显式确认。严禁静默创建文档（`restart-prompt.md` §3）。
+
+### 实验资产
+
+`scripts/preprocessing_consumer/`（6 个模块 + 2 个 runner）· `consumer-report.json` · `consumer-report-b2.json` · `docs/DECISIONS/85_PREPROCESSING_CONSUMER_PHASE0.md`
+
+### 下一步
+
+1. SpanAdapter 正式设计（Path B 契约）
+2. Admission approve() 物化验证
+3. preprocessing 答案污染修复后重跑

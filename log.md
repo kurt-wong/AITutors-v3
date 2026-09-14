@@ -2781,3 +2781,112 @@ Step 4（TEST-INFRA-01 / BUG-V3-050）单独处理，不插入主线
 
 **BUG-V3-050 编号保持不变**（Owner 裁决：编号本身不改变治理语义，改它会制造纯治理 churn；
 「独立处理」的意图已由 `Type: Test Infrastructure` + `Status: Open — 单独立项` 表达）。
+
+---
+
+## 2026-09-14 — Step 2 三 BUG 闭环 + preprocessing 全景审查 + Phase 0 消费验证决策
+
+### Step 2 收口
+
+- 三个产品缺陷修复并推送：`11b4369`（BUG-V3-045 gate binding invariant）/
+  `20bd1de`（BUG-V3-046 annotation sealed forbid）/ `9797dd5`（BUG-V3-047 sealed
+  source immutability）/ `d1322d5`（bugs.md 状态更新）。
+- F-6 修复发现 6 个测试文件的 helper 存在「先建 sealed 再 append」的系统性模式，
+  全部修正为 draft → append → seal（Test fixture correction，非降低标准）。
+- 全量 pytest **810 passed + 3 xfailed**；origin/main == local main。
+
+### preprocessing 全景审查（只读）
+
+对 `D:\Project\Papers` 做完整文档 + 代码结构审查：
+
+- 项目阶段：Phase P2 知识生产（charter `governance/phase_p2_charter.md`）。
+- P2.1-c 答案证据契约收口：38/39 卷 parse 97.44% / answer_rate 100% / admission_ready 100%。
+- 71/71 人工标注完成：KEEP 52 / SPLIT 17 / LOST 2 / UNCERTAIN 0。
+  SPLIT 17 条根因 = 答案区间污染（整表污染 ~10 / 相邻串题 ~3），非真实拆分需求。
+  LOST 2 条性质不同：延庆语文 = answer_lines 过短（纳入修复验证）；
+  交大英语 = source markdown 缺内容（标 source defect，禁 LLM 补全）。
+- 用户裁定：不改 V3 Question 模型（Question + 多小问 + 共享 Material 得到实证支持），
+  只修 answer_lines 边界精度。DSH 正在修。
+- 产出盘点：`reslice-p2-b1/` 38 卷（prompt v2.3）+ `reslice-p2-fix1/` 5 卷（v2.5）+
+  `reslice-batch-C/` 50 卷（v2.1，旧版）。
+
+### 架构分析与决策
+
+**两侧接口实测**：
+
+- preprocessing manifest：行号区间 `[起, 止]`，精确零歧义，LLM 只输出行号不誊写正文。
+- V3 annotation payload：角色声明（stem/options/answer），SourceResolver 从 sealed source
+  模式匹配；**禁止** payload 含 `line_refs`（任何深度）。
+- V3 Gate 输入：`GateService.run(source_version_id, annotation_id)` 从 DB 加载全部数据。
+- V3 无 manifest 导入通道。
+
+**核心 Contract Gap（Philosophy Gap）**：preprocessing 说「答案在第 85-92 行」，
+V3 期望「有答案区，Resolver 自己找」。定位权归属不同。
+
+**用户裁定**：
+
+1. 三层架构：preprocessing = Document Fact Extraction System / V3 = Knowledge Asset
+   Admission System。preprocessing 不是 V3 的 OCR 模块。
+2. 当前不集成代码（演进速度不同）；长期方向 = 生产模块进 V3、审计工具留独立仓库。
+3. 不等完全成熟再验证——现在就做 Phase 0 消费实验。
+4. Phase 0 = contract validation harness，双轨验证（Track A annotation 适配 /
+   Track B ResolvedSpan 直通），失败分类三类 Gap（Schema / Semantic / Philosophy）。
+5. 决策文档：`docs/DECISIONS/85_PREPROCESSING_CONSUMER_PHASE0.md`。
+
+### 文档更新
+
+- `Status.md`：追加 2026-09-14 快照。
+- `restart-prompt.md`：升版 v1.63，新增 §0.0g。
+- `docs/DECISIONS/85_PREPROCESSING_CONSUMER_PHASE0.md`：新建（Phase 0 实验设计）。
+
+### 下一步
+
+1. Phase 0 adapter 实验（`scripts/preprocessing_consumer/`，只读 38 卷，临时 DB）
+2. preprocessing DSH 修完答案污染后重跑 Phase 0
+3. 根据 Track A/B 结果决定正式集成方向
+
+---
+
+## 2026-09-14 — Phase 0 + 0.2 消费验证实验执行与收口
+
+### Phase 0 双轨实验
+
+**Track A（manifest → V3 annotation → GateService）**：871 units → 1 candidate（0.11%）。
+根因 = 有损转换：preprocessing 高精度行号被降级为角色声明后，V3 Resolver 无法恢复。
+Track A 使命完成：证明 V3 annotation contract 不应承载 preprocessing 强定位信息。
+
+**Track B（manifest → ResolvedSpan 构造）**：2934/2934 spans 构造成功，0 unresolved，
+0 bad reference。定位层完全兼容。
+
+### Phase 0.2 完整链（ResolvedRun → IRBuilder → Compiler → Gate → Candidate）
+
+三轮迭代：
+1. 基线：181/871 ready（20.8%）
+2. 修正 annotation 格式（composite shared_components + per-label option spans）：632（72.6%）
+3. 修正 answer_evidence fallback：**647（74.3%）**
+
+最终：38/38 卷完成，0 错误，**44 auto_approve / 0 rejected / 603 pending_review**。
+
+### 核心结论
+
+preprocessing Source Span 定位模型与 V3 完全兼容。冲突在 Annotation Representation，
+不在 Source Resolution。正确方向 = SpanAdapter 入口（Path B）。
+preprocessing 定位升级为 V3 的 Source Intelligence Layer。
+
+### 新增强制规则
+
+文档创建禁令：任何新建文档须符合 91 §5.1 + 用户显式确认。严禁静默创建（restart-prompt §3）。
+教训：本轮曾静默创建 86 号实验报告文档，被用户指出后删除——数据已在 JSON + stdout，
+不需要静态报告文档。
+
+### 实验资产
+
+`scripts/preprocessing_consumer/`：manifest_reader / source_loader / annotation_adapter /
+resolved_span_adapter / runner（Phase 0）/ runner_b2（Phase 0.2）+ 2 份 consumer-report JSON。
+`docs/DECISIONS/85_PREPROCESSING_CONSUMER_PHASE0.md`：决策 + 结果（§9/§10）。
+
+### 下一步
+
+1. SpanAdapter 正式设计（Path B ResolvedSpan Producer 契约）
+2. Admission approve() 物化验证（Candidate → Question/Instance）
+3. preprocessing 答案污染修复后重跑 Phase 0.2

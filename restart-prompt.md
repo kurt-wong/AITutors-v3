@@ -1,15 +1,40 @@
-Version: v1.62
-Status: **Documentation Governance 稳定；代码对抗性审查 Step 1+3 已完成，待 push** —
-**C-01 = OPEN / PAUSED**（权威落点 `82 §5.3.1`）：暂停于**上游生产事实缺口**，**非架构错误**；
-BIND-1 **PASS/FROZEN** · BIND-2 **PASS/FROZEN** · BIND-3 方向 ACCEPTED / 契约 UNPROVEN；
-**84 台账 A 类 0 OPEN · D 类 0 OPEN**；
-**对抗性审查 6 项发现（`bugs.md` 045–050）**：产品缺陷 **045/046/047 应修** ·
-架构契约未闭环 **048 不编码** · 输入鲁棒性 **049 延后 preprocessing** ·
-测试基础设施 **050 单独立项（编号保持，不改 051）**；
-**Step 3 已完成**：`80 §6.1` 加范围澄清 banner，Gate C CLOSED 状态不变；
-下一步 = **push `870b447` + Step 3 commit**，然后 **Step 2 修 045/046/047**
-（顺序 F-5 → F-3 → F-6）——**不是**设计 Manifest Schema，**不是**实现 Adapter
-Date: 2026-09-13
+Version: v1.64
+Status: **Phase 0 + 0.2 消费验证实验完成（85 号 §9/§10）** —
+核心结论：preprocessing Source Span 定位模型与 V3 完全兼容，
+冲突在 Annotation Representation 不在 Source Resolution；
+Phase 0.2：647/871 ready（74.3%）· 44 auto_approve · 0 rejected；
+正确方向 = SpanAdapter 入口（Path B）；
+preprocessing 定位 = V3 Source Intelligence Layer；
+**新增强制规则：文档创建禁令（restart-prompt §3）**；
+C-01 = OPEN / PAUSED；BIND-1/2 PASS/FROZEN · BIND-3 UNPROVEN；
+下一步 = SpanAdapter 正式设计 → Admission 物化验证 → preprocessing 修复后重跑
+Date: 2026-09-14
+
+## 0.0g Phase 0 + 0.2 消费验证实验完成（2026-09-14）
+
+### 实验结果
+
+**Phase 0 双轨**：Track A 871→1 candidate（0.11%，有损转换不可行）；
+Track B 2934/2934 spans（100%，定位层完全兼容）。
+
+**Phase 0.2 完整链**（ResolvedRun → IR → Compiler → Gate → Candidate）：
+38/38 卷，647/871 ready（74.3%），**44 auto_approve / 0 rejected / 603 pending_review**。
+
+### 核心结论
+
+preprocessing Source Span 定位模型与 V3 完全兼容。冲突在 Annotation Representation，
+不在 Source Resolution。preprocessing = V3 的 Source Intelligence Layer。
+正确方向 = SpanAdapter 入口（Path B），让 preprocessing ResolvedSpan 直接进入 IR。
+
+### 新增强制规则
+
+**文档创建禁令**（§3）：任何新建文档须符合 91 §5.1 + 用户显式确认。严禁静默创建。
+
+### 下一步
+
+1. SpanAdapter 正式设计（Path B 契约）
+2. Admission approve() 物化验证
+3. preprocessing 答案污染修复后重跑
 
 ## 0.0f Step 3：C-2 结论范围收敛（2026-09-13，只改文字零编码）
 
@@ -682,6 +707,7 @@ Replay 可重建。
 
 ## 3. 强制规则（摘要，权威在六册）
 
+- **文档创建禁令（2026-09-14 用户裁定）**：任何新建文档必须符合文档治理规范（91 §5.1 四项门槛），且**必须经用户显式确认后再创建**。严禁静默创建文档。数据报告直接从数据文件展示或 runner stdout 输出，不另建静态报告文档。
 - 单主链：不建第二条 pipeline；状态只经唯一入口（decision_status → approve()/reject()）。
 - Live 是组合放行：LLM/cloud OCR 须 live mode + `--allow-live` + task + budget 同时成立。
 - LE key = `{task_type, stage, contract_domain, input_domain}`（不含 task_id）。
