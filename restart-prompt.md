@@ -7,7 +7,8 @@ Phase 0.3-B：527/548 choice units resolved（96.2%）via Source-grounded label 
 Producer Contract 不需要强制 per-option spans；
 **新增强制规则：文档创建禁令（restart-prompt §3）**；
 C-01 = OPEN / PAUSED；BIND-1/2 PASS/FROZEN · BIND-3 UNPROVEN；
-下一步 = correctness sampling → Phase 0.3-C Admission Boundary → 32 结构缺失调查
+**Last verified test baseline: 810 passed / 3 xfailed @ f88a7ad (2026-09-14)**
+下一步 = correctness sampling deep verification → Phase 0.3-C Admission Boundary → 32 结构缺失调查
 Date: 2026-09-14
 
 ## 0.0h Phase 0.2-R2 + 0.3-B Evidence-Faithful 实验（2026-09-14）

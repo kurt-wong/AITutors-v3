@@ -451,6 +451,15 @@ resolved 细分：
 - **单行**（160 units）：`A. NaOH B. Mg(OH)₂ C. Al(OH)₃ D. KOH` → A 行首 ok，B/C/D inline with character offsets ✓
 - **含公式**（113 units）：`$ H_2 $` 等 LaTeX 不干扰 label detection ✓
 
+### 数字变化可追溯链
+
+```
+首次实验: 532 resolved + 16 no_labels = 548
+correctness sampling 发现: 195 个 less_than_4_labels 是 inline detection false positive
+修复 inline detection:    527 resolved + 16 no_labels + 5 incomplete = 548
+最终 pending_review:      16 + 5 = 21
+```
+
 ### 16 个 no_labels 归因
 
 | 格式类型 | 数量 | 说明 |
