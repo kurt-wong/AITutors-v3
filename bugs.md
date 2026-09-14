@@ -897,7 +897,7 @@
 `tests/adversarial/spec_gap/` 并配 module 级 `xfail`（`pytest -q` 记 xfailed 不计 failed）。
 
 ### BUG-V3-045 — GateService.run 缺 `no_cross_version` 校验（F-3）
-- Status: **Open**
+- Status: **Resolved**
 - 类型：**产品实现缺陷**（Owner 裁决确认 HIGH，应修）
 - 等级：HIGH
 - 契约：`75 §六.4` no_cross_version；`20 §5.1`「只消费 annotation 声明的 source_version_id」。
@@ -911,9 +911,14 @@
   **没有证明它对当前 source 有效**。
 - 期望修复：`if annotation.source_version_id != source_version_id: reject()`；
   补测 same document / different source_version / both sealed / annotation valid 必须拒绝。
+- **Resolved（2026-09-13）**：提取 `validate_annotation_binding()` 独立模块
+  （`app/domains/gate/binding.py`），5 项校验序列：source_version 存在 / annotation 存在 /
+  status valid / source_version_id 匹配（F-3 核心）/ source sealed。document identity 由
+  version_id 匹配隐含保证（annotation → source_version → document）。GateService.run() 委托
+  调用，未来 Gate/Admission/Resolver 可复用。commit `11b4369`。
 
 ### BUG-V3-046 — draft source_version 可被 annotation 引用（F-5）
-- Status: **Open**
+- Status: **Resolved**
 - 类型：**产品实现缺陷**（Owner 裁决确认 HIGH，应修）
 - 等级：HIGH
 - 契约：`10 §4.5`「`source_version_id` 只允许指向 sealed version」；`00 P3`「sealed source
@@ -927,9 +932,14 @@
 - 后果：下游 Resolver/Gate 会消费一个**仍可被改写的 source**，「seal 即唯一事实源」被绕开。
 - Owner 补充：不要只修 annotation 创建入口，需检查**所有**产生 Semantic Annotation 的入口
   （API / CLI / 内部 service；测试 helper 除外），避免绕过。
+- **Resolved（2026-09-13）**：在 `SnapshotRepository.create_semantic_annotation()` 增加 sealed
+  invariant——source_version 必须存在且 `status == "sealed"`，否则抛 RepositoryError。这是
+  数据不变量（10 §4.5），非业务规则；repository boundary 是最低可信边界，覆盖 executor/CLI/
+  migration/测试 helper 及未来 service。测试假设修正：`test_candidate_created_pending_review`
+  加 seal 步骤（原用 draft，现被禁止）。commit `20bd1de`。
 
 ### BUG-V3-047 — sealed version 可被 `append_line` 注入行（F-6）
-- Status: **Open**
+- Status: **Resolved**
 - 类型：**产品实现缺陷**（Owner 裁决确认；优先级低于 045/046）
 - 等级：MEDIUM
 - 契约：`10 §4.2`「status=sealed 后禁任何 UPDATE（Repository 抛错，不静默忽略）」；
@@ -941,6 +951,13 @@
   `AppendOnlyViolation`。`SealService` 靠 early-return 自我规避，但**直接调 repository 的路径绕过它**。
 - Owner 裁决：不要只补一行 `if sealed: raise`，应统一设计 **SourceMutationGuard** 统一入口，
   否则日后 `delete_line` / `reorder_line` / `replace_content` 还会出现同类问题。
+- **Resolved（2026-09-13）**：在 `SourceRepository` 增加私有方法 `_assert_source_version_mutable()`
+  ——source_version 必须存在且 `status != "sealed"`，否则抛 `AppendOnlyViolation`。接入
+  `append_line()` / `append_figure()` / `append_span()` 三个 append 方法。未引入
+  decorator/middleware/guard framework（当前规模：append 3 / update 3 / delete 0 / bulk 0，
+  属过度设计）。6 个测试 helper 修正为 draft → append → seal 流程（修正测试旧世界观）。
+  UNIQUE 约束测试重构为 draft 状态下测试（保持测试意图独立于 sealed guard）。
+  commit `9797dd5`。
 
 ### BUG-V3-048 — Evidence Authority Enforcement 未闭环（F-2）
 - Status: **Open — 架构决策未决，暂不编码**
