@@ -879,6 +879,127 @@
   （205 垃圾 + 55 解析标记 + 1 离群点 `A;`，不扩展白名单）。
   审查后全量 pytest **802 passed**，零失败。
 
+---
+
+## 对抗性审查发现（2026-09-13，四分类裁决）
+
+本轮为**代码与架构对抗性审查**（非文档治理）。方法：四维度并行摸底 → 对每个可证伪缺口
+**自己写测试实测**，不采信摸底报告结论。Owner 裁决把 6 项发现分为四类，**不统一进修复列表**：
+
+| 类型 | 项 | 处置 |
+|---|---|---|
+| 产品实现缺陷 | F-3 · F-5 · F-6 | **修**（FAIL → 修复 → PASS，进正常 CI gate） |
+| 架构契约未闭环 | F-2 | **改 C-2 表述，暂不编码**（Evidence = 审计记录 还是 准入前置，是架构决策非 bug） |
+| 输入鲁棒性 | F-4 | **延后 preprocessing**（C-01 正等 marker 质量生产事实） |
+| 测试基础设施 | F-1 | **单独立项 TEST-INFRA-01** |
+
+测试分层已落地：产品契约测试留在 `tests/` 根；F-2/F-4 迁至
+`tests/adversarial/spec_gap/` 并配 module 级 `xfail`（`pytest -q` 记 xfailed 不计 failed）。
+
+### BUG-V3-045 — GateService.run 缺 `no_cross_version` 校验（F-3）
+- Status: **Open**
+- 类型：**产品实现缺陷**（Owner 裁决确认 HIGH，应修）
+- 等级：HIGH
+- 契约：`75 §六.4` no_cross_version；`20 §5.1`「只消费 annotation 声明的 source_version_id」。
+- 证据：`backend/tests/test_adversarial_evidence_boundary.py::test_gate_run_rejects_annotation_from_different_source_version`
+  → **`Failed: DID NOT RAISE`**。同 document 两个 sealed version（内容不同），
+  annotation 绑 A，用 B 的 id 调 `GateService.run()` **放行**。
+- 代码：`app/domains/gate/service.py:131-143` 独立取 version 与 annotation，
+  只校验 `ann.status != "valid"`，**从不比对 `ann.source_version_id == source_version_id`**。
+- 后果：resolver 用 B 的行解释为 A 设计的 payload；题号若重叠会产出 provenance 错配的
+  candidate，且可能 `auto_approve`。`annotation.status == valid` 只证明 annotation 有效，
+  **没有证明它对当前 source 有效**。
+- 期望修复：`if annotation.source_version_id != source_version_id: reject()`；
+  补测 same document / different source_version / both sealed / annotation valid 必须拒绝。
+
+### BUG-V3-046 — draft source_version 可被 annotation 引用（F-5）
+- Status: **Open**
+- 类型：**产品实现缺陷**（Owner 裁决确认 HIGH，应修）
+- 等级：HIGH
+- 契约：`10 §4.5`「`source_version_id` 只允许指向 sealed version」；`00 P3`「sealed source
+  是唯一事实源」。
+- 证据：`backend/tests/test_adversarial_seal_immutability.py::test_annotation_cannot_reference_draft_source_version`
+  → **`Failed: DID NOT RAISE`**。`status="draft"` 的 version 直接被
+  `create_semantic_annotation` 接受。
+- 代码：`app/models/snapshot.py:29-30`（FK 无 status CHECK）；
+  `app/domains/annotation/service.py:37-48`（`annotate()` 接受任意 UUID，无 status 校验）；
+  `app/repositories/snapshot_repository.py`（`create_semantic_annotation` 直接透传）。
+- 后果：下游 Resolver/Gate 会消费一个**仍可被改写的 source**，「seal 即唯一事实源」被绕开。
+- Owner 补充：不要只修 annotation 创建入口，需检查**所有**产生 Semantic Annotation 的入口
+  （API / CLI / 内部 service；测试 helper 除外），避免绕过。
+
+### BUG-V3-047 — sealed version 可被 `append_line` 注入行（F-6）
+- Status: **Open**
+- 类型：**产品实现缺陷**（Owner 裁决确认；优先级低于 045/046）
+- 等级：MEDIUM
+- 契约：`10 §4.2`「status=sealed 后禁任何 UPDATE（Repository 抛错，不静默忽略）」；
+  `10 §8` 不变量 1「sealed source 行：无 UPDATE/DELETE」。
+- 证据：`backend/tests/test_adversarial_seal_immutability.py::test_append_line_on_sealed_version_is_rejected`
+  → **`Failed: DID NOT RAISE`**。
+- 代码：`app/repositories/source_repository.py:165-166` `append_line()` = `await self.add(line)`，
+  **无 sealed 守卫**；而 `update_line()` / `update_figure()` / `update_span()` 明确抛
+  `AppendOnlyViolation`。`SealService` 靠 early-return 自我规避，但**直接调 repository 的路径绕过它**。
+- Owner 裁决：不要只补一行 `if sealed: raise`，应统一设计 **SourceMutationGuard** 统一入口，
+  否则日后 `delete_line` / `reorder_line` / `replace_content` 还会出现同类问题。
+
+### BUG-V3-048 — Evidence Authority Enforcement 未闭环（F-2）
+- Status: **Open — 架构决策未决，暂不编码**
+- 类型：**架构契约未闭环**（Owner 裁决：**不是 bug**）
+- 等级：P0（本轮最重要发现）
+- 契约：`75 §三 R4`「只有 ValidationEvent 产生 Evidence Authority」；
+  `R5`「Semantic IR 只能引用 ValidatedEvidence」。
+- 证据（两条独立结构性测试，现处 `tests/adversarial/spec_gap/`，module 级 xfail）：
+  - `admission.py` 全文**零处**出现 `EvidencePromotion` / `ValidationEvent` / `is_evidence_validated`
+  - `is_evidence_validated` 在 `backend/app` 下**只有定义与 `__init__` 导出，零生产调用方**
+- 准确定性（Owner 修正我的表述）：不是「Evidence 系统失效」，而是——
+  | 层面 | 状态 |
+  |---|---|
+  | Evidence 事件记录 | PASS |
+  | Evidence Promotion 服务 | PASS |
+  | **Evidence Authority 作为准入条件** | **FAIL** |
+- 实际链路是 `Annotation → Resolver → Gate → Admission`，
+  而非 `… → Evidence Validation → ValidatedEvidence → Gate → Admission`。
+- **待裁决的架构问题**：Evidence 是 A) 审计记录，还是 B) 准入前置条件？
+  当前代码选 A，Spec 更接近 B。这是**架构决策，不是 bug**，故不编码。
+- **对 C-2 的影响**：C-2 原描述「invalid binding 不产生 validated evidence，因此 IR bypass
+  被阻断」是**逻辑跳跃**——「不会产生 validated evidence」≠「系统不会继续接受该对象」。
+  应改为「Evidence layer 自洽，但 authority enforcement 尚未闭环」。见 Step 3。
+
+### BUG-V3-049 — 退化空白 marker 拿到自信 `exact`（F-4）
+- Status: **Open — 延后 preprocessing 阶段**
+- 类型：**输入鲁棒性 / 输入质量**（Owner 裁决：非架构缺陷，不进当前 P0/P1）
+- 等级：LOW
+- 证据：`tests/adversarial/spec_gap/test_spec_gap_evidence_and_marker.py::test_whitespace_only_marker_yields_confident_exact`
+  （module 级 xfail）。实测：`role=material status=exact line_refs=('P1L001',)
+  evidence=('material marker', '   ')`。
+- **机制纠正**（我纠正了摸底报告的判断）：报告称会因规范化后空串、`"" in l.text` 恒真 →
+  `ambiguous`。实际 `raw_hits` 用**原始** query，`"   " in "   "` 为真且恰 1 命中 → `exact`。
+- **不构成「不猜」违规**——是字面子串匹配如设计工作。违反的是「有效引用必须具有语义意义」。
+- 延后理由：C-01 正在等 marker 质量 / source fidelity / role coverage 的**生产事实**，
+  现在修这里可能是假问题。
+
+### BUG-V3-050 — 测试套件隔离缺陷（F-1 / TEST-INFRA-01）
+- Status: **Open — 单独立项，非产品缺陷**
+- 类型：**测试基础设施**
+- 等级：HIGH（影响未来所有对抗性审查的可信度）
+- 证据链：
+  1. 新增一个走完整管线的测试 → 全量变 **8 failed + 2 error**
+  2. 排除该文件重跑 → **802 passed**
+  3. 单独跑 `test_seal_dbflow` → 13 passed
+  4. 失败断言原文：`select(count()).select_from(Document)` → `assert 2 == 1`
+- 根因一：`test_seal_dbflow` / `test_annotation_dbflow` 断言**全局表计数**，非本测试 scope；
+  conftest **不做 truncate**（仅 session 开头 `upgrade head`，dbflow 测试直接用
+  `async_session_maker` 并 commit）。**任何在它们之前创建 document 的测试都会打破它们。**
+  802 绿部分靠字母序运气。
+- 根因二：`claim_next` 取**最早 queued**（`runtime_repository.next_queued_id`），
+  而 `test_executor.py` 的 `_mk_task` 留下 queued task（实测 DB 一度残留 **18 个**）。
+  下一个 `run_once` 会认领**别人的** task。`claim_next` 语义对 worker pool 是对的，
+  缺陷在测试隔离。
+- 建议方向（未执行，需授权）：per-test truncate（或 `TRUNCATE … RESTART IDENTITY CASCADE`）、
+  禁止测试直接 `async_session_maker` commit 绕过 fixture、全局计数断言改为 scope 到本测试。
+- 附：`test_h_seal_concurrency` 未断言并发收敛后的 version `status == "sealed"`，
+  若两路都返回 draft，`n_ver == 1` 仍成立但 seal 契约已破（摸底报告 GAP-4，未实测）。
+
 ## Resolved Bugs
 
 （暂无。）

@@ -2652,3 +2652,75 @@ UNASSIGNED = 0        OPEN candidates: 1 (P0 1) = C-01 OPEN/PAUSED
 三个搜索目标已跑完一轮。**剩余可选项只有一条**：是否把「L0 出站引用可解析性」
 做成 scanner 的一项检查（不把 `docs_archive/` 纳入 census，只验引用是否解析）。
 **这属于新增 scanner 能力，等 Owner 明示，不自动做。**
+
+---
+
+## 2026-09-13 — V3 代码与架构对抗性审查（四维度）+ Owner 四分类裁决 + Step 1 冻结
+
+**性质**：本轮**不是**文档治理，是**代码与架构**对抗性审查。
+方法：四维度并行摸底（重试分层 / Resolver 不猜 / Sealed 不可变 / Evidence 权威边界）
+→ 对每个可证伪缺口**自己写测试实测**，**不采信摸底报告结论**。
+
+### 一、已证伪（缺口不存在，红线成立）
+
+| 声称 | 实测 | 结论 |
+|---|---|---|
+| HTTP retry × LLM retry 可复合成无审计风暴 | 9 HTTP post / 3 Invocation / 1 Audit / budget 1-0 | **红线成立** |
+| 真实 400 可能被重试 | 1 post / 1 invocation / 1 failed audit | **不重试** |
+| fallback 默认值可能被改反无测试察觉 | 哨兵测试锁死 `is False` | **已锁** |
+| FORBIDDEN_FIELDS list-in-list 可能漏检 | `a[0][0].line_refs` 正确检出 | **递归正常** |
+| `UNIQUE(question_id, source_version_id, occurrence_key)` 可能未在 DB 层 | 重复插入抛 `IntegrityError` | **DB 层有效** |
+
+Resolver「不猜」负向矩阵（missing / ambiguous / fuzzy / incomplete / 无首匹配回退 /
+contextual 不自动准入）现有 31 例已充分覆盖，**未发现新的猜路径**。
+
+### 二、六项发现与四分类（Owner 裁决，**不统一进修复列表**）
+
+| ID | 类型 | 处置 |
+|---|---|---|
+| **F-2** BUG-V3-048 | **架构契约未闭环**（**非 bug**） | 改 C-2 表述，**暂不编码** |
+| **F-3** BUG-V3-045 | 产品实现缺陷 HIGH | **修** |
+| **F-5** BUG-V3-046 | 产品实现缺陷 HIGH | **修**（查全部 annotation 入口） |
+| **F-6** BUG-V3-047 | 产品实现缺陷 MEDIUM | **修**，但统一 **SourceMutationGuard** |
+| **F-4** BUG-V3-049 | 输入鲁棒性 | **延后 preprocessing** |
+| **F-1** BUG-V3-050 | 测试基础设施 | **单独立项 TEST-INFRA-01** |
+
+**F-2 的准确定性**（Owner 修正我的过度表述）：不是「Evidence 系统失效」，
+而是 Evidence 事件记录 PASS / Promotion 服务 PASS / **作为准入条件 FAIL**。
+实际链路 `Annotation → Resolver → Gate → Admission`，缺
+`Evidence Validation → ValidatedEvidence` 环节。
+**待裁决架构问题**：Evidence 是 A) 审计记录 还是 B) 准入前置条件？
+代码选 A，Spec 更接近 B。**架构决策，不是 bug。**
+
+**F-4 机制纠正**（我纠正摸底报告）：报告称空白 marker 会因规范化后空串、
+`"" in l.text` 恒真 → `ambiguous`。实际 `raw_hits` 用**原始** query，
+`"   " in "   "` 恰 1 命中 → `exact`。**不构成「不猜」违规**。
+
+### 三、测试分层已落地（Step 1）
+
+```text
+tests/test_adversarial_retry_compounding.py      3  PASS  （红线反证）
+tests/test_adversarial_evidence_boundary.py      1  FAIL  （F-3 产品契约）
+tests/test_adversarial_seal_immutability.py      2 FAIL / 2 PASS  （F-5 F-6 产品契约 + 2 已证伪）
+tests/adversarial/spec_gap/test_spec_gap_...py   3  XFAIL （F-2 ×2 · F-4，不进 CI gate）
+```
+
+`testpaths=["tests"]` 递归收集子目录，**仅分目录不足以排除**，故配 module 级
+`pytestmark = xfail`：`pytest -q` 记 xfailed 不计 failed；若日后实现 enforcement 会 XPASS，
+那本身就是信号。
+
+### 四、我自己的错误（如实交代，全部靠实证报错查出）
+
+1. 假设 `TaskExecutor.__init__` 签名 → TypeError
+2. 清理 SQL 用不存在的列 `file_sha256`（实为 `original_sha256`）、`document_id` on annotations
+   （实为 `source_version_id`）
+3. 清理函数同事务 `rollback()` 把先前已成功的删除一并撤销 → FK violation
+4. `is_evidence_validated` 过滤器把 docstring 算成调用方 → 该测试**误 PASSED**，已修正
+5. `Question` / `QuestionInstance` 漏非空列 → 测试失败
+
+### 五、Step 1 完成；Step 2–4 未开工
+
+**已做**：F-1~F-6 登记 `bugs.md` BUG-V3-045..050 · 测试四分层落地 · 本节 + Status + restart-prompt 同步。
+
+**未做（等 Owner 明示）**：Step 2 修 045/046/047 · Step 3 只改 C-2 表述不编码 ·
+Step 4 单独处理 TEST-INFRA-01。**未改任何产品代码。**

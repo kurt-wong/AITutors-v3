@@ -3105,3 +3105,54 @@ UNASSIGNED = 0        OPEN candidates: 1 (P0 1) = C-01 OPEN/PAUSED
 
 下一步：三个搜索目标已跑完一轮。**唯一剩余可选项** = 是否给 scanner 加「L0 出站引用可解析性」检查
 （不把 `docs_archive/` 纳入 census，只验引用）。**属新增 scanner 能力，等 Owner 明示。**
+
+---
+
+## 2026-09-13 — V3 代码与架构对抗性审查 + Owner 四分类裁决（Step 1 冻结）
+
+**本轮性质**：代码与架构对抗性审查，**非**文档治理。四维度摸底 → 对每个可证伪缺口
+**自己写测试实测**，不采信摸底报告结论。
+
+### 已证伪（红线成立）
+
+```text
+HTTP retry × LLM retry 乘法   9 post / 3 Invocation / 1 Audit / budget 1-0   ✅ 红线成立
+真实 400 端到端不重试          1 post / 1 invocation / 1 failed audit        ✅ 不重试
+fallback 默认关闭哨兵          settings.provider_fallback_enabled is False   ✅ 已锁
+FORBIDDEN_FIELDS list-in-list  a[0][0].line_refs 正确检出                    ✅ 递归正常
+UNIQUE 三元组 DB 层            重复插入抛 IntegrityError                      ✅ 有效
+Resolver 不猜负向矩阵          现有 31 例充分覆盖，未发现新猜路径              ✅
+```
+
+### 六项发现（四分类，不统一进修复列表）
+
+| ID | bugs.md | 类型 | 处置 |
+|---|---|---|---|
+| **F-2** | BUG-V3-048 | **架构契约未闭环（非 bug）** | 改 C-2 表述，**暂不编码** |
+| **F-3** | BUG-V3-045 | 产品实现缺陷 HIGH | **修** |
+| **F-5** | BUG-V3-046 | 产品实现缺陷 HIGH | **修**（查全部 annotation 入口） |
+| **F-6** | BUG-V3-047 | 产品实现缺陷 MEDIUM | **修**，统一 SourceMutationGuard |
+| **F-4** | BUG-V3-049 | 输入鲁棒性 | **延后 preprocessing** |
+| **F-1** | BUG-V3-050 | 测试基础设施 | **单独立项 TEST-INFRA-01** |
+
+**F-2 定性（Owner 修正我的过度表述）**：Evidence 事件记录 PASS · Promotion 服务 PASS ·
+**作为准入条件 FAIL**。待裁决架构问题：Evidence 是 A) 审计记录 还是 B) 准入前置条件？
+代码选 A，Spec 更接近 B。**架构决策，不是 bug。**
+
+**F-4 机制纠正（我纠正摸底报告）**：空白 marker 不是因 `"" in l.text` 恒真 → ambiguous；
+实际 `raw_hits` 用原始 query，`"   " in "   "` 恰 1 命中 → `exact`。**非「不猜」违规。**
+
+### 测试四分层（Step 1 已落地）
+
+```text
+tests/test_adversarial_retry_compounding.py      3 PASS    红线反证
+tests/test_adversarial_evidence_boundary.py      1 FAIL    F-3 产品契约
+tests/test_adversarial_seal_immutability.py      2 FAIL / 2 PASS   F-5·F-6 产品契约 + 2 已证伪
+tests/adversarial/spec_gap/…                     3 XFAIL   F-2×2 · F-4，不进 CI gate
+```
+
+### Step 1 完成 · Step 2–4 未开工
+
+**已做**：F-1~F-6 登记 `bugs.md` 045–050 · 测试四分层 · L5 三处同步。
+**未做（等授权）**：Step 2 修 045/046/047 · Step 3 只改 C-2 表述不编码 ·
+Step 4 单独处理 TEST-INFRA-01。**未改任何产品代码。**

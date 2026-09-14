@@ -1,15 +1,67 @@
-Version: v1.60
-Status: **Documentation Governance Stabilization（DG）— DG-5 已收口；Residual Audit 案例 1 + Phase-2 完成** —
-**C-01 = OPEN / PAUSED**（权威落点 `82 §5.3.1`）：暂停于**上游生产事实缺口**，
-**非架构错误**，也**不**意味着「应立即继续设计 Manifest Schema」；
+Version: v1.61
+Status: **Documentation Governance 稳定；转入代码与架构对抗性审查（Step 1 已冻结）** —
+**C-01 = OPEN / PAUSED**（权威落点 `82 §5.3.1`）：暂停于**上游生产事实缺口**，**非架构错误**；
 BIND-1 **PASS/FROZEN** · BIND-2 **PASS/FROZEN** · BIND-3 方向 ACCEPTED / 契约 UNPROVEN；
-Binding Carrier = PENDING；manifest-only 未冻结；
-**84 台账：A 类 0 OPEN · D 类 0 OPEN**（A-10 / A-11 均 RESOLVED）；剩余 3 项（C-01 PAUSED + B-03/B-04 非缺陷）；
-Gate A PASS / B **NOT CLOSED** / C CLOSED (Phase 1) / D CONTRACT CLOSED；
-**Adapter 未开工**（BIND-1/2 PASS 不构成开工授权；前置仍 `81 §5.4` 三项）；
-下一步：**preprocessing 独立收口**（AITutors-preprocessing 自身）——
-**不是**继续整理文档，**不是**设计 Manifest Schema
+**84 台账 A 类 0 OPEN · D 类 0 OPEN**；
+**本轮对抗性审查新增 6 项发现（`bugs.md` 045–050）**，Owner 四分类：
+产品实现缺陷 **045/046/047 应修** · 架构契约未闭环 **048 不编码** ·
+输入鲁棒性 **049 延后 preprocessing** · 测试基础设施 **050 单独立项**；
+下一步 = **Step 2 修 045/046/047**（需 Owner 明示开工）——
+**不是**设计 Manifest Schema，**不是**实现 Adapter
 Date: 2026-09-13
+
+## 0.0e 代码与架构对抗性审查 · Step 1 冻结（2026-09-13）
+
+**本轮性质**：代码与架构对抗性审查，**非**文档治理。四维度摸底（重试分层 / Resolver 不猜 /
+Sealed 不可变 / Evidence 权威边界）→ 对每个可证伪缺口**自己写测试实测**，不采信摸底报告结论。
+
+### 已证伪（红线成立）
+
+```text
+HTTP retry × LLM retry 乘法  9 post / 3 Invocation / 1 Audit / budget 1-0  ✅ 红线成立
+真实 400 端到端不重试         1 post / 1 invocation / 1 failed audit       ✅ 不重试
+fallback 默认关闭哨兵         settings.provider_fallback_enabled is False  ✅ 已锁
+FORBIDDEN_FIELDS list-in-list a[0][0].line_refs 正确检出                   ✅ 递归正常
+UNIQUE 三元组 DB 层           重复插入抛 IntegrityError                     ✅ 有效
+Resolver 不猜负向矩阵         现有 31 例充分覆盖，未发现新猜路径             ✅
+```
+
+### 六项发现（四分类，**不统一进修复列表**）
+
+| ID | bugs.md | 类型 | 处置 |
+|---|---|---|---|
+| **F-2** | 048 | **架构契约未闭环（非 bug）** | 改 C-2 表述，**暂不编码** |
+| **F-3** | 045 | 产品实现缺陷 HIGH | **修** |
+| **F-5** | 046 | 产品实现缺陷 HIGH | **修**（查全部 annotation 入口） |
+| **F-6** | 047 | 产品实现缺陷 MEDIUM | **修**，统一 SourceMutationGuard |
+| **F-4** | 049 | 输入鲁棒性 | **延后 preprocessing** |
+| **F-1** | 050 | 测试基础设施 | **单独立项 TEST-INFRA-01** |
+
+**F-2 定性（Owner 修正我的过度表述）**：Evidence 事件记录 PASS · Promotion 服务 PASS ·
+**作为准入条件 FAIL**。实际链路 `Annotation → Resolver → Gate → Admission`，缺
+`Evidence Validation → ValidatedEvidence` 环节。
+**待裁决架构问题**：Evidence 是 A) 审计记录 还是 B) 准入前置条件？代码选 A，Spec 更接近 B。
+
+**F-4 机制纠正（我纠正摸底报告）**：空白 marker 不是因 `"" in l.text` 恒真 → ambiguous；
+实际 `raw_hits` 用原始 query，`"   " in "   "` 恰 1 命中 → `exact`。**非「不猜」违规。**
+
+### 测试四分层（已落地）
+
+```text
+tests/test_adversarial_retry_compounding.py      3 PASS    红线反证
+tests/test_adversarial_evidence_boundary.py      1 FAIL    F-3 产品契约
+tests/test_adversarial_seal_immutability.py      2 FAIL / 2 PASS   F-5·F-6 + 2 已证伪
+tests/adversarial/spec_gap/…                     3 XFAIL   F-2×2 · F-4，不进 CI gate
+```
+
+`testpaths=["tests"]` 递归收集子目录，**仅分目录不足以排除**，故配 module 级
+`pytestmark = xfail`：`pytest -q` 记 xfailed 不计 failed。
+
+### Step 1 完成 · Step 2–4 未开工
+
+**已做**：F-1~F-6 登记 `bugs.md` 045–050 · 测试四分层 · L5 同步。
+**未做（等 Owner 明示）**：Step 2 修 045/046/047 · Step 3 只改 C-2 表述不编码 ·
+Step 4 单独处理 TEST-INFRA-01。**未改任何产品代码。**
 
 ## 0.0d Residual Audit Phase-2：三个搜索目标跑完一轮（A-11，2026-09-13）
 
