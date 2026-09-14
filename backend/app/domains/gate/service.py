@@ -29,13 +29,13 @@ from app.domains.compile.ir import IRBuilder
 from app.domains.evidence import EvidencePromotionService, ProposerIdentity
 from app.domains.gate import GATE_POLICY_VERSION
 from app.domains.gate.admission import AdmissionService
+from app.domains.gate.binding import validate_annotation_binding
 from app.domains.gate.payload import build as build_payload
 from app.domains.gate.policy import evaluate, partition_candidate
 from app.domains.resolver import RESOLVER_VERSION
 from app.domains.resolver.resolver import SourceResolver
 from app.domains.resolver.span import SourceFigureView, SourceLineView
 from app.models.snapshot import AdmissionCandidate
-from app.repositories.base import RepositoryError
 from app.repositories.snapshot_repository import SnapshotRepository
 from app.repositories.source_repository import SourceRepository
 
@@ -128,14 +128,12 @@ class GateService:
 
         attempt_id：compile-stage Runtime Provenance 透传（Lock-5，仅落 Artifact，不进 LE hash）。
         """
-        version = await self._source.get_version(source_version_id)
-        if version is None:
-            raise RepositoryError(f"source_version {source_version_id} not found")
-        ann = await self._snap.find_annotation_by_id(annotation_id)
-        if ann is None:
-            raise RepositoryError(f"annotation {annotation_id} not found")
-        if ann.status != "valid":
-            raise RepositoryError(f"annotation {annotation_id} status={ann.status} (not valid)")
+        version, ann = await validate_annotation_binding(
+            source_version_id=source_version_id,
+            annotation_id=annotation_id,
+            source_repo=self._source,
+            snap_repo=self._snap,
+        )
 
         lines = tuple(
             SourceLineView(
