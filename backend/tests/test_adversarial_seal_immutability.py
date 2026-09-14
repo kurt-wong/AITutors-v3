@@ -38,7 +38,7 @@ async def _mk_doc_and_version(session, *, status: str, texts=("1. 题干", "A. �
         document_id=doc.id, artifact_kind="pdf", role="native", provider="native",
         body_text="\n".join(texts), body_hash=sha256_hex(list(texts)),
         integrity_hash=sha256_hex(list(texts)), page_count=1, line_count=len(texts),
-        status=status,
+        status="draft",
     )
     await session.flush()
     for i, t in enumerate(texts):
@@ -48,6 +48,9 @@ async def _mk_doc_and_version(session, *, status: str, texts=("1. 题干", "A. �
             line_hash=sha256_hex(t),
         ))
     await session.flush()
+    if status == "sealed":
+        await src.seal_version(sv.id)
+        await session.flush()
     return doc, sv
 
 

@@ -163,7 +163,23 @@ class SourceRepository(BaseRepository):
             )
         row.status = _SEALED
 
+    async def _assert_source_version_mutable(self, version_id: uuid.UUID) -> None:
+        """sealed invariant：sealed SourceVersion 不可追加任何子行（10 §4.2）。
+
+        BUG-V3-047：此前 append_line/append_figure/append_span 无 sealed 守卫，
+        仅 SealService 层自律。repository boundary 才是不可绕过的最低可信边界。
+        """
+        row = await self._session.get(DocumentSourceVersion, version_id)
+        if row is None:
+            raise RepositoryError(f"source_version {version_id} not found")
+        if row.status == _SEALED:
+            raise AppendOnlyViolation(
+                f"sealed source version {version_id} is immutable — "
+                f"append on sealed version is forbidden (10 §4.2)"
+            )
+
     async def append_line(self, line: DocumentSourceLine) -> None:
+        await self._assert_source_version_mutable(line.source_version_id)
         await self.add(line)
 
     async def update_line(self, *_args: object, **_kwargs: object) -> None:
@@ -171,6 +187,7 @@ class SourceRepository(BaseRepository):
         raise AppendOnlyViolation("document_source_lines is append-only")
 
     async def append_figure(self, figure: SourceFigure) -> None:
+        await self._assert_source_version_mutable(figure.source_version_id)
         await self.add(figure)
 
     async def update_figure(self, *_args: object, **_kwargs: object) -> None:
@@ -178,6 +195,7 @@ class SourceRepository(BaseRepository):
 
     async def append_span(self, span) -> None:
         """Phase I-3：追加 document_source_span（layout evidence）。"""
+        await self._assert_source_version_mutable(span.source_version_id)
         await self.add(span)
 
     async def update_span(self, *_args: object, **_kwargs: object) -> None:

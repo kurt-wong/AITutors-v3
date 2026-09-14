@@ -35,7 +35,7 @@ async def test_repository_create_db_roundtrip(session) -> None:
     version = await sr.create_source_version(
         document_id=doc.id, artifact_kind="canonical_l1", role="canonical",
         provider="native", body_text="", body_hash=_SHA, integrity_hash=_SHA,
-        page_count=1, line_count=1, status="sealed",
+        page_count=1, line_count=1, status="draft",
     )
     await sr.flush()  # version.id 落位后再建 line/figure
     line = DocumentSourceLine(source_version_id=version.id, line_ref="P1L001", seq=1,
@@ -46,7 +46,9 @@ async def test_repository_create_db_roundtrip(session) -> None:
                           page_no=1, bbox={}, placement="stem", source="native",
                           object_key="obj/f.png", figure_hash=_SHA)
     await sr.append_figure(figure)
-    await sr.flush()  # version/line/figure 落 id
+    await sr.flush()
+    await sr.seal_version(version.id)
+    await sr.flush()
     assert line.id and figure.id
 
     # --- A 域 ---

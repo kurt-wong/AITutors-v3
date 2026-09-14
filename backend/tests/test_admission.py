@@ -60,7 +60,7 @@ async def _seed(session, texts=SINGLE_LINES, units=None):
         document_id=doc.id, artifact_kind="pdf", role="native", provider="native",
         body_text="\n".join(texts), body_hash=sha256_hex(list(texts)),
         integrity_hash=sha256_hex(list(texts)), page_count=1, line_count=n,
-        status="sealed",
+        status="draft",
     )
     await session.flush()
     for i, t in enumerate(texts):
@@ -69,6 +69,9 @@ async def _seed(session, texts=SINGLE_LINES, units=None):
             page_no=1, line_no_in_page=i + 1, text=t, block_type="text",
             line_hash=sha256_hex(t),
         ))
+    await session.flush()
+    await src.seal_version(sv.id)
+    await session.flush()
     ann = await SnapshotRepository(session).create_semantic_annotation(
         source_version_id=sv.id, annotation_schema_version="semantic-metadata-annotation/v0.3",
         prompt_version="semantic-annotation/v1", model_config_hash=sha256_hex("m"),

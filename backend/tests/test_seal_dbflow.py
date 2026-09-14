@@ -5,6 +5,7 @@
 """
 
 import hashlib
+import uuid
 
 import pytest
 from sqlalchemy import func, select
@@ -13,6 +14,7 @@ from sqlalchemy.exc import IntegrityError
 from app.ai.ocr.gateway import OCRGateway
 from app.ai.ocr.providers import MockOCRProvider, NativeTextProvider
 from app.ai.ocr.result import OCRLine, OCRResult
+from app.core.hashing import sha256_hex
 from app.domains.source.line_index import compute_body_hash
 from app.domains.source.seal import SealService
 from app.models.runtime import Budget, LlmCallAudit
@@ -51,7 +53,28 @@ async def test_b1_seal_idempotent_single_doc_single_version(session, pdf_bytes):
 
 
 async def test_b2_line_ref_db_unique_constraint(session, pdf_bytes):
-    v = await _seal(session, pdf_bytes)
+    """验证 DB UNIQUE(source_version_id, line_ref) — 在 draft 状态下测试，避免 sealed guard 干扰。"""
+    src = SourceRepository(session)
+    doc = await src.create_document(
+        original_object_key=f"obj/{uuid.uuid4()}.pdf",
+        original_sha256=sha256_hex(str(uuid.uuid4())),
+        file_name="b2.pdf", file_type="pdf", upload_meta={},
+        processing_status="ingesting",
+    )
+    await session.flush()
+    v = await src.create_source_version(
+        document_id=doc.id, artifact_kind="pdf", role="native", provider="native",
+        body_text="line1", body_hash=sha256_hex("line1"),
+        integrity_hash=sha256_hex("line1"), page_count=1, line_count=1,
+        status="draft",
+    )
+    await session.flush()
+    line1 = DocumentSourceLine(
+        source_version_id=v.id, line_ref="P1L001", seq=1,
+        page_no=1, line_no_in_page=1, text="line1", block_type="text",
+        line_hash=sha256_hex("line1"),
+    )
+    await src.append_line(line1)
     await session.flush()
     dup = DocumentSourceLine(
         source_version_id=v.id,
@@ -61,13 +84,9 @@ async def test_b2_line_ref_db_unique_constraint(session, pdf_bytes):
         line_no_in_page=999,
         text="dup",
         block_type="text",
-        bbox=None,
-        raw_sources={"provider": "native"},
-        selected_source="native",
-        evidence="x",
-        line_hash="h" * 64,
+        line_hash=sha256_hex("dup"),
     )
-    await SourceRepository(session).append_line(dup)
+    await src.append_line(dup)
     with pytest.raises(IntegrityError):
         await session.flush()
 
@@ -381,7 +400,27 @@ async def test_seal_repeat_same_figures_idempotent(session, pdf_bytes_with_figur
 
 async def test_figure_id_db_unique_constraint(session, pdf_bytes_with_figure):
     """BUG-011-E：DB 级 UNIQUE(source_version_id, figure_id) 兜底（persistence boundary）。"""
-    v = await _seal(session, pdf_bytes_with_figure)
+    src = SourceRepository(session)
+    doc = await src.create_document(
+        original_object_key=f"obj/{uuid.uuid4()}.pdf",
+        original_sha256=sha256_hex(str(uuid.uuid4())),
+        file_name="fig.pdf", file_type="pdf", upload_meta={},
+        processing_status="ingesting",
+    )
+    await session.flush()
+    v = await src.create_source_version(
+        document_id=doc.id, artifact_kind="pdf", role="native", provider="native",
+        body_text="x", body_hash=sha256_hex("x"),
+        integrity_hash=sha256_hex("x"), page_count=1, line_count=1,
+        status="draft",
+    )
+    await session.flush()
+    fig1 = SourceFigure(
+        source_version_id=v.id, figure_id="FIG-1-01",
+        page_no=1, bbox={}, placement="standalone", source="native",
+        object_key="figure:orig", figure_hash=sha256_hex("f1"),
+    )
+    await src.append_figure(fig1)
     await session.flush()
     dup = SourceFigure(
         source_version_id=v.id,
@@ -391,8 +430,8 @@ async def test_figure_id_db_unique_constraint(session, pdf_bytes_with_figure):
         placement="standalone",
         source="native",
         object_key="figure:dup",
-        figure_hash="f" * 64,
+        figure_hash=sha256_hex("f2"),
     )
-    await SourceRepository(session).append_figure(dup)
+    await src.append_figure(dup)
     with pytest.raises(IntegrityError):
         await session.flush()

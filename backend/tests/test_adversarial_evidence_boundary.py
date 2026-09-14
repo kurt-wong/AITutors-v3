@@ -62,7 +62,7 @@ async def _seed_two_versions(session, texts_a, texts_b):
             document_id=doc.id, artifact_kind="pdf", role="native", provider="native",
             body_text="\n".join(texts), body_hash=sha256_hex(list(texts)),
             integrity_hash=sha256_hex(list(texts)), page_count=1, line_count=len(texts),
-            status="sealed",
+            status="draft",
         )
         await session.flush()
         for i, t in enumerate(texts):
@@ -71,6 +71,8 @@ async def _seed_two_versions(session, texts_a, texts_b):
                 page_no=1, line_no_in_page=i + 1, text=t, block_type="text",
                 line_hash=sha256_hex(t),
             ))
+        await session.flush()
+        await src.seal_version(sv.id)
         await session.flush()
         return sv
 
