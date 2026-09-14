@@ -10,6 +10,7 @@ from app.models.snapshot import (
     AdmissionEvent,
     SemanticAnnotation,
 )
+from app.models.source import DocumentSourceVersion
 from app.repositories.base import AppendOnlyViolation, BaseRepository, RepositoryError
 
 
@@ -29,11 +30,26 @@ class SnapshotRepository(BaseRepository):
     ) -> SemanticAnnotation:
         """幂等写（H Phase 6，H0-6）：锚 UNIQUE(stage,hash) ON CONFLICT DO NOTHING。
 
+        BUG-V3-046（F-5）：10 §4.5 —— annotation 只能引用 sealed source_version。
+        这是数据不变量（data invariant），不是业务规则：repository boundary 强制。
+
         插入成功 → returning 返回新行；同 (stage,hash) 冲突（并发或既有）→ re-read existing：
           valid/superseded → 返回既有（idempotent success）；
           invalid（残留失败行，find_annotation_by_le_hash 不复用）→ RepositoryError —— 同 LE
           valid 写入被 invalid 残留阻挡，须新 LE（原 IntegrityError 语义的显式化）。
         """
+        # BUG-V3-046：sealed invariant — annotation 永远不能引用未封存 SourceVersion
+        sv_row = await self._session.get(DocumentSourceVersion, source_version_id)
+        if sv_row is None:
+            raise RepositoryError(
+                f"source_version {source_version_id} not found"
+            )
+        if sv_row.status != "sealed":
+            raise RepositoryError(
+                f"source_version {source_version_id} status={sv_row.status} "
+                f"(not sealed) — annotation on non-sealed source is forbidden "
+                f"(10 §4.5)"
+            )
         stmt = (
             pg_insert(SemanticAnnotation)
             .values(

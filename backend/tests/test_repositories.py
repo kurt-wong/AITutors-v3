@@ -102,9 +102,12 @@ async def test_candidate_created_pending_review(session) -> None:
 
     Phase 6：create 立即落库（pg_insert + returning，非惰性 ORM add）——候选必须满足 FK，
     故先建真实 source_version 父行 + annotation 父行。
+    BUG-V3-046：annotation 只能引用 sealed source_version（10 §4.5），故先 seal。
     """
     snap = SnapshotRepository(session)
-    _sr, _doc, version = await _mk_draft(session)
+    sr, _doc, version = await _mk_draft(session)
+    await sr.seal_version(version.id)
+    await session.flush()
     ann = await snap.create_semantic_annotation(
         source_version_id=version.id,
         annotation_schema_version="semantic-metadata-annotation/v0.3",
