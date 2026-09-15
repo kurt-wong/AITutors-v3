@@ -3405,3 +3405,146 @@ EB-004 = EVIDENCED。BUG-V3-048 实验验证成立。
 1. DSH 完成 Docker 重建
 2. Claude 连通性验证 + alembic migration + pytest 基线
 3. 正式进入 preprocessing 联调阶段
+
+---
+
+## 2026-09-15 — EB-008 L2 Design Proposal
+
+### Owner 裁决
+
+1. **方向 B 确认**：Evidence Authority 是准入前置条件，不接受降级为纯审计记录。
+2. **Option C 暂不接受**：「human review = Evidence Authority」是 INFERRED/PROPOSED，不是 Frozen Fact。
+3. **进入 L2 Design 阶段**，不进入 implementation。
+
+### L2 Design Proposal
+
+创建 `Docs/DECISIONS/87_EB008_EVIDENCE_AUTHORITY_ENFORCEMENT_DESIGN.md`：
+
+- D1：Evidence Authority = ValidationEvent 授予的信任状态，绑定 (claim_id, reference_ids, source_version_id, run_id)
+- D2：三选项（α 统一于 R4 / β 双产生者 / γ 独立通道），待 Owner 裁决
+- D3：双路径 Authority 产生机制（auto: Gate ValidationEvent; human: HumanReview ValidationEvent）
+- D4：Authority 四元组绑定 + run_id 引入
+- D5：claim_id → candidate_id join（unit_id 桥梁，all-leaf-units 判定）
+- D6：DB 持久化（append-only 表）+ 失效（INVALIDATED event）+ replay + restart
+- D7：IR Boundary enforcement（第一层）
+- D8：Admission Boundary enforcement（第二层，approve() 步骤 4.5）
+- D9：check 位置（source check 后、_materialize() 前）+ fail-closed（ROLLBACK + pending_review）
+- D10：§8.2 双入口兼容性（Authority 是新增前置，不改变现有语义）
+
+### Coordination 更新
+
+- state.yaml：EB-008 登记（status: l2_design）+ DEC-012 冻结
+- CURRENT.md：EB-008 行 + DEC-012 行 + 证据位置
+
+### 下一步
+
+1. DSH adversarial review（87号 D1–D10 逐项）
+2. Owner 终裁
+3. 升 L2 Decision Record
+4. Implementation（L2 Decision 生效后）
+
+---
+
+## 2026-09-15 — EB-008 L2 Design Revision-1
+
+### DSH 第一轮 Adversarial Review 发现
+
+- FACT-025: ValidationEvent claim_id 缺 candidate/source_version/run identity binding
+- FACT-026: ValidationEvent 与 review_trail 持久化不一致
+- FACT-027: Human authority producer 缺 issuer contract
+- FACT-028: IR/Admission Boundary 可能共享同一 evaluate decision
+
+### Revision-1 核心变更
+
+- **D1/D2**: Authority = Projection（非 Event、非 Domain State）；ValidationEvent = Authority Grant Event
+- **D3**: Human Review 选择 B——产生 ValidationEvent(validation_method="human_review")，依据 75 §4.4 数据模型预留 + Trust Split
+- **D4/D5**: AuthorityIdentity 四元组 = (source_version_id, candidate_id, run_id, claim_id)；ValidationEvent 增加三个 identity 字段
+- **D6**: Authority 从 DB events 重算，不直接持久化；source mutation → 批量 INVALIDATED
+- **D7**: IR Boundary 6 项必要条件 + AuthoritySnapshot 冻结
+- **D8**: Admission 验证 Existence + Validity + Identity Match + Freshness
+- **D9**: 两层 enforcement 独立性证明——IR Boundary 检查 evidence 链，Admission Boundary 检查 candidate identity
+- **D10**: 双入口统一，差异在 ValidationEvent 产生者
+
+### 产出
+
+- `Docs/DECISIONS/88_EB008_EVIDENCE_AUTHORITY_ENFORCEMENT_REVISION1.md`
+- state.yaml: EB-008 status=l2_revision + FACT-025~028 登记
+- CURRENT.md: 同步更新
+- HANDOFFS/2026-09-15-Claude-to-DSH-004.md: DSH 二次 review handoff
+
+### 下一步
+
+1. DSH 二次 adversarial review（88号 D1–D10 + 6 个攻击目标）
+2. Owner DEC-013 终裁
+3. 升 L2 Decision Record
+
+---
+
+## 2026-09-15 — EB-008 Evidence Verification
+
+### 验证结果
+
+| 项 | Verdict | 核心理由 |
+|---|---|---|
+| E1 Cold Start | PARTIALLY PROVEN | 设计无循环依赖，但实现缺口（FACT-018） |
+| E2 Run Semantics | PROVEN | run_id 绑定正确，replay 确定性 |
+| E3 Human Authority | PARTIALLY PROVEN | 证据链完整，OQ-1 + 触发时机未解决 |
+| E4 Identity Binding | PARTIALLY PROVEN | 设计完整，2/4 字段不存在于代码 |
+| E5 Join | PARTIALLY PROVEN | 规则正确，candidate_id 不存在 |
+| E6 Lifecycle | PROVEN | 状态机已实现（FACT-024） |
+| E7 Two-layer | PROVEN | 不同 failure mode，独立检查 |
+
+### 7 项 Open Risks（E8）
+
+1. 实现缺口：Gate 不产生 ValidationEvent
+2. OQ-1: reviewer_id 认证机制
+3. OQ-2: time-based expiration
+4. OQ-3: Freshness 时间窗口
+5. 投影触发时机未定义
+6. candidate_id/run_id 字段不存在
+7. AuthoritySnapshot 机制未定义
+
+### 产出
+
+- `Docs/COORDINATION/EVIDENCE/EB008-CLAUDE-VERIFICATION.md`
+- state.yaml + CURRENT.md 同步
+
+### 下一步
+
+DSH verification → Owner DEC-013 → L2 Decision Record
+
+---
+
+## 2026-09-15 — EB-008 L2 Design Revision-2
+
+### Owner Review 裁决
+
+- Authority=Projection / ValidationEvent=Grant Event / Human Review→ValidationEvent→Authority / 两层 enforcement：**方向保留**
+- D-001 Option A（设计冻结先于实现）：**不接受**
+- 三个架构问题（RDQ-001/002/003）必须先解决
+
+### Revision-2 解决方案
+
+| RDQ | 问题 | 解决方案 |
+|---|---|---|
+| RDQ-001 | Bootstrap Authority 循环依赖 | Authority 不是 IR 创建前提，是 IR Admission 前提；Gate 是 Authority Producer；Bootstrap Protocol B1-B6 |
+| RDQ-002 | Run Identity 冲突 | Candidate 属于 Run（many-to-one）；candidate_id 全局唯一；run_id 冗余移除；Run Identity Model I1-I6 |
+| RDQ-003 | Human Issuer Contract | 四元组：issuer_type / issuer_identity / issuance_event / binding_scope；Issuer Contract C1-C7 |
+
+### AuthorityIdentity 最终定义
+
+```
+AuthorityIdentity = (source_version_id, candidate_id, claim_id)
+```
+
+run_id 从 Rev-1 的四元组中移除（RDQ-002 证明冗余）。
+
+### 产出
+
+- `Docs/DECISIONS/89_EB008_EVIDENCE_AUTHORITY_ENFORCEMENT_REVISION2.md`
+- state.yaml: EB-008 status=l2_revision2
+- CURRENT.md: 同步更新
+
+### 下一步
+
+DSH Review-3 → Owner DEC-013 → L2 Decision Record

@@ -31,6 +31,13 @@
 | FACT-009 | No options_region concept (DSH independent) | DSH | observed |
 | FACT-010 | Claude-4 attribution persisted, SEMANTIC=0 | V3 | observed |
 | FACT-011 | Q51 = region missing, not region wrong | DSH | observed |
+| FACT-012 | P3.2: 4/4 attack vectors BYPASS Admission | V3 | observed |
+| FACT-013 | approve() checks gate_decision only | V3 | observed |
+| FACT-014 | is_evidence_validated=False does not block Admission | V3 | observed |
+| FACT-025 | ValidationEvent claim_id lacks candidate/source_version/run binding | DSH | observed |
+| FACT-026 | ValidationEvent lifecycle vs review_trail persistence inconsistent | DSH | observed |
+| FACT-027 | Human authority producer lacks issuer contract | DSH | observed |
+| FACT-028 | IR/Admission Boundary may share same evaluate decision | DSH | observed |
 
 ---
 
@@ -43,6 +50,7 @@
 | EB-003 | Missing punctuation contextual rule | Open |
 | EB-004 | _locate_options() CONTRACT GAP | Open, confirmed |
 | EB-005 | Formula FP structural exclusion | Open, INFERRED |
+| EB-008 | Admission Evidence Authority enforcement | **L2 Revision-2** (resolves RDQ-001/002/003, awaiting DSH Review-3) |
 
 ---
 
@@ -57,6 +65,7 @@
 - DEC-007: Phase 0.3-B = Boundary Discovery
 - DEC-008: P3.2 uses experimental adapter path
 - DEC-009: Raw HTML is intended Source representation
+- DEC-012: Before EB-008 adjudication: no design, no implementation, Admission not modified
 
 ---
 
@@ -69,3 +78,8 @@
 | Claude-4 attribution | `backend/scripts/preprocessing_consumer/claude4-attribution.json` |
 | Sampling analyzer | `backend/scripts/preprocessing_consumer/sampling_analyzer.py` |
 | Resolver source | `backend/app/domains/resolver/resolver.py` |
+| EB-008 L2 Design (Rev-0) | `Docs/DECISIONS/87_EB008_EVIDENCE_AUTHORITY_ENFORCEMENT_DESIGN.md` |
+| EB-008 L2 Design (Rev-1) | `Docs/DECISIONS/88_EB008_EVIDENCE_AUTHORITY_ENFORCEMENT_REVISION1.md` |
+| EB-008 L2 Design (Rev-2) | `Docs/DECISIONS/89_EB008_EVIDENCE_AUTHORITY_ENFORCEMENT_REVISION2.md` |
+| EB-008 Verification Evidence | `Docs/COORDINATION/EVIDENCE/EB008-CLAUDE-VERIFICATION.md` |
+| P3.2 enforcement results | `backend/scripts/preprocessing_consumer/p32-enforcement-results.json` |
