@@ -1,0 +1,6027 @@
+{
+  "total_resolved": 527,
+  "sample_count": 113,
+  "strata_counts": {
+    "unusual_labels": 9,
+    "multiple_choice": 12,
+    "odd_label_count": 1,
+    "inline_mixed": 31,
+    "inline_single_line": 30,
+    "standard_multiline": 30
+  },
+  "samples": [
+    {
+      "paper": "2021北京昌平高一（下）期末化学（教师版）(1)",
+      "unit_id": "Q1",
+      "question_type": "single_choice",
+      "options_region": [
+        10,
+        12
+      ],
+      "detected_labels": [
+        "C"
+      ],
+      "result": "resolved",
+      "located": {
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L012",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 12
+        }
+      },
+      "region_text": [
+        "L010: <table border=1 style='margin: auto; word-wrap: break-word;'><tr><td style='text-align: center; word-wrap: break-word;'>A</td><td style='text-align: center; word-wrap: break-word;'>B</td><td style='text-align: center; word-wrap: break-word;'>C</td><td style='text-align: center; word-wrap: break-word;'>D</td></tr><tr><td style='text-align: center; word-wrap: break-word;'><img src=\"../../_imgs/2021北京昌平高一（下）期末化学（教师版）(1)/img_in_image_box_106_332_284_457.jpg\" alt=\"Image\"\" /></td><td style='text-align: center; word-wrap: break-word;'><img src=\"../../_imgs/2021北京昌平高一（下）期末化学（教师版）(1)/img_in_image_box_314_335_484_460.jpg\" alt=\"Image\"\" /></td><td style='text-align: center; word-wrap: break-word;'><img src=\"../../_imgs/2021北京昌平高一（下）期末化学（教师版）(1)/img_in_image_box_521_335_694_463.jpg\" alt=\"Image\"\" /></td><td style='text-align: center; word-wrap: break-word;'><img src=\"../../_imgs/2021北京昌平高一（下）期末化学（教师版）(1)/img_in_image_box_732_335_902_457.jpg\" alt=\"Image\"\" /></td></tr><tr><td style='text-align: center; word-wrap: break-word;'>燃料电池发电站</td><td style='text-align: center; word-wrap: break-word;'>地热发电厂</td><td style='text-align: center; word-wrap: break-word;'>风力发电厂</td><td style='text-align: center; word-wrap: break-word;'>水力发电站</td></tr><tr><td colspan=\"4\">A A B B C C D D</td></tr></table>",
+        "L011: ",
+        "L012: C. C"
+      ],
+      "_stratum": "unusual_labels"
+    },
+    {
+      "paper": "2021北京昌平高一（下）期末化学（教师版）(1)",
+      "unit_id": "Q3",
+      "question_type": "single_choice",
+      "options_region": [
+        20,
+        20
+      ],
+      "detected_labels": [
+        "A",
+        "F",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L020",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 20
+        },
+        "F": {
+          "status": "inline",
+          "line_ref": "P1L020",
+          "start_offset": 5,
+          "end_offset": 6,
+          "line_no": 20
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L020",
+          "start_offset": 8,
+          "end_offset": 9,
+          "line_no": 20
+        },
+        "C": {
+          "status": "inline",
+          "line_ref": "P1L020",
+          "start_offset": 17,
+          "end_offset": 18,
+          "line_no": 20
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L020",
+          "start_offset": 26,
+          "end_offset": 27,
+          "line_no": 20
+        }
+      },
+      "region_text": [
+        "L020: A. 氟（F） B. 氯（Cl） C. 溴（Br） D. 碘（I）"
+      ],
+      "_stratum": "unusual_labels"
+    },
+    {
+      "paper": "2022北京师大附中高一（下）期中政治（教师版）(1)",
+      "unit_id": "Q28",
+      "question_type": "single_choice",
+      "options_region": [
+        365,
+        371
+      ],
+      "detected_labels": [
+        "A",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L365",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 365
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L369",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 369
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L371",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 371
+        }
+      },
+      "region_text": [
+        "L365: A. 完善初次分配机制，改善老年人居家生活照护条件",
+        "L366: ",
+        "L367: B 帮助困难老人家庭成员提升职业技能，增强赡养能力",
+        "L368: ",
+        "L369: C. 通过政府财政补贴、社会捐赠等方式予以必要支持",
+        "L370: ",
+        "L371: D. 政府履行再分配调节职能，推进私人养老服务均等化"
+      ],
+      "_stratum": "unusual_labels"
+    },
+    {
+      "paper": "2021北京十二中高一（下）期中物理（教师版）(1)",
+      "unit_id": "Q5",
+      "question_type": "single_choice",
+      "options_region": [
+        59,
+        65
+      ],
+      "detected_labels": [
+        "A",
+        "F",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L059",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 59
+        },
+        "F": {
+          "status": "inline",
+          "line_ref": "P1L059",
+          "start_offset": 25,
+          "end_offset": 26,
+          "line_no": 59
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L061",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 61
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L063",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 63
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L065",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 65
+        }
+      },
+      "region_text": [
+        "L059: A. 物体的动能增加了  $ (F - mg - f)h $",
+        "L060: ",
+        "L061: B. 物体的重力势能减小了 mgh",
+        "L062: ",
+        "L063: C. 物体的重力做功为 mgh",
+        "L064: ",
+        "L065: D. 物体的加速度为  $ \\frac{F - f}{m} $"
+      ],
+      "_stratum": "unusual_labels"
+    },
+    {
+      "paper": "2022北京顺义一中高一（下）期中物理（教师版）(1)",
+      "unit_id": "Q2",
+      "question_type": "single_choice",
+      "options_region": [
+        13,
+        16
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L016",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 16
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L016",
+          "start_offset": 5,
+          "end_offset": 6,
+          "line_no": 16
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L016",
+          "start_offset": 14,
+          "end_offset": 15,
+          "line_no": 16
+        }
+      },
+      "region_text": [
+        "L013: <div style=\"text-align: center;\"><img src=\"imgs/img_in_image_box_84_486_274_611.jpg\" alt=\"Image\" width=\"15%\" /></div>",
+        "L014: ",
+        "L015: ",
+        "L016: A. 甲 B. 乙 C 丙 D. 丁"
+      ],
+      "_stratum": "unusual_labels"
+    },
+    {
+      "paper": "2022北京顺义一中高一（下）期中物理（教师版）(1)",
+      "unit_id": "Q7",
+      "question_type": "single_choice",
+      "options_region": [
+        72,
+        102
+      ],
+      "detected_labels": [
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L100",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 100
+        }
+      },
+      "region_text": [
+        "L072: <div style=\"text-align: center;\">A.</div>",
+        "L073: ",
+        "L074: ",
+        "L075: . 大小相等的力 F 按如图所示的四种方式作用在相同的物体上，使物体沿粗糙的水平面移动相同的距离，其力 F 做功最多的是()",
+        "L076: ",
+        "L077: F",
+        "L078: ",
+        "L079: F",
+        "L080: ",
+        "L081: 30°",
+        "L082: ",
+        "L083: <div style=\"text-align: center;\"><img src=\"imgs/img_in_image_box_114_1245_251_1297.jpg\" alt=\"Image\" width=\"11%\" /></div>",
+        "L084: ",
+        "L085: ",
+        "L086: <div style=\"text-align: center;\">B.</div>",
+        "L087: ",
+        "L088: ",
+        "L089: <div style=\"text-align: center;\"><img src=\"imgs/img_in_image_box_108_1321_250_1403.jpg\" alt=\"Image\" width=\"11%\" /></div>",
+        "L090: ",
+        "L091: ",
+        "L092: <div style=\"text-align: center;\">C.</div>",
+        "L093: ",
+        "L094: ",
+        "L095: <div style=\"text-align: center;\"><img src=\"imgs/img_in_image_box_108_1424_254_1501.jpg\" alt=\"Image\" width=\"12%\" /></div>",
+        "L096: ",
+        "L097: ",
+        "L098: ---",
+        "L099: ",
+        "L100: D.",
+        "L101: ",
+        "L102: <div style=\"text-align: center;\"><img src=\"imgs/img_in_image_box_110_70_249_163.jpg\" alt=\"Image\" width=\"11%\" /></div>"
+      ],
+      "_stratum": "unusual_labels"
+    },
+    {
+      "paper": "2017-2019北京高中生物高一上期末汇编：分子与细胞（教师版）(1)",
+      "unit_id": "Q46",
+      "question_type": "single_choice",
+      "options_region": [
+        497,
+        497
+      ],
+      "detected_labels": [
+        "B"
+      ],
+      "result": "resolved",
+      "located": {
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L497",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 497
+        }
+      },
+      "region_text": [
+        "L497: B. B"
+      ],
+      "_stratum": "unusual_labels"
+    },
+    {
+      "paper": "2021北京农大附中高二（上）期中物理（合格考）（教师版）(1)",
+      "unit_id": "Q17",
+      "question_type": "single_choice",
+      "options_region": [
+        199,
+        217
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L199",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 199
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L204",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 204
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L215",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 215
+        }
+      },
+      "region_text": [
+        "L199: A.",
+        "L200: ",
+        "L201: <div style=\"text-align: center;\"><img src=\"../../_imgs/2021北京农大附中高二（上）期中物理（合格考）（教师版）(1)/img_in_image_box_104_844_286_977.jpg\" alt=\"Image\" width=\"15%\" /></div>",
+        "L202: ",
+        "L203: ",
+        "L204: B.",
+        "L205: ",
+        "L206: <div style=\"text-align: center;\"><img src=\"../../_imgs/2021北京农大附中高二（上）期中物理（合格考）（教师版）(1)/img_in_image_box_591_843_775_977.jpg\" alt=\"Image\" width=\"15%\" /></div>",
+        "L207: ",
+        "L208: ",
+        "L209: <div style=\"text-align: center;\">C.</div>",
+        "L210: ",
+        "L211: ",
+        "L212: <div style=\"text-align: center;\"><img src=\"../../_imgs/2021北京农大附中高二（上）期中物理（合格考）（教师版）(1)/img_in_image_box_108_993_292_1129.jpg\" alt=\"Image\" width=\"15%\" /></div>",
+        "L213: ",
+        "L214: ",
+        "L215: D.",
+        "L216: ",
+        "L217: <div style=\"text-align: center;\"><img src=\"../../_imgs/2021北京农大附中高二（上）期中物理（合格考）（教师版）(1)/img_in_image_box_593_991_782_1131.jpg\" alt=\"Image\" width=\"15%\" /></div>"
+      ],
+      "_stratum": "unusual_labels"
+    },
+    {
+      "paper": "2021北京农大附中高二（上）期中物理（合格考）（教师版）(1)",
+      "unit_id": "Q19",
+      "question_type": "single_choice",
+      "options_region": [
+        232,
+        238
+      ],
+      "detected_labels": [
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L234",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 234
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L236",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 236
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L238",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 238
+        }
+      },
+      "region_text": [
+        "L232: A 电场力做正功，电势能增加",
+        "L233: ",
+        "L234: B. 电场力做正功，电势能减少",
+        "L235: ",
+        "L236: C. 电场力不做功，电势能不变",
+        "L237: ",
+        "L238: D. 电场力做负功，电势能减少"
+      ],
+      "_stratum": "unusual_labels"
+    },
+    {
+      "paper": "2018北京一零一中学高一（下）期中物理（教师版）(1)",
+      "unit_id": "Q16",
+      "question_type": "multiple_choice",
+      "options_region": [
+        154,
+        160
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L154",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 154
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L156",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 156
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L158",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 158
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L160",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 160
+        }
+      },
+      "region_text": [
+        "L154: A. 速率不变的曲线运动是没有加速度的",
+        "L155: ",
+        "L156: B. 曲线运动一定是变速运动",
+        "L157: ",
+        "L158: C. 变速运动一定是曲线运动",
+        "L159: ",
+        "L160: D. 做曲线运动的物体一定有加速度"
+      ],
+      "_stratum": "multiple_choice"
+    },
+    {
+      "paper": "2018北京一零一中学高一（下）期中物理（教师版）(1)",
+      "unit_id": "Q17",
+      "question_type": "multiple_choice",
+      "options_region": [
+        166,
+        168
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L166",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 166
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L166",
+          "start_offset": 16,
+          "end_offset": 17,
+          "line_no": 166
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L168",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 168
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L168",
+          "start_offset": 31,
+          "end_offset": 32,
+          "line_no": 168
+        }
+      },
+      "region_text": [
+        "L166: A. 竖直分速度等于水平分速度 B. 即时速度大小为  $ \\sqrt{5}v_{0} $",
+        "L167: ",
+        "L168: C. 运动的时间为 $ \\frac{2v_{0}}{g} $ D. 运动的位移为 $ \\frac{2v_{0}^{2}}{g} $"
+      ],
+      "_stratum": "multiple_choice"
+    },
+    {
+      "paper": "2018北京一零一中学高一（下）期中物理（教师版）(1)",
+      "unit_id": "Q18",
+      "question_type": "multiple_choice",
+      "options_region": [
+        175,
+        181
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L175",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 175
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L177",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 177
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L179",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 179
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L181",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 181
+        }
+      },
+      "region_text": [
+        "L175: A. 小球通过最高点时，对杆的拉力大小是 6N",
+        "L176: ",
+        "L177: B. 小球通过最高点时，对杆的压力大小是 6N",
+        "L178: ",
+        "L179: C. 小球通过最低点时，对杆的拉力大小是 24N",
+        "L180: ",
+        "L181: D. 小球通过最低点时，对杆的拉力大小是 54N"
+      ],
+      "_stratum": "multiple_choice"
+    },
+    {
+      "paper": "2018北京一零一中学高一（下）期中物理（教师版）(1)",
+      "unit_id": "Q19",
+      "question_type": "multiple_choice",
+      "options_region": [
+        188,
+        194
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L188",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 188
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L190",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 190
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L192",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 192
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L194",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 194
+        }
+      },
+      "region_text": [
+        "L188: A. 这两点电荷一定是等量异种电荷",
+        "L189: ",
+        "L190: B. 这两点电荷一定是等量同种电荷",
+        "L191: ",
+        "L192: C. D、C 两点的电势一定相等",
+        "L193: ",
+        "L194: D. C 点的电场强度比 D 点的电场强度小"
+      ],
+      "_stratum": "multiple_choice"
+    },
+    {
+      "paper": "2018北京一零一中学高一（下）期中物理（教师版）(1)",
+      "unit_id": "Q20",
+      "question_type": "multiple_choice",
+      "options_region": [
+        201,
+        207
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L201",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 201
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L203",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 203
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L205",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 205
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L207",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 207
+        }
+      },
+      "region_text": [
+        "L201: A. 电容器的电容将增大",
+        "L202: ",
+        "L203: B. 电阻 R 中没有电流",
+        "L204: ",
+        "L205: C. 电阻 R 中有从 a 流向 b 的电流",
+        "L206: ",
+        "L207: D. 电阻 R 中有从 b 流向 a 的电流"
+      ],
+      "_stratum": "multiple_choice"
+    },
+    {
+      "paper": "2018北京一零一中学高一（下）期中物理（教师版）(1)",
+      "unit_id": "Q21",
+      "question_type": "multiple_choice",
+      "options_region": [
+        216,
+        222
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L216",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 216
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L218",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 218
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L220",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 220
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L222",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 222
+        }
+      },
+      "region_text": [
+        "L216: A. 增大偏转电压  $ U_{2} $",
+        "L217: ",
+        "L218: B. 增大板长 l",
+        "L219: ",
+        "L220: C. 减小板间距离 d",
+        "L221: ",
+        "L222: D. 增大加速电压  $ U_{1} $"
+      ],
+      "_stratum": "multiple_choice"
+    },
+    {
+      "paper": "2021北京十二中高一（下）期中物理（教师版）(1)",
+      "unit_id": "Q11",
+      "question_type": "multiple_choice",
+      "options_region": [
+        142,
+        148
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L142",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 142
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L144",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 144
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L146",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 146
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L148",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 148
+        }
+      },
+      "region_text": [
+        "L142: A. 汽车做匀加速直线运动",
+        "L143: ",
+        "L144: B. 汽车的加速度逐渐减小",
+        "L145: ",
+        "L146: C. 汽车的位移为  $ \\frac{Pt}{f} - \\frac{mP^2}{2f^3} $",
+        "L147: ",
+        "L148: D. 汽车的位移为  $ \\frac{P \\cdot t}{2f} $"
+      ],
+      "_stratum": "multiple_choice"
+    },
+    {
+      "paper": "2021北京十二中高一（下）期中物理（教师版）(1)",
+      "unit_id": "Q12",
+      "question_type": "multiple_choice",
+      "options_region": [
+        157,
+        163
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L157",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 157
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L159",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 159
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L161",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 161
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L163",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 163
+        }
+      },
+      "region_text": [
+        "L157: A. 足球从冲顶后至飞入球门时，重力对足球做的功为  $ mgh_2 - mgh_1 $",
+        "L158: ",
+        "L159: B. 运动员冲顶过程中对足球做的功为  $ \\frac{1}{2}mv_2^2 - \\frac{1}{2}mv_1^2 $",
+        "L160: ",
+        "L161: C. 足球飞入球门时的动能为  $ mg(h_1 - h_2) + \\frac{1}{2}mv_1^2 $",
+        "L162: ",
+        "L163: D. 足球飞入球门时的动能为  $ mg(h_1 - h_2) + \\frac{1}{2}mv_2^2 $"
+      ],
+      "_stratum": "multiple_choice"
+    },
+    {
+      "paper": "2022北京一七一中高三（上）期中物理（教师版）(1)",
+      "unit_id": "Q11",
+      "question_type": "multiple_choice",
+      "options_region": [
+        136,
+        142
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L136",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 136
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L138",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 138
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L140",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 140
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L142",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 142
+        }
+      },
+      "region_text": [
+        "L136: A. 质点振动的方向总是垂直于波传播的方向",
+        "L137: ",
+        "L138: B. 任一振动质点每经过一个周期沿着波的传播方向移动一个波长",
+        "L139: ",
+        "L140: C. 相隔一个周期 两时刻，机械波的图像相同",
+        "L141: ",
+        "L142: D. 当两列机械波相遇时，在相遇区域，任一点的总位移等于两列波分别引起的位移的矢量和"
+      ],
+      "_stratum": "multiple_choice"
+    },
+    {
+      "paper": "2022北京一七一中高三（上）期中物理（教师版）(1)",
+      "unit_id": "Q12",
+      "question_type": "multiple_choice",
+      "options_region": [
+        149,
+        155
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L149",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 149
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L151",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 151
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L153",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 153
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L155",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 155
+        }
+      },
+      "region_text": [
+        "L149: A. 高尔夫球在何时落地",
+        "L150: ",
+        "L151: B. 高尔夫球可上升的最大高度",
+        "L152: ",
+        "L153: C. 人击球时对高尔夫球做的功",
+        "L154: ",
+        "L155: D. 高尔夫球落地时离击球点的距离"
+      ],
+      "_stratum": "multiple_choice"
+    },
+    {
+      "paper": "2022北京一七一中高三（上）期中物理（教师版）(1)",
+      "unit_id": "Q13",
+      "question_type": "multiple_choice",
+      "options_region": [
+        164,
+        170
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L164",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 164
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L166",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 166
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L168",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 168
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L170",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 170
+        }
+      },
+      "region_text": [
+        "L164: A. m 从 a 点运动到 b 点过程中，m 与 M 组成的系统机械能守恒、水平方向动量守恒",
+        "L165: ",
+        "L166: B. m 从 a 点释放后运动的全过程中，m 的机械能守恒",
+        "L167: ",
+        "L168: C. m 释放后能够到达 c 点",
+        "L169: ",
+        "L170: D. 当 m 首次从右向左到达最低点 b 时，M 的速度达到最大"
+      ],
+      "_stratum": "multiple_choice"
+    },
+    {
+      "paper": "2022北京一七一中高三（上）期中物理（教师版）(1)",
+      "unit_id": "Q14",
+      "question_type": "multiple_choice",
+      "options_region": [
+        177,
+        183
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L177",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 177
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L179",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 179
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L181",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 181
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L183",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 183
+        }
+      },
+      "region_text": [
+        "L177: A. 若小球运动到最高点时速度为 0，则小球机械能一定不守恒",
+        "L178: ",
+        "L179: B. 若小球第一次运动到最高点时速度大小为 0，则  $ v_{0} $ 一定小于  $ 5 \\, m/s $",
+        "L180: ",
+        "L181: C. 若要小球不挤压内轨，则  $ v_{0} $ 一定不小于  $ 5 \\, m/s $",
+        "L182: ",
+        "L183: D. 若小球开始运动时初动能为 1.6J，则足够长时间后小球的机械能为 1J"
+      ],
+      "_stratum": "multiple_choice"
+    },
+    {
+      "paper": "2022北京顺义一中高一（下）期中物理（教师版）(1)",
+      "unit_id": "Q9",
+      "question_type": "single_choice",
+      "options_region": [
+        120,
+        129
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L123",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 123
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L125",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 125
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L127",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 127
+        }
+      },
+      "region_text": [
+        "L120: <div style=\"text-align: center;\"><img src=\"imgs/img_in_image_box_75_804_462_1052.jpg\" alt=\"Image\" width=\"32%\" /></div>",
+        "L121: ",
+        "L122: ",
+        "L123: A.  $ W_{1}=W_{2} $",
+        "L124: ",
+        "L125: B.  $ W_{1}<W_{2} $",
+        "L126: ",
+        "L127: C.  $ W_{1}>W_{2} $",
+        "L128: ",
+        "L129: D 无法确定"
+      ],
+      "_stratum": "odd_label_count"
+    },
+    {
+      "paper": "2018北京101中学高一（下）期中历史含答案(1)",
+      "unit_id": "Q8",
+      "question_type": "single_choice",
+      "options_region": [
+        74,
+        76
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L074",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 74
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L074",
+          "start_offset": 17,
+          "end_offset": 18,
+          "line_no": 74
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L076",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 76
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L076",
+          "start_offset": 16,
+          "end_offset": 17,
+          "line_no": 76
+        }
+      },
+      "region_text": [
+        "L074: A. 宋朝孟元老著《东京梦华录》 B. 明朝施耐庵著《水浒传》",
+        "L075: ",
+        "L076: C. 清朝徐松编《宋会要辑稿》 D. 当代学者赵广超著《笔记（清明上河图）》"
+      ],
+      "_stratum": "inline_mixed"
+    },
+    {
+      "paper": "2018北京101中学高一（下）期中历史含答案(1)",
+      "unit_id": "Q16",
+      "question_type": "single_choice",
+      "options_region": [
+        128,
+        130
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L128",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 128
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L128",
+          "start_offset": 16,
+          "end_offset": 17,
+          "line_no": 128
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L130",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 130
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L130",
+          "start_offset": 16,
+          "end_offset": 17,
+          "line_no": 130
+        }
+      },
+      "region_text": [
+        "L128: A. 阻碍了资本主义萌芽的成长 B. 促进了商品货币经济的活跃",
+        "L129: ",
+        "L130: C. 大大增强了城市的经济功能 D. 便利了商业资本的迅速积聚"
+      ],
+      "_stratum": "inline_mixed"
+    },
+    {
+      "paper": "2018北京101中学高一（下）期中历史含答案(1)",
+      "unit_id": "Q27",
+      "question_type": "single_choice",
+      "options_region": [
+        228,
+        230
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L228",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 228
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L228",
+          "start_offset": 13,
+          "end_offset": 14,
+          "line_no": 228
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L230",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 230
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L230",
+          "start_offset": 15,
+          "end_offset": 16,
+          "line_no": 230
+        }
+      },
+      "region_text": [
+        "L228: A. 整个革命的进程缩短 B. 先进国家几乎同时进行",
+        "L229: ",
+        "L230: C. 社会生产力获得极大提高 D. 科学与技术开始紧密结合"
+      ],
+      "_stratum": "inline_mixed"
+    },
+    {
+      "paper": "2018北京101中学高一（下）期中历史含答案(1)",
+      "unit_id": "Q30",
+      "question_type": "single_choice",
+      "options_region": [
+        254,
+        256
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L254",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 254
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L254",
+          "start_offset": 15,
+          "end_offset": 16,
+          "line_no": 254
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L256",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 256
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L256",
+          "start_offset": 15,
+          "end_offset": 16,
+          "line_no": 256
+        }
+      },
+      "region_text": [
+        "L254: A. 形成了完整的工业化体系 B. 阻止了外国工业品倾销",
+        "L255: ",
+        "L256: C. 形成了近代企业管理模式 D. 引进了西方的生产技术"
+      ],
+      "_stratum": "inline_mixed"
+    },
+    {
+      "paper": "2018北京101中学高一（下）期中历史含答案(1)",
+      "unit_id": "Q33",
+      "question_type": "single_choice",
+      "options_region": [
+        278,
+        280
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L278",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 278
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L278",
+          "start_offset": 9,
+          "end_offset": 10,
+          "line_no": 278
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L280",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 280
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L280",
+          "start_offset": 9,
+          "end_offset": 10,
+          "line_no": 280
+        }
+      },
+      "region_text": [
+        "L278: A. 安庆军械所 B. 江南制造总局",
+        "L279: ",
+        "L280: C. 轮船招商局 D. 继昌隆缫丝厂"
+      ],
+      "_stratum": "inline_mixed"
+    },
+    {
+      "paper": "2018北京101中学高一（下）期中历史含答案(1)",
+      "unit_id": "Q34",
+      "question_type": "single_choice",
+      "options_region": [
+        284,
+        286
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L284",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 284
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L284",
+          "start_offset": 13,
+          "end_offset": 14,
+          "line_no": 284
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L286",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 286
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L286",
+          "start_offset": 13,
+          "end_offset": 14,
+          "line_no": 286
+        }
+      },
+      "region_text": [
+        "L284: A. 《南京条约》签订后 B. 《北京条约》签订后",
+        "L285: ",
+        "L286: C. 《马关条约》签订后 D. 《辛丑条约》签订后"
+      ],
+      "_stratum": "inline_mixed"
+    },
+    {
+      "paper": "2018北京101中学高一（下）期中历史含答案(1)",
+      "unit_id": "Q35",
+      "question_type": "single_choice",
+      "options_region": [
+        290,
+        294
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L290",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 290
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L290",
+          "start_offset": 16,
+          "end_offset": 17,
+          "line_no": 290
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L294",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 294
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L294",
+          "start_offset": 16,
+          "end_offset": 17,
+          "line_no": 294
+        }
+      },
+      "region_text": [
+        "L290: A. 对外贸易入超局面得以扭转 B. 政府忽视采矿冶炼业发展",
+        "L291: ",
+        "L292: ---",
+        "L293: ",
+        "L294: C. 交通运输业是政府投资重点 D. 中国实现自强求富的目标"
+      ],
+      "_stratum": "inline_mixed"
+    },
+    {
+      "paper": "2018北京101中学高一（下）期中历史含答案(1)",
+      "unit_id": "Q44",
+      "question_type": "single_choice",
+      "options_region": [
+        380,
+        382
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L380",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 380
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L380",
+          "start_offset": 13,
+          "end_offset": 14,
+          "line_no": 380
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L382",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 382
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L382",
+          "start_offset": 13,
+          "end_offset": 14,
+          "line_no": 382
+        }
+      },
+      "region_text": [
+        "L380: A. “以阶级斗争为纲” B. 重返联合国",
+        "L381: ",
+        "L382: C. 实施第一个五年计划 D. 实行改革开放"
+      ],
+      "_stratum": "inline_mixed"
+    },
+    {
+      "paper": "2018北京101中学高一（上）期中地理含答案",
+      "unit_id": "Q21",
+      "question_type": "single_choice",
+      "options_region": [
+        242,
+        244
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L242",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 242
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L242",
+          "start_offset": 9,
+          "end_offset": 10,
+          "line_no": 242
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L244",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 244
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L244",
+          "start_offset": 9,
+          "end_offset": 10,
+          "line_no": 244
+        }
+      },
+      "region_text": [
+        "L242: A. 4月21日 B. 6月22日",
+        "L243: ",
+        "L244: C. 8月23日 D. 10月21日"
+      ],
+      "_stratum": "inline_mixed"
+    },
+    {
+      "paper": "2018北京101中学高一（上）期中地理含答案",
+      "unit_id": "Q29",
+      "question_type": "single_choice",
+      "options_region": [
+        330,
+        334
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L330",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 330
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L330",
+          "start_offset": 16,
+          "end_offset": 17,
+          "line_no": 330
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L334",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 334
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L334",
+          "start_offset": 16,
+          "end_offset": 17,
+          "line_no": 334
+        }
+      },
+      "region_text": [
+        "L330: A. 储水量巨大，以冰川为主体 B. 是由地球水体构成的连续不规则的圈层",
+        "L331: ",
+        "L332: ---",
+        "L333: ",
+        "L334: C. 只有地表各水体间不断循环 D. 与岩石圈、大气圈、生物圈组成外部圈层"
+      ],
+      "_stratum": "inline_mixed"
+    },
+    {
+      "paper": "2018北京101中学高一（上）期中地理含答案",
+      "unit_id": "Q30",
+      "question_type": "single_choice",
+      "options_region": [
+        338,
+        346
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L346",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 346
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L346",
+          "start_offset": 6,
+          "end_offset": 7,
+          "line_no": 346
+        },
+        "C": {
+          "status": "inline",
+          "line_ref": "P1L346",
+          "start_offset": 12,
+          "end_offset": 13,
+          "line_no": 346
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L346",
+          "start_offset": 18,
+          "end_offset": 19,
+          "line_no": 346
+        }
+      },
+      "region_text": [
+        "L338: ①生物圈是由动植物、微生物构成的圈层",
+        "L339: ",
+        "L340: ②生物圈是地球生物及其生存环境的总称",
+        "L341: ",
+        "L342: ③生物圈的范围包括大气圈底部、水圈全部和岩石圈上部",
+        "L343: ",
+        "L344: ④生物圈中的生物均通过光合作用改造大气圈成分",
+        "L345: ",
+        "L346: A. ①③ B. ②④ C. ②③ D. ①④"
+      ],
+      "_stratum": "inline_mixed"
+    },
+    {
+      "paper": "2018北京101中学高一（上）期中地理含答案",
+      "unit_id": "Q42",
+      "question_type": "single_choice",
+      "options_region": [
+        446,
+        448
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L446",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 446
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L446",
+          "start_offset": 8,
+          "end_offset": 9,
+          "line_no": 446
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L448",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 448
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L448",
+          "start_offset": 8,
+          "end_offset": 9,
+          "line_no": 448
+        }
+      },
+      "region_text": [
+        "L446: A. 锋面系统 B. 温室效应",
+        "L447: ",
+        "L448: C. 热力环流 D. 台风活动"
+      ],
+      "_stratum": "inline_mixed"
+    },
+    {
+      "paper": "2018北京101中学高一（上）期中地理含答案",
+      "unit_id": "Q43",
+      "question_type": "single_choice",
+      "options_region": [
+        454,
+        481
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L481",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 481
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L481",
+          "start_offset": 5,
+          "end_offset": 6,
+          "line_no": 481
+        },
+        "C": {
+          "status": "inline",
+          "line_ref": "P1L481",
+          "start_offset": 10,
+          "end_offset": 11,
+          "line_no": 481
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L481",
+          "start_offset": 15,
+          "end_offset": 16,
+          "line_no": 481
+        }
+      },
+      "region_text": [
+        "L454: <div style=\"text-align: center;\"><img src=\"../../_imgs/2018北京101中学高一（上）期中地理含答案/img_in_image_box_255_81_397_204.jpg\" alt=\"Image\" width=\"11%\" /></div>",
+        "L455: ",
+        "L456: ",
+        "L457: <div style=\"text-align: center;\">①</div>",
+        "L458: ",
+        "L459: ",
+        "L460: <div style=\"text-align: center;\"><img src=\"../../_imgs/2018北京101中学高一（上）期中地理含答案/img_in_image_box_414_84_594_199.jpg\" alt=\"Image\" width=\"15%\" /></div>",
+        "L461: ",
+        "L462: ",
+        "L463: <div style=\"text-align: center;\"><img src=\"../../_imgs/2018北京101中学高一（上）期中地理含答案/img_in_image_box_612_84_772_199.jpg\" alt=\"Image\" width=\"13%\" /></div>",
+        "L464: ",
+        "L465: ",
+        "L466: <div style=\"text-align: center;\">②</div>",
+        "L467: ",
+        "L468: ",
+        "L469: <div style=\"text-align: center;\"><img src=\"../../_imgs/2018北京101中学高一（上）期中地理含答案/img_in_image_box_776_93_975_193.jpg\" alt=\"Image\" width=\"16%\" /></div>",
+        "L470: ",
+        "L471: ",
+        "L472: <div style=\"text-align: center;\">③</div>",
+        "L473: ",
+        "L474: ",
+        "L475: <div style=\"text-align: center;\">图15</div>",
+        "L476: ",
+        "L477: ",
+        "L478: <div style=\"text-align: center;\">④□</div>",
+        "L479: ",
+        "L480: ",
+        "L481: A. ① B. ② C. ③ D. ④"
+      ],
+      "_stratum": "inline_mixed"
+    },
+    {
+      "paper": "2017-2019北京高一政治上学期期末汇编：科学社会主义常识与中国特色社会主义（教师版）(1)",
+      "unit_id": "Q15",
+      "question_type": "single_choice",
+      "options_region": [
+        175,
+        177
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L175",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 175
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L175",
+          "start_offset": 9,
+          "end_offset": 10,
+          "line_no": 175
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L177",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 177
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L177",
+          "start_offset": 10,
+          "end_offset": 11,
+          "line_no": 177
+        }
+      },
+      "region_text": [
+        "L175: A. 《乌托邦》 B. 《太阳城》",
+        "L176: ",
+        "L177: C. 《自然法典》 D. 《共产党宣言》"
+      ],
+      "_stratum": "inline_mixed"
+    },
+    {
+      "paper": "2018北京一零一中学高一（下）期中物理（教师版）(1)",
+      "unit_id": "Q14",
+      "question_type": "single_choice",
+      "options_region": [
+        142,
+        144
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L142",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 142
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L142",
+          "start_offset": 14,
+          "end_offset": 15,
+          "line_no": 142
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L144",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 144
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L144",
+          "start_offset": 17,
+          "end_offset": 18,
+          "line_no": 144
+        }
+      },
+      "region_text": [
+        "L142: A. 空腔导体外表面的电量 B. 空腔导体内表面的电量",
+        "L143: ",
+        "L144: C. 空腔导体内部任意一点的场强 D. 空腔导体内任意一点的电势"
+      ],
+      "_stratum": "inline_mixed"
+    },
+    {
+      "paper": "2022北京顺义一中高一（下）期中物理（教师版）(1)",
+      "unit_id": "Q13",
+      "question_type": "single_choice",
+      "options_region": [
+        170,
+        173
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L173",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 173
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L173",
+          "start_offset": 11,
+          "end_offset": 12,
+          "line_no": 173
+        },
+        "C": {
+          "status": "inline",
+          "line_ref": "P1L173",
+          "start_offset": 22,
+          "end_offset": 23,
+          "line_no": 173
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L173",
+          "start_offset": 33,
+          "end_offset": 34,
+          "line_no": 173
+        }
+      },
+      "region_text": [
+        "L170: <div style=\"text-align: center;\"><img src=\"imgs/img_in_image_box_75_1309_342_1436.jpg\" alt=\"Image\" width=\"22%\" /></div>",
+        "L171: ",
+        "L172: ",
+        "L173: A. 120km/h B. 300km/h C. 320km/h D. 480km/h"
+      ],
+      "_stratum": "inline_mixed"
+    },
+    {
+      "paper": "2017-2019北京高中生物高一上期末汇编：分子与细胞（教师版）(1)",
+      "unit_id": "Q11",
+      "question_type": "single_choice",
+      "options_region": [
+        100,
+        102
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L102",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 102
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L102",
+          "start_offset": 7,
+          "end_offset": 8,
+          "line_no": 102
+        },
+        "C": {
+          "status": "inline",
+          "line_ref": "P1L102",
+          "start_offset": 14,
+          "end_offset": 15,
+          "line_no": 102
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L102",
+          "start_offset": 21,
+          "end_offset": 22,
+          "line_no": 102
+        }
+      },
+      "region_text": [
+        "L100: ---",
+        "L101: ",
+        "L102: A. 碳和氮 B. 碳和氢 C. 氮和磷 D. 氢和磷"
+      ],
+      "_stratum": "inline_mixed"
+    },
+    {
+      "paper": "2017-2019北京高中生物高一上期末汇编：分子与细胞（教师版）(1)",
+      "unit_id": "Q24",
+      "question_type": "single_choice",
+      "options_region": [
+        230,
+        232
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L230",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 230
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L230",
+          "start_offset": 13,
+          "end_offset": 14,
+          "line_no": 230
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L232",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 232
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L232",
+          "start_offset": 12,
+          "end_offset": 13,
+          "line_no": 232
+        }
+      },
+      "region_text": [
+        "L230: A. 自由扩散和协助扩散 B. 主动运输和胞吞",
+        "L231: ",
+        "L232: C．自由扩散和主动运输 D．协助扩散和主动运输"
+      ],
+      "_stratum": "inline_mixed"
+    },
+    {
+      "paper": "2017-2019北京高中生物高一上期末汇编：分子与细胞（教师版）(1)",
+      "unit_id": "Q27",
+      "question_type": "single_choice",
+      "options_region": [
+        258,
+        260
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L258",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 258
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L258",
+          "start_offset": 11,
+          "end_offset": 12,
+          "line_no": 258
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L260",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 260
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L260",
+          "start_offset": 11,
+          "end_offset": 12,
+          "line_no": 260
+        }
+      },
+      "region_text": [
+        "L258: A. 葡萄糖和纤维素 B. 纤维素和磷脂",
+        "L259: ",
+        "L260: C．核糖核酸和氨基酸 D．脱氧核糖核酸和葡萄糖"
+      ],
+      "_stratum": "inline_mixed"
+    },
+    {
+      "paper": "2017-2019北京高中生物高一上期末汇编：分子与细胞（教师版）(1)",
+      "unit_id": "Q38",
+      "question_type": "single_choice",
+      "options_region": [
+        425,
+        427
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L425",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 425
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L425",
+          "start_offset": 10,
+          "end_offset": 11,
+          "line_no": 425
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L427",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 427
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L427",
+          "start_offset": 10,
+          "end_offset": 11,
+          "line_no": 427
+        }
+      },
+      "region_text": [
+        "L425: A. 光反应的条件 B. ATP 的产生部位",
+        "L426: ",
+        "L427: C．能量的转换过程 D．由  $ CO_{2} $ 合成糖类的过程"
+      ],
+      "_stratum": "inline_mixed"
+    },
+    {
+      "paper": "2017-2019北京高中生物高一上期末汇编：分子与细胞（教师版）(1)",
+      "unit_id": "Q48",
+      "question_type": "single_choice",
+      "options_region": [
+        511,
+        513
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L511",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 511
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L511",
+          "start_offset": 23,
+          "end_offset": 24,
+          "line_no": 511
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L513",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 513
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L513",
+          "start_offset": 10,
+          "end_offset": 11,
+          "line_no": 513
+        }
+      },
+      "region_text": [
+        "L511: A. 增加室内  $ CO_{2} $ 浓度 B. 增大室内昼夜温差",
+        "L512: ",
+        "L513: C. 增加光照强度 D. 采用绿色玻璃盖顶"
+      ],
+      "_stratum": "inline_mixed"
+    },
+    {
+      "paper": "2010北京上地一零一中高一分班考英语（教师版）(1)",
+      "unit_id": "Q15",
+      "question_type": "single_choice",
+      "options_region": [
+        63,
+        65
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L063",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 63
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L063",
+          "start_offset": 25,
+          "end_offset": 26,
+          "line_no": 63
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L065",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 65
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L065",
+          "start_offset": 29,
+          "end_offset": 30,
+          "line_no": 65
+        }
+      },
+      "region_text": [
+        "L063: A. how we got to the zoo B. how can we get to the zoo",
+        "L064: ",
+        "L065: C. how did we get to the zoo D. how we can get to the zoo"
+      ],
+      "_stratum": "inline_mixed"
+    },
+    {
+      "paper": "2018北京丰台高一（下）期中语文（B卷）（教师版）(1)",
+      "unit_id": "Q4",
+      "question_type": "single_choice",
+      "options_region": [
+        43,
+        47
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L043",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 43
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L043",
+          "start_offset": 12,
+          "end_offset": 13,
+          "line_no": 43
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L047",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 47
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L047",
+          "start_offset": 11,
+          "end_offset": 12,
+          "line_no": 47
+        }
+      },
+      "region_text": [
+        "L043: A. 围拥 演练 引导 B. 簇拥 演示 引导",
+        "L044: ",
+        "L045: ---",
+        "L046: ",
+        "L047: C．簇拥 演示 导致 D．围拥 演练 导致"
+      ],
+      "_stratum": "inline_mixed"
+    },
+    {
+      "paper": "2022北京一零一中高三（上）统练六化学（教师版）(1)",
+      "unit_id": "Q6",
+      "question_type": "single_choice",
+      "options_region": [
+        75,
+        77
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L075",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 75
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L075",
+          "start_offset": 15,
+          "end_offset": 16,
+          "line_no": 75
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L077",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 77
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L077",
+          "start_offset": 14,
+          "end_offset": 15,
+          "line_no": 77
+        }
+      },
+      "region_text": [
+        "L075: A. ①、②均能发生加成反应 B. ①、②均含有三种官能团",
+        "L076: ",
+        "L077: C. ①、②互为同分异构体 D. ①、②均能与NaOH溶液反应"
+      ],
+      "_stratum": "inline_mixed"
+    },
+    {
+      "paper": "2021北京高三一模二模历史汇编：近代中国的经济（教师版）(1)",
+      "unit_id": "Q1",
+      "question_type": "single_choice",
+      "options_region": [
+        10,
+        18
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L018",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 18
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L018",
+          "start_offset": 6,
+          "end_offset": 7,
+          "line_no": 18
+        },
+        "C": {
+          "status": "inline",
+          "line_ref": "P1L018",
+          "start_offset": 12,
+          "end_offset": 13,
+          "line_no": 18
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L018",
+          "start_offset": 18,
+          "end_offset": 19,
+          "line_no": 18
+        }
+      },
+      "region_text": [
+        "L010: ①民族工业的短暂春天促进棉纺织发展",
+        "L011: ",
+        "L012: ②日本帝国主义加紧了对中国的经济掠夺",
+        "L013: ",
+        "L014: ③西方列强逐步放弃了对中国的经济侵略",
+        "L015: ",
+        "L016: ④官僚资本导致了民族资本主义工业萎缩",
+        "L017: ",
+        "L018: A. ①② B. ②③ C. ②④ D. ①④"
+      ],
+      "_stratum": "inline_mixed"
+    },
+    {
+      "paper": "2021北京高三一模二模历史汇编：近代中国的经济（教师版）(1)",
+      "unit_id": "Q3",
+      "question_type": "single_choice",
+      "options_region": [
+        35,
+        45
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L045",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 45
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L045",
+          "start_offset": 7,
+          "end_offset": 8,
+          "line_no": 45
+        },
+        "C": {
+          "status": "inline",
+          "line_ref": "P1L045",
+          "start_offset": 14,
+          "end_offset": 15,
+          "line_no": 45
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L045",
+          "start_offset": 21,
+          "end_offset": 22,
+          "line_no": 45
+        }
+      },
+      "region_text": [
+        "L035: ①民国政府鼓励民间兴办实业",
+        "L036: ",
+        "L037: ②抵制日货、提倡国货运动兴起",
+        "L038: ",
+        "L039: ---",
+        "L040: ",
+        "L041: ③一战期间欧洲市场需求量增大",
+        "L042: ",
+        "L043: ④政府引进技术大力发展重工业",
+        "L044: ",
+        "L045: A. ①②③ B. ①②④ C. ①③④ D. ②③④"
+      ],
+      "_stratum": "inline_mixed"
+    },
+    {
+      "paper": "2021北京高三一模二模历史汇编：近代中国的经济（教师版）(1)",
+      "unit_id": "Q6",
+      "question_type": "single_choice",
+      "options_region": [
+        72,
+        74
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L072",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 72
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L072",
+          "start_offset": 12,
+          "end_offset": 13,
+          "line_no": 72
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L074",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 74
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L074",
+          "start_offset": 12,
+          "end_offset": 13,
+          "line_no": 74
+        }
+      },
+      "region_text": [
+        "L072: A. 推崇实业救国思想 B. 注重加强近代化建设",
+        "L073: ",
+        "L074: C. 民族工业发展迅速 D. 致力于唤醒民族意识"
+      ],
+      "_stratum": "inline_mixed"
+    },
+    {
+      "paper": "2021北京高三一模二模历史汇编：近代中国的经济（教师版）(1)",
+      "unit_id": "Q7",
+      "question_type": "single_choice",
+      "options_region": [
+        88,
+        96
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L096",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 96
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L096",
+          "start_offset": 7,
+          "end_offset": 8,
+          "line_no": 96
+        },
+        "C": {
+          "status": "inline",
+          "line_ref": "P1L096",
+          "start_offset": 14,
+          "end_offset": 15,
+          "line_no": 96
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L096",
+          "start_offset": 21,
+          "end_offset": 22,
+          "line_no": 96
+        }
+      },
+      "region_text": [
+        "L088: ①经济发展缓慢并伴有巨大的波动",
+        "L089: ",
+        "L090: ②人口的过度增长阻碍了经济发展",
+        "L091: ",
+        "L092: ③人民生活水平总体呈下降的趋势",
+        "L093: ",
+        "L094: ④日本侵华战争严重破坏经济发展",
+        "L095: ",
+        "L096: A. ①②③ B. ①②④ C. ①③④ D. ②③④"
+      ],
+      "_stratum": "inline_mixed"
+    },
+    {
+      "paper": "2021北京四中顺义分校高二（上）期中化学（教师版）(1)",
+      "unit_id": "Q7",
+      "question_type": "single_choice",
+      "options_region": [
+        79,
+        81
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L079",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 79
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L079",
+          "start_offset": 67,
+          "end_offset": 68,
+          "line_no": 79
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L081",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 81
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L081",
+          "start_offset": 12,
+          "end_offset": 13,
+          "line_no": 81
+        }
+      },
+      "region_text": [
+        "L079: A.  $ \\mathrm{c}(\\mathrm{H}^{+})>\\mathrm{c}(\\mathrm{OH}^{-}) $ 的溶液 B. 含  $ H^{+} $ 的溶液",
+        "L080: ",
+        "L081: C. pH<7 的溶液 D. 加酚酞显无色的溶液"
+      ],
+      "_stratum": "inline_mixed"
+    },
+    {
+      "paper": "2021北京农大附中高二（上）期中物理（合格考）（教师版）(1)",
+      "unit_id": "Q14",
+      "question_type": "single_choice",
+      "options_region": [
+        174,
+        178
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L174",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 174
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L174",
+          "start_offset": 28,
+          "end_offset": 29,
+          "line_no": 174
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L178",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 178
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L178",
+          "start_offset": 20,
+          "end_offset": 21,
+          "line_no": 178
+        }
+      },
+      "region_text": [
+        "L174: A. a 电容器的电容为  $ 1000\\mu F $ B. b 电容器只能在  $ 10V $ 电压工作",
+        "L175: ",
+        "L176: ---",
+        "L177: ",
+        "L178: C. b 电容器最多能容纳电荷 I C D. a 电容器工作时不区分正负极"
+      ],
+      "_stratum": "inline_mixed"
+    },
+    {
+      "paper": "2019北京101中学高二（下）期中生物含答案(1)",
+      "unit_id": "Q11",
+      "question_type": "single_choice",
+      "options_region": [
+        123,
+        125
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L123",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 123
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L123",
+          "start_offset": 12,
+          "end_offset": 13,
+          "line_no": 123
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L125",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 125
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L125",
+          "start_offset": 12,
+          "end_offset": 13,
+          "line_no": 125
+        }
+      },
+      "region_text": [
+        "L123: A. 能分化为多种细胞 B. 不具有发育的全能性",
+        "L124: ",
+        "L125: C. 保持细胞分裂能力 D. 分化过程一般不可逆"
+      ],
+      "_stratum": "inline_mixed"
+    },
+    {
+      "paper": "2021北京昌平高一（下）期末化学（教师版）(1)",
+      "unit_id": "Q2",
+      "question_type": "single_choice",
+      "options_region": [
+        16,
+        16
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L016",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 16
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L016",
+          "start_offset": 8,
+          "end_offset": 9,
+          "line_no": 16
+        },
+        "C": {
+          "status": "inline",
+          "line_ref": "P1L016",
+          "start_offset": 27,
+          "end_offset": 28,
+          "line_no": 16
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L016",
+          "start_offset": 46,
+          "end_offset": 47,
+          "line_no": 16
+        }
+      },
+      "region_text": [
+        "L016: A. NaOH B. Mg(OH) $ _{2} $ C. Al(OH) $ _{3} $ D. KOH"
+      ],
+      "_stratum": "inline_single_line"
+    },
+    {
+      "paper": "2018北京101中学高一（下）期中历史含答案(1)",
+      "unit_id": "Q6",
+      "question_type": "single_choice",
+      "options_region": [
+        56,
+        56
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L056",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 56
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L056",
+          "start_offset": 6,
+          "end_offset": 7,
+          "line_no": 56
+        },
+        "C": {
+          "status": "inline",
+          "line_ref": "P1L056",
+          "start_offset": 12,
+          "end_offset": 13,
+          "line_no": 56
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L056",
+          "start_offset": 18,
+          "end_offset": 19,
+          "line_no": 56
+        }
+      },
+      "region_text": [
+        "L056: A. 筒车 B. 翻车 C. 耧车 D. 水排"
+      ],
+      "_stratum": "inline_single_line"
+    },
+    {
+      "paper": "2018北京101中学高一（下）期中历史含答案(1)",
+      "unit_id": "Q14",
+      "question_type": "single_choice",
+      "options_region": [
+        114,
+        114
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L114",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 114
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L114",
+          "start_offset": 8,
+          "end_offset": 9,
+          "line_no": 114
+        },
+        "C": {
+          "status": "inline",
+          "line_ref": "P1L114",
+          "start_offset": 16,
+          "end_offset": 17,
+          "line_no": 114
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L114",
+          "start_offset": 24,
+          "end_offset": 25,
+          "line_no": 114
+        }
+      },
+      "region_text": [
+        "L114: A. 隋唐时期 B. 宋元时期 C. 明清时期 D. 民国时期"
+      ],
+      "_stratum": "inline_single_line"
+    },
+    {
+      "paper": "2018北京101中学高一（下）期中历史含答案(1)",
+      "unit_id": "Q26",
+      "question_type": "single_choice",
+      "options_region": [
+        224,
+        224
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L224",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 224
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L224",
+          "start_offset": 7,
+          "end_offset": 8,
+          "line_no": 224
+        },
+        "C": {
+          "status": "inline",
+          "line_ref": "P1L224",
+          "start_offset": 14,
+          "end_offset": 15,
+          "line_no": 224
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L224",
+          "start_offset": 21,
+          "end_offset": 22,
+          "line_no": 224
+        }
+      },
+      "region_text": [
+        "L224: A. ①②③ B. ①②④ C. ②③④ D. ①②③④"
+      ],
+      "_stratum": "inline_single_line"
+    },
+    {
+      "paper": "2018北京101中学高一（下）期中历史含答案(1)",
+      "unit_id": "Q50",
+      "question_type": "single_choice",
+      "options_region": [
+        436,
+        436
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L436",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 436
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L436",
+          "start_offset": 8,
+          "end_offset": 9,
+          "line_no": 436
+        },
+        "C": {
+          "status": "inline",
+          "line_ref": "P1L436",
+          "start_offset": 16,
+          "end_offset": 17,
+          "line_no": 436
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L436",
+          "start_offset": 24,
+          "end_offset": 25,
+          "line_no": 436
+        }
+      },
+      "region_text": [
+        "L436: A. ①②③④ B. ②③④① C. ③①②④ D. ④①②③"
+      ],
+      "_stratum": "inline_single_line"
+    },
+    {
+      "paper": "2022北京丰台高一（下）期末历史（教师版）(1)",
+      "unit_id": "Q11",
+      "question_type": "single_choice",
+      "options_region": [
+        111,
+        111
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L111",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 111
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L111",
+          "start_offset": 7,
+          "end_offset": 8,
+          "line_no": 111
+        },
+        "C": {
+          "status": "inline",
+          "line_ref": "P1L111",
+          "start_offset": 14,
+          "end_offset": 15,
+          "line_no": 111
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L111",
+          "start_offset": 21,
+          "end_offset": 22,
+          "line_no": 111
+        }
+      },
+      "region_text": [
+        "L111: A. ①②③ B. ②③④ C. ①②④ D. ①③④"
+      ],
+      "_stratum": "inline_single_line"
+    },
+    {
+      "paper": "2018北京101中学高一（上）期中地理含答案",
+      "unit_id": "Q8",
+      "question_type": "single_choice",
+      "options_region": [
+        67,
+        67
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L067",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 67
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L067",
+          "start_offset": 9,
+          "end_offset": 10,
+          "line_no": 67
+        },
+        "C": {
+          "status": "inline",
+          "line_ref": "P1L067",
+          "start_offset": 18,
+          "end_offset": 19,
+          "line_no": 67
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L067",
+          "start_offset": 26,
+          "end_offset": 27,
+          "line_no": 67
+        }
+      },
+      "region_text": [
+        "L067: A. 核裂变反应 B. 核聚变反应 C. 耀斑爆发 D. 太阳风"
+      ],
+      "_stratum": "inline_single_line"
+    },
+    {
+      "paper": "2021北京高一地理上学期期末汇编：地球上的水（教师版）(1)",
+      "unit_id": "Q1",
+      "question_type": "single_choice",
+      "options_region": [
+        10,
+        10
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L010",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 10
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L010",
+          "start_offset": 5,
+          "end_offset": 6,
+          "line_no": 10
+        },
+        "C": {
+          "status": "inline",
+          "line_ref": "P1L010",
+          "start_offset": 10,
+          "end_offset": 11,
+          "line_no": 10
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L010",
+          "start_offset": 15,
+          "end_offset": 16,
+          "line_no": 10
+        }
+      },
+      "region_text": [
+        "L010: A. ① B. ② C. ③ D. ④"
+      ],
+      "_stratum": "inline_single_line"
+    },
+    {
+      "paper": "2017-2019北京高一政治上学期期末汇编：科学社会主义常识与中国特色社会主义（教师版）(1)",
+      "unit_id": "Q10",
+      "question_type": "single_choice",
+      "options_region": [
+        121,
+        121
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L121",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 121
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L121",
+          "start_offset": 7,
+          "end_offset": 8,
+          "line_no": 121
+        },
+        "C": {
+          "status": "inline",
+          "line_ref": "P1L121",
+          "start_offset": 14,
+          "end_offset": 15,
+          "line_no": 121
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L121",
+          "start_offset": 21,
+          "end_offset": 22,
+          "line_no": 121
+        }
+      },
+      "region_text": [
+        "L121: A. ①②③ B. ①②④ C. ①③④ D. ②③④"
+      ],
+      "_stratum": "inline_single_line"
+    },
+    {
+      "paper": "2022北京师大附中高一（下）期中政治（教师版）(1)",
+      "unit_id": "Q3",
+      "question_type": "single_choice",
+      "options_region": [
+        41,
+        41
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L041",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 41
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L041",
+          "start_offset": 6,
+          "end_offset": 7,
+          "line_no": 41
+        },
+        "C": {
+          "status": "inline",
+          "line_ref": "P1L041",
+          "start_offset": 12,
+          "end_offset": 13,
+          "line_no": 41
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L041",
+          "start_offset": 18,
+          "end_offset": 19,
+          "line_no": 41
+        }
+      },
+      "region_text": [
+        "L041: A. ①③ B. ①④ C. ②③ D. ②④"
+      ],
+      "_stratum": "inline_single_line"
+    },
+    {
+      "paper": "2022北京师大附中高一（下）期中政治（教师版）(1)",
+      "unit_id": "Q13",
+      "question_type": "single_choice",
+      "options_region": [
+        159,
+        159
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L159",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 159
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L159",
+          "start_offset": 6,
+          "end_offset": 7,
+          "line_no": 159
+        },
+        "C": {
+          "status": "inline",
+          "line_ref": "P1L159",
+          "start_offset": 12,
+          "end_offset": 13,
+          "line_no": 159
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L159",
+          "start_offset": 18,
+          "end_offset": 19,
+          "line_no": 159
+        }
+      },
+      "region_text": [
+        "L159: A. ①② B. ①③ C. ②④ D. ③④"
+      ],
+      "_stratum": "inline_single_line"
+    },
+    {
+      "paper": "2022北京师大附中高一（下）期中政治（教师版）(1)",
+      "unit_id": "Q22",
+      "question_type": "single_choice",
+      "options_region": [
+        289,
+        289
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L289",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 289
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L289",
+          "start_offset": 6,
+          "end_offset": 7,
+          "line_no": 289
+        },
+        "C": {
+          "status": "inline",
+          "line_ref": "P1L289",
+          "start_offset": 12,
+          "end_offset": 13,
+          "line_no": 289
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L289",
+          "start_offset": 18,
+          "end_offset": 19,
+          "line_no": 289
+        }
+      },
+      "region_text": [
+        "L289: A. ①② B. ①③ C. ②④ D. ③④"
+      ],
+      "_stratum": "inline_single_line"
+    },
+    {
+      "paper": "2022北京师大附中高一（下）期中政治（教师版）(1)",
+      "unit_id": "Q30",
+      "question_type": "single_choice",
+      "options_region": [
+        390,
+        390
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L390",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 390
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L390",
+          "start_offset": 6,
+          "end_offset": 7,
+          "line_no": 390
+        },
+        "C": {
+          "status": "inline",
+          "line_ref": "P1L390",
+          "start_offset": 12,
+          "end_offset": 13,
+          "line_no": 390
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L390",
+          "start_offset": 18,
+          "end_offset": 19,
+          "line_no": 390
+        }
+      },
+      "region_text": [
+        "L390: A. ①② B. ①③ C. ②③ D. ③④"
+      ],
+      "_stratum": "inline_single_line"
+    },
+    {
+      "paper": "2021北京朝阳高一（下）期末数学（教师版）(1)",
+      "unit_id": "Q8",
+      "question_type": "single_choice",
+      "options_region": [
+        77,
+        77
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L077",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 77
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L077",
+          "start_offset": 6,
+          "end_offset": 7,
+          "line_no": 77
+        },
+        "C": {
+          "status": "inline",
+          "line_ref": "P1L077",
+          "start_offset": 12,
+          "end_offset": 13,
+          "line_no": 77
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L077",
+          "start_offset": 18,
+          "end_offset": 19,
+          "line_no": 77
+        }
+      },
+      "region_text": [
+        "L077: A. 65 B. 70 C. 75 D. 80"
+      ],
+      "_stratum": "inline_single_line"
+    },
+    {
+      "paper": "2018北京一零一中学高一（下）期中物理（教师版）(1)",
+      "unit_id": "Q3",
+      "question_type": "single_choice",
+      "options_region": [
+        17,
+        17
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L017",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 17
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L017",
+          "start_offset": 6,
+          "end_offset": 7,
+          "line_no": 17
+        },
+        "C": {
+          "status": "inline",
+          "line_ref": "P1L017",
+          "start_offset": 31,
+          "end_offset": 32,
+          "line_no": 17
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L017",
+          "start_offset": 61,
+          "end_offset": 62,
+          "line_no": 17
+        }
+      },
+      "region_text": [
+        "L017: A. mg B.  $ \\frac{mv^{2}}{r} $ C.  $ mg - \\frac{mv^{2}}{r} $ D.  $ mg + \\frac{mv^{2}}{r} $"
+      ],
+      "_stratum": "inline_single_line"
+    },
+    {
+      "paper": "2017-2019北京高中生物高一上期末汇编：分子与细胞（教师版）(1)",
+      "unit_id": "Q2",
+      "question_type": "single_choice",
+      "options_region": [
+        17,
+        17
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L017",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 17
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L017",
+          "start_offset": 6,
+          "end_offset": 7,
+          "line_no": 17
+        },
+        "C": {
+          "status": "inline",
+          "line_ref": "P1L017",
+          "start_offset": 13,
+          "end_offset": 14,
+          "line_no": 17
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L017",
+          "start_offset": 19,
+          "end_offset": 20,
+          "line_no": 17
+        }
+      },
+      "region_text": [
+        "L017: A. 淀粉 B. ATP C. 脂肪 D. 蛋白质"
+      ],
+      "_stratum": "inline_single_line"
+    },
+    {
+      "paper": "2017-2019北京高中生物高一上期末汇编：分子与细胞（教师版）(1)",
+      "unit_id": "Q39",
+      "question_type": "single_choice",
+      "options_region": [
+        434,
+        434
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L434",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 434
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L434",
+          "start_offset": 5,
+          "end_offset": 6,
+          "line_no": 434
+        },
+        "C": {
+          "status": "inline",
+          "line_ref": "P1L434",
+          "start_offset": 10,
+          "end_offset": 11,
+          "line_no": 434
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L434",
+          "start_offset": 15,
+          "end_offset": 16,
+          "line_no": 434
+        }
+      },
+      "region_text": [
+        "L434: A. A B. B C. C D. D"
+      ],
+      "_stratum": "inline_single_line"
+    },
+    {
+      "paper": "2017-2019北京高中生物高一上期末汇编：分子与细胞（教师版）(1)",
+      "unit_id": "Q65",
+      "question_type": "single_choice",
+      "options_region": [
+        674,
+        674
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L674",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 674
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L674",
+          "start_offset": 9,
+          "end_offset": 10,
+          "line_no": 674
+        },
+        "C": {
+          "status": "inline",
+          "line_ref": "P1L674",
+          "start_offset": 16,
+          "end_offset": 17,
+          "line_no": 674
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L674",
+          "start_offset": 23,
+          "end_offset": 24,
+          "line_no": 674
+        }
+      },
+      "region_text": [
+        "L674: A. 类囊体膜上 B. 外膜上 C. 内膜上 D. 基质中"
+      ],
+      "_stratum": "inline_single_line"
+    },
+    {
+      "paper": "2010北京上地一零一中高一分班考英语（教师版）(1)",
+      "unit_id": "Q1",
+      "question_type": "single_choice",
+      "options_region": [
+        7,
+        7
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L007",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 7
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L007",
+          "start_offset": 5,
+          "end_offset": 6,
+          "line_no": 7
+        },
+        "C": {
+          "status": "inline",
+          "line_ref": "P1L007",
+          "start_offset": 11,
+          "end_offset": 12,
+          "line_no": 7
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L007",
+          "start_offset": 18,
+          "end_offset": 19,
+          "line_no": 7
+        }
+      },
+      "region_text": [
+        "L007: A. a B. an C. the D. /"
+      ],
+      "_stratum": "inline_single_line"
+    },
+    {
+      "paper": "2010北京上地一零一中高一分班考英语（教师版）(1)",
+      "unit_id": "Q7",
+      "question_type": "single_choice",
+      "options_region": [
+        29,
+        29
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L029",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 29
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L029",
+          "start_offset": 8,
+          "end_offset": 9,
+          "line_no": 29
+        },
+        "C": {
+          "status": "inline",
+          "line_ref": "P1L029",
+          "start_offset": 16,
+          "end_offset": 17,
+          "line_no": 29
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L029",
+          "start_offset": 24,
+          "end_offset": 25,
+          "line_no": 29
+        }
+      },
+      "region_text": [
+        "L029: A. good B. well C. best D. better"
+      ],
+      "_stratum": "inline_single_line"
+    },
+    {
+      "paper": "2010北京上地一零一中高一分班考英语（教师版）(1)",
+      "unit_id": "Q13",
+      "question_type": "single_choice",
+      "options_region": [
+        53,
+        53
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L053",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 53
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L053",
+          "start_offset": 12,
+          "end_offset": 13,
+          "line_no": 53
+        },
+        "C": {
+          "status": "inline",
+          "line_ref": "P1L053",
+          "start_offset": 24,
+          "end_offset": 25,
+          "line_no": 53
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L053",
+          "start_offset": 32,
+          "end_offset": 33,
+          "line_no": 53
+        }
+      },
+      "region_text": [
+        "L053: A. has gone B. has been C. went D. was going"
+      ],
+      "_stratum": "inline_single_line"
+    },
+    {
+      "paper": "2021北京高三一模二模政治汇编：生活与哲学（选择题）（教师版）(1)",
+      "unit_id": "Q5",
+      "question_type": "single_choice",
+      "options_region": [
+        75,
+        75
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L075",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 75
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L075",
+          "start_offset": 6,
+          "end_offset": 7,
+          "line_no": 75
+        },
+        "C": {
+          "status": "inline",
+          "line_ref": "P1L075",
+          "start_offset": 12,
+          "end_offset": 13,
+          "line_no": 75
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L075",
+          "start_offset": 18,
+          "end_offset": 19,
+          "line_no": 75
+        }
+      },
+      "region_text": [
+        "L075: A. ①③ B. ①④ C. ②③ D. ②④"
+      ],
+      "_stratum": "inline_single_line"
+    },
+    {
+      "paper": "2021北京高三一模二模政治汇编：生活与哲学（选择题）（教师版）(1)",
+      "unit_id": "Q11",
+      "question_type": "single_choice",
+      "options_region": [
+        187,
+        187
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L187",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 187
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L187",
+          "start_offset": 6,
+          "end_offset": 7,
+          "line_no": 187
+        },
+        "C": {
+          "status": "inline",
+          "line_ref": "P1L187",
+          "start_offset": 12,
+          "end_offset": 13,
+          "line_no": 187
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L187",
+          "start_offset": 18,
+          "end_offset": 19,
+          "line_no": 187
+        }
+      },
+      "region_text": [
+        "L187: A. ①② B. ①③ C. ②④ D. ③④"
+      ],
+      "_stratum": "inline_single_line"
+    },
+    {
+      "paper": "2021北京高三一模二模政治汇编：生活与哲学（选择题）（教师版）(1)",
+      "unit_id": "Q21",
+      "question_type": "single_choice",
+      "options_region": [
+        355,
+        355
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L355",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 355
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L355",
+          "start_offset": 6,
+          "end_offset": 7,
+          "line_no": 355
+        },
+        "C": {
+          "status": "inline",
+          "line_ref": "P1L355",
+          "start_offset": 12,
+          "end_offset": 13,
+          "line_no": 355
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L355",
+          "start_offset": 18,
+          "end_offset": 19,
+          "line_no": 355
+        }
+      },
+      "region_text": [
+        "L355: A. ①② B. ①③ C. ②④ D. ③④"
+      ],
+      "_stratum": "inline_single_line"
+    },
+    {
+      "paper": "2021北京高三一模二模政治汇编：生活与哲学（选择题）（教师版）(1)",
+      "unit_id": "Q33",
+      "question_type": "single_choice",
+      "options_region": [
+        508,
+        508
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L508",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 508
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L508",
+          "start_offset": 6,
+          "end_offset": 7,
+          "line_no": 508
+        },
+        "C": {
+          "status": "inline",
+          "line_ref": "P1L508",
+          "start_offset": 12,
+          "end_offset": 13,
+          "line_no": 508
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L508",
+          "start_offset": 18,
+          "end_offset": 19,
+          "line_no": 508
+        }
+      },
+      "region_text": [
+        "L508: A. ①② B. ①③ C. ②④ D. ③④"
+      ],
+      "_stratum": "inline_single_line"
+    },
+    {
+      "paper": "2021北京高三一模二模政治汇编：生活与哲学（选择题）（教师版）(1)",
+      "unit_id": "Q40",
+      "question_type": "single_choice",
+      "options_region": [
+        597,
+        597
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L597",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 597
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L597",
+          "start_offset": 6,
+          "end_offset": 7,
+          "line_no": 597
+        },
+        "C": {
+          "status": "inline",
+          "line_ref": "P1L597",
+          "start_offset": 12,
+          "end_offset": 13,
+          "line_no": 597
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L597",
+          "start_offset": 18,
+          "end_offset": 19,
+          "line_no": 597
+        }
+      },
+      "region_text": [
+        "L597: A. ①② B. ①③ C. ②④ D. ③④"
+      ],
+      "_stratum": "inline_single_line"
+    },
+    {
+      "paper": "2021北京高三一模二模政治汇编：生活与哲学（选择题）（教师版）(1)",
+      "unit_id": "Q45",
+      "question_type": "single_choice",
+      "options_region": [
+        668,
+        668
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L668",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 668
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L668",
+          "start_offset": 6,
+          "end_offset": 7,
+          "line_no": 668
+        },
+        "C": {
+          "status": "inline",
+          "line_ref": "P1L668",
+          "start_offset": 12,
+          "end_offset": 13,
+          "line_no": 668
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L668",
+          "start_offset": 18,
+          "end_offset": 19,
+          "line_no": 668
+        }
+      },
+      "region_text": [
+        "L668: A. ①② B. ①④ C. ②③ D. ③④"
+      ],
+      "_stratum": "inline_single_line"
+    },
+    {
+      "paper": "2022北京一七一中高三（上）期中物理（教师版）(1)",
+      "unit_id": "Q6",
+      "question_type": "single_choice",
+      "options_region": [
+        89,
+        89
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L089",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 89
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L089",
+          "start_offset": 28,
+          "end_offset": 29,
+          "line_no": 89
+        },
+        "C": {
+          "status": "inline",
+          "line_ref": "P1L089",
+          "start_offset": 57,
+          "end_offset": 58,
+          "line_no": 89
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L089",
+          "start_offset": 75,
+          "end_offset": 76,
+          "line_no": 89
+        }
+      },
+      "region_text": [
+        "L089: A.  $ \\frac{\\sqrt{3}}{3}s $ B.  $ \\frac{2\\sqrt{3}}{3}s $ C.  $ \\sqrt{3}s $ D. 2s"
+      ],
+      "_stratum": "inline_single_line"
+    },
+    {
+      "paper": "2021北京四中顺义分校高二（上）期中化学（教师版）(1)",
+      "unit_id": "Q3",
+      "question_type": "single_choice",
+      "options_region": [
+        49,
+        49
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L049",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 49
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L049",
+          "start_offset": 17,
+          "end_offset": 18,
+          "line_no": 49
+        },
+        "C": {
+          "status": "inline",
+          "line_ref": "P1L049",
+          "start_offset": 25,
+          "end_offset": 26,
+          "line_no": 49
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L049",
+          "start_offset": 45,
+          "end_offset": 46,
+          "line_no": 49
+        }
+      },
+      "region_text": [
+        "L049: A.  $ NH_{4}Cl $ B. NaCl C.  $ CH_{3}COONa $ D.  $ Na_{2}CO_{3} $"
+      ],
+      "_stratum": "inline_single_line"
+    },
+    {
+      "paper": "2021北京农大附中高二（上）期中物理（合格考）（教师版）(1)",
+      "unit_id": "Q2",
+      "question_type": "single_choice",
+      "options_region": [
+        13,
+        13
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L013",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 13
+        },
+        "B": {
+          "status": "inline",
+          "line_ref": "P1L013",
+          "start_offset": 7,
+          "end_offset": 8,
+          "line_no": 13
+        },
+        "C": {
+          "status": "inline",
+          "line_ref": "P1L013",
+          "start_offset": 14,
+          "end_offset": 15,
+          "line_no": 13
+        },
+        "D": {
+          "status": "inline",
+          "line_ref": "P1L013",
+          "start_offset": 21,
+          "end_offset": 22,
+          "line_no": 13
+        }
+      },
+      "region_text": [
+        "L013: A. 7 倍 B. 3 倍 C. 9 倍 D. 10 倍"
+      ],
+      "_stratum": "inline_single_line"
+    },
+    {
+      "paper": "2016-2019北京高一化学下学期期末汇编：化学反应原理（教师版）(1)",
+      "unit_id": "Q1",
+      "question_type": "single_choice",
+      "options_region": [
+        7,
+        13
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L007",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 7
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L009",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 9
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L011",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 11
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L013",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 13
+        }
+      },
+      "region_text": [
+        "L007: A. 混合气体的压强",
+        "L008: ",
+        "L009: B．混合气体的平均相对分子质量",
+        "L010: ",
+        "L011: C. A 的物质的量",
+        "L012: ",
+        "L013: D．B 的物质的量浓度"
+      ],
+      "_stratum": "standard_multiline"
+    },
+    {
+      "paper": "2016-2019北京高一化学下学期期末汇编：化学反应原理（教师版）(1)",
+      "unit_id": "Q12",
+      "question_type": "single_choice",
+      "options_region": [
+        142,
+        150
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L142",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 142
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L144",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 144
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L146",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 146
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L150",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 150
+        }
+      },
+      "region_text": [
+        "L142: A. a<0",
+        "L143: ",
+        "L144: B. 过程Ⅱ可能使用了催化剂",
+        "L145: ",
+        "L146: C. 使用催化剂可以提高 SO₂ 的平衡转化率",
+        "L147: ",
+        "L148: ---",
+        "L149: ",
+        "L150: D．反应物断键吸收能量之和小于生成物成键释放能量之和"
+      ],
+      "_stratum": "standard_multiline"
+    },
+    {
+      "paper": "2021北京昌平高一（下）期末化学（教师版）(1)",
+      "unit_id": "Q16",
+      "question_type": "single_choice",
+      "options_region": [
+        150,
+        156
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L150",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 150
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L152",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 152
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L154",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 154
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L156",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 156
+        }
+      },
+      "region_text": [
+        "L150: A. 等质量的 NO₂ 与 N₂O₄ 的物质的量",
+        "L151: ",
+        "L152: B. 等物质的量的  $ ^{12}CO_{2} $ 与  $ ^{14}CO_{2} $ 的质量",
+        "L153: ",
+        "L154: C. 等物质的量的 Fe 与 Cu 分别与足量 Cl₂ 反应时转移的电子数",
+        "L155: ",
+        "L156: D. 标准状况下，等物质的量的 O₂ 与 O₃ 的体积"
+      ],
+      "_stratum": "standard_multiline"
+    },
+    {
+      "paper": "2018北京101中学高一（下）期中历史含答案(1)",
+      "unit_id": "Q18",
+      "question_type": "single_choice",
+      "options_region": [
+        144,
+        150
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L144",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 144
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L146",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 146
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L148",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 148
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L150",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 150
+        }
+      },
+      "region_text": [
+        "L144: A. 海上贸易频繁",
+        "L145: ",
+        "L146: B. 商品价格上涨",
+        "L147: ",
+        "L148: C. 经营方式变革",
+        "L149: ",
+        "L150: D. 道路中心转移"
+      ],
+      "_stratum": "standard_multiline"
+    },
+    {
+      "paper": "2018北京101中学高一（下）期中历史含答案(1)",
+      "unit_id": "Q39",
+      "question_type": "single_choice",
+      "options_region": [
+        326,
+        332
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L326",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 326
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L328",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 328
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L330",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 330
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L332",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 332
+        }
+      },
+      "region_text": [
+        "L326: A. 建立了门类比较齐全的工业体系",
+        "L327: ",
+        "L328: B. 已经实现了社会主义工业化",
+        "L329: ",
+        "L330: C. 初步改变了我国工业落后的面貌",
+        "L331: ",
+        "L332: D. 经济工作中存在着严重冒进倾向"
+      ],
+      "_stratum": "standard_multiline"
+    },
+    {
+      "paper": "2022北京丰台高一（下）期末历史（教师版）(1)",
+      "unit_id": "Q7",
+      "question_type": "single_choice",
+      "options_region": [
+        70,
+        76
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L070",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 70
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L072",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 72
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L074",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 74
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L076",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 76
+        }
+      },
+      "region_text": [
+        "L070: A. 农业生产出现商品化",
+        "L071: ",
+        "L072: B. 长途贸易得到发展",
+        "L073: ",
+        "L074: C. 形成实力雄厚的商帮",
+        "L075: ",
+        "L076: D. 棉纺织业技术精良"
+      ],
+      "_stratum": "standard_multiline"
+    },
+    {
+      "paper": "2022北京丰台高一（下）期末历史（教师版）(1)",
+      "unit_id": "Q25",
+      "question_type": "single_choice",
+      "options_region": [
+        265,
+        271
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L265",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 265
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L267",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 267
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L269",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 269
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L271",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 271
+        }
+      },
+      "region_text": [
+        "L265: A. 各国民族革命取得胜利",
+        "L266: ",
+        "L267: B. 无产阶级登上政治舞台",
+        "L268: ",
+        "L269: C. 古老的亚洲开始觉醒",
+        "L270: ",
+        "L271: D. 第三世界国家走向联合"
+      ],
+      "_stratum": "standard_multiline"
+    },
+    {
+      "paper": "2018北京101中学高一（上）期中地理含答案",
+      "unit_id": "Q32",
+      "question_type": "single_choice",
+      "options_region": [
+        354,
+        360
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L354",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 354
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L356",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 356
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L358",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 358
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L360",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 360
+        }
+      },
+      "region_text": [
+        "L354: A. 对流层中的臭氧能吸收太阳紫外辐射",
+        "L355: ",
+        "L356: B．平流层中的水汽能吸收太阳红外辐射",
+        "L357: ",
+        "L358: C. 大气对太阳辐射的吸收具有选择性",
+        "L359: ",
+        "L360: D. 大气通过大量吸收太阳辐射而明显增温"
+      ],
+      "_stratum": "standard_multiline"
+    },
+    {
+      "paper": "2017-2019北京高一政治上学期期末汇编：科学社会主义常识与中国特色社会主义（教师版）(1)",
+      "unit_id": "Q6",
+      "question_type": "single_choice",
+      "options_region": [
+        67,
+        73
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L067",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 67
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L069",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 69
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L071",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 71
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L073",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 73
+        }
+      },
+      "region_text": [
+        "L067: A. 人民公社化运动",
+        "L068: ",
+        "L069: B．社会主义市场经济体制的建立",
+        "L070: ",
+        "L071: C. 新政协的召开",
+        "L072: ",
+        "L073: D. 生产资料所有制的社会主义改造"
+      ],
+      "_stratum": "standard_multiline"
+    },
+    {
+      "paper": "2022北京师大附中高一（下）期中政治（教师版）(1)",
+      "unit_id": "Q7",
+      "question_type": "single_choice",
+      "options_region": [
+        81,
+        87
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L081",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 81
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L083",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 83
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L085",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 85
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L087",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 87
+        }
+      },
+      "region_text": [
+        "L081: A. 中共中央领导国家政权，全国人大、地方党组织是行使国家权力的国家机关",
+        "L082: ",
+        "L083: B. 中共中央是我国的权力机关，全国人大是中央的执行机关",
+        "L084: ",
+        "L085: C. 充分发挥党对人民代表大会的组织领导，为坚持和发展中国特色社会主义提供组织保证",
+        "L086: ",
+        "L087: D. 中国共产党对国家的领导包含政治领导，中共中央提出的方针政策是通过全国人大变为国家意志的，程序合法"
+      ],
+      "_stratum": "standard_multiline"
+    },
+    {
+      "paper": "2018北京一零一中学高一（下）期中物理（教师版）(1)",
+      "unit_id": "Q4",
+      "question_type": "single_choice",
+      "options_region": [
+        21,
+        27
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L021",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 21
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L023",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 23
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L025",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 25
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L027",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 27
+        }
+      },
+      "region_text": [
+        "L021: A. 增大到原来的二倍",
+        "L022: ",
+        "L023: B. 减小到原来的一半",
+        "L024: ",
+        "L025: C. 增大到原来的四倍",
+        "L026: ",
+        "L027: D. 减小到原来的四分之一"
+      ],
+      "_stratum": "standard_multiline"
+    },
+    {
+      "paper": "2021北京十二中高一（下）期中物理（教师版）(1)",
+      "unit_id": "Q2",
+      "question_type": "single_choice",
+      "options_region": [
+        24,
+        30
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L024",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 24
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L026",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 26
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L028",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 28
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L030",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 30
+        }
+      },
+      "region_text": [
+        "L024: A. 刚推出时动能最大",
+        "L025: ",
+        "L026: B. 在最高点动能最小",
+        "L027: ",
+        "L028: C. 落地时机械能最大",
+        "L029: ",
+        "L030: D. 在最高点机械能最小"
+      ],
+      "_stratum": "standard_multiline"
+    },
+    {
+      "paper": "2022北京顺义一中高一（下）期中物理（教师版）(1)",
+      "unit_id": "Q6",
+      "question_type": "single_choice",
+      "options_region": [
+        61,
+        70
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L064",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 64
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L066",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 66
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L068",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 68
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L070",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 70
+        }
+      },
+      "region_text": [
+        "L061: <div style=\"text-align: center;\"><img src=\"imgs/img_in_image_box_74_782_243_913.jpg\" alt=\"Image\" width=\"14%\" /></div>",
+        "L062: ",
+        "L063: ",
+        "L064: A. 所有乘客的线速度都相同",
+        "L065: ",
+        "L066: B. 所有乘客的加速度都相同",
+        "L067: ",
+        "L068: C. 每位乘客受到的合外力大小均相等",
+        "L069: ",
+        "L070: D. 每位乘客对座椅的压力大小均相等"
+      ],
+      "_stratum": "standard_multiline"
+    },
+    {
+      "paper": "2017-2019北京高中生物高一上期末汇编：分子与细胞（教师版）(1)",
+      "unit_id": "Q9",
+      "question_type": "single_choice",
+      "options_region": [
+        80,
+        86
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L080",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 80
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L082",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 82
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L084",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 84
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L086",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 86
+        }
+      },
+      "region_text": [
+        "L080: A. 细胞具有各项生理功能",
+        "L081: ",
+        "L082: B. 已分化的细胞全部都再进一步分化",
+        "L083: ",
+        "L084: C. 已分化的细胞能恢复到分化前的状态",
+        "L085: ",
+        "L086: D. 已分化的细胞仍具有产生完整有机体或分化成其他"
+      ],
+      "_stratum": "standard_multiline"
+    },
+    {
+      "paper": "2017-2019北京高中生物高一上期末汇编：分子与细胞（教师版）(1)",
+      "unit_id": "Q21",
+      "question_type": "single_choice",
+      "options_region": [
+        198,
+        206
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L200",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 200
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L202",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 202
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L204",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 204
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L206",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 206
+        }
+      },
+      "region_text": [
+        "L198: ---",
+        "L199: ",
+        "L200: A. 细胞发生了变异",
+        "L201: ",
+        "L202: B. 不同细胞的基因不同",
+        "L203: ",
+        "L204: C. 某些细胞失去了全能性",
+        "L205: ",
+        "L206: D. 不同细胞中的基因选择性地表达"
+      ],
+      "_stratum": "standard_multiline"
+    },
+    {
+      "paper": "2017-2019北京高中生物高一上期末汇编：分子与细胞（教师版）(1)",
+      "unit_id": "Q34",
+      "question_type": "single_choice",
+      "options_region": [
+        328,
+        334
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L328",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 328
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L330",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 330
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L332",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 332
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L334",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 334
+        }
+      },
+      "region_text": [
+        "L328: A. 植物体内的水分含量对其光合作用有影响",
+        "L329: ",
+        "L330: B. 水是构成叶肉细胞的重要化合物之一",
+        "L331: ",
+        "L332: C. 自由水可作为细胞内化学反应的反应物",
+        "L333: ",
+        "L334: D. 同种植物萌发种子的含水量和休眠种子的相同"
+      ],
+      "_stratum": "standard_multiline"
+    },
+    {
+      "paper": "2017-2019北京高中生物高一上期末汇编：分子与细胞（教师版）(1)",
+      "unit_id": "Q55",
+      "question_type": "single_choice",
+      "options_region": [
+        573,
+        579
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L573",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 573
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L575",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 575
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L577",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 577
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L579",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 579
+        }
+      },
+      "region_text": [
+        "L573: A. 人体内各种酶作用所需的最适条件是一致的",
+        "L574: ",
+        "L575: B. 探究 pH 对酶活性的影响时应保持温度适宜且相同",
+        "L576: ",
+        "L577: C. 淀粉、蔗糖、淀粉酶和碘液可用于验证酶的专一性",
+        "L578: ",
+        "L579: D. 测定温度对酶活性影响时需将酶和底物混合后再在相同温度下保温"
+      ],
+      "_stratum": "standard_multiline"
+    },
+    {
+      "paper": "2017-2019北京高中生物高一上期末汇编：分子与细胞（教师版）(1)",
+      "unit_id": "Q69",
+      "question_type": "single_choice",
+      "options_region": [
+        696,
+        702
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L696",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 696
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L698",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 698
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L700",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 700
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L702",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 702
+        }
+      },
+      "region_text": [
+        "L696: A. 糖原和纤维素",
+        "L697: ",
+        "L698: B. 淀粉和纤维素",
+        "L699: ",
+        "L700: C. 淀粉和糖原",
+        "L701: ",
+        "L702: D. 核糖和麦芽糖"
+      ],
+      "_stratum": "standard_multiline"
+    },
+    {
+      "paper": "2017-2019北京高中生物高一上期末汇编：分子与细胞（教师版）(1)",
+      "unit_id": "Q83",
+      "question_type": "single_choice",
+      "options_region": [
+        854,
+        860
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L854",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 854
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L856",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 856
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L858",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 858
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L860",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 860
+        }
+      },
+      "region_text": [
+        "L854: A. 细胞 - 器官 - 组织 - 系统 - 个体",
+        "L855: ",
+        "L856: B．器官－个体－系统－组织－细胞",
+        "L857: ",
+        "L858: C．个体－器官－组织－系统－细胞",
+        "L859: ",
+        "L860: D．细胞－组织－器官－系统－个体"
+      ],
+      "_stratum": "standard_multiline"
+    },
+    {
+      "paper": "2018北京丰台高一（下）期中语文（B卷）（教师版）(1)",
+      "unit_id": "Q5",
+      "question_type": "single_choice",
+      "options_region": [
+        51,
+        57
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L051",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 51
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L053",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 53
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L055",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 55
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L057",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 57
+        }
+      },
+      "region_text": [
+        "L051: A. 《红楼梦》是中国古代最著名的长篇章回体小说，作者为清代曹雪芹。本书以贾、史、王、薛四个大家族的兴衰为背景，真实而艺术地反映了我国封建社会走向衰亡的历史趋势。",
+        "L052: ",
+        "L053: B．鲁迅，原名周树人，浙江绍兴人。伟大的无产阶级的文学家、思想家、革命家。他的著作以小说、杂文为主。《祝福》出自小说集《呐喊》。",
+        "L054: ",
+        "L055: C. 李白与杜甫是唐代著名诗人，分别以浪漫主义和现实主义风格著称于世，文学史上并称“李杜”，《师说》作者、古文运动倡导者韩愈曾说“李杜文章在，光焰万丈长。”",
+        "L056: ",
+        "L057: D．荀子是战国时期儒家思想的重要代表人物，主张“性恶论”，这一点与同为儒家代表人物的孟子不同，孟子主张“性善论”。儒家经典有“四书五经”，“四书”指《大学》《中庸》《论语》《孟子》。"
+      ],
+      "_stratum": "standard_multiline"
+    },
+    {
+      "paper": "2018北京牛栏山一中高三（上）期中化学含答案(1)",
+      "unit_id": "Q14",
+      "question_type": "single_choice",
+      "options_region": [
+        161,
+        169
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L161",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 161
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L163",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 163
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L167",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 167
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L169",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 169
+        }
+      },
+      "region_text": [
+        "L161: A. 向 NaOH 溶液中通  $ SO_{2} $ 至 pH=7:  $ c(\\mathrm{Na}^{+})=c(\\mathrm{HSO}_{3}^{-})+2c(\\mathrm{SO}_{3}^{2-}) $",
+        "L162: ",
+        "L163: B. 向  $ NH_{4}HSO_{4} $ 加入等浓度等体积的 NaOH 溶液后：",
+        "L164: ",
+        "L165:  $ c(\\text{NH}_{4}^{+}) + c(\\text{NH}_{3} \\cdot \\text{H}_{2}\\text{O}) = c(\\text{Na}^{+}) $",
+        "L166: ",
+        "L167: C. 向  $ NH_{4}Cl $ 溶液中加入等浓度等体积的  $ NH_{3} \\cdot H_{2}O $ 后，所得溶液呈碱性，则： $ c(NH_{4}^{+}) < c(NH_{3} \\cdot H_{2}O) $",
+        "L168: ",
+        "L169: D. 向  $ CH_{3}COOH $ 溶液中加入少量  $ CH_{3}COONa $ 晶体： $ \\frac{c(CH_{3}COO^{-})}{c(CH_{3}COOH)} $ 增大"
+      ],
+      "_stratum": "standard_multiline"
+    },
+    {
+      "paper": "2022北京一零一中高三（上）统练六化学（教师版）(1)",
+      "unit_id": "Q13",
+      "question_type": "single_choice",
+      "options_region": [
+        195,
+        201
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L195",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 195
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L197",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 197
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L199",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 199
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L201",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 201
+        }
+      },
+      "region_text": [
+        "L195: A. 滤渣 A 的主要成分为 BaSO₄ 和 SiO₂",
+        "L196: ",
+        "L197: B. 步骤①、②中均有过滤操作",
+        "L198: ",
+        "L199: C. 该过程中，铈元素的化合价变化了两次",
+        "L200: ",
+        "L201: D. 步骤②反应的离子方程式为  $ 2\\text{Ce}^{3+} + 6\\text{HCO}_3^- = \\text{Ce}_2(\\text{CO}_3)_3 \\downarrow + 3\\text{CO}_2 \\uparrow + 3\\text{H}_2\\text{O} $"
+      ],
+      "_stratum": "standard_multiline"
+    },
+    {
+      "paper": "2021北京高三一模二模政治汇编：生活与哲学（选择题）（教师版）(1)",
+      "unit_id": "Q17",
+      "question_type": "single_choice",
+      "options_region": [
+        258,
+        264
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L258",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 258
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L260",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 260
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L262",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 262
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L264",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 264
+        }
+      },
+      "region_text": [
+        "L258: A. 要树立全局观念，立足整体、统筹全局",
+        "L259: ",
+        "L260: B．通过实践，人们总能把观念中的东西变成现实",
+        "L261: ",
+        "L262: C. 整体与部分相互制约，部分的功能关系整体的成败",
+        "L263: ",
+        "L264: D．事物之间的联系是客观的，只有人力可以使其改变"
+      ],
+      "_stratum": "standard_multiline"
+    },
+    {
+      "paper": "2022北京一六一中高三12月月考数学（教师版）(1)",
+      "unit_id": "Q3",
+      "question_type": "single_choice",
+      "options_region": [
+        17,
+        23
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L017",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 17
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L019",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 19
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L021",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 21
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L023",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 23
+        }
+      },
+      "region_text": [
+        "L017: A.  $ x \\pm \\sqrt{3} y = 0 $  ",
+        "L018: ",
+        "L019: B.  $ \\sqrt{3} x \\pm y = 0 $  ",
+        "L020: ",
+        "L021: C.  $ x \\pm 3 y = 0 $  ",
+        "L022: ",
+        "L023: D.  $ 3 x \\pm y = 0 $"
+      ],
+      "_stratum": "standard_multiline"
+    },
+    {
+      "paper": "2022北京一七一中高三（上）期中物理（教师版）(1)",
+      "unit_id": "Q7",
+      "question_type": "single_choice",
+      "options_region": [
+        96,
+        102
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L096",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 96
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L098",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 98
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L100",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 100
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L102",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 102
+        }
+      },
+      "region_text": [
+        "L096: A. 从 b 向 a，A、B、C 构成的电容器放电",
+        "L097: ",
+        "L098: B. 从 a 向 b，A、B、C 构成的电容器放电",
+        "L099: ",
+        "L100: C. 从 b 向 a，A、B、C 构成的电容器充电",
+        "L101: ",
+        "L102: D. 从 a 向 b，A、B、C 构成的电容器充电"
+      ],
+      "_stratum": "standard_multiline"
+    },
+    {
+      "paper": "2020北京八十中高三（下）开学考生物含答案(1)",
+      "unit_id": "Q10",
+      "question_type": "single_choice",
+      "options_region": [
+        112,
+        118
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L112",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 112
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L114",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 114
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L116",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 116
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L118",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 118
+        }
+      },
+      "region_text": [
+        "L112: A. 突变型细菌缺乏酶 $ ^{①} $、 $ ^{②} $、 $ ^{③} $",
+        "L113: ",
+        "L114: B. 酶 $ ^{①} $与乙结合后不会改变酶 $ ^{①} $的形状",
+        "L115: ",
+        "L116: C. 酶②能催化乙转变为丙，也能催化丙转变为丁",
+        "L117: ",
+        "L118: D. 若丙→戊的反应受阻，突变型细菌也能生长"
+      ],
+      "_stratum": "standard_multiline"
+    },
+    {
+      "paper": "2021北京高三一模二模生物汇编：种群和群落（教师版）(1)",
+      "unit_id": "Q6",
+      "question_type": "single_choice",
+      "options_region": [
+        75,
+        81
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L075",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 75
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L077",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 77
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L079",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 79
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L081",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 81
+        }
+      },
+      "region_text": [
+        "L075: A. 三种生物的能量相对值随水深增大呈现先增后减的趋势",
+        "L076: ",
+        "L077: B．三种生物中甲更适于生活在水深较浅的地区",
+        "L078: ",
+        "L079: C．乙同化的能量可以用于甲的生长发育繁殖",
+        "L080: ",
+        "L081: D．在垂直方向上该湖泊存在着明显的分层现象"
+      ],
+      "_stratum": "standard_multiline"
+    },
+    {
+      "paper": "2021北京四中顺义分校高二（上）期中化学（教师版）(1)",
+      "unit_id": "Q10",
+      "question_type": "single_choice",
+      "options_region": [
+        105,
+        111
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L105",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 105
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L107",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 107
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L109",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 109
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L111",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 111
+        }
+      },
+      "region_text": [
+        "L105: A.  $ Na_2CO_3 $",
+        "L106: ",
+        "L107: B.  $ H_2SO_4 $",
+        "L108: ",
+        "L109: C.  $ Na_2SO_4 $",
+        "L110: ",
+        "L111: D. NaOH"
+      ],
+      "_stratum": "standard_multiline"
+    },
+    {
+      "paper": "2021北京农大附中高二（上）期中物理（合格考）（教师版）(1)",
+      "unit_id": "Q4",
+      "question_type": "single_choice",
+      "options_region": [
+        27,
+        33
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L027",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 27
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L029",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 29
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L031",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 31
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L033",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 33
+        }
+      },
+      "region_text": [
+        "L027: A. 最小的电荷量叫元电荷",
+        "L028: ",
+        "L029: B. 点电荷是理想模型，电场线是真实存在于电场周围的",
+        "L030: ",
+        "L031: C. 沿着电场线的方向电场强度一定减小",
+        "L032: ",
+        "L033: D. 电源的作用是生产电荷"
+      ],
+      "_stratum": "standard_multiline"
+    },
+    {
+      "paper": "2019北京101中学高二（下）期中生物含答案(1)",
+      "unit_id": "Q4",
+      "question_type": "single_choice",
+      "options_region": [
+        46,
+        52
+      ],
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "result": "resolved",
+      "located": {
+        "A": {
+          "status": "ok",
+          "line_ref": "P1L046",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 46
+        },
+        "B": {
+          "status": "ok",
+          "line_ref": "P1L048",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 48
+        },
+        "C": {
+          "status": "ok",
+          "line_ref": "P1L050",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 50
+        },
+        "D": {
+          "status": "ok",
+          "line_ref": "P1L052",
+          "start_offset": null,
+          "end_offset": null,
+          "line_no": 52
+        }
+      },
+      "region_text": [
+        "L046: A. 合成编码目的肽的 DNA 片段",
+        "L047: ",
+        "L048: B. 构建含目的肽 DNA 片段的表达载体",
+        "L049: ",
+        "L050: C. 依据 $P_{1}$ 氨基酸序列设计多条模拟肽",
+        "L051: ",
+        "L052: D. 筛选出具有优良活性的模拟肽作为目的肽"
+      ],
+      "_stratum": "standard_multiline"
+    }
+  ]
+}

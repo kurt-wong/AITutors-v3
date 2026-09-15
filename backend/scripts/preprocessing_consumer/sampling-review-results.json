@@ -1,0 +1,1795 @@
+{
+  "summary": {
+    "total_samples": 113,
+    "correct": 108,
+    "with_issues": 5,
+    "high_severity": 2,
+    "medium_severity": 3,
+    "accuracy": 95.57522123893806
+  },
+  "by_stratum": {
+    "unusual_labels": {
+      "total": 9,
+      "correct": 5,
+      "high": 2,
+      "medium": 2
+    },
+    "multiple_choice": {
+      "total": 12,
+      "correct": 12,
+      "high": 0,
+      "medium": 0
+    },
+    "odd_label_count": {
+      "total": 1,
+      "correct": 0,
+      "high": 0,
+      "medium": 1
+    },
+    "inline_mixed": {
+      "total": 31,
+      "correct": 31,
+      "high": 0,
+      "medium": 0
+    },
+    "inline_single_line": {
+      "total": 30,
+      "correct": 30,
+      "high": 0,
+      "medium": 0
+    },
+    "standard_multiline": {
+      "total": 30,
+      "correct": 30,
+      "high": 0,
+      "medium": 0
+    }
+  },
+  "issue_types": {
+    "html_structure_issue": 5,
+    "incomplete_detection": 2
+  },
+  "results": [
+    {
+      "paper": "2021北京昌平高一（下）期末化学（教师版）(1)",
+      "unit_id": "Q1",
+      "stratum": "unusual_labels",
+      "detected_labels": [
+        "C"
+      ],
+      "issues": [
+        {
+          "type": "html_structure_issue",
+          "html_elements": 14,
+          "detected_count": 1,
+          "evidence": "HTML structure present (14 elements) but only 1 labels detected",
+          "severity": "MEDIUM"
+        }
+      ],
+      "correct": false,
+      "issue_count": 1,
+      "severity": "MEDIUM"
+    },
+    {
+      "paper": "2021北京昌平高一（下）期末化学（教师版）(1)",
+      "unit_id": "Q3",
+      "stratum": "unusual_labels",
+      "detected_labels": [
+        "A",
+        "F",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2022北京师大附中高一（下）期中政治（教师版）(1)",
+      "unit_id": "Q28",
+      "stratum": "unusual_labels",
+      "detected_labels": [
+        "A",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2021北京十二中高一（下）期中物理（教师版）(1)",
+      "unit_id": "Q5",
+      "stratum": "unusual_labels",
+      "detected_labels": [
+        "A",
+        "F",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2022北京顺义一中高一（下）期中物理（教师版）(1)",
+      "unit_id": "Q2",
+      "stratum": "unusual_labels",
+      "detected_labels": [
+        "A",
+        "B",
+        "D"
+      ],
+      "issues": [
+        {
+          "type": "html_structure_issue",
+          "html_elements": 1,
+          "detected_count": 3,
+          "evidence": "HTML structure present (1 elements) but only 3 labels detected",
+          "severity": "MEDIUM"
+        }
+      ],
+      "correct": false,
+      "issue_count": 1,
+      "severity": "MEDIUM"
+    },
+    {
+      "paper": "2022北京顺义一中高一（下）期中物理（教师版）(1)",
+      "unit_id": "Q7",
+      "stratum": "unusual_labels",
+      "detected_labels": [
+        "D"
+      ],
+      "issues": [
+        {
+          "type": "incomplete_detection",
+          "missed_labels": [
+            "A",
+            "B",
+            "C"
+          ],
+          "evidence": "Found markers ['A', 'B', 'C', 'D'] but only detected ['D']",
+          "severity": "HIGH"
+        },
+        {
+          "type": "html_structure_issue",
+          "html_elements": 7,
+          "detected_count": 1,
+          "evidence": "HTML structure present (7 elements) but only 1 labels detected",
+          "severity": "MEDIUM"
+        }
+      ],
+      "correct": false,
+      "issue_count": 2,
+      "severity": "HIGH"
+    },
+    {
+      "paper": "2017-2019北京高中生物高一上期末汇编：分子与细胞（教师版）(1)",
+      "unit_id": "Q46",
+      "stratum": "unusual_labels",
+      "detected_labels": [
+        "B"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2021北京农大附中高二（上）期中物理（合格考）（教师版）(1)",
+      "unit_id": "Q17",
+      "stratum": "unusual_labels",
+      "detected_labels": [
+        "A",
+        "B",
+        "D"
+      ],
+      "issues": [
+        {
+          "type": "incomplete_detection",
+          "missed_labels": [
+            "C"
+          ],
+          "evidence": "Found markers ['A', 'B', 'C', 'D'] but only detected ['A', 'B', 'D']",
+          "severity": "HIGH"
+        },
+        {
+          "type": "html_structure_issue",
+          "html_elements": 5,
+          "detected_count": 3,
+          "evidence": "HTML structure present (5 elements) but only 3 labels detected",
+          "severity": "MEDIUM"
+        }
+      ],
+      "correct": false,
+      "issue_count": 2,
+      "severity": "HIGH"
+    },
+    {
+      "paper": "2021北京农大附中高二（上）期中物理（合格考）（教师版）(1)",
+      "unit_id": "Q19",
+      "stratum": "unusual_labels",
+      "detected_labels": [
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2018北京一零一中学高一（下）期中物理（教师版）(1)",
+      "unit_id": "Q16",
+      "stratum": "multiple_choice",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2018北京一零一中学高一（下）期中物理（教师版）(1)",
+      "unit_id": "Q17",
+      "stratum": "multiple_choice",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2018北京一零一中学高一（下）期中物理（教师版）(1)",
+      "unit_id": "Q18",
+      "stratum": "multiple_choice",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2018北京一零一中学高一（下）期中物理（教师版）(1)",
+      "unit_id": "Q19",
+      "stratum": "multiple_choice",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2018北京一零一中学高一（下）期中物理（教师版）(1)",
+      "unit_id": "Q20",
+      "stratum": "multiple_choice",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2018北京一零一中学高一（下）期中物理（教师版）(1)",
+      "unit_id": "Q21",
+      "stratum": "multiple_choice",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2021北京十二中高一（下）期中物理（教师版）(1)",
+      "unit_id": "Q11",
+      "stratum": "multiple_choice",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2021北京十二中高一（下）期中物理（教师版）(1)",
+      "unit_id": "Q12",
+      "stratum": "multiple_choice",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2022北京一七一中高三（上）期中物理（教师版）(1)",
+      "unit_id": "Q11",
+      "stratum": "multiple_choice",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2022北京一七一中高三（上）期中物理（教师版）(1)",
+      "unit_id": "Q12",
+      "stratum": "multiple_choice",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2022北京一七一中高三（上）期中物理（教师版）(1)",
+      "unit_id": "Q13",
+      "stratum": "multiple_choice",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2022北京一七一中高三（上）期中物理（教师版）(1)",
+      "unit_id": "Q14",
+      "stratum": "multiple_choice",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2022北京顺义一中高一（下）期中物理（教师版）(1)",
+      "unit_id": "Q9",
+      "stratum": "odd_label_count",
+      "detected_labels": [
+        "A",
+        "B",
+        "C"
+      ],
+      "issues": [
+        {
+          "type": "html_structure_issue",
+          "html_elements": 1,
+          "detected_count": 3,
+          "evidence": "HTML structure present (1 elements) but only 3 labels detected",
+          "severity": "MEDIUM"
+        }
+      ],
+      "correct": false,
+      "issue_count": 1,
+      "severity": "MEDIUM"
+    },
+    {
+      "paper": "2018北京101中学高一（下）期中历史含答案(1)",
+      "unit_id": "Q8",
+      "stratum": "inline_mixed",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2018北京101中学高一（下）期中历史含答案(1)",
+      "unit_id": "Q16",
+      "stratum": "inline_mixed",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2018北京101中学高一（下）期中历史含答案(1)",
+      "unit_id": "Q27",
+      "stratum": "inline_mixed",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2018北京101中学高一（下）期中历史含答案(1)",
+      "unit_id": "Q30",
+      "stratum": "inline_mixed",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2018北京101中学高一（下）期中历史含答案(1)",
+      "unit_id": "Q33",
+      "stratum": "inline_mixed",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2018北京101中学高一（下）期中历史含答案(1)",
+      "unit_id": "Q34",
+      "stratum": "inline_mixed",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2018北京101中学高一（下）期中历史含答案(1)",
+      "unit_id": "Q35",
+      "stratum": "inline_mixed",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2018北京101中学高一（下）期中历史含答案(1)",
+      "unit_id": "Q44",
+      "stratum": "inline_mixed",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2018北京101中学高一（上）期中地理含答案",
+      "unit_id": "Q21",
+      "stratum": "inline_mixed",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2018北京101中学高一（上）期中地理含答案",
+      "unit_id": "Q29",
+      "stratum": "inline_mixed",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2018北京101中学高一（上）期中地理含答案",
+      "unit_id": "Q30",
+      "stratum": "inline_mixed",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2018北京101中学高一（上）期中地理含答案",
+      "unit_id": "Q42",
+      "stratum": "inline_mixed",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2018北京101中学高一（上）期中地理含答案",
+      "unit_id": "Q43",
+      "stratum": "inline_mixed",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2017-2019北京高一政治上学期期末汇编：科学社会主义常识与中国特色社会主义（教师版）(1)",
+      "unit_id": "Q15",
+      "stratum": "inline_mixed",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2018北京一零一中学高一（下）期中物理（教师版）(1)",
+      "unit_id": "Q14",
+      "stratum": "inline_mixed",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2022北京顺义一中高一（下）期中物理（教师版）(1)",
+      "unit_id": "Q13",
+      "stratum": "inline_mixed",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2017-2019北京高中生物高一上期末汇编：分子与细胞（教师版）(1)",
+      "unit_id": "Q11",
+      "stratum": "inline_mixed",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2017-2019北京高中生物高一上期末汇编：分子与细胞（教师版）(1)",
+      "unit_id": "Q24",
+      "stratum": "inline_mixed",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2017-2019北京高中生物高一上期末汇编：分子与细胞（教师版）(1)",
+      "unit_id": "Q27",
+      "stratum": "inline_mixed",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2017-2019北京高中生物高一上期末汇编：分子与细胞（教师版）(1)",
+      "unit_id": "Q38",
+      "stratum": "inline_mixed",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2017-2019北京高中生物高一上期末汇编：分子与细胞（教师版）(1)",
+      "unit_id": "Q48",
+      "stratum": "inline_mixed",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2010北京上地一零一中高一分班考英语（教师版）(1)",
+      "unit_id": "Q15",
+      "stratum": "inline_mixed",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2018北京丰台高一（下）期中语文（B卷）（教师版）(1)",
+      "unit_id": "Q4",
+      "stratum": "inline_mixed",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2022北京一零一中高三（上）统练六化学（教师版）(1)",
+      "unit_id": "Q6",
+      "stratum": "inline_mixed",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2021北京高三一模二模历史汇编：近代中国的经济（教师版）(1)",
+      "unit_id": "Q1",
+      "stratum": "inline_mixed",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2021北京高三一模二模历史汇编：近代中国的经济（教师版）(1)",
+      "unit_id": "Q3",
+      "stratum": "inline_mixed",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2021北京高三一模二模历史汇编：近代中国的经济（教师版）(1)",
+      "unit_id": "Q6",
+      "stratum": "inline_mixed",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2021北京高三一模二模历史汇编：近代中国的经济（教师版）(1)",
+      "unit_id": "Q7",
+      "stratum": "inline_mixed",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2021北京四中顺义分校高二（上）期中化学（教师版）(1)",
+      "unit_id": "Q7",
+      "stratum": "inline_mixed",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2021北京农大附中高二（上）期中物理（合格考）（教师版）(1)",
+      "unit_id": "Q14",
+      "stratum": "inline_mixed",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2019北京101中学高二（下）期中生物含答案(1)",
+      "unit_id": "Q11",
+      "stratum": "inline_mixed",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2021北京昌平高一（下）期末化学（教师版）(1)",
+      "unit_id": "Q2",
+      "stratum": "inline_single_line",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2018北京101中学高一（下）期中历史含答案(1)",
+      "unit_id": "Q6",
+      "stratum": "inline_single_line",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2018北京101中学高一（下）期中历史含答案(1)",
+      "unit_id": "Q14",
+      "stratum": "inline_single_line",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2018北京101中学高一（下）期中历史含答案(1)",
+      "unit_id": "Q26",
+      "stratum": "inline_single_line",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2018北京101中学高一（下）期中历史含答案(1)",
+      "unit_id": "Q50",
+      "stratum": "inline_single_line",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2022北京丰台高一（下）期末历史（教师版）(1)",
+      "unit_id": "Q11",
+      "stratum": "inline_single_line",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2018北京101中学高一（上）期中地理含答案",
+      "unit_id": "Q8",
+      "stratum": "inline_single_line",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2021北京高一地理上学期期末汇编：地球上的水（教师版）(1)",
+      "unit_id": "Q1",
+      "stratum": "inline_single_line",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2017-2019北京高一政治上学期期末汇编：科学社会主义常识与中国特色社会主义（教师版）(1)",
+      "unit_id": "Q10",
+      "stratum": "inline_single_line",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2022北京师大附中高一（下）期中政治（教师版）(1)",
+      "unit_id": "Q3",
+      "stratum": "inline_single_line",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2022北京师大附中高一（下）期中政治（教师版）(1)",
+      "unit_id": "Q13",
+      "stratum": "inline_single_line",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2022北京师大附中高一（下）期中政治（教师版）(1)",
+      "unit_id": "Q22",
+      "stratum": "inline_single_line",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2022北京师大附中高一（下）期中政治（教师版）(1)",
+      "unit_id": "Q30",
+      "stratum": "inline_single_line",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2021北京朝阳高一（下）期末数学（教师版）(1)",
+      "unit_id": "Q8",
+      "stratum": "inline_single_line",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2018北京一零一中学高一（下）期中物理（教师版）(1)",
+      "unit_id": "Q3",
+      "stratum": "inline_single_line",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2017-2019北京高中生物高一上期末汇编：分子与细胞（教师版）(1)",
+      "unit_id": "Q2",
+      "stratum": "inline_single_line",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2017-2019北京高中生物高一上期末汇编：分子与细胞（教师版）(1)",
+      "unit_id": "Q39",
+      "stratum": "inline_single_line",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2017-2019北京高中生物高一上期末汇编：分子与细胞（教师版）(1)",
+      "unit_id": "Q65",
+      "stratum": "inline_single_line",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2010北京上地一零一中高一分班考英语（教师版）(1)",
+      "unit_id": "Q1",
+      "stratum": "inline_single_line",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2010北京上地一零一中高一分班考英语（教师版）(1)",
+      "unit_id": "Q7",
+      "stratum": "inline_single_line",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2010北京上地一零一中高一分班考英语（教师版）(1)",
+      "unit_id": "Q13",
+      "stratum": "inline_single_line",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2021北京高三一模二模政治汇编：生活与哲学（选择题）（教师版）(1)",
+      "unit_id": "Q5",
+      "stratum": "inline_single_line",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2021北京高三一模二模政治汇编：生活与哲学（选择题）（教师版）(1)",
+      "unit_id": "Q11",
+      "stratum": "inline_single_line",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2021北京高三一模二模政治汇编：生活与哲学（选择题）（教师版）(1)",
+      "unit_id": "Q21",
+      "stratum": "inline_single_line",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2021北京高三一模二模政治汇编：生活与哲学（选择题）（教师版）(1)",
+      "unit_id": "Q33",
+      "stratum": "inline_single_line",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2021北京高三一模二模政治汇编：生活与哲学（选择题）（教师版）(1)",
+      "unit_id": "Q40",
+      "stratum": "inline_single_line",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2021北京高三一模二模政治汇编：生活与哲学（选择题）（教师版）(1)",
+      "unit_id": "Q45",
+      "stratum": "inline_single_line",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2022北京一七一中高三（上）期中物理（教师版）(1)",
+      "unit_id": "Q6",
+      "stratum": "inline_single_line",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2021北京四中顺义分校高二（上）期中化学（教师版）(1)",
+      "unit_id": "Q3",
+      "stratum": "inline_single_line",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2021北京农大附中高二（上）期中物理（合格考）（教师版）(1)",
+      "unit_id": "Q2",
+      "stratum": "inline_single_line",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2016-2019北京高一化学下学期期末汇编：化学反应原理（教师版）(1)",
+      "unit_id": "Q1",
+      "stratum": "standard_multiline",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2016-2019北京高一化学下学期期末汇编：化学反应原理（教师版）(1)",
+      "unit_id": "Q12",
+      "stratum": "standard_multiline",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2021北京昌平高一（下）期末化学（教师版）(1)",
+      "unit_id": "Q16",
+      "stratum": "standard_multiline",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2018北京101中学高一（下）期中历史含答案(1)",
+      "unit_id": "Q18",
+      "stratum": "standard_multiline",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2018北京101中学高一（下）期中历史含答案(1)",
+      "unit_id": "Q39",
+      "stratum": "standard_multiline",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2022北京丰台高一（下）期末历史（教师版）(1)",
+      "unit_id": "Q7",
+      "stratum": "standard_multiline",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2022北京丰台高一（下）期末历史（教师版）(1)",
+      "unit_id": "Q25",
+      "stratum": "standard_multiline",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2018北京101中学高一（上）期中地理含答案",
+      "unit_id": "Q32",
+      "stratum": "standard_multiline",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2017-2019北京高一政治上学期期末汇编：科学社会主义常识与中国特色社会主义（教师版）(1)",
+      "unit_id": "Q6",
+      "stratum": "standard_multiline",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2022北京师大附中高一（下）期中政治（教师版）(1)",
+      "unit_id": "Q7",
+      "stratum": "standard_multiline",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2018北京一零一中学高一（下）期中物理（教师版）(1)",
+      "unit_id": "Q4",
+      "stratum": "standard_multiline",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2021北京十二中高一（下）期中物理（教师版）(1)",
+      "unit_id": "Q2",
+      "stratum": "standard_multiline",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2022北京顺义一中高一（下）期中物理（教师版）(1)",
+      "unit_id": "Q6",
+      "stratum": "standard_multiline",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2017-2019北京高中生物高一上期末汇编：分子与细胞（教师版）(1)",
+      "unit_id": "Q9",
+      "stratum": "standard_multiline",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2017-2019北京高中生物高一上期末汇编：分子与细胞（教师版）(1)",
+      "unit_id": "Q21",
+      "stratum": "standard_multiline",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2017-2019北京高中生物高一上期末汇编：分子与细胞（教师版）(1)",
+      "unit_id": "Q34",
+      "stratum": "standard_multiline",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2017-2019北京高中生物高一上期末汇编：分子与细胞（教师版）(1)",
+      "unit_id": "Q55",
+      "stratum": "standard_multiline",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2017-2019北京高中生物高一上期末汇编：分子与细胞（教师版）(1)",
+      "unit_id": "Q69",
+      "stratum": "standard_multiline",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2017-2019北京高中生物高一上期末汇编：分子与细胞（教师版）(1)",
+      "unit_id": "Q83",
+      "stratum": "standard_multiline",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2018北京丰台高一（下）期中语文（B卷）（教师版）(1)",
+      "unit_id": "Q5",
+      "stratum": "standard_multiline",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2018北京牛栏山一中高三（上）期中化学含答案(1)",
+      "unit_id": "Q14",
+      "stratum": "standard_multiline",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2022北京一零一中高三（上）统练六化学（教师版）(1)",
+      "unit_id": "Q13",
+      "stratum": "standard_multiline",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2021北京高三一模二模政治汇编：生活与哲学（选择题）（教师版）(1)",
+      "unit_id": "Q17",
+      "stratum": "standard_multiline",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2022北京一六一中高三12月月考数学（教师版）(1)",
+      "unit_id": "Q3",
+      "stratum": "standard_multiline",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2022北京一七一中高三（上）期中物理（教师版）(1)",
+      "unit_id": "Q7",
+      "stratum": "standard_multiline",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2020北京八十中高三（下）开学考生物含答案(1)",
+      "unit_id": "Q10",
+      "stratum": "standard_multiline",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2021北京高三一模二模生物汇编：种群和群落（教师版）(1)",
+      "unit_id": "Q6",
+      "stratum": "standard_multiline",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2021北京四中顺义分校高二（上）期中化学（教师版）(1)",
+      "unit_id": "Q10",
+      "stratum": "standard_multiline",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2021北京农大附中高二（上）期中物理（合格考）（教师版）(1)",
+      "unit_id": "Q4",
+      "stratum": "standard_multiline",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    },
+    {
+      "paper": "2019北京101中学高二（下）期中生物含答案(1)",
+      "unit_id": "Q4",
+      "stratum": "standard_multiline",
+      "detected_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "issues": [],
+      "correct": true,
+      "issue_count": 0,
+      "severity": "NONE"
+    }
+  ]
+}

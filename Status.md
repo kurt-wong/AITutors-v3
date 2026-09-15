@@ -3362,6 +3362,6 @@ composite 格式映射不完整 · answer_evidence 与 explanation 行重叠 · 
 
 ### 下一步
 
-1. 532 resolved 的 correctness sampling 深度验证
+1. 527 resolved 的 correctness sampling 深度验证
 2. Phase 0.3-C Admission Boundary（Evidence Authority → Admission enforcement）
 3. 32 个结构缺失 units 的 preprocessing 侧调查

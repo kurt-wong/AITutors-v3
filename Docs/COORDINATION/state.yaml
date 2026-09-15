@@ -1,0 +1,177 @@
+coordination_version: 0.1
+
+workstream:
+  id: EB-0.3B
+  name: Evidence Resolution Boundary Discovery
+  status: OPEN
+
+agents:
+  v3:
+    agent: claude
+    repository: kurt-wong/AITutors-v3
+    branch: main
+    commit: pending
+    status: attribution_persisted
+  preprocessing:
+    agent: dsh
+    repository: kurt-wong/Aitutors-preprocessing
+    branch: main
+    commit: 6f09e9d
+    status: interop_complete
+
+facts:
+  - id: FACT-001
+    statement: "527/548 option regions resolved (96.2% resolution coverage)"
+    source: v3
+    evidence: "backend/scripts/preprocessing_consumer/consumer-report-b3.json"
+    status: observed
+
+  - id: FACT-002
+    statement: "103/113 sampled correctness = 91.2%"
+    source: v3
+    evidence: "backend/scripts/preprocessing_consumer/correctness-sampling-report.json"
+    status: observed
+
+  - id: FACT-003
+    statement: "21 pending cases: 10 STRUCTURAL + 9 CONTEXTUAL_DETERMINISTIC + 1 LEXICAL + 1 UNKNOWN"
+    source: v3
+    evidence: "backend/scripts/preprocessing_consumer/claude4-attribution.json"
+    status: observed
+
+  - id: FACT-004
+    statement: "HTML table/image options cross-corroborated: V3 13 cases + DSH Q51/Q13/Q37"
+    source: both
+    evidence: "V3 claude4-attribution.json + DSH b2 manifest review"
+    status: observed
+
+  - id: FACT-005
+    statement: "Production Resolver has NO options_region concept; boundary from _region_end() Source inference"
+    source: v3
+    evidence: "resolver.py L337-346, L368-379; Gate zero reference"
+    status: observed
+    dsh_verified: true
+
+  - id: FACT-006
+    statement: "214/216 regions contain canonical markers (DSH source-side verification)"
+    source: preprocessing
+    evidence: "DSH b2 8-volume manifest review"
+    status: observed
+
+  - id: FACT-007
+    statement: "options_region is sufficient minimal Evidence handoff (no per-option spans needed)"
+    source: both
+    evidence: "DSH cross-check + V3 attribution: 0 A-class"
+    status: observed
+
+  - id: FACT-008
+    statement: "region_upper=None unbounded scan reaches production _locate_options()"
+    source: preprocessing
+    evidence: "DSH read resolver.py L395"
+    status: observed
+    confirms: "Claude CONTRACT GAP claim"
+
+  - id: FACT-009
+    statement: "Production Resolver has NO options_region concept (DSH independent verification)"
+    source: preprocessing
+    evidence: "DSH read resolver.py + grep app domain"
+    status: observed
+    note: "Independent verification of FACT-005"
+
+  - id: FACT-010
+    statement: "Claude-4 attribution: 31 cases four-dimension classified, SEMANTIC=0"
+    source: v3
+    evidence: "backend/scripts/preprocessing_consumer/claude4-attribution.json"
+    status: observed
+    note: "Persisted to disk this commit"
+
+  - id: FACT-011
+    statement: "Q51 = region missing, not region wrong (options absorbed into stem_lines)"
+    source: preprocessing
+    evidence: "DSH source read: options at L540 within stem_lines=[537,540]"
+    status: observed
+
+open_questions:
+  - id: EB-001
+    question: "HTML representation ownership: preprocessing vs bounded Resolver parsing"
+    status: open
+    blocked_by: "P3.2 consumption experiment"
+
+  - id: EB-002
+    question: "Should production Resolver introduce options_region concept?"
+    status: open
+    note: "DSH: V3 adoption gap, not Producer defect"
+
+  - id: EB-003
+    question: "Is bounded contextual resolution for missing punctuation viable?"
+    status: open
+
+  - id: EB-004
+    question: "_locate_options() CONTRACT GAP: region_upper=None path"
+    status: open
+    note: "Confirmed by FACT-008"
+
+  - id: EB-005
+    question: "Formula/chemical FP: can structural context exclude without semantic knowledge?"
+    status: open
+
+decisions:
+  - id: DEC-001
+    statement: "Do not modify Frozen Spec during 0.3-B"
+    status: frozen
+
+  - id: DEC-002
+    statement: "Do not modify Resolver heuristics"
+    status: frozen
+
+  - id: DEC-003
+    statement: "Do not freeze Producer Contract"
+    status: frozen
+
+  - id: DEC-004
+    statement: "Do not create L2 Decision Record yet"
+    status: frozen
+
+  - id: DEC-005
+    statement: "B class entry point = P3.2 consumption experiment, not prompt/regex change"
+    status: frozen
+
+  - id: DEC-006
+    statement: "Three metrics permanently separate"
+    status: frozen
+
+  - id: DEC-007
+    statement: "Phase 0.3-B = Boundary Discovery, not Final Resolver Contract"
+    status: frozen
+
+  - id: DEC-008
+    statement: "P3.2 must use experimental adapter path, not self-inference"
+    status: frozen
+    source: "DSH handoff 002"
+
+  - id: DEC-009
+    statement: "Raw HTML is intended Source representation; no conversion mechanism"
+    status: frozen
+    source: "DSH reply to question 1"
+
+prohibitions:
+  - "No Resolver enhancement"
+  - "No Producer Contract freeze"
+  - "No new L2 decision document"
+  - "No Frozen Spec modification"
+  - "No HTML to preprocessing conclusion without P3.2 evidence"
+  - "No treating 21 pending + 10 high-risk as 31 independent failures"
+  - "No metric mixing (96.2% / 91.2% / 98.1% are distinct)"
+  - "No converting HTML options to plain text (manufactures representation not in source)"
+
+protocol:
+  startup:
+    - "Read state.yaml"
+    - "Read CURRENT.md"
+    - "Inspect referenced evidence files"
+    - "Work only on OPEN items"
+  completion:
+    - "Update handoff in HANDOFFS/"
+    - "Update state.yaml facts if new evidence"
+    - "Commit"
+  claim_format: "CLAIM then EVIDENCE then PROPOSAL then DECISION (no skipping)"
+  canonical_ledger: "DSH repo (kurt-wong/Aitutors-preprocessing); V3 side is mirror"
