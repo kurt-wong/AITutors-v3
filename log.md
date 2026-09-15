@@ -3118,3 +3118,23 @@ L2 升级待 Owner 终裁。
 产出：`Docs/DECISIONS/91_EB008_EVIDENCE_AUTHORITY_ENFORCEMENT_REVISION4.md`
 
 下一步：Owner 终裁 → L2 Decision Record → 实现阶段
+
+## 2026-09-15 — EB-008 Final（Revision-5，设计冻结）
+
+Owner Review-5 确认核心设计方向，完成收尾：
+
+1. Identity Model 确认：Run=Process / Candidate=Entity / le_hash 决定
+   Semantic Identity / 同 hash 跨 Run 复用正确。禁止 run_id 回归 Authority。
+2. Human Review Proof 三项声明：candidate 级粒度；防 DB 篡改不负责 API 认证；
+   API 访问控制属外部边界。
+3. IR Boundary 确认 Option B：IR provisional / 不代表事实 / 不能直接成为
+   Question Knowledge / Admission 唯一入口。
+4. DEC 编号治理：DEC-013 与其他 ledger 冲突 → 重编号 DEC-016。
+   历史文档（87-91号）中 DEC-013 均指现 DEC-016，不回改。
+5. Implementation Checklist（92号 §5）：validation_events 表、review proof
+   生成与验证、Admission Authority enforcement、invalidate 级联、
+   append-only 保护。每项含验收标准。
+
+产出：`Docs/DECISIONS/92_EB008_EVIDENCE_AUTHORITY_ENFORCEMENT_FINAL.md`
+
+EB-008 设计阶段结束。实现阶段入口 = 92号 + 本 commit。

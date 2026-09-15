@@ -50,7 +50,7 @@
 | EB-003 | Missing punctuation contextual rule | Open |
 | EB-004 | _locate_options() CONTRACT GAP | Open, confirmed |
 | EB-005 | Formula FP structural exclusion | Open, INFERRED |
-| EB-008 | Admission Evidence Authority enforcement | **L2 Revision-4** (Decision-4 Option B adopted; awaiting Owner final adjudication) |
+| EB-008 | Admission Evidence Authority enforcement | **Design Frozen** (92号 FINAL; DEC-016; implementation entry) |
 
 ---
 
@@ -66,7 +66,7 @@
 - DEC-008: P3.2 uses experimental adapter path
 - DEC-009: Raw HTML is intended Source representation
 - DEC-012: Before EB-008 adjudication: no design, no implementation, Admission not modified
-- DEC-013: EB-008 Owner business rules frozen (Decision-1~4: idempotent Identity, Review Proof, persistence, IR Boundary Option B)
+- DEC-016: EB-008 Owner business rules frozen (Decision-1~4: idempotent Identity, Review Proof, persistence, IR Boundary Option B) [renamed from DEC-013, cross-ledger conflict]
 
 ---
 
@@ -84,5 +84,6 @@
 | EB-008 L2 Design (Rev-2) | `Docs/DECISIONS/89_EB008_EVIDENCE_AUTHORITY_ENFORCEMENT_REVISION2.md` |
 | EB-008 L2 Design (Rev-3) | `Docs/DECISIONS/90_EB008_EVIDENCE_AUTHORITY_ENFORCEMENT_REVISION3.md` |
 | EB-008 L2 Design (Rev-4) | `Docs/DECISIONS/91_EB008_EVIDENCE_AUTHORITY_ENFORCEMENT_REVISION4.md` |
+| EB-008 FINAL (implementation entry) | `Docs/DECISIONS/92_EB008_EVIDENCE_AUTHORITY_ENFORCEMENT_FINAL.md` |
 | EB-008 Verification Evidence | `Docs/COORDINATION/EVIDENCE/EB008-CLAUDE-VERIFICATION.md` |
 | P3.2 enforcement results | `backend/scripts/preprocessing_consumer/p32-enforcement-results.json` |

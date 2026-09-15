@@ -3637,3 +3637,39 @@ EB-008 Owner business rules (Decision-1~4) 已冻结为 DEC-013。L2 升级待 O
 ### 下一步
 
 Owner 终裁（DEC-013 L2 升级）→ L2 Decision Record → 实现阶段
+
+---
+
+## EB-008 Final / Revision-5 (2026-09-15) — Design Frozen
+
+**触发**：Owner Review-5 确认核心设计方向，收尾进入实现阶段。
+
+### 本版变更
+
+1. Identity Model 确认（Run=Process / Candidate=Entity / le_hash Semantic Identity / 跨 Run 复用正确；禁止 run_id 回归）
+2. Human Review Proof 三项声明：
+   - proof 粒度 = candidate 级
+   - proof 防数据库直接篡改，不负责 API 身份认证
+   - API 访问控制属于系统外部边界
+3. IR Boundary 确认 Option B（IR provisional / 不代表事实 / 不能直接成为 Knowledge / Admission 唯一入口）
+4. DEC 编号治理：DEC-013 → DEC-016（跨 ledger 冲突；历史文档引用规则明确）
+5. Implementation Checklist（五项 + 验收标准）：
+   - validation_events 表（Alembic + ORM + Repository INSERT-only + 状态机接入 + PromotionService 改造）
+   - review proof 生成与验证（proof.py + APP_SECRET + 验证时机）
+   - Admission Authority enforcement（投影函数 + approve() 接入 + fail-closed + 双入口保持）
+   - invalidate 级联机制（触发场景 + 级联范围 + terminal + 审计）
+   - append-only 保护策略（应用层双保护 Phase-1 必做 + DB 触发器加固）
+
+### 产出
+
+- `Docs/DECISIONS/92_EB008_EVIDENCE_AUTHORITY_ENFORCEMENT_FINAL.md`
+- state.yaml: EB-008 status=design_frozen, blocked_by=none; DEC-016
+- CURRENT.md: 同步更新
+
+### 风险列表（8 项，最终）
+
+1-7 继承 Rev-4；新增 8：proof 不做 API 认证（外部边界职责，Review-5 接受）
+
+### 状态
+
+**EB-008 设计阶段结束。实现阶段入口 = 92号 + 最终 commit。**
