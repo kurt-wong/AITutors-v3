@@ -3722,3 +3722,14 @@ Owner 终裁（DEC-013 L2 升级）→ L2 Decision Record → 实现阶段
 ### 状态
 
 **EB-008 P1 实现完成，待 DSH 代码攻击测试。**
+
+---
+
+## 2026-09-15 — EB008 P1 Implementation Notes（DSH 攻击测试基线）
+
+- 输出 `Docs/COORDINATION/EVIDENCE/EB008-P1-IMPLEMENTATION-NOTES.md`
+- 内容：validation_events 数据模型、proof 流程、Authority 投影、Admission
+  enforcement 位置、invalidate 生命周期、已接受风险 R-1..R-4、攻击测试操作
+  手册（非法事件 / proof 失败 / fail-closed / replay）、禁止事项
+- 纯文档，无代码变更；设计冻结基线不变（92号 FINAL）
+- **EB-008 P1 就绪，交 DSH adversarial review**

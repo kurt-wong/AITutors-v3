@@ -3151,3 +3151,9 @@ EvidencePromotionService 去 in-memory（DEC-016 Decision-3）。
 全量 837 passed / 1 xfailed（F-4 保留）。
 
 下一步：DSH 代码攻击测试 → 完整 V3 业务链。
+
+## 2026-09-15 — EB008-P1-IMPLEMENTATION-NOTES
+
+固化 P1 实现说明供 DSH 攻击测试：数据模型/proof/投影/enforcement/invalidate
+五节 + 已接受风险声明（proof≠API认证、APP_SECRET泄露=Deployment Boundary、
+DB trigger=Phase-2、sv supersede=Source域职责）+ 攻击手册。无代码变更。
