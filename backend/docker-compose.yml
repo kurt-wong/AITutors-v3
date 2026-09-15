@@ -1,8 +1,11 @@
 services:
   # 段 A 仅提供 PostgreSQL 基础设施；应用由 uvicorn 手动启动（骨架非部署系统）。
   # backend/worker 服务占位：段 C（external gate）起才实装，且 worker 是独立进程（30 §2）。
+  # 2026-09-15 重建(用户指令): 三容器统一 aitutor- 前缀; 卷 backend_postgres_data 幸存,
+  # 数据直接复用; redis/minio 无历史版本要求(docs 无 pin), 沿用本地既有 redis:alpine。
   postgres:
     image: pgvector/pgvector:pg16
+    container_name: aitutor-postgres
     environment:
       POSTGRES_USER: aitutors
       POSTGRES_PASSWORD: change-me
@@ -17,5 +20,36 @@ services:
       timeout: 5s
       retries: 10
 
+  redis:
+    image: redis:alpine
+    container_name: aitutor-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    # minio/minio 在 Docker Hub 已停止分发(pull denied), 官方镜像现位于 quay.io。
+    image: quay.io/minio/minio:latest
+    container_name: aitutor-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
 volumes:
   postgres_data:
+  minio_data:
