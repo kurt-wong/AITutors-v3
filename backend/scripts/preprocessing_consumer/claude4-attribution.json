@@ -4,9 +4,24 @@
   "methodology": {
     "framework": "Four-dimension attribution",
     "dimensions": {
-      "dim1_producer_region": ["REGION_CORRECT", "REGION_WRONG", "REGION_UNKNOWN"],
-      "dim2_source_representation": ["TEXT_DIRECT", "STRUCTURED_HTML", "IMAGE_REFERENCE", "INSUFFICIENT"],
-      "dim3_resolution_class": ["LEXICAL", "STRUCTURAL", "CONTEXTUAL_DETERMINISTIC", "SEMANTIC", "UNKNOWN"]
+      "dim1_producer_region": [
+        "REGION_CORRECT",
+        "REGION_WRONG",
+        "REGION_UNKNOWN"
+      ],
+      "dim2_source_representation": [
+        "TEXT_DIRECT",
+        "STRUCTURED_HTML",
+        "IMAGE_REFERENCE",
+        "INSUFFICIENT"
+      ],
+      "dim3_resolution_class": [
+        "LEXICAL",
+        "STRUCTURAL",
+        "CONTEXTUAL_DETERMINISTIC",
+        "SEMANTIC",
+        "UNKNOWN"
+      ]
     },
     "populations": {
       "pending_21": "548 choice units - 527 resolved = 21 unresolved",
@@ -15,44 +30,301 @@
     "note": "21 pending and 10 high-risk are NON-OVERLAPPING populations"
   },
   "pending_21": [
-    {"case_id": "P-01", "paper": "2016-2019北京高一化学化学反应原理", "unit": "Q4", "result": "no_labels", "dim2": "STRUCTURED_HTML", "dim3": "STRUCTURAL", "note": "HTML table, options in td"},
-    {"case_id": "P-02", "paper": "2018北京牛栏山一中高三化学", "unit": "Q1", "result": "no_labels", "dim2": "STRUCTURED_HTML", "dim3": "STRUCTURAL", "note": "HTML table"},
-    {"case_id": "P-03", "paper": "2018北京牛栏山一中高三化学", "unit": "Q6", "result": "no_labels", "dim2": "STRUCTURED_HTML", "dim3": "STRUCTURAL", "note": "HTML table"},
-    {"case_id": "P-04", "paper": "2018北京牛栏山一中高三化学", "unit": "Q7", "result": "no_labels", "dim2": "STRUCTURED_HTML", "dim3": "STRUCTURAL", "note": "HTML table"},
-    {"case_id": "P-05", "paper": "2018北京牛栏山一中高三化学", "unit": "Q9", "result": "no_labels", "dim2": "STRUCTURED_HTML", "dim3": "STRUCTURAL", "note": "HTML table"},
-    {"case_id": "P-06", "paper": "2018北京101中学高一化学", "unit": "Q13", "result": "no_labels", "dim2": "STRUCTURED_HTML", "dim3": "STRUCTURAL", "note": "HTML div + images"},
-    {"case_id": "P-07", "paper": "2018北京101中学高一化学", "unit": "Q37", "result": "no_labels", "dim2": "STRUCTURED_HTML", "dim3": "STRUCTURAL", "note": "HTML div + images"},
-    {"case_id": "P-08", "paper": "2017-2019北京高中生物分子与细胞", "unit": "Q72", "result": "no_labels", "dim2": "STRUCTURED_HTML", "dim3": "STRUCTURAL", "note": "HTML div"},
-    {"case_id": "P-09", "paper": "2021北京海淀进修实验化学", "unit": "Q1", "result": "no_labels", "dim2": "STRUCTURED_HTML", "dim3": "STRUCTURAL", "note": "HTML div"},
-    {"case_id": "P-10", "paper": "2021北京农大附中高二物理合格考", "unit": "Q7", "result": "no_labels", "dim2": "STRUCTURED_HTML", "dim3": "STRUCTURAL", "note": "HTML div"},
-    {"case_id": "P-11", "paper": "2022北京海淀高一历史", "unit": "Q8", "result": "no_labels", "dim2": "TEXT_DIRECT", "dim3": "CONTEXTUAL_DETERMINISTIC", "note": "A lacks punctuation"},
-    {"case_id": "P-12", "paper": "2022北京海淀高一历史", "unit": "Q13", "result": "no_labels", "dim2": "TEXT_DIRECT", "dim3": "CONTEXTUAL_DETERMINISTIC", "note": "A lacks punctuation"},
-    {"case_id": "P-13", "paper": "2022北京海淀高一历史", "unit": "Q16", "result": "no_labels", "dim2": "TEXT_DIRECT", "dim3": "CONTEXTUAL_DETERMINISTIC", "note": "A lacks punctuation"},
-    {"case_id": "P-14", "paper": "2022北京师大附中高一英语", "unit": "Q9", "result": "no_labels", "dim2": "TEXT_DIRECT", "dim3": "CONTEXTUAL_DETERMINISTIC", "note": "A lacks punctuation"},
-    {"case_id": "P-15", "paper": "2022北京海淀进修实验数学", "unit": "Q1", "result": "no_labels", "dim2": "TEXT_DIRECT", "dim3": "CONTEXTUAL_DETERMINISTIC", "note": "A lacks punctuation"},
-    {"case_id": "P-16", "paper": "2021北京昌平高一化学", "unit": "Q5", "result": "incomplete", "dim2": "TEXT_DIRECT", "dim3": "CONTEXTUAL_DETERMINISTIC", "note": "H from H:O:H chemical notation"},
-    {"case_id": "P-17", "paper": "2022北京海淀高三统计", "unit": "Q7", "result": "incomplete", "dim2": "TEXT_DIRECT", "dim3": "CONTEXTUAL_DETERMINISTIC", "note": "G from formula"},
-    {"case_id": "P-18", "paper": "2022北京海淀高三化学", "unit": "Q12", "result": "incomplete", "dim2": "TEXT_DIRECT", "dim3": "CONTEXTUAL_DETERMINISTIC", "note": "G from formula"},
-    {"case_id": "P-19", "paper": "2021北京顺义一中化学", "unit": "Q14", "result": "incomplete", "dim2": "TEXT_DIRECT", "dim3": "CONTEXTUAL_DETERMINISTIC", "note": "G from formula"},
-    {"case_id": "P-20", "paper": "2010北京西城高一英语", "unit": "Q5", "result": "no_labels", "dim2": "TEXT_DIRECT", "dim3": "LEXICAL", "note": "---prefix blocks line-start detection, inline skipped"},
-    {"case_id": "P-21", "paper": "2021北京顺义一中物理", "unit": "Q13", "result": "incomplete", "dim2": "TEXT_DIRECT", "dim3": "UNKNOWN", "note": "A/B/C/D all detected but B/C marked incomplete - needs code trace"}
+    {
+      "case_id": "P-01",
+      "paper": "2016-2019北京高一化学下学期期末汇编：化学反应原理（教师版）(1)",
+      "unit": "Q4",
+      "result": "no_labels",
+      "dim2": "STRUCTURED_HTML",
+      "dim3": "STRUCTURAL",
+      "note": ""
+    },
+    {
+      "case_id": "P-02",
+      "paper": "2021北京昌平高一（下）期末化学（教师版）(1)",
+      "unit": "Q5",
+      "result": "incomplete",
+      "dim2": "TEXT_DIRECT",
+      "dim3": "CONTEXTUAL_DETERMINISTIC",
+      "note": "Formula/chemical FP"
+    },
+    {
+      "case_id": "P-03",
+      "paper": "2022北京丰台高一（下）期末历史（教师版）(1)",
+      "unit": "Q8",
+      "result": "no_labels",
+      "dim2": "TEXT_DIRECT",
+      "dim3": "LEXICAL",
+      "note": "Detection logic issue"
+    },
+    {
+      "case_id": "P-04",
+      "paper": "2022北京丰台高一（下）期末历史（教师版）(1)",
+      "unit": "Q13",
+      "result": "no_labels",
+      "dim2": "TEXT_DIRECT",
+      "dim3": "LEXICAL",
+      "note": "Detection logic issue"
+    },
+    {
+      "case_id": "P-05",
+      "paper": "2022北京丰台高一（下）期末历史（教师版）(1)",
+      "unit": "Q16",
+      "result": "no_labels",
+      "dim2": "TEXT_DIRECT",
+      "dim3": "LEXICAL",
+      "note": "Detection logic issue"
+    },
+    {
+      "case_id": "P-06",
+      "paper": "2018北京101中学高一（上）期中地理含答案",
+      "unit": "Q13",
+      "result": "no_labels",
+      "dim2": "STRUCTURED_HTML",
+      "dim3": "STRUCTURAL",
+      "note": "Detection logic issue"
+    },
+    {
+      "case_id": "P-07",
+      "paper": "2018北京101中学高一（上）期中地理含答案",
+      "unit": "Q37",
+      "result": "no_labels",
+      "dim2": "STRUCTURED_HTML",
+      "dim3": "STRUCTURAL",
+      "note": "Detection logic issue"
+    },
+    {
+      "case_id": "P-08",
+      "paper": "2022北京师大附中高一（下）期中政治（教师版）(1)",
+      "unit": "Q9",
+      "result": "no_labels",
+      "dim2": "TEXT_DIRECT",
+      "dim3": "LEXICAL",
+      "note": "Detection logic issue"
+    },
+    {
+      "case_id": "P-09",
+      "paper": "2021北京十二中高一（下）期中物理（教师版）(1)",
+      "unit": "Q13",
+      "result": "incomplete",
+      "dim2": "TEXT_DIRECT",
+      "dim3": "CONTEXTUAL_DETERMINISTIC",
+      "note": "Partial detection"
+    },
+    {
+      "case_id": "P-10",
+      "paper": "2017-2019北京高中生物高一上期末汇编：分子与细胞（教师版）(1)",
+      "unit": "Q72",
+      "result": "no_labels",
+      "dim2": "STRUCTURED_HTML",
+      "dim3": "STRUCTURAL",
+      "note": "Partial detection"
+    },
+    {
+      "case_id": "P-11",
+      "paper": "2010北京上地一零一中高一分班考英语（教师版）(1)",
+      "unit": "Q5",
+      "result": "no_labels",
+      "dim2": "TEXT_DIRECT",
+      "dim3": "LEXICAL",
+      "note": "Detection logic issue"
+    },
+    {
+      "case_id": "P-12",
+      "paper": "2018北京牛栏山一中高三（上）期中化学含答案(1)",
+      "unit": "Q1",
+      "result": "no_labels",
+      "dim2": "STRUCTURED_HTML",
+      "dim3": "STRUCTURAL",
+      "note": "Detection logic issue"
+    },
+    {
+      "case_id": "P-13",
+      "paper": "2018北京牛栏山一中高三（上）期中化学含答案(1)",
+      "unit": "Q6",
+      "result": "no_labels",
+      "dim2": "STRUCTURED_HTML",
+      "dim3": "STRUCTURAL",
+      "note": "Detection logic issue"
+    },
+    {
+      "case_id": "P-14",
+      "paper": "2018北京牛栏山一中高三（上）期中化学含答案(1)",
+      "unit": "Q7",
+      "result": "no_labels",
+      "dim2": "STRUCTURED_HTML",
+      "dim3": "STRUCTURAL",
+      "note": "Detection logic issue"
+    },
+    {
+      "case_id": "P-15",
+      "paper": "2018北京牛栏山一中高三（上）期中化学含答案(1)",
+      "unit": "Q9",
+      "result": "no_labels",
+      "dim2": "STRUCTURED_HTML",
+      "dim3": "STRUCTURAL",
+      "note": "Detection logic issue"
+    },
+    {
+      "case_id": "P-16",
+      "paper": "2022北京一零一中高三（上）统练六化学（教师版）(1)",
+      "unit": "Q7",
+      "result": "incomplete",
+      "dim2": "TEXT_DIRECT",
+      "dim3": "CONTEXTUAL_DETERMINISTIC",
+      "note": "Formula/chemical FP"
+    },
+    {
+      "case_id": "P-17",
+      "paper": "2022北京一零一中高三（上）统练六化学（教师版）(1)",
+      "unit": "Q12",
+      "result": "incomplete",
+      "dim2": "TEXT_DIRECT",
+      "dim3": "CONTEXTUAL_DETERMINISTIC",
+      "note": "Formula/chemical FP"
+    },
+    {
+      "case_id": "P-18",
+      "paper": "2022北京一六一中高三12月月考数学（教师版）(1)",
+      "unit": "Q1",
+      "result": "no_labels",
+      "dim2": "TEXT_DIRECT",
+      "dim3": "LEXICAL",
+      "note": "Detection logic issue"
+    },
+    {
+      "case_id": "P-19",
+      "paper": "2021北京四中顺义分校高二（上）期中化学（教师版）(1)",
+      "unit": "Q1",
+      "result": "no_labels",
+      "dim2": "STRUCTURED_HTML",
+      "dim3": "STRUCTURAL",
+      "note": "Detection logic issue"
+    },
+    {
+      "case_id": "P-20",
+      "paper": "2021北京四中顺义分校高二（上）期中化学（教师版）(1)",
+      "unit": "Q14",
+      "result": "incomplete",
+      "dim2": "TEXT_DIRECT",
+      "dim3": "CONTEXTUAL_DETERMINISTIC",
+      "note": "Formula/chemical FP"
+    },
+    {
+      "case_id": "P-21",
+      "paper": "2021北京农大附中高二（上）期中物理（合格考）（教师版）(1)",
+      "unit": "Q7",
+      "result": "no_labels",
+      "dim2": "STRUCTURED_HTML",
+      "dim3": "STRUCTURAL",
+      "note": "Formula/chemical FP"
+    }
   ],
   "high_risk_10": [
-    {"case_id": "H-01", "paper": "2021北京昌平高一化学", "unit": "Q1", "verdict": "FP", "dim2": "STRUCTURED_HTML", "dim3": "STRUCTURAL", "note": "C. C in HTML table, real options are images"},
-    {"case_id": "H-02", "paper": "2021北京昌平高一化学", "unit": "Q3", "verdict": "FP", "dim2": "TEXT_DIRECT", "dim3": "CONTEXTUAL_DETERMINISTIC", "note": "F from fluorine element symbol in parentheses"},
-    {"case_id": "H-03", "paper": "2022北京师大附中高一政治", "unit": "Q28", "verdict": "INCOMPLETE", "dim2": "TEXT_DIRECT", "dim3": "CONTEXTUAL_DETERMINISTIC", "note": "B lacks punctuation"},
-    {"case_id": "H-04", "paper": "2021北京十二中高一物理", "unit": "Q5", "verdict": "FP", "dim2": "TEXT_DIRECT", "dim3": "CONTEXTUAL_DETERMINISTIC", "note": "F from formula (F-mg-f)"},
-    {"case_id": "H-05", "paper": "2022北京顺义一中物理", "unit": "Q2", "verdict": "INCOMPLETE", "dim2": "TEXT_DIRECT", "dim3": "CONTEXTUAL_DETERMINISTIC", "note": "C lacks punctuation"},
-    {"case_id": "H-06", "paper": "2022北京顺义一中物理", "unit": "Q7", "verdict": "INCOMPLETE", "dim2": "STRUCTURED_HTML", "dim3": "STRUCTURAL", "note": "A/B/C in HTML divs"},
-    {"case_id": "H-07", "paper": "2017-2019北京高中生物", "unit": "Q46", "verdict": "AMBIGUOUS", "dim2": "TEXT_DIRECT", "dim3": "UNKNOWN", "note": "B. B fragment"},
-    {"case_id": "H-08", "paper": "2021北京农大附中高二物理", "unit": "Q17", "verdict": "INCOMPLETE", "dim2": "STRUCTURED_HTML", "dim3": "STRUCTURAL", "note": "C in HTML div"},
-    {"case_id": "H-09", "paper": "2021北京农大附中高二物理", "unit": "Q19", "verdict": "INCOMPLETE", "dim2": "TEXT_DIRECT", "dim3": "CONTEXTUAL_DETERMINISTIC", "note": "A lacks punctuation"},
-    {"case_id": "H-10", "paper": "2022北京顺义一中物理", "unit": "Q9", "verdict": "INCOMPLETE", "dim2": "TEXT_DIRECT", "dim3": "CONTEXTUAL_DETERMINISTIC", "note": "D lacks punctuation"}
+    {
+      "case_id": "H-01",
+      "paper": "2021北京昌平高一（下）期末化学（教师版）(1)",
+      "unit": "Q1",
+      "verdict": "FP",
+      "dim2": "STRUCTURED_HTML",
+      "dim3": "STRUCTURAL",
+      "note": "C. C in HTML table, real options are images"
+    },
+    {
+      "case_id": "H-02",
+      "paper": "2021北京昌平高一（下）期末化学（教师版）(1)",
+      "unit": "Q3",
+      "verdict": "FP",
+      "dim2": "TEXT_DIRECT",
+      "dim3": "CONTEXTUAL_DETERMINISTIC",
+      "note": "F from fluorine element symbol in parentheses"
+    },
+    {
+      "case_id": "H-03",
+      "paper": "2022北京师大附中高一（下）期中政治（教师版）(1)",
+      "unit": "Q28",
+      "verdict": "INCOMPLETE",
+      "dim2": "TEXT_DIRECT",
+      "dim3": "CONTEXTUAL_DETERMINISTIC",
+      "note": "B lacks punctuation"
+    },
+    {
+      "case_id": "H-04",
+      "paper": "2021北京十二中高一（下）期中物理（教师版）(1)",
+      "unit": "Q5",
+      "verdict": "FP",
+      "dim2": "TEXT_DIRECT",
+      "dim3": "CONTEXTUAL_DETERMINISTIC",
+      "note": "F from formula (F-mg-f)"
+    },
+    {
+      "case_id": "H-05",
+      "paper": "2022北京顺义一中高一（下）期中物理（教师版）(1)",
+      "unit": "Q2",
+      "verdict": "INCOMPLETE",
+      "dim2": "TEXT_DIRECT",
+      "dim3": "CONTEXTUAL_DETERMINISTIC",
+      "note": "C lacks punctuation"
+    },
+    {
+      "case_id": "H-06",
+      "paper": "2022北京顺义一中高一（下）期中物理（教师版）(1)",
+      "unit": "Q7",
+      "verdict": "INCOMPLETE",
+      "dim2": "STRUCTURED_HTML",
+      "dim3": "STRUCTURAL",
+      "note": "A/B/C in HTML divs"
+    },
+    {
+      "case_id": "H-07",
+      "paper": "2017-2019北京高中生物高一上期末汇编：分子与细胞（教师版）(1)",
+      "unit": "Q46",
+      "verdict": "AMBIGUOUS",
+      "dim2": "TEXT_DIRECT",
+      "dim3": "UNKNOWN",
+      "note": "B. B fragment"
+    },
+    {
+      "case_id": "H-08",
+      "paper": "2021北京农大附中高二（上）期中物理（合格考）（教师版）(1)",
+      "unit": "Q17",
+      "verdict": "INCOMPLETE",
+      "dim2": "STRUCTURED_HTML",
+      "dim3": "STRUCTURAL",
+      "note": "C in HTML div"
+    },
+    {
+      "case_id": "H-09",
+      "paper": "2021北京农大附中高二（上）期中物理（合格考）（教师版）(1)",
+      "unit": "Q19",
+      "verdict": "INCOMPLETE",
+      "dim2": "TEXT_DIRECT",
+      "dim3": "CONTEXTUAL_DETERMINISTIC",
+      "note": "A lacks punctuation"
+    },
+    {
+      "case_id": "H-10",
+      "paper": "2022北京顺义一中高一（下）期中物理（教师版）(1)",
+      "unit": "Q9",
+      "verdict": "INCOMPLETE",
+      "dim2": "TEXT_DIRECT",
+      "dim3": "CONTEXTUAL_DETERMINISTIC",
+      "note": "D lacks punctuation"
+    }
   ],
   "summary": {
     "total_cases": 31,
-    "by_dim2": {"TEXT_DIRECT": 18, "STRUCTURED_HTML": 13},
-    "by_dim3": {"STRUCTURAL": 13, "CONTEXTUAL_DETERMINISTIC": 15, "LEXICAL": 1, "SEMANTIC": 0, "UNKNOWN": 2},
+    "by_dim2": {
+      "TEXT_DIRECT": 18,
+      "STRUCTURED_HTML": 13
+    },
+    "by_dim3": {
+      "STRUCTURAL": 13,
+      "CONTEXTUAL_DETERMINISTIC": 15,
+      "LEXICAL": 1,
+      "SEMANTIC": 0,
+      "UNKNOWN": 2
+    },
     "key_findings": [
       "SEMANTIC class = 0: all formula/chemical FP re-classified as CONTEXTUAL_DETERMINISTIC",
       "HTML ownership UNRESOLVED: bounded parsing within Evidence Region may be Resolver's job",
@@ -61,9 +333,19 @@
     ]
   },
   "cross_corpus_correspondence": {
-    "note": "DSH tested b2 8 volumes, V3 tested reslice-p2-b1 38 volumes. Cases do not overlap but patterns match.",
-    "dsh_q51_html_table": ["P-01", "P-02", "P-03", "P-04", "P-05", "H-01"],
-    "dsh_q13_q37_image_div": ["P-06", "P-07"],
+    "note": "DSH tested b2 8 volumes, V3 tested reslice-p2-b1 38 volumes. Cases may overlap in paper but are from different unit sets.",
+    "dsh_q51_html_table": [
+      "P-01",
+      "P-02",
+      "P-03",
+      "P-04",
+      "P-05",
+      "H-01"
+    ],
+    "dsh_q13_q37_image_div": [
+      "P-06",
+      "P-07"
+    ],
     "correspondence_type": "PATTERN_LEVEL"
   }
 }
