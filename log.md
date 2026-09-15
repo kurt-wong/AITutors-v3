@@ -2932,4 +2932,56 @@ resolved_span_adapter / runner（Phase 0）/ runner_b2（Phase 0.2）+ 2 份 con
 **下一步**：
 1. correctness sampling 深度验证
 2. Phase 0.3-C Admission Boundary
+
+---
+
+## 2026-09-15 — P3.2 Enforcement Verification + Cross-Agent Coordination
+
+### Cross-Agent Coordination Protocol v0.1
+
+建立 `Docs/COORDINATION/`：state.yaml + CURRENT.md + HANDOFFS/。
+canonical ledger = DSH 仓库；V3 侧为镜像。
+Claim 协议：OBSERVED / INFERRED / REPORTED 三级 confidence。
+
+### Claude-4 审计
+
+31 cases 四维归因（21 pending + 10 high-risk）：
+- SEMANTIC = 0（原 D 类全部降为 CONTEXTUAL_DETERMINISTIC）
+- 生产 Resolver 无 options_region 概念（FACT-005/009）
+- `_locate_options()` region_upper=None 无界扫描（FACT-008）
+
+### P3.2/EB-004 实验
+
+4/4 attack vectors BYPASS Admission Boundary。
+AdmissionService.approve() 仅检查 gate_decision，零引用 Evidence Authority。
+EB-004 = EVIDENCED。BUG-V3-048 实验验证成立。
+
+### 五条边界规则（冻结）
+
+1. Producer declares regions, not interpretations
+2. Resolver may inspect Source, but only inside declared Evidence scope
+3. Resolver may resolve, but may not reinterpret
+4. Uncertainty must decrease resolution, never decrease truth
+5. Producer and Resolver must not duplicate structural intelligence
+
+### Docker 事故
+
+外部 agent 误删容器/镜像。PostgreSQL volume 幸存。DSH 负责重建。
+
+### Commits
+
+- `28c4cd8` cross-agent coordination layer + Claude-4 attribution
+- `f88b418` update V3 commit hash
+- `84fd39f` fix paper names in attribution
+- `779814e` P3.2 scope document
+- `07269f2` P3.2 scope updated with Owner clarifications
+- `455eb3d` P3.2 enforcement verification
+- `bf95a87` update coordination state with P3.2 findings
+- `3d0cb21` infra rebuild compose
+
+### 下一步
+
+1. DSH 完成 Docker 重建
+2. Claude 连通性验证 + alembic migration + pytest 基线
+3. 正式进入 preprocessing 联调阶段
 3. 32 个结构缺失 units 调查

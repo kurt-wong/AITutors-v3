@@ -3365,3 +3365,43 @@ composite 格式映射不完整 · answer_evidence 与 explanation 行重叠 · 
 1. 527 resolved 的 correctness sampling 深度验证
 2. Phase 0.3-C Admission Boundary（Evidence Authority → Admission enforcement）
 3. 32 个结构缺失 units 的 preprocessing 侧调查
+
+---
+
+## 2026-09-15 — P3.2 Enforcement Verification + Cross-Agent Coordination
+
+### Cross-Agent Coordination Protocol v0.1
+
+建立 `Docs/COORDINATION/`：state.yaml + CURRENT.md + HANDOFFS/。
+canonical ledger = DSH 仓库；V3 侧为镜像。
+Claim 协议：OBSERVED / INFERRED / REPORTED。
+
+### Claude-4 审计（四维归因）
+
+31 cases 四维分类：SEMANTIC=0。
+- 生产 Resolver 无 options_region 概念（FACT-005/009）
+- `_locate_options()` region_upper=None 无界扫描（FACT-008）
+- HTML ownership = UNRESOLVED
+
+### P3.2/EB-004 实验结果
+
+**4/4 attack vectors BYPASS**。AdmissionService.approve() 仅检查 gate_decision。
+EB-004 = EVIDENCED。BUG-V3-048 实验验证成立。
+
+### 五条边界规则（冻结）
+
+1. Producer declares regions, not interpretations
+2. Resolver may inspect Source, but only inside declared Evidence scope
+3. Resolver may resolve, but may not reinterpret
+4. Uncertainty must decrease resolution, never decrease truth
+5. Producer and Resolver must not duplicate structural intelligence
+
+### Docker 事故
+
+外部 agent 误删容器/镜像。PostgreSQL volume 幸存。DSH 负责重建。
+
+### 下一步
+
+1. DSH 完成 Docker 重建
+2. Claude 连通性验证 + alembic migration + pytest 基线
+3. 正式进入 preprocessing 联调阶段

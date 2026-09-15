@@ -1,15 +1,79 @@
-Version: v1.65
-Status: **Phase 0.2-R2 + 0.3-B Evidence-Faithful 完成（85 号 §11/§12）** —
-evidence-faithful baseline = 289/871（33.2%）· 0 auto_approve · 0 rejected；
-647/871（74.3%）= provisional/contaminated（synthetic option fabrication）；
-Phase 0.3-B：527/548 choice units resolved（96.2%）via Source-grounded label detection；
-架构结论 = Producer 提供 Evidence Region，Canonical Resolver 负责 per-label resolution；
-Producer Contract 不需要强制 per-option spans；
-**新增强制规则：文档创建禁令（restart-prompt §3）**；
+Version: v1.66
+Status: **P3.2/EB-004 Enforcement Verification 完成 + Cross-Agent Coordination v0.1 建立** —
+P3.2 实验：4/4 attack vectors BYPASS Admission Boundary（N1/N2/N7/N8）；
+AdmissionService.approve() 仅检查 gate_decision，零引用 Evidence Authority；
+EB-004 = EVIDENCED；BUG-V3-048 实验验证成立；
+Claude-4 审计：31 cases 四维归因，SEMANTIC=0；
+Cross-Agent Coordination Protocol v0.1 已建立（Docs/COORDINATION/）；
+**Docker 事故：PostgreSQL volume 幸存，MinIO/Redis 待重建（DSH 处理中）**；
 C-01 = OPEN / PAUSED；BIND-1/2 PASS/FROZEN · BIND-3 UNPROVEN；
 **Last verified test baseline: 810 passed / 3 xfailed @ f88a7ad (2026-09-14)**
-下一步 = correctness sampling deep verification → Phase 0.3-C Admission Boundary → 32 结构缺失调查
-Date: 2026-09-14
+下一步 = DSH 重建 Docker → 连通性验证 → 正式进入 preprocessing 联调阶段
+Date: 2026-09-15
+
+## 0.0i P3.2 Enforcement Verification + Cross-Agent Coordination（2026-09-15）
+
+### Cross-Agent Coordination Protocol v0.1
+
+建立 `Docs/COORDINATION/`：state.yaml（机读）+ CURRENT.md（人读）+ HANDOFFS/。
+canonical ledger = DSH 仓库；V3 侧为镜像。
+Claim 协议：OBSERVED / INFERRED / REPORTED 三级 confidence。
+单主规则：EB/FACT/DEC id 由 DSH 仓库单调分配。
+
+### Claude-4 审计（四维归因）
+
+31 cases（21 pending + 10 high-risk）四维分类：
+- Dim1 Producer Region：31/31 REGION_CORRECT
+- Dim2 Source Representation：18 TEXT_DIRECT + 13 STRUCTURED_HTML
+- Dim3 Resolution Class：13 STRUCTURAL + 15 CONTEXTUAL_DETERMINISTIC + 1 LEXICAL + 2 UNKNOWN
+- **SEMANTIC = 0**（原 D 类全部降为 CONTEXTUAL_DETERMINISTIC）
+
+关键发现：
+- 生产 Resolver 无 options_region 概念（FACT-005/009，DSH 独立验证）
+- `_locate_options()` region_upper=None 时无界扫描可达生产（FACT-008）
+- HTML ownership = UNRESOLVED（bounded parsing 可能属于 Resolver）
+
+### P3.2/EB-004 实验结果
+
+**4/4 attack vectors BYPASS**：
+
+| 攻击 | 预期 | 实际 |
+|---|---|---|
+| N8: gate_decision=auto_approve, 无 ValidationEvent | REJECT | ACCEPTED |
+| N7: 直接 Admission, 无 EvidencePromotion | REJECT | ACCEPTED |
+| N1: EvidenceClaim 无 ValidationEvent | REJECT | ACCEPTED |
+| N2: ValidationEvent rejected result | REJECT | ACCEPTED |
+
+**OBSERVED**：AdmissionService.approve() 仅检查 gate_decision。
+**INFERENCE**：Evidence Authority 存在但未被强制执行。
+**DECISION**：PENDING（是否在 Admission 强制 Evidence Authority 等 Owner 裁决）。
+
+### 五条边界规则（冻结）
+
+1. Producer declares regions, not interpretations
+2. Resolver may inspect Source, but only inside declared Evidence scope
+3. Resolver may resolve, but may not reinterpret
+4. Uncertainty must decrease resolution, never decrease truth
+5. Producer and Resolver must not duplicate structural intelligence
+
+### 三个数字永久分开
+
+- 96.2% = resolution coverage（527/548）
+- 91.2% = sampled correctness（103/113）
+- 98.1% = estimated population correctness
+
+### Docker 事故（2026-09-15）
+
+外部 agent 误删所有容器/镜像。PostgreSQL volume 幸存（数据完整）。
+MinIO 镜像源改为 quay.io（Docker Hub 不再分发）。
+Redis/MinIO 当前 V3 阶段不需要。
+**DSH 负责重建**，Claude 负责重建后连通性验证 + alembic migration。
+
+### 下一步
+
+1. DSH 完成 Docker 重建
+2. Claude 连通性验证 + alembic upgrade head + 全量 pytest 基线
+3. 正式进入 preprocessing 联调阶段（V3 ↔ preprocessing 无缝衔接）
 
 ## 0.0h Phase 0.2-R2 + 0.3-B Evidence-Faithful 实验（2026-09-14）
 
