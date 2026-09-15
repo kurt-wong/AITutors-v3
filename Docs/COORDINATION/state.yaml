@@ -11,7 +11,7 @@ agents:
     repository: kurt-wong/AITutors-v3
     branch: main
     commit: 69a6c0b
-    status: eb008_l2_revision3
+    status: eb008_l2_revision4
   preprocessing:
     agent: dsh
     repository: kurt-wong/Aitutors-preprocessing
@@ -165,10 +165,10 @@ open_questions:
 
   - id: EB-008
     question: "Admission Evidence Authority enforcement: how to enforce without breaking 20 §8.2 dual-entry and materialization transaction"
-    status: l2_revision3
+    status: l2_revision4
     owner: claude
-    blocked_by: dsh_review_4
-    note: "Revision-3 at Docs/DECISIONS/90_EB008_EVIDENCE_AUTHORITY_ENFORCEMENT_REVISION3.md. Implements Owner Decision-1 (idempotent Question Identity via le_hash), Decision-2 (Review Proof token, no IAM), Decision-3 (validation_events persistence + Authority projection), Decision-4 (IR Boundary Option A/B analysis, awaiting Owner). Answers RQ-001~006. Awaiting DSH Review-4."
+    blocked_by: owner_adjudication
+    note: "Revision-4 at Docs/DECISIONS/91_EB008_EVIDENCE_AUTHORITY_ENFORCEMENT_REVISION4.md. Owner Decision-4 adjudicated: Option B adopted (IR provisional, IR not trusted knowledge asset, Authority required for Question Knowledge Layer). Adds Boundary definitions (IR Layer / Knowledge Layer), unverified-IR permission bounds, Authority Projection lifecycle. All Decision-1~4 implemented. Awaiting Owner final adjudication (DEC-013)."
 
 decisions:
   - id: DEC-001
@@ -213,6 +213,12 @@ decisions:
     statement: "Before EB-008 adjudication: neither side designs or implements; Admission not modified"
     status: frozen
     source: "Owner EB-008 adjudication 2026-09-15"
+
+  - id: DEC-013
+    statement: "EB-008 Owner business rules (frozen): (1) HASH identity = same Question Entity, idempotent replay; (2) Human Review Trust = review proof token, no IAM (personal system); (3) all evidence persisted, no in-memory; (4) IR Boundary = Option B: IR provisional, IR not trusted knowledge asset, Authority required for Question Knowledge Layer"
+    status: frozen
+    source: "Owner Decision-1~4, 2026-09-15"
+    note: "Design constraints frozen. L2 upgrade pending Owner final adjudication of Revision-4."
 
 prohibitions:
   - "No Resolver enhancement"

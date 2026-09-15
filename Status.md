@@ -3592,3 +3592,48 @@ DSH Review-3 → Owner DEC-013 → L2 Decision Record
 ### 下一步
 
 DSH Review-4 → Owner DEC-013（含 Decision-4 IR Boundary 裁决）→ L2 Decision Record
+
+---
+
+## EB-008 Revision-4 (2026-09-15)
+
+**触发**：Owner Decision-4 裁决 — Option B 采用。
+
+### Owner 裁决原文
+
+> 采用 Option B：IR 可以先生成。但：IR 不是可信知识资产。
+> Authority 是进入 Question Knowledge Layer 的必要条件。
+
+### Rev-4 变更
+
+| # | 变更 |
+|---|---|
+| 1 | 删除所有暗示 IR 必须先获得 Authority 的描述（Option A 记为被否决历史注记） |
+| 2 | IR = Intermediate Representation：结构化原始材料 / Gate 输入 / 后续编译输入；IR 本身不代表事实可信 |
+| 3 | Boundary 双层：IR Layer 允许 provisional；Question Knowledge Layer 必须 Authority validated |
+| 4 | 未验证 IR：可存在/调试/重编译；禁止进入最终 Question 实体（enforcement = approve()） |
+| 5 | Authority Projection 生命周期：状态机、on-demand 时机、无缓存、唯一消费点 Admission |
+
+### DEC-013 冻结
+
+EB-008 Owner business rules (Decision-1~4) 已冻结为 DEC-013。L2 升级待 Owner 终裁。
+
+### 产出
+
+- `Docs/DECISIONS/91_EB008_EVIDENCE_AUTHORITY_ENFORCEMENT_REVISION4.md`
+- state.yaml: EB-008 status=l2_revision4, blocked_by=owner_adjudication, DEC-013 新增
+- CURRENT.md: 同步更新
+
+### 风险列表（7 项）
+
+1. APP_SECRET 泄露 → 伪造 review_proof（运维责任，Decision-2 接受）
+2. validation_events 无 DB 层 append-only（Phase-1 trade-off）
+3. IR 被误当作知识资产（Boundary 文档 + Admission enforcement）
+4. provisional IR 调试泄露（IR transient，仅物化产物对外）
+5. INVALIDATED 误触发 → 需新 Entity 重建
+6. pending_review 无事件落库（符合 fail-closed）
+7. 单层 enforcement（IR 非知识资产；新消费者出现时需重评）
+
+### 下一步
+
+Owner 终裁（DEC-013 L2 升级）→ L2 Decision Record → 实现阶段

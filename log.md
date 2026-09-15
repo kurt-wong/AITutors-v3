@@ -3095,3 +3095,26 @@ INVALIDATED terminal 语义：恢复 = 新 evidence → 新 annotation → 新 l
 产出：`Docs/DECISIONS/90_EB008_EVIDENCE_AUTHORITY_ENFORCEMENT_REVISION3.md`
 
 下一步：DSH Review-4 → Owner DEC-013 → L2 Decision Record
+
+## 2026-09-15 — EB-008 Revision-4（Owner Decision-4 裁决落实）
+
+Owner 裁决 IR Boundary：采用 Option B。
+"IR 可以先生成。但：IR 不是可信知识资产。
+Authority 是进入 Question Knowledge Layer 的必要条件。"
+
+Rev-4 变更：
+1. 删除所有暗示 IR 需先获得 Authority 的描述（Option A 否决，历史注记保留）
+2. IR = Intermediate Representation：结构化原始材料、Gate 输入、后续编译输入；
+   IR 本身不代表事实可信
+3. Boundary 双层：IR Layer（provisional 允许）/ Question Knowledge Layer（必须 Authority validated）
+4. 未验证 IR 可存在/调试/重编译，禁止进入最终 Question 实体；
+   enforcement = Admission.approve()（唯一入口）
+5. Authority Projection 生命周期：状态机（none/validated/rejected/invalidated）、
+   on-demand 计算、无缓存、唯一消费点 Admission Boundary
+
+DEC-013 冻结：Owner business rules Decision-1~4 记录为冻结决策。
+L2 升级待 Owner 终裁。
+
+产出：`Docs/DECISIONS/91_EB008_EVIDENCE_AUTHORITY_ENFORCEMENT_REVISION4.md`
+
+下一步：Owner 终裁 → L2 Decision Record → 实现阶段
