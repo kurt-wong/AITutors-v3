@@ -1,0 +1,46 @@
+{
+  "experiment": "P3.2-EB-004-Enforcement-Verification",
+  "attack_vectors": {
+    "N8": {
+      "expected": "REJECT",
+      "actual": "ACCEPTED",
+      "bypass": true,
+      "observation": "No Evidence Authority check"
+    },
+    "N7": {
+      "expected": "REJECT",
+      "actual": "ACCEPTED",
+      "bypass": true,
+      "observation": "No EvidencePromotionService"
+    },
+    "N1": {
+      "expected": "REJECT",
+      "actual": "ACCEPTED",
+      "bypass": true,
+      "observation": "EvidenceReference but no ValidationEvent"
+    },
+    "N2": {
+      "expected": "REJECT",
+      "actual": "ACCEPTED",
+      "bypass": true,
+      "observation": "is_evidence_validated=False"
+    }
+  },
+  "bypass_paths": [
+    "N8",
+    "N7",
+    "N1",
+    "N2"
+  ],
+  "summary": {
+    "total_attacks": 4,
+    "bypass_count": 4,
+    "bypass_paths": [
+      "N8",
+      "N7",
+      "N1",
+      "N2"
+    ],
+    "enforcement_effective": false
+  }
+}
