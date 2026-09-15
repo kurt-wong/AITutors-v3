@@ -1,7 +1,7 @@
 # Cross-Agent Coordination — Current State
 
 **Workstream**: EB-0.3B Evidence Resolution Boundary Discovery
-**Status**: OPEN — Integration Contract v0.1 **NOT FROZEN**（BLOCK B1/B2/B3；无实现决策）
+**Status**: OPEN — Integration Contract v0.1 **NOT FROZEN**（BLOCK B1/B2/B3；无实现决策）· preprocessing Owner **暂停令** @ `746e35c`（数据清洗/schema/daemon/contract 全暂停，等裁决）
 **Last Updated**: 2026-09-16
 **Canonical Ledger**: DSH repo (kurt-wong/Aitutors-preprocessing). This is V3 mirror.
 
@@ -11,8 +11,8 @@
 
 | Agent | Repo | Commit | Status |
 |---|---|---|---|
-| Claude (V3) | AITutors-v3 | 938535d | contract_consumer_review_v02_not_frozen |
-| DSH (Preprocessing) | Aitutors-preprocessing | 4d78513 | dq_data_quality_scan_complete |
+| Claude (V3) | AITutors-v3 | 821c53b | consumer_gap_map_fact_baseline |
+| DSH (Preprocessing) | Aitutors-preprocessing | 746e35c | owner_pause_order_pending_B1B2B3 |
 
 ---
 
@@ -40,9 +40,11 @@
 | FACT-028 | IR/Admission Boundary may share same evaluate decision | DSH | observed |
 | FACT-030 | **B1 transport mismatch**: contract says V3 consumes IR; V3 reads manifest only (0 hits for `resolver_ir\|source_sha256` @ backend/) | V3 | observed, **blocks freeze** |
 | FACT-031 | **B2 hash algorithm mismatch**: `sha256_hex` via canonical_json always DIFFER; `body_hash` via splitlines drifts (6/12) | V3 | observed, **blocks freeze** |
-| FACT-032 | **B3 unit_type silent split**: 4 consumer points, 0 isolation, 3 mutually contradictory interpretations | V3 | observed, **blocks freeze** |
-| FACT-033 | DQE §1-A claims consumer isolation "已生效" — contradicted by FACT-032 | V3 | observed, **needs DSH correction** |
+| FACT-032 | **B3 unit_type silent failure**（已更正）: 两层矛盾（annotation 洗白为 standalone vs span 按 composite 解析）+ candidate 零落库（incomplete→skip，永不到达 `:252`）；静默失败掩盖 | V3 | observed_corrected, **blocks freeze** |
+| FACT-033 | DQE §1-A「已生效」+ Closure Plan §2「fail-closed 生效中」—— **DSH 已正式撤回**（Reconciliation v0.2 §B3 @ `ad1abdd`），双方对齐 | V3 | **resolved** |
 | FACT-034 | Figure: 70,838 refs, 27,240 dangling (unrecovered `imgs/`); V3 `SourceFigure` field-level non-interoperable | Both | observed, not a blocker |
+| FACT-035 | **B1 producer 合取约束**: 无单一输出面同时具备全语料覆盖+md sha 锚+持续产出；identity 面 87 v2 / 79 v1，覆盖面以 87 为上限 | Both | observed, **blocks freeze** |
+| FACT-036 | **B2 producer hash 穷举**: 输出面仅原始字节 SHA-256 单族；`body_hash`/`line_hash` producer 零产出；`norm_sha256` 算法在仓内定义但从未作接口发布 | Both | observed |
 
 ---
 
@@ -97,4 +99,6 @@
 | P3.2 enforcement results | `backend/scripts/preprocessing_consumer/p32-enforcement-results.json` |
 | Consumer Review v0.1 (baseline `1fbaf5e`) | `Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-CONTRACT-CONSUMER-REVIEW.md` |
 | **Consumer Review v0.2 (freeze verdict, DQE baseline `4d78513`)** | `Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-CONTRACT-CONSUMER-REVIEW-v0.2.md` |
+| **Contract Blocker Analysis（Owner 裁决材料，非契约/非冻结）** | `Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-CONTRACT-BLOCKER-ANALYSIS.md` |
+| **V3 Consumer Gap Map（V3 消费面事实 + 对 BLOCKER-ANALYSIS 两处更正）** | `Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-CONSUMER-GAP-MAP.md` |
 | Handoff 007 (B1/B2/B3 → DSH confirm) | `Docs/COORDINATION/HANDOFFS/2026-09-16-Claude-to-DSH-007.md` |

@@ -1,5 +1,7 @@
 # PREPROCESSING-V3-CONTRACT-CONSUMER-REVIEW v0.2
 
+> **勘误（2026-09-16 追加，原文不改写）**：本文件 §B.2 / §A.3 含两处已更正的错误——(E-1) 「candidate 层记 `composite_unit`、三处解释互相矛盾、静默分裂」为错误推断，正确形态 = annotation vs span **两层矛盾** + candidate **零落库**（incomplete→skip）+ 静默失败掩盖；(E-2) `splitlines()` 位置在 `source_loader.py:27`（`load_source_lines`），非 `compute_body_hash`（漂移 6/12 结论不变）。经 DSH Reconciliation v0.2（preprocessing `ad1abdd` §B3）指出、V3 亲验确认。权威更正落点：`PREPROCESSING-V3-CONSUMER-GAP-MAP.md` §0。**§D 冻结判定（7 PASS / 3 BLOCK）不受影响**——CB-3 作为 blocker 的判定不变。
+
 > **角色**：Claude = AITutors-v3 Consumer Owner（非 preprocessing 重新设计方）。
 > **任务**：基于 DQE 报告，回答 Integration Contract v0.1 **是否可以冻结**。
 > **性质**：仅消费者事实审查。**未修改 preprocessing / 未修改 V3 adapter / 未提出实现方案 / 未冻结契约。**

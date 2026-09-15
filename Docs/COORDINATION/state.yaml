@@ -11,14 +11,14 @@ agents:
     agent: claude
     repository: kurt-wong/AITutors-v3
     branch: main
-    commit: 938535d
-    status: contract_consumer_review_v02_not_frozen
+    commit: 821c53b
+    status: consumer_gap_map_fact_baseline
   preprocessing:
     agent: dsh
     repository: kurt-wong/Aitutors-preprocessing
     branch: main
-    commit: 4d78513
-    status: dq_data_quality_scan_complete
+    commit: 746e35c
+    status: owner_pause_order_pending_B1B2B3
 
 facts:
   - id: FACT-001
@@ -156,20 +156,37 @@ facts:
     blocks: "Integration Contract v0.1 freeze (B2)"
 
   - id: FACT-032
-    statement: "B3 unit_type silent split: unknown value (observed 1x 'andalone_question') is not isolated by any of four V3 consumer points; annotation_adapter.py:101-104 treats it as standalone, resolved_span_adapter.py:78 and runner_b2.py:117 treat it as composite, runner_b2.py:252 persists candidate unit_type='composite_unit' — three mutually contradictory interpretations"
+    statement: "B3 unit_type silent failure: unknown value (observed 1x 'andalone_question') is not isolated by any V3 consumer point. CORRECTED FORM (was: 'runner_b2.py:252 persists composite_unit — three mutually contradictory interpretations'; that inference was WRONG, verified against DSH Reconciliation v0.2). Actual: annotation_adapter.py:42 hardcodes payload unit_type to 'standalone_question' (noise silently whitened); span layer branches on original manifest value (== 'standalone_question'? no -> composite path, resolved_span_adapter.py:77-90, runner_b2.py:116-127); candidate layer ZERO LANDING — unit is incomplete (stem unresolved) so runner_b2.py:232-239 skips before :252, and even if reached ir.py:108 reads whitened payload -> 'standalone_unit' not 'composite_unit'. Contradiction = annotation (standalone) vs span (composite) TWO layers. Terminal state: silent incomplete->skip, real reason (unknown unit_type) never appears in any layer."
     source: v3
-    evidence: "backend/scripts/preprocessing_consumer/annotation_adapter.py:101-104; resolved_span_adapter.py:77-90; runner_b2.py:116-127,252; manifest_reader.py:52 (no closed-set validation)"
-    status: observed
+    evidence: "backend/scripts/preprocessing_consumer/annotation_adapter.py:42,101-104; resolved_span_adapter.py:77-90; runner_b2.py:116-127,232-239,252; compile/ir.py:108; manifest_reader.py:52 (no closed-set validation); DSH PREPROCESSING-PRODUCER-FACT-RECONCILIATION-v0.2.md section B3 @ ad1abdd; V3 PREPROCESSING-V3-CONSUMER-GAP-MAP.md section 0 E-1"
+    status: observed_corrected
     date: "2026-09-16"
     blocks: "Integration Contract v0.1 freeze (B3)"
+    note: "Isolation still unimplemented — blocker judgment unchanged. Noise is class-level (2nd schema noise example 'explanation_lines_note' found, INTERFACE FACTS v1 section 1)."
 
   - id: FACT-033
-    statement: "DQE report section 1 option A claims consumer-side unit_type isolation 'already effective, no action needed' — contradicted by FACT-032 (four consumer points, zero isolation). Cross-repo factual error, not an opinion disagreement."
+    statement: "DQE report section 1 option A claimed consumer-side unit_type isolation 'already effective, no action needed' — CONTRADICTED by FACT-032. RESOLVED: DSH formally withdrew the statement (Reconciliation v0.2 section B3 @ ad1abdd) and also confirmed Closure Plan section 2 'fail-closed in effect' claim inaccurate (actual terminal state is incomplete->skip, not a PENDING channel). Cross-repo factual error now corrected on producer side; both sides aligned on 'isolation not implemented'."
     source: v3
-    evidence: "PREPROCESSING-DATA-QUALITY-REPORT.md section 1 option A @ preprocessing 4d78513 vs FACT-032 code anchors"
+    evidence: "PREPROCESSING-DATA-QUALITY-REPORT.md section 1 option A @ 4d78513 (withdrawn); PREPROCESSING-PRODUCER-FACT-RECONCILIATION-v0.2.md section B3 special confirmation @ ad1abdd"
+    status: resolved
+    date: "2026-09-16"
+    note: "handoff 007 B3 confirmation request closed."
+
+  - id: FACT-035
+    statement: "B1 producer output-surface conjunction: no single output surface has full-corpus coverage + md sha anchor + continuous production. manifest covers 166/166 but 0 sha; IR has source_sha256 (71/71 zero-drift) but is a one-shot frozen artifact of 88 R50 records (71 ADMITTED with ir object, 1664 units), not regenerated since R52; OCR output list (1801 entries) anchors PDF bytes not md. identity face split: v2 = 87 manifests (consumable under C-IN-1) / v1 legacy = 79 (rejected) — any transport ruling is capped at 87 consumable manifests."
+    source: both
+    evidence: "preprocessing INTEGRATION/PREPROCESSING-PRODUCER-INTERFACE-FACTS.md section 0/1 @ 17c55d8; FACT-030 V3-side anchors"
     status: observed
     date: "2026-09-16"
-    requires: "DSH correction of DQE section 1 option A statement"
+    blocks: "Integration Contract v0.1 freeze (B1)"
+
+  - id: FACT-036
+    statement: "B2 producer hash inventory (exhaustive): output-surface hashes = source_sha256(md raw bytes), source_sha256(PDF raw bytes), corpus_sha256 — single algorithm family (raw-byte SHA-256), no keys, independently recomputable. body_hash and line_hash have ZERO producer output (repo-wide grep 0) — cross-system 'algorithm agreement' has no object to compare. norm_sha256 normalization algorithm IS defined in producer repo (r64 NORM_ALGO: NFC + CRLF/CR->LF + per-line rstrip + whole strip) but NEVER published as interface. source_sha256 input = raw file bytes (DSH VERIFIED, handoff 007 B2 request closed)."
+    source: both
+    evidence: "preprocessing INTEGRATION/PREPROCESSING-PRODUCER-INTERFACE-FACTS.md section 2/4 @ 17c55d8; PREPROCESSING-PRODUCER-FACT-RECONCILIATION-v0.2.md section B1/B2 @ ad1abdd"
+    status: observed
+    date: "2026-09-16"
+    note: "If any ruling requires text-normalized hash on the interface, that is a NEW producer output = interface change (governance applies, not proposed here)."
 
   - id: FACT-034
     statement: "Figure: reference existence != asset existence. 70,838 img references; 27,240 dangling across 1,396 files, all in unrecovered imgs/ form; rewritten ../../_imgs/ form has 0 dangling. V3 SourceFigure needs 7 fields, preprocessing provides none — field-level non-interoperable. Not a freeze blocker."
@@ -216,8 +233,8 @@ open_questions:
     question: "Integration Contract v0.1 freeze readiness (Consumer Review v0.2)"
     status: not_frozen
     owner: owner
-    blocked_by: "B1 transport layer undecided (root cause); B2 hash reconciliation unachievable; B3 unit_type isolation unimplemented + cross-repo factual conflict"
-    note: "7 PASS / 3 BLOCK. B1 is root cause: transport layer (IR vs manifest) undecided, so B2 has no surface to reconcile on and B3 has no unified isolation plane. NO implementation decision taken — no adapter change, no preprocessing change requested, no fix direction proposed. Freeze adjudication belongs to Owner. Full review: Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-CONTRACT-CONSUMER-REVIEW-v0.2.md @ commit 938535d."
+    blocked_by: "B1 transport layer undecided (root cause; producer-side conjunction FACT-035, coverage capped at 87 identity-v2 manifests); B2 hash reconciliation unachievable (producer raw-byte sha vs V3 canonical_json/splitlines; body_hash/line_hash have no producer counterpart — FACT-036); B3 unit_type isolation unimplemented (cross-repo factual conflict RESOLVED — DSH withdrew DQE section 1-A / Closure Plan section 2 claims, FACT-033 resolved; corrected form in FACT-032)"
+    note: "7 PASS / 3 BLOCK. B1 is root cause. NO implementation decision taken — no adapter change, no preprocessing change requested, no fix direction proposed. Freeze adjudication belongs to Owner. preprocessing Owner issued pause order @ 746e35c (data cleaning/schema/daemon/contract all paused pending B1/B2/B3). V3-side fact baseline: Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-CONSUMER-GAP-MAP.md (authoritative corrections in section 0) + PREPROCESSING-V3-CONTRACT-BLOCKER-ANALYSIS.md (CB-3 corrected same batch). Producer-side inputs: INTERFACE FACTS v1 @ 17c55d8 + Reconciliation v0.2 @ ad1abdd."
     date: "2026-09-16"
 
 decisions:
