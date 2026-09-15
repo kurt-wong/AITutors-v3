@@ -10,8 +10,8 @@ agents:
     agent: claude
     repository: kurt-wong/AITutors-v3
     branch: main
-    commit: 28c4cd8
-    status: attribution_persisted
+    commit: 455eb3d
+    status: p32_complete
   preprocessing:
     agent: dsh
     repository: kurt-wong/Aitutors-preprocessing
@@ -89,6 +89,27 @@ facts:
     source: preprocessing
     evidence: "DSH source read: options at L540 within stem_lines=[537,540]"
     status: observed
+  - id: FACT-012
+    statement: "P3.2 enforcement verification: 4/4 attack vectors BYPASS Admission Boundary"
+    source: v3
+    evidence: "backend/scripts/preprocessing_consumer/p32-enforcement-results.json"
+    status: observed
+    date: "2026-09-15"
+
+  - id: FACT-013
+    statement: "AdmissionService.approve() checks gate_decision only; zero EvidencePromotion/ValidationEvent references"
+    source: v3
+    evidence: "admission.py L63-114; p32 experiment N7/N8"
+    status: observed
+    date: "2026-09-15"
+
+  - id: FACT-014
+    statement: "is_evidence_validated=False does not block Admission (N2 bypass)"
+    source: v3
+    evidence: "p32 experiment N2: is_evidence_validated=False, Admission still succeeded"
+    status: observed
+    date: "2026-09-15"
+
 
 open_questions:
   - id: EB-001
@@ -107,8 +128,8 @@ open_questions:
 
   - id: EB-004
     question: "_locate_options() CONTRACT GAP: region_upper=None path"
-    status: open
-    note: "Confirmed by FACT-008"
+    status: evidenced
+    note: "P3.2 complete: 4/4 bypass confirmed. FACT-012/013/014."
 
   - id: EB-005
     question: "Formula/chemical FP: can structural context exclude without semantic knowledge?"
