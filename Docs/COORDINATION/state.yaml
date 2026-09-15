@@ -10,7 +10,7 @@ agents:
     agent: claude
     repository: kurt-wong/AITutors-v3
     branch: main
-    commit: pending
+    commit: 28c4cd8
     status: attribution_persisted
   preprocessing:
     agent: dsh
