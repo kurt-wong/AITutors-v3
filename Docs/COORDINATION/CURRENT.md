@@ -1,9 +1,21 @@
 # Cross-Agent Coordination — Current State
 
 **Workstream**: EB-0.3B Evidence Resolution Boundary Discovery
-**Status**: OPEN — Integration Contract v0.1 **NOT FROZEN**（BLOCK B1/B2/B3；无实现决策）· preprocessing Owner **暂停令** @ `746e35c`（数据清洗/schema/daemon/contract 全暂停，等裁决）
+**Status**: OPEN — Owner **B1/B2/B3 架构已裁决**（DEC-020/021/022，`DECISION ≠ IMPLEMENTATION`，代码零改动）· Contract v0.2 DRAFT = 冻结候选 **NOT FROZEN** · preprocessing Owner 暂停令 @ `746e35c` 仍生效
 **Last Updated**: 2026-09-16
 **Canonical Ledger**: DSH repo (kurt-wong/Aitutors-preprocessing). This is V3 mirror.
+
+---
+
+## Owner Decisions (2026-09-16, architecture only — implementation not started)
+
+| ID | Decision |
+|---|---|
+| DEC-020 | **B1 Transport**: Manifest + IR 双层接口。Manifest = Source Identity Authority；IR = Semantic Consumption Authority；经 `source_version_id` 关联 |
+| DEC-021 | **B2 Identity**: 唯一 source identity = `SHA-256(raw bytes)`；canonical_json / body_hash / line_hash / integrity_hash 只能作内部校验，不得替代 source identity |
+| DEC-022 | **B3 Semantic Boundary**: unknown `unit_type` 不得自动转换 / 不得静默 fallback / 不得进入 Question materialization；处理方式 UNKNOWN/PENDING |
+
+**开放冻结前提**（v0.2 DRAFT §8）：DSH 确认 producer 接口变更面（OQ-8）· UNKNOWN/PENDING 落层（OQ-5，涉冻结值域）· 实现排期归属 · 逐层 required 字段归属表（Q1-2）。
 
 ---
 
@@ -11,7 +23,7 @@
 
 | Agent | Repo | Commit | Status |
 |---|---|---|---|
-| Claude (V3) | AITutors-v3 | 821c53b | consumer_gap_map_fact_baseline |
+| Claude (V3) | AITutors-v3 | 821c53b | decision_alignment_v02_draft |
 | DSH (Preprocessing) | Aitutors-preprocessing | 746e35c | owner_pause_order_pending_B1B2B3 |
 
 ---
@@ -39,7 +51,7 @@
 | FACT-027 | Human authority producer lacks issuer contract | DSH | observed |
 | FACT-028 | IR/Admission Boundary may share same evaluate decision | DSH | observed |
 | FACT-030 | **B1 transport mismatch**: contract says V3 consumes IR; V3 reads manifest only (0 hits for `resolver_ir\|source_sha256` @ backend/) | V3 | observed, **blocks freeze** |
-| FACT-031 | **B2 hash algorithm mismatch**: `sha256_hex` via canonical_json always DIFFER; `body_hash` via splitlines drifts (6/12) | V3 | observed, **blocks freeze** |
+| FACT-031 | **B2 hash algorithm mismatch**（行号已勘误）: `sha256_hex` via canonical_json always DIFFER; splitlines 在 `load_source_lines`（`:27`）非 `compute_body_hash`，`body_hash` 漂移 6/12 结论不变 | V3 | observed_corrected, **架构已裁决 DEC-021** |
 | FACT-032 | **B3 unit_type silent failure**（已更正）: 两层矛盾（annotation 洗白为 standalone vs span 按 composite 解析）+ candidate 零落库（incomplete→skip，永不到达 `:252`）；静默失败掩盖 | V3 | observed_corrected, **blocks freeze** |
 | FACT-033 | DQE §1-A「已生效」+ Closure Plan §2「fail-closed 生效中」—— **DSH 已正式撤回**（Reconciliation v0.2 §B3 @ `ad1abdd`），双方对齐 | V3 | **resolved** |
 | FACT-034 | Figure: 70,838 refs, 27,240 dangling (unrecovered `imgs/`); V3 `SourceFigure` field-level non-interoperable | Both | observed, not a blocker |
@@ -99,6 +111,8 @@
 | P3.2 enforcement results | `backend/scripts/preprocessing_consumer/p32-enforcement-results.json` |
 | Consumer Review v0.1 (baseline `1fbaf5e`) | `Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-CONTRACT-CONSUMER-REVIEW.md` |
 | **Consumer Review v0.2 (freeze verdict, DQE baseline `4d78513`)** | `Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-CONTRACT-CONSUMER-REVIEW-v0.2.md` |
-| **Contract Blocker Analysis（Owner 裁决材料，非契约/非冻结）** | `Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-CONTRACT-BLOCKER-ANALYSIS.md` |
-| **V3 Consumer Gap Map（V3 消费面事实 + 对 BLOCKER-ANALYSIS 两处更正）** | `Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-CONSUMER-GAP-MAP.md` |
-| Handoff 007 (B1/B2/B3 → DSH confirm) | `Docs/COORDINATION/HANDOFFS/2026-09-16-Claude-to-DSH-007.md` |
+| **Contract Blocker Analysis（Owner 裁决材料，非契约/非冻结；CB 三项已标 DECIDED 架构）** | `Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-CONTRACT-BLOCKER-ANALYSIS.md` |
+| **V3 Consumer Gap Map（V3 消费面事实 + 对 BLOCKER-ANALYSIS 两处更正 + DECISION 状态）** | `Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-CONSUMER-GAP-MAP.md` |
+| **Decision Alignment Report（Owner 裁决对齐；DECISION/IMPLEMENTATION/UNKNOWN 三态）** | `Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-DECISION-ALIGNMENT-REPORT.md` |
+| **Contract v0.2 DRAFT（冻结候选，NOT FROZEN）** | `Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-CONTRACT-v0.2-DRAFT.md` |
+| Handoff 007 (B1/B2/B3 → DSH confirm; 含勘误横幅) | `Docs/COORDINATION/HANDOFFS/2026-09-16-Claude-to-DSH-007.md` |

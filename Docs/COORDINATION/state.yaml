@@ -4,7 +4,7 @@ workstream:
   id: EB-0.3B
   name: Evidence Resolution Boundary Discovery
   status: OPEN
-  note: "Integration Contract v0.1 = NOT FROZEN (blocked B1/B2/B3); no implementation decision taken"
+  note: "Owner B1/B2/B3 architecture decisions taken (DEC-020/021/022) — DECISION != IMPLEMENTATION, no code changed. Integration Contract v0.2 DRAFT = freeze candidate, NOT FROZEN. Freeze prerequisites open: DSH producer-interface confirmation (OQ-8), UNKNOWN/PENDING landing layer (OQ-5), implementation-schedule ownership."
 
 agents:
   v3:
@@ -12,7 +12,7 @@ agents:
     repository: kurt-wong/AITutors-v3
     branch: main
     commit: 821c53b
-    status: consumer_gap_map_fact_baseline
+    status: decision_alignment_v02_draft
   preprocessing:
     agent: dsh
     repository: kurt-wong/Aitutors-preprocessing
@@ -148,12 +148,13 @@ facts:
     blocks: "Integration Contract v0.1 freeze (B1)"
 
   - id: FACT-031
-    statement: "B2 hash algorithm mismatch: V3 self-computed hashes cannot match preprocessing source_sha256; sha256_hex wraps via canonical_json (hashing.py:60-62) so always DIFFER; compute_body_hash uses splitlines normalization (source_loader.py:43-46) so drifts on CRLF/trailing-newline files (v0.1 measured 6/12 DIFFER)"
+    statement: "B2 hash algorithm mismatch: V3 self-computed hashes cannot match preprocessing source_sha256; sha256_hex wraps via canonical_json (hashing.py:60-62) so always DIFFER; body_hash uses splitlines in load_source_lines (source_loader.py:27) then join+SHA-256 (source_loader.py:43-46), so drifts on CRLF/trailing-newline files (v0.1 measured 6/12 DIFFER). NOTE: earlier statement attributed splitlines to compute_body_hash:43-46 — that line-number attribution was WRONG (E-2 correction, Reconciliation v0.2 section B3 item 4 @ ad1abdd); drift conclusion unchanged."
     source: v3
-    evidence: "backend/app/core/hashing.py:60-62; backend/scripts/preprocessing_consumer/source_loader.py:43-46; runner.py:71-73; consumer review v0.2 section A.3"
-    status: observed
+    evidence: "backend/app/core/hashing.py:60-62; backend/scripts/preprocessing_consumer/source_loader.py:27,43-46; runner.py:71-73; consumer review v0.2 section A.3; GAP-MAP section 0 E-2 @ 643ebd0"
+    status: observed_corrected
     date: "2026-09-16"
     blocks: "Integration Contract v0.1 freeze (B2)"
+    note: "Owner DECISION 2026-09-16 (DEC-021): sole source identity = SHA-256(raw bytes); other hashes internal-only. Implementation not started."
 
   - id: FACT-032
     statement: "B3 unit_type silent failure: unknown value (observed 1x 'andalone_question') is not isolated by any V3 consumer point. CORRECTED FORM (was: 'runner_b2.py:252 persists composite_unit — three mutually contradictory interpretations'; that inference was WRONG, verified against DSH Reconciliation v0.2). Actual: annotation_adapter.py:42 hardcodes payload unit_type to 'standalone_question' (noise silently whitened); span layer branches on original manifest value (== 'standalone_question'? no -> composite path, resolved_span_adapter.py:77-90, runner_b2.py:116-127); candidate layer ZERO LANDING — unit is incomplete (stem unresolved) so runner_b2.py:232-239 skips before :252, and even if reached ir.py:108 reads whitened payload -> 'standalone_unit' not 'composite_unit'. Contradiction = annotation (standalone) vs span (composite) TWO layers. Terminal state: silent incomplete->skip, real reason (unknown unit_type) never appears in any layer."
@@ -231,10 +232,10 @@ open_questions:
 
   - id: EB-009
     question: "Integration Contract v0.1 freeze readiness (Consumer Review v0.2)"
-    status: not_frozen
+    status: architecture_decided_implementation_pending
     owner: owner
-    blocked_by: "B1 transport layer undecided (root cause; producer-side conjunction FACT-035, coverage capped at 87 identity-v2 manifests); B2 hash reconciliation unachievable (producer raw-byte sha vs V3 canonical_json/splitlines; body_hash/line_hash have no producer counterpart — FACT-036); B3 unit_type isolation unimplemented (cross-repo factual conflict RESOLVED — DSH withdrew DQE section 1-A / Closure Plan section 2 claims, FACT-033 resolved; corrected form in FACT-032)"
-    note: "7 PASS / 3 BLOCK. B1 is root cause. NO implementation decision taken — no adapter change, no preprocessing change requested, no fix direction proposed. Freeze adjudication belongs to Owner. preprocessing Owner issued pause order @ 746e35c (data cleaning/schema/daemon/contract all paused pending B1/B2/B3). V3-side fact baseline: Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-CONSUMER-GAP-MAP.md (authoritative corrections in section 0) + PREPROCESSING-V3-CONTRACT-BLOCKER-ANALYSIS.md (CB-3 corrected same batch). Producer-side inputs: INTERFACE FACTS v1 @ 17c55d8 + Reconciliation v0.2 @ ad1abdd."
+    blocked_by: "All three blockers ARCHITECTURE-DECIDED (DEC-020/021/022) but IMPLEMENTATION not started on either side. Open freeze prerequisites (v0.2 DRAFT section 8): (1) DSH confirms producer interface change surface (Manifest source_version_id carrier, field naming = OQ-8); (2) OQ-5 UNKNOWN/PENDING landing layer undecided (touches frozen domains BUG-V3-018 semantic_status {ready,incomplete} and 10 section 5.2 decision_status); (3) implementation-schedule ownership (freeze-before-impl vs impl-before-freeze) undecided; (4) required-field ownership table per layer (Q1-2) open."
+    note: "7 PASS / 3 BLOCK at review time. Owner decisions 2026-09-16: B1 dual-layer interface (Manifest=Source Identity Authority, IR=Semantic Consumption Authority, linked by source_version_id); B2 sole source identity = SHA-256(raw bytes), other hashes internal-only; B3 unknown unit_type -> no auto-convert / no silent fallback / no materialization -> UNKNOWN/PENDING. DECISION != IMPLEMENTATION — no code changed, no producer interface changed. Contract v0.2 DRAFT (freeze candidate, NOT FROZEN): Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-CONTRACT-v0.2-DRAFT.md. Decision alignment: PREPROCESSING-V3-DECISION-ALIGNMENT-REPORT.md. Fact baseline: PREPROCESSING-V3-CONSUMER-GAP-MAP.md + PREPROCESSING-V3-CONTRACT-BLOCKER-ANALYSIS.md."
     date: "2026-09-16"
 
 decisions:
@@ -286,6 +287,24 @@ decisions:
     status: frozen
     source: "Owner Decision-1~4, 2026-09-15; confirmed Review-5"
     note: "Renamed from DEC-013 (cross-ledger numbering conflict). 87-91号 docs referencing DEC-013 mean this decision. Design frozen; implementation entry = 92号."
+
+  - id: DEC-020
+    statement: "B1 Transport (Owner architecture decision): official production interface = Manifest + IR dual-layer. Manifest = Source Identity Authority. IR = Semantic Consumption Authority. The two layers MUST be linked by an explicit source_version_id."
+    status: decided
+    source: "Owner instruction 2026-09-16"
+    note: "ARCHITECTURE DECISION ONLY — implementation not started on either side. Manifest currently has no source_version_id/sha field (0/166); V3 has zero IR consumption code. Producer field naming/location = OQ-8 (DSH domain). Contract wording: v0.2 DRAFT section 1."
+
+  - id: DEC-021
+    statement: "B2 Identity (Owner architecture decision): sole source identity = Original Source Bytes SHA-256, i.e. SHA-256(raw bytes). Other hashes (canonical_json hash, body_hash, line_hash, integrity_hash) may serve ONLY as internal integrity/consistency checks and MUST NOT substitute for source identity."
+    status: decided
+    source: "Owner instruction 2026-09-16"
+    note: "ARCHITECTURE DECISION ONLY — V3 consumer path still writes canonical_json-wrapped value into documents.original_sha256 (runner.py:73, hashing.py:60-62); not yet raw-bytes. Producer source_sha256 input already matches (VERIFIED @ ad1abdd). Contract wording: v0.2 DRAFT section 2."
+
+  - id: DEC-022
+    statement: "B3 Semantic Boundary (Owner architecture decision): unknown unit_type MUST NOT be auto-converted, MUST NOT silently fall back, MUST NOT enter Question materialization. Handling = UNKNOWN/PENDING."
+    status: decided
+    source: "Owner instruction 2026-09-16"
+    note: "ARCHITECTURE DECISION ONLY — current terminal state is silent incomplete->skip (annotation_adapter.py:42 whitening, runner_b2.py:232-239 skip); violates 'no auto-convert' and 'no silent fallback'. Landing layer for UNKNOWN/PENDING = UNKNOWN (OQ-5): SEMANTIC_STATUS frozen at {ready,incomplete} (compile/__init__.py:28-29, BUG-V3-018); pending_review reachable only from ready units. Contract wording: v0.2 DRAFT sections 3.2/4."
 
 prohibitions:
   - "No Resolver enhancement"

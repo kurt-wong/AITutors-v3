@@ -4,13 +4,15 @@
 > **目的**：Owner 裁决材料——供 Owner 就三个 blocker 逐项裁决，**不是 v0.2 草案**。
 > **禁止事项（本文件遵守）**：未提出实现方案 · 未修改 Contract · 未修改 V3 · 未修改 preprocessing。
 >
+> **2026-09-16 状态更新**：Owner 已下达 B1/B2/B3 **架构裁决**（`DECISION`，见 `PREPROCESSING-V3-DECISION-ALIGNMENT-REPORT.md` §0）。三项 blocker 的**架构方向已定**；**实现均未开始**（`IMPLEMENTATION: not started`），落层/排期项仍 `UNKNOWN`。本文件下方「待 Owner 裁决问题」中已由 DECISION 回答的条目已标注；未回答条目仍开放。**DECISION ≠ IMPLEMENTATION。**
+>
 > **证据基线**：
 > | 侧 | 基线 | 说明 |
 > |---|---|---|
 > | V3 代码 | `b5ddbe3` | 其后仅文档提交，代码未变 |
-> | V3 文档 | `821c53b` | Consumer Review v0.2 @ `938535d` |
+> | V3 文档 | `643ebd0` | Consumer Gap Map + 事实基线 |
 > | preprocessing | `746e35c` | Owner 暂停令；Interface Facts v1 @ `17c55d8`；Reconciliation v0.2 @ `ad1abdd`；Closure Plan @ `4fdbb70`；DQE @ `4d78513` |
-> | 被分析契约 | `INTEGRATION/PREPROCESSING-INTEGRATION-CONTRACT.md` @ `1fbaf5e` | `git diff 1fbaf5e 746e35c` → 空，未改 |
+> | 被分析契约 | v0.1 @ `1fbaf5e` | 未改；v0.2 DRAFT 见 `PREPROCESSING-V3-CONTRACT-v0.2-DRAFT.md`（NOT FROZEN） |
 >
 > **范围边界**：本文件只分析 **阻塞契约冻结的三项**。数据卫生项（figure recovery / flags registry / historical cleanup）已在 DSH Closure Plan v1 §1-B/§1-C 分类，**双方一致判定其不阻塞接口冻结**——不在此重复。相关 Owner 批准项见 Closure Plan §5。
 >
@@ -62,12 +64,14 @@ V3 实际状态与该声明不符：
 
 ### 待 Owner 裁决问题
 
-- **Q1-1**：V3 消费载体裁定为哪一种？（IR / manifest / 双载体且契约显式分层声明各自 required 面）
-- **Q1-2**：若裁定 manifest 为消费载体，契约 §3.1 中 IR 层独有字段（含 `source_sha256`）的 required 地位如何处置——移出 V3 required 面 / 要求 producer 增补到 manifest / 其他？
-- **Q1-3**：若裁定 IR 为消费载体，V3 侧 IR loader 的排期是否作为契约冻结前置条件，还是契约先冻结、实现后补？
-- **Q1-4**：契约 §2「V3 消费以 IR 为准」的措辞，在裁定前是否需先按 V3 实况更正为事实描述？
+> **DECISION 已回答（2026-09-16）**：Q1-1 → **Manifest + IR 双层接口**（Manifest = Source Identity Authority，IR = Semantic Consumption Authority，经 `source_version_id` 关联）。其余问题状态如下。
 
-**状态：NOT DECIDED。**
+- **Q1-1**：~~V3 消费载体裁定为哪一种？~~ **已裁决**：双层并行（`DECISION`，见 v0.2 DRAFT §1.1）。
+- **Q1-2**：若裁定 manifest 为消费载体，契约 §3.1 中 IR 层独有字段（含 `source_sha256`）的 required 地位如何处置——**部分回答**：双层各有权威面，required 清单需按层拆分（v0.2 DRAFT §3.1/§5）；**具体字段归属表仍开放**。
+- **Q1-3**：~~若裁定 IR 为消费载体，V3 侧 IR loader 的排期是否作为契约冻结前置条件？~~ **仍开放**（`UNKNOWN`）——v0.2 DRAFT §8-4 将排期归属列为冻结前提，须 Owner 另裁。
+- **Q1-4**：契约 §2「V3 消费以 IR 为准」的措辞——**已由 v0.2 DRAFT §3.1 取代**（双层各有权威面，不再单层优先）。
+
+**状态：DECIDED（架构）· IMPLEMENTATION: not started · 排期 UNKNOWN。**
 
 ---
 
@@ -119,12 +123,14 @@ v0.1 实测（12 份 ADMITTED 样本）：`file_sha` 路径 12/12 DIFFER；`body
 
 ### 待 Owner 裁决问题
 
-- **Q2-1**：跨系统对账 hash 的**输入定义**统一为什么？（原始文件字节 / 规范化文本 / producer 仓内已定义的 r64 NORM_ALGO / 其他可双方独立重算的定义）
-- **Q2-2**：该定义由契约强制约定（写入 §1.1/§1.2），还是双方各自实现后对账？若为前者，V3 侧现有两路 hash 与新定义的关系如何处置？
-- **Q2-3**：~~producer 侧计算输入口径是否需 DSH 先书面确认？~~ **已答复**：DSH Reconciliation v0.2（`ad1abdd`）VERIFIED —— `source_sha256` 输入 = **源 md 原始文件字节**（`resolver_reference.py:52-53,249`）。handoff 007 B2 确认请求已闭环。
-- **Q2-4**：在口径统一前，契约 §3.3-3 的阻断条款如何表述才不构成不可执行承诺？
+> **DECISION 已回答（2026-09-16）**：Q2-1 → **唯一 source identity = `SHA-256(raw bytes)`**；其他 hash 只能作内部校验。其余问题状态如下。
 
-**状态：NOT DECIDED。**
+- **Q2-1**：~~跨系统对账 hash 的输入定义统一为什么？~~ **已裁决**：raw bytes SHA-256（`DECISION`，v0.2 DRAFT §2.1）。
+- **Q2-2**：该定义由契约强制约定，还是双方各自实现后对账？——**部分回答**：契约强制约定（v0.2 DRAFT §2.1-2.3 为 REQUIREMENT）；**V3 侧现有两路 hash 与新定义的关系已明确**（不得作跨系统 identity，§2.2）；内部 hash 家族治理仍 `UNKNOWN`（OQ-7）。
+- **Q2-3**：~~producer 侧计算输入口径是否需 DSH 先书面确认？~~ **已闭环**：DSH Reconciliation v0.2（`ad1abdd`）VERIFIED —— `source_sha256` 输入 = 源 md 原始文件字节。
+- **Q2-4**：~~在口径统一前，契约 §3.3-3 的阻断条款如何表述？~~ **已回答**：口径已统一（§2.1）；阻断条款按 raw bytes 重述（v0.2 DRAFT §2.3/§4.4）；**可执行前提（载体）未满足**——依赖 B1 实现。
+
+**状态：DECIDED（口径）· IMPLEMENTATION: not started（V3 写入/对账未按新口径实现）。**
 
 ---
 
@@ -183,12 +189,14 @@ v0.1 实测（12 份 ADMITTED 样本）：`file_sha` 路径 12/12 DIFFER；`body
 
 ### 待 Owner 裁决问题
 
-- **Q3-1**：unit_type 隔离的**执行面**在哪一层？（依赖 CB-1 裁决结果——消费载体未定则执行面无统一落点）
-- **Q3-2**：~~DSH 侧「已生效 / fail-closed 生效中」陈述如何处置？~~ **已闭环**：DSH Reconciliation v0.2（`ad1abdd` §B3）正式撤回两处陈述并确认 V3 四消费点零隔离信号。handoff 007 B3 确认请求已闭环。
-- **Q3-3**：契约 §3.3-6 措辞是否需按 V3 实况调整（从「要求隔离」改为「隔离待实现 + 当前行为如实描述」），还是保持要求不变、由 V3 侧排期实现？
-- **Q3-4**：披露路线 vs 清洁路线（与 Closure Plan §5-1 同源）——本分析**不预判**；仅提示该裁决**不能替代** Q3-1 的执行面裁定。
+> **DECISION 已回答（2026-09-16）**：unknown `unit_type` → **不自动转换 / 不静默 fallback / 不 materialize；处理方式 UNKNOWN/PENDING**。其余问题状态如下。
 
-**状态：NOT DECIDED。**
+- **Q3-1**：~~unit_type 隔离的执行面在哪一层？~~ **部分回答**：处置语义已裁决（UNKNOWN/PENDING，v0.2 DRAFT §3.2/§4.1）；**落层设计仍 `UNKNOWN`**（B3-G2 / OQ-5——涉及冻结值域 BUG-V3-018 与 10 §5.2，须 Owner 另裁）。
+- **Q3-2**：~~DSH 侧「已生效 / fail-closed 生效中」陈述如何处置？~~ **已闭环**：DSH Reconciliation v0.2（`ad1abdd` §B3）正式撤回两处陈述并确认 V3 四消费点零隔离信号。
+- **Q3-3**：契约 §3.3-6 措辞是否需按 V3 实况调整——**已回答**：v0.2 DRAFT §3.2/§4.1/§4.2 将其升格为四条禁令 + 三处置禁止混淆（冻结候选措辞）。
+- **Q3-4**：披露路线 vs 清洁路线（与 Closure Plan §5-1 同源）——**仍开放**；DECISION 不涉及数据清洗，该裁决**不能替代** Q3-1 落层裁定。
+
+**状态：DECIDED（处置语义）· IMPLEMENTATION: not started（当前仍是静默 incomplete→skip）· 落层 UNKNOWN。**
 
 ---
 
@@ -201,20 +209,20 @@ CB-1 transport ──┬──→ CB-2 对账落点（载体未定则无处比�
 
 - **CB-1 是根因**：不裁则 CB-2/CB-3 各自的裁决缺乏落点。
 - **CB-2 与 CB-3 相互独立**：hash 口径与 unit_type 隔离无直接依赖，可在 CB-1 之后并行裁决。
-- **三项全部 NOT DECIDED**。本文件不预填任何结论，不提出任何实现方案。
+- **2026-09-16 状态**：三项**架构均已裁决**（`DECISION`）。CB-1 → 双层接口；CB-2 → raw bytes 唯一 identity；CB-3 → UNKNOWN/PENDING 处置语义。**实现均未开始**；仍开放的落点/排期项：Q1-2 字段归属表、Q1-3 排期归属、OQ-5 落层设计、OQ-7 内部 hash 治理、OQ-8 producer 字段命名。本文件不预填实现方案。
 
 ---
 
 ## 边界声明
 
-**本文件做了**：三个 blocker 的事实陈述 + 行级证据位置 + 影响范围 + 待 Owner 裁决问题；CB-3 两处错误推断的删除与更正（candidate composite_unit / 三层分裂 → 两层矛盾 + candidate 零落库 + 静默失败掩盖）；producer 侧新事实并入（identity 87/79、五输出面合取约束、hash 零产出、噪声类级现象）；Q2-3 / Q3-2 确认请求闭环登记；跨仓事实错误消解登记。
+**本文件做了**：三个 blocker 的事实陈述 + 行级证据位置 + 影响范围 + 待 Owner 裁决问题（含 DECISION 回答状态标注）；CB-3 两处错误推断的删除与更正（candidate composite_unit / 三层分裂 → 两层矛盾 + candidate 零落库 + 静默失败掩盖）；producer 侧新事实并入（identity 87/79、五输出面合取约束、hash 零产出、噪声类级现象）；Q2-3 / Q3-2 确认请求闭环登记；跨仓事实错误消解登记；Owner 架构裁决状态同步（DECIDED 架构 / IMPLEMENTATION not started / 落层 UNKNOWN）。
 
-**本文件没做（任务禁止项）**：未提出实现方案 · 未修改 Contract（preprocessing 仓契约本体未动）· 未修改 V3（代码零改动）· 未修改 preprocessing · 未冻结任何文档 · 未代 Owner 填任何裁决结论。
+**本文件没做（任务禁止项）**：未提出实现方案 · **未把 DECISION 描述为已实现** · 未修改 Contract（preprocessing 仓契约本体未动）· 未修改 V3（代码零改动）· 未修改 preprocessing · 未冻结任何文档 · 未代 Owner 填任何裁决结论。
 
-**被取代物**：`CONTRACTS/PREPROCESSING-V3-CONTRACT-v0.2-DRAFT-SKELETON.md`（v0.2 草案骨架）**不进入正式历史**，保留于工作区未提交。本文件取代其作为 Owner 裁决材料的用途。
+**被取代物**：`CONTRACTS/PREPROCESSING-V3-CONTRACT-v0.2-DRAFT-SKELETON.md`（早期骨架）**不进入正式历史**，保留于工作区未提交。本文件与 `PREPROCESSING-V3-CONTRACT-v0.2-DRAFT.md`（冻结候选）共同构成当前裁决/契约材料。
 
 **EB-008 状态**：不因本文件变动。
 
 ---
 
-*BLOCKER-ANALYSIS — 2026-09-16，Claude（AITutors-v3）。V3 代码基线 `b5ddbe3` · preprocessing `746e35c`（Interface Facts v1 @ `17c55d8` / Reconciliation v0.2 @ `ad1abdd`）· 被分析契约 `1fbaf5e`（未改）。非契约 / 非冻结文档 / 仅事实分析。*
+*BLOCKER-ANALYSIS — 2026-09-16，Claude（AITutors-v3）。V3 代码基线 `b5ddbe3` · 文档 `643ebd0` · preprocessing `746e35c` · v0.1 `1fbaf5e`（未改）· v0.2 DRAFT 另文（NOT FROZEN）。非契约 / 非冻结文档 / 仅事实分析。DECISION ≠ IMPLEMENTATION。*
