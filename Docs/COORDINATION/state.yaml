@@ -128,8 +128,8 @@ open_questions:
 
   - id: EB-004
     question: "_locate_options() CONTRACT GAP: region_upper=None path"
-    status: evidenced
-    note: "P3.2 complete: 4/4 bypass confirmed. FACT-012/013/014."
+    status: confirmed
+    note: "Owner confirmed 2026-09-15: Admission lacks Evidence Authority enforcement. Producer Contract unchanged. EB-005 remains independent."
 
   - id: EB-005
     question: "Formula/chemical FP: can structural context exclude without semantic knowledge?"

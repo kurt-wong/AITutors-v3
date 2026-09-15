@@ -46,7 +46,8 @@ Claim 协议：OBSERVED / INFERRED / REPORTED 三级 confidence。
 
 **OBSERVED**：AdmissionService.approve() 仅检查 gate_decision。
 **INFERENCE**：Evidence Authority 存在但未被强制执行。
-**DECISION**：PENDING（是否在 Admission 强制 Evidence Authority 等 Owner 裁决）。
+**DECISION**：EB-004 CONFIRMED（Owner 2026-09-15）——Admission lacks Evidence Authority enforcement。
+Producer Contract 不变。EB-005 独立。
 
 ### 五条边界规则（冻结）
 
