@@ -11,7 +11,7 @@ agents:
     repository: kurt-wong/AITutors-v3
     branch: main
     commit: 69a6c0b
-    status: eb008_l2_revision2
+    status: eb008_l2_revision3
   preprocessing:
     agent: dsh
     repository: kurt-wong/Aitutors-preprocessing
@@ -165,10 +165,10 @@ open_questions:
 
   - id: EB-008
     question: "Admission Evidence Authority enforcement: how to enforce without breaking 20 §8.2 dual-entry and materialization transaction"
-    status: l2_revision2
+    status: l2_revision3
     owner: claude
-    blocked_by: dsh_review_3
-    note: "Revision-2 at Docs/DECISIONS/89_EB008_EVIDENCE_AUTHORITY_ENFORCEMENT_REVISION2.md. Resolves RDQ-001 (Bootstrap Protocol B1-B6), RDQ-002 (Run Identity Model I1-I6, run_id removed), RDQ-003 (Issuer Contract C1-C7). Awaiting DSH Review-3."
+    blocked_by: dsh_review_4
+    note: "Revision-3 at Docs/DECISIONS/90_EB008_EVIDENCE_AUTHORITY_ENFORCEMENT_REVISION3.md. Implements Owner Decision-1 (idempotent Question Identity via le_hash), Decision-2 (Review Proof token, no IAM), Decision-3 (validation_events persistence + Authority projection), Decision-4 (IR Boundary Option A/B analysis, awaiting Owner). Answers RQ-001~006. Awaiting DSH Review-4."
 
 decisions:
   - id: DEC-001

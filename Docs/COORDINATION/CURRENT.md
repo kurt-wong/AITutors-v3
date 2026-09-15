@@ -50,7 +50,7 @@
 | EB-003 | Missing punctuation contextual rule | Open |
 | EB-004 | _locate_options() CONTRACT GAP | Open, confirmed |
 | EB-005 | Formula FP structural exclusion | Open, INFERRED |
-| EB-008 | Admission Evidence Authority enforcement | **L2 Revision-2** (resolves RDQ-001/002/003, awaiting DSH Review-3) |
+| EB-008 | Admission Evidence Authority enforcement | **L2 Revision-3** (Owner Decision-1~4 implemented, answers RQ-001~006, awaiting DSH Review-4) |
 
 ---
 
@@ -81,5 +81,6 @@
 | EB-008 L2 Design (Rev-0) | `Docs/DECISIONS/87_EB008_EVIDENCE_AUTHORITY_ENFORCEMENT_DESIGN.md` |
 | EB-008 L2 Design (Rev-1) | `Docs/DECISIONS/88_EB008_EVIDENCE_AUTHORITY_ENFORCEMENT_REVISION1.md` |
 | EB-008 L2 Design (Rev-2) | `Docs/DECISIONS/89_EB008_EVIDENCE_AUTHORITY_ENFORCEMENT_REVISION2.md` |
+| EB-008 L2 Design (Rev-3) | `Docs/DECISIONS/90_EB008_EVIDENCE_AUTHORITY_ENFORCEMENT_REVISION3.md` |
 | EB-008 Verification Evidence | `Docs/COORDINATION/EVIDENCE/EB008-CLAUDE-VERIFICATION.md` |
 | P3.2 enforcement results | `backend/scripts/preprocessing_consumer/p32-enforcement-results.json` |

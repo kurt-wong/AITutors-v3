@@ -3548,3 +3548,47 @@ run_id 从 Rev-1 的四元组中移除（RDQ-002 证明冗余）。
 ### 下一步
 
 DSH Review-3 → Owner DEC-013 → L2 Decision Record
+
+---
+
+## EB-008 Revision-3 (2026-09-15)
+
+**触发**：Owner Decision-1~4（frozen business rules），停止基于旧假设推演。
+
+### Owner 裁决落实
+
+| Decision | 内容 | Rev-3 落实 |
+|---|---|---|
+| Decision-1 | HASH 一致 = 同一 Entity | 删除 "每次 Run 创建新 Candidate"；le_hash idempotent；replay 语义 R1-R5 |
+| Decision-2 | 个人系统，Review Proof | SHA256 proof token（candidate_id + result + reviewer + timestamp + APP_SECRET）；删除 IAM 讨论 |
+| Decision-3 | 所有证据持久化 | validation_events 新表；Authority 从事件投影；禁止 in-memory |
+| Decision-4 | IR Boundary 先解释 | IR 职责 + Option A/B 对比，供 Owner 裁决，不预设结论 |
+
+### RQ 回答
+
+| RQ | 答案 |
+|---|---|
+| RQ-001 | le_hash 确定性 + candidate 复用 + validation_events 持久化 + 幂等 append |
+| RQ-002 | Run=Process（不持久化）；Candidate=Entity（le_hash 唯一）；跨 Run 复用 by design |
+| RQ-003 | SHA256 proof token；Trust Model = Deployment Environment Boundary（明确 trade-off） |
+| RQ-004 | validation_events 表（INSERT-only）；Authority 投影 = latest event |
+| RQ-005 | INVALIDATED 是 terminal；恢复 = 新 evidence → 新 le_hash → 新 Entity → 新 Authority |
+| RQ-006 | IR = transient assembly；Option A（Authority→IR）冷启动死锁；Option B（IR→Gate→Authority→Admission）与当前结构一致 |
+
+### 产出
+
+- `Docs/DECISIONS/90_EB008_EVIDENCE_AUTHORITY_ENFORCEMENT_REVISION3.md`
+- `Docs/COORDINATION/HANDOFFS/2026-09-15-Claude-to-DSH-006.md`
+- state.yaml: EB-008 status=l2_revision3, blocked_by=dsh_review_4
+- CURRENT.md: 同步更新
+
+### 未解决风险
+
+- APP_SECRET 泄露 → 可伪造 review_proof（运维责任，Decision-2 接受）
+- validation_events 无 DB 层 append-only（Phase-1 trade-off）
+- IR 暂无 Authority 检查（Admission Boundary 是最终防线）
+- INVALIDATED 误触发 → 需新 Entity 重建
+
+### 下一步
+
+DSH Review-4 → Owner DEC-013（含 Decision-4 IR Boundary 裁决）→ L2 Decision Record

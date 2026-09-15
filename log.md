@@ -3067,3 +3067,31 @@ AuthorityIdentity 最终定义：(source_version_id, candidate_id, claim_id)
 产出：`Docs/DECISIONS/89_EB008_EVIDENCE_AUTHORITY_ENFORCEMENT_REVISION2.md`
 
 下一步：DSH Review-3 → Owner DEC-013 → L2 Decision Record
+
+## 2026-09-15 — EB-008 Revision-3（Owner Decision-1~4 落实）
+
+Owner 裁决四项冻结业务规则，停止旧假设推演：
+
+Decision-1（Question Identity）：HASH 一致 = 同一 Entity。Run 是 Process，Candidate 是 Entity。
+Rev-2 "每次 Run 创建新 Candidate" 错误——代码实际是 le_hash idempotent（service.py:214-216）。
+删除该描述，定义 replay 语义 R1-R5：replay 不改变 Authority，已 VALIDATED 为 no-op。
+
+Decision-2（Human Review Trust）：个人系统，不要求 IAM。改用 Review Proof token：
+SHA256(candidate_id + review_result + reviewer_id + reviewed_at + APP_SECRET)。
+Trust Model = Deployment Environment Boundary，明确标记 trade-off（非 IAM 等价）。
+
+Decision-3（Evidence Persistence）：禁止 in-memory。当前 promotion.py:207-209 违反。
+新表 validation_events（INSERT-only）；Authority = latest event 投影，非独立存储。
+
+Decision-4（IR Boundary）：Owner 未裁决。Rev-3 解释 IR 职责（transient assembly，
+不独立持久化）+ 两方案对比：Option A（Authority→IR）冷启动死锁；Option B
+（IR→Gate→Authority→Admission）与当前 pipeline 顺序一致。供 Owner 裁决。
+
+RQ-001~006 逐项回答（见 90号 §2-§7）。
+
+INVALIDATED terminal 语义：恢复 = 新 evidence → 新 annotation → 新 le_hash →
+新 candidate → 新 Entity → 新 Authority。无 resurrection。
+
+产出：`Docs/DECISIONS/90_EB008_EVIDENCE_AUTHORITY_ENFORCEMENT_REVISION3.md`
+
+下一步：DSH Review-4 → Owner DEC-013 → L2 Decision Record
