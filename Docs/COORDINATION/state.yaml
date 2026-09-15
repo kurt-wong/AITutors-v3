@@ -4,20 +4,21 @@ workstream:
   id: EB-0.3B
   name: Evidence Resolution Boundary Discovery
   status: OPEN
+  note: "Integration Contract v0.1 = NOT FROZEN (blocked B1/B2/B3); no implementation decision taken"
 
 agents:
   v3:
     agent: claude
     repository: kurt-wong/AITutors-v3
     branch: main
-    commit: 69a6c0b
-    status: eb008_p1_implemented
+    commit: 938535d
+    status: contract_consumer_review_v02_not_frozen
   preprocessing:
     agent: dsh
     repository: kurt-wong/Aitutors-preprocessing
     branch: main
-    commit: 6f09e9d
-    status: interop_complete
+    commit: 4d78513
+    status: dq_data_quality_scan_complete
 
 facts:
   - id: FACT-001
@@ -138,6 +139,46 @@ facts:
     status: observed
     date: "2026-09-15"
 
+  - id: FACT-030
+    statement: "B1 transport mismatch: contract says V3 consumes IR, but V3 reads manifest only; backend/ has zero matches for resolver_ir / resolver-ir / ir.json / source_sha256; Manifest dataclass (manifest_reader.py:28-35) carries no sha field"
+    source: v3
+    evidence: "backend/scripts/preprocessing_consumer/manifest_reader.py:28-35,44-75; Grep resolver_ir|source_sha256 @ backend/ = 0 hits"
+    status: observed
+    date: "2026-09-16"
+    blocks: "Integration Contract v0.1 freeze (B1)"
+
+  - id: FACT-031
+    statement: "B2 hash algorithm mismatch: V3 self-computed hashes cannot match preprocessing source_sha256; sha256_hex wraps via canonical_json (hashing.py:60-62) so always DIFFER; compute_body_hash uses splitlines normalization (source_loader.py:43-46) so drifts on CRLF/trailing-newline files (v0.1 measured 6/12 DIFFER)"
+    source: v3
+    evidence: "backend/app/core/hashing.py:60-62; backend/scripts/preprocessing_consumer/source_loader.py:43-46; runner.py:71-73; consumer review v0.2 section A.3"
+    status: observed
+    date: "2026-09-16"
+    blocks: "Integration Contract v0.1 freeze (B2)"
+
+  - id: FACT-032
+    statement: "B3 unit_type silent split: unknown value (observed 1x 'andalone_question') is not isolated by any of four V3 consumer points; annotation_adapter.py:101-104 treats it as standalone, resolved_span_adapter.py:78 and runner_b2.py:117 treat it as composite, runner_b2.py:252 persists candidate unit_type='composite_unit' — three mutually contradictory interpretations"
+    source: v3
+    evidence: "backend/scripts/preprocessing_consumer/annotation_adapter.py:101-104; resolved_span_adapter.py:77-90; runner_b2.py:116-127,252; manifest_reader.py:52 (no closed-set validation)"
+    status: observed
+    date: "2026-09-16"
+    blocks: "Integration Contract v0.1 freeze (B3)"
+
+  - id: FACT-033
+    statement: "DQE report section 1 option A claims consumer-side unit_type isolation 'already effective, no action needed' — contradicted by FACT-032 (four consumer points, zero isolation). Cross-repo factual error, not an opinion disagreement."
+    source: v3
+    evidence: "PREPROCESSING-DATA-QUALITY-REPORT.md section 1 option A @ preprocessing 4d78513 vs FACT-032 code anchors"
+    status: observed
+    date: "2026-09-16"
+    requires: "DSH correction of DQE section 1 option A statement"
+
+  - id: FACT-034
+    statement: "Figure: reference existence != asset existence. 70,838 img references; 27,240 dangling across 1,396 files, all in unrecovered imgs/ form; rewritten ../../_imgs/ form has 0 dangling. V3 SourceFigure needs 7 fields, preprocessing provides none — field-level non-interoperable. Not a freeze blocker."
+    source: both
+    evidence: "PREPROCESSING-DATA-QUALITY-REPORT.md section 2 @ 4d78513; app/models/source.py:99-120; runner.py:43 (import only, zero use); ir.py:145,220-222"
+    status: observed
+    date: "2026-09-16"
+    note: "Not a blocker; contract 2.4 should state asset-availability reality before freeze (wording is Owner/DSH's call)"
+
 
 open_questions:
   - id: EB-001
@@ -165,10 +206,19 @@ open_questions:
 
   - id: EB-008
     question: "Admission Evidence Authority enforcement: how to enforce without breaking 20 §8.2 dual-entry and materialization transaction"
-    status: p1_implemented
+    status: p1_impl_external_verification_pending
     owner: claude
     blocked_by: none
-    note: "Phase-1 implemented per92号 §5 Checklist (5 items): validation_events table (Alembic 0011 + ORM + EvidenceRepository INSERT-only), review proof (proof.py + APP_SECRET), Admission Authority enforcement (project_authority + fail-closed in approve()), invalidate cascade (annotation supersede wired; sv entry available), append-only app-layer protection. Tests: 837 passed (test_eb008_evidence_authority.py 26 acceptance tests). Next: DSH code attack verification."
+    verification: "External verification evidence unavailable in current repository state."
+    note: "Phase-1 implemented per 92号 §5 Checklist (5 items): validation_events table (Alembic 0011 + ORM + EvidenceRepository INSERT-only), review proof (proof.py + APP_SECRET), Admission Authority enforcement (project_authority + fail-closed in approve()), invalidate cascade (annotation supersede wired; sv entry available), append-only app-layer protection. Tests: 837 passed (test_eb008_evidence_authority.py 26 acceptance tests). Commit 88aeae8 + notes b5ddbe3 (local; unpushed at calibration time). A claimed external Review-1 report (commit eea4a4e, attacks/ suite, EB008-IMPLEMENTATION-REVIEW-1.md) was checked 2026-09-15 and NOT found in this repository — not accepted as verification. NOT VERIFIED; NOT DSH approved; step-6 full V3 business chain NOT released. Design stays frozen (DEC-016 / 92号); only bugfix / test-addition / implementation-deviation fixes accepted. Collaboration model: EB-008 is a cross-boundary constraint under the Integration Contract, not a DSH-as-V3-QA flow (see Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-CONTRACT.md)."
+
+  - id: EB-009
+    question: "Integration Contract v0.1 freeze readiness (Consumer Review v0.2)"
+    status: not_frozen
+    owner: owner
+    blocked_by: "B1 transport layer undecided (root cause); B2 hash reconciliation unachievable; B3 unit_type isolation unimplemented + cross-repo factual conflict"
+    note: "7 PASS / 3 BLOCK. B1 is root cause: transport layer (IR vs manifest) undecided, so B2 has no surface to reconcile on and B3 has no unified isolation plane. NO implementation decision taken — no adapter change, no preprocessing change requested, no fix direction proposed. Freeze adjudication belongs to Owner. Full review: Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-CONTRACT-CONSUMER-REVIEW-v0.2.md @ commit 938535d."
+    date: "2026-09-16"
 
 decisions:
   - id: DEC-001

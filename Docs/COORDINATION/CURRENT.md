@@ -1,8 +1,8 @@
 # Cross-Agent Coordination — Current State
 
 **Workstream**: EB-0.3B Evidence Resolution Boundary Discovery
-**Status**: OPEN
-**Last Updated**: 2026-09-15
+**Status**: OPEN — Integration Contract v0.1 **NOT FROZEN**（BLOCK B1/B2/B3；无实现决策）
+**Last Updated**: 2026-09-16
 **Canonical Ledger**: DSH repo (kurt-wong/Aitutors-preprocessing). This is V3 mirror.
 
 ---
@@ -11,8 +11,8 @@
 
 | Agent | Repo | Commit | Status |
 |---|---|---|---|
-| Claude (V3) | AITutors-v3 | (this commit) | attribution_persisted |
-| DSH (Preprocessing) | Aitutors-preprocessing | 6f09e9d | interop_complete |
+| Claude (V3) | AITutors-v3 | 938535d | contract_consumer_review_v02_not_frozen |
+| DSH (Preprocessing) | Aitutors-preprocessing | 4d78513 | dq_data_quality_scan_complete |
 
 ---
 
@@ -38,6 +38,11 @@
 | FACT-026 | ValidationEvent lifecycle vs review_trail persistence inconsistent | DSH | observed |
 | FACT-027 | Human authority producer lacks issuer contract | DSH | observed |
 | FACT-028 | IR/Admission Boundary may share same evaluate decision | DSH | observed |
+| FACT-030 | **B1 transport mismatch**: contract says V3 consumes IR; V3 reads manifest only (0 hits for `resolver_ir\|source_sha256` @ backend/) | V3 | observed, **blocks freeze** |
+| FACT-031 | **B2 hash algorithm mismatch**: `sha256_hex` via canonical_json always DIFFER; `body_hash` via splitlines drifts (6/12) | V3 | observed, **blocks freeze** |
+| FACT-032 | **B3 unit_type silent split**: 4 consumer points, 0 isolation, 3 mutually contradictory interpretations | V3 | observed, **blocks freeze** |
+| FACT-033 | DQE §1-A claims consumer isolation "已生效" — contradicted by FACT-032 | V3 | observed, **needs DSH correction** |
+| FACT-034 | Figure: 70,838 refs, 27,240 dangling (unrecovered `imgs/`); V3 `SourceFigure` field-level non-interoperable | Both | observed, not a blocker |
 
 ---
 
@@ -50,7 +55,8 @@
 | EB-003 | Missing punctuation contextual rule | Open |
 | EB-004 | _locate_options() CONTRACT GAP | Open, confirmed |
 | EB-005 | Formula FP structural exclusion | Open, INFERRED |
-| EB-008 | Admission Evidence Authority enforcement | **P1 Implemented** (92号 §5 五项落地; 837 tests passed; awaiting DSH code attack) |
+| EB-008 | Admission Evidence Authority enforcement | **Implementation completed, external adversarial verification pending** (P1 local: 88aeae8 + notes b5ddbe3; External verification evidence unavailable in current repository state; NOT VERIFIED / NOT DSH approved / step-6 NOT released) |
+| EB-009 | Integration Contract v0.1 freeze | **NOT FROZEN** — BLOCK B1 (transport) / B2 (hash) / B3 (unit_type)。根因 = B1；无实现决策。待 Owner 裁决传输层 |
 
 ---
 
@@ -74,6 +80,8 @@
 
 | Evidence | Location |
 |---|---|
+| Preprocessing ↔ V3 Integration Contract (DRAFT v0.1) | `Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-CONTRACT.md` |
+| EB-008 P1 Implementation Notes | `Docs/COORDINATION/EVIDENCE/EB008-P1-IMPLEMENTATION-NOTES.md` |
 | Phase 0.3-B results | `backend/scripts/preprocessing_consumer/consumer-report-b3.json` |
 | Correctness sampling | `backend/scripts/preprocessing_consumer/correctness-sampling-report.json` |
 | Claude-4 attribution | `backend/scripts/preprocessing_consumer/claude4-attribution.json` |
@@ -87,3 +95,6 @@
 | EB-008 FINAL (implementation entry) | `Docs/DECISIONS/92_EB008_EVIDENCE_AUTHORITY_ENFORCEMENT_FINAL.md` |
 | EB-008 Verification Evidence | `Docs/COORDINATION/EVIDENCE/EB008-CLAUDE-VERIFICATION.md` |
 | P3.2 enforcement results | `backend/scripts/preprocessing_consumer/p32-enforcement-results.json` |
+| Consumer Review v0.1 (baseline `1fbaf5e`) | `Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-CONTRACT-CONSUMER-REVIEW.md` |
+| **Consumer Review v0.2 (freeze verdict, DQE baseline `4d78513`)** | `Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-CONTRACT-CONSUMER-REVIEW-v0.2.md` |
+| Handoff 007 (B1/B2/B3 → DSH confirm) | `Docs/COORDINATION/HANDOFFS/2026-09-16-Claude-to-DSH-007.md` |
