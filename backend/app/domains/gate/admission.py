@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import re
 import uuid
+from datetime import datetime, timezone
 
 from app.domains.compile import map_canonical_type
 from app.domains.compile.identity_normalization import (
@@ -38,9 +39,14 @@ from app.domains.compile.identity_normalization import (
     normalize_identity,
     strip_option_label,
 )
+from app.domains.evidence.proof import generate_review_proof, verify_review_proof
 from app.models.snapshot import AdmissionCandidate
 from app.repositories.base import RepositoryError
 from app.repositories.content_repository import ContentRepository
+from app.repositories.evidence_repository import (
+    AUTHORITY_VALIDATED,
+    EvidenceRepository,
+)
 from app.repositories.snapshot_repository import SnapshotRepository
 from app.repositories.source_repository import SourceRepository
 
@@ -58,6 +64,8 @@ class AdmissionService:
         self._content = ContentRepository(session)
         self._snap = SnapshotRepository(session)
         self._source = SourceRepository(session)
+        # EB-008 §5.3：Evidence Authority 投影 + human_review 事件写入（Admission Boundary）
+        self._evidence = EvidenceRepository(session)
 
     # ------------------------------------------------------------------ approve
     async def approve(
@@ -102,6 +110,14 @@ class AdmissionService:
                 )
         else:
             raise RepositoryError(f"unknown approve source {source!r}")
+
+        # ---- EB-008 §5.3：Evidence Authority enforcement（Admission Boundary）----
+        # human 路径：人工审核结果 → human_review ValidationEvent + review_proof（§5.2）
+        # 双入口保持（20 §8.2）：auto_gate 依赖 Gate 已落的 validated 事件；
+        # human 依赖本步生成的 human_review 事件。随后统一投影校验，fail-closed。
+        if source in _HUMAN_SOURCES:
+            await self._record_human_review(candidate, review_result="validated")
+        await self._require_evidence_authority(candidate)
 
         created_questions, created_instances = await self._materialize(candidate)
 
@@ -150,8 +166,63 @@ class AdmissionService:
             "reviewer_id": reviewer_id,
             "reasons": reasons,
         }
-        await self._snap.append_review_trail(candidate_id, entry)
+        candidate = await self._snap.append_review_trail(candidate_id, entry)
+        # EB-008 §5.2：人工 reject → human_review ValidationEvent（rejected）+ proof
+        await self._record_human_review(candidate, review_result="rejected")
         return await self._snap._transition_decision(candidate.id, "rejected")
+
+    # -------------------------------------------------- EB-008 Authority Boundary
+    async def _record_human_review(
+        self, candidate: AdmissionCandidate, *, review_result: str
+    ) -> None:
+        """人工审核结果 → human_review ValidationEvent + review_proof（92号 §5.2）。
+
+        reviewed_at / reviewer_id 取自 review_trail 最新对应 entry（BUG-V3-025：time 由
+        append_review_trail 注入）。replay（已有同结果事件）→ Repository no-op（R4）。
+        """
+        entry = _latest_human_entry(candidate.review_trail, review_result)
+        if entry is None:
+            raise RepositoryError(
+                f"no human {review_result} review_trail entry found (20 §8.2)"
+            )
+        reviewed_at = _parse_review_time(entry.get("time"))
+        reviewer_id = entry.get("reviewer_id") or entry.get("verified_by") or "unknown"
+        proof = generate_review_proof(
+            candidate_id=candidate.id,
+            review_result=review_result,
+            reviewer_id=reviewer_id,
+            reviewed_at=reviewed_at,
+        )
+        await self._evidence.append_human_review_event(
+            candidate_id=candidate.id,
+            source_version_id=candidate.source_version_id,
+            claim_id=_candidate_claim_id(candidate),
+            review_result=review_result,
+            reviewer_id=reviewer_id,
+            reviewed_at=reviewed_at,
+            review_proof=proof,
+        )
+
+    async def _require_evidence_authority(self, candidate: AdmissionCandidate) -> None:
+        """Admission Boundary：claim Authority 必须 VALIDATED，否则 fail-closed（92号 §5.3）。
+
+        - 投影（latest-by-validated_at wins）
+        - human_review 事件 → verify_review_proof；失败 → 拒（防 DB 篡改，§2 声明 2）
+        - Authority 缺失/无效 → RepositoryError；candidate 保持 pending_review（不 reject）
+        """
+        claim_id = _candidate_claim_id(candidate)
+        state, latest = await self._evidence.project_authority(candidate.id, claim_id)
+        if latest is not None and latest.validation_method == "human_review":
+            if not verify_review_proof(latest):
+                raise RepositoryError(
+                    f"Evidence Authority fail-closed: human_review proof invalid "
+                    f"for claim {claim_id!r} (possible DB tamper, EB-008 §5.2)"
+                )
+        if state != AUTHORITY_VALIDATED:
+            raise RepositoryError(
+                f"Evidence Authority fail-closed: claim {claim_id!r} "
+                f"authority={state!r}; approval forbidden (EB-008)"
+            )
 
     # ------------------------------------------------------------------ 物化
     async def _materialize(
@@ -454,3 +525,32 @@ def _has_human_approve(review_trail: list | None) -> bool:
         if entry.get("decision") == _REVIEW_APPROVE and entry.get("verified_by") in _HUMAN_SOURCES:
             return True
     return False
+
+
+# ------------------------------------------------------------------ EB-008 helpers
+def _candidate_claim_id(candidate: AdmissionCandidate) -> str:
+    """claim_id = candidate payload IR root unit_id（与 GateService record_validation 同源）。"""
+    units = ((candidate.payload or {}).get("ir_snapshot") or {}).get("units") or []
+    if not units or not units[0].get("unit_id"):
+        raise RepositoryError(
+            "candidate payload has no IR units; cannot resolve claim_id (EB-008)"
+        )
+    return units[0]["unit_id"]
+
+
+def _latest_human_entry(review_trail: list | None, review_result: str) -> dict | None:
+    """review_trail 中最新匹配的人工 entry（validated→approve / rejected→reject）。"""
+    key = _REVIEW_APPROVE if review_result == "validated" else _REVIEW_REJECT
+    if not review_trail:
+        return None
+    for entry in reversed(review_trail):
+        if entry.get("decision") == key and entry.get("verified_by") in _HUMAN_SOURCES:
+            return entry
+    return None
+
+
+def _parse_review_time(value: str | None) -> datetime:
+    """review_trail entry time（ISO-8601）→ datetime；缺失用当前 UTC（fail-safe 兜底）。"""
+    if not value:
+        return datetime.now(timezone.utc)
+    return datetime.fromisoformat(value)

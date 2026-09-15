@@ -15,10 +15,11 @@ EXPECTED_TABLES = {
     "source_figures",
     "document_active_sources",
     "document_source_selection_events",
-    # C 域（3）
+    # C 域（4：EB-008 +validation_events）
     "semantic_annotations",
     "admission_candidates",
     "admission_events",
+    "validation_events",
     # A 域（10）
     "questions",
     "question_instances",
@@ -90,7 +91,7 @@ async def test_db_tables_exact_20() -> None:
     tables, _, _ = await _snapshot()
     db_tables = await _content_tables(tables)
     assert db_tables == EXPECTED_TABLES
-    assert len(db_tables) == 20  # Phase I-3: +document_source_spans
+    assert len(db_tables) == 21  # EB-008: +validation_events（Phase I-3 +document_source_spans）
 
 
 async def test_orm_metadata_matches_db() -> None:

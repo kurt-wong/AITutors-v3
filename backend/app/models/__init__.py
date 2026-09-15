@@ -15,6 +15,7 @@ from app.models.content import (
     UnitGroup,
     UnitGroupMember,
 )
+from app.models.evidence import ValidationEventRecord
 from app.models.runtime import Budget, LlmCallAudit, Task, TaskClaim
 from app.models.snapshot import AdmissionCandidate, AdmissionEvent, SemanticAnnotation
 from app.models.source import (
@@ -38,6 +39,7 @@ __all__ = [
     "SemanticAnnotation",
     "AdmissionCandidate",
     "AdmissionEvent",
+    "ValidationEventRecord",
     "Question",
     "QuestionInstance",
     "InstanceRoleContent",

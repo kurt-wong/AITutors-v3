@@ -35,6 +35,9 @@ class Settings(BaseSettings):
     minio_bucket: str = ""
     minio_secure: bool = False
     admin_api_key: str | None = None
+    # EB-008（92号 §5.2）：review proof 密钥。≥32 字节；缺失时 proof 生成/验证
+    # fail-closed（proof.py require_app_secret），非 test 环境启动时校验（main.py）。
+    app_secret: str = ""
 
     # ---- live provider 凭证（30 §6：仅 live 态校验当前 provider；disabled/mock 不要求）----
     deepseek_api_key: str | None = None

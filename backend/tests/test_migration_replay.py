@@ -167,7 +167,7 @@ def test_incremental_0003_to_0004_delta() -> None:
     finally:
         command.upgrade(cfg, "head")  # 无条件恢复到 head，防失败态污染后续测试
     delta = after - before
-    expected_delta = {"tasks", "task_claims", "document_source_spans"}
+    expected_delta = {"tasks", "task_claims", "document_source_spans", "validation_events"}
     assert delta == expected_delta, f"增量 delta 期望 {sorted(expected_delta)}，实得 {sorted(delta)}"
 
 

@@ -36,6 +36,7 @@ from app.domains.resolver import RESOLVER_VERSION
 from app.domains.resolver.resolver import SourceResolver
 from app.domains.resolver.span import SourceFigureView, SourceLineView
 from app.models.snapshot import AdmissionCandidate
+from app.repositories.evidence_repository import EvidenceRepository
 from app.repositories.snapshot_repository import SnapshotRepository
 from app.repositories.source_repository import SourceRepository
 
@@ -100,11 +101,12 @@ def _confidence_only_projection(payload: object) -> object:
 
 class GateService:
     def __init__(self, session) -> None:
+        self._session = session
         self._snap = SnapshotRepository(session)
         self._source = SourceRepository(session)
         self._admission = AdmissionService(session)
-        # Evidence Promotion Contract Phase 1: fresh per run, not singleton.
-        # Phase 1 Hardening (Medium 9 fix): per-run isolation prevents accumulation.
+        # Evidence Promotion Contract: fresh per run, not singleton.
+        # EB-008 §5.1：DB-backed（EvidenceRepository 注入），per-run isolation 保留。
         self._evidence: EvidencePromotionService | None = None
 
     @property
@@ -155,9 +157,9 @@ class GateService:
             source_version_id=source_version_id, lines=lines, figures=figures
         ).resolve(ann.payload)
 
-        # Evidence Promotion Contract Phase 1: fresh service per run (Medium 9 fix).
-        # Prevents accumulation across run() calls.
-        self._evidence = EvidencePromotionService()
+        # Evidence Promotion Contract: fresh service per run (Medium 9 fix).
+        # EB-008 §5.1：注入 EvidenceRepository —— ValidationEvents 持久化，非内存。
+        self._evidence = EvidencePromotionService(EvidenceRepository(self._session))
 
         # Phase 1 Hardening (High 6 fix): ProposerIdentity is "llm", not "native_parser".
         # The annotation payload was produced by an LLM. The Resolver merely verified
@@ -184,18 +186,9 @@ class GateService:
                 root=root, ir=ir, compiled=compiled, resolved_run=resolved_run
             )
 
-            # Evidence Promotion Contract Phase 1: record ValidationEvent.
             # R4: Only ValidationEvent produces Evidence Authority.
-            # Phase 1 Hardening (Critical 3 fix): pass reference_ids to link
-            # ValidationEvent → EvidenceReference.
-            span_ids = _extract_unit_span_ids(root, compiled)
-            ref_ids = tuple(
-                f"er-{sid}" for sid in span_ids
-            )
-            self._evidence.record_validation(
-                root.unit_id, gate, reference_ids=ref_ids
-            )
-
+            # EB-008 §5.1：事件落库移到 candidate 解析后（需 candidate_id）；
+            # reference_ids 链接 ValidationEvent → EvidenceReference（Critical 3）。
             payload = build_payload(
                 root=root, ir=ir, compiled=compiled, resolved_run=resolved_run
             )
@@ -229,6 +222,19 @@ class GateService:
                 )
                 await self._snap.flush()  # candidate.id 回填后供 approve lock
             candidates.append(candidate)
+
+            # EB-008 §5.1：ValidationEvent 持久化（candidate.id 已可得）。
+            # replay 幂等（R4）：同 (candidate, claim) 同结果 → Repository no-op，不新增行。
+            # pending_review → None（不落事件，fail-closed by design）。
+            span_ids = _extract_unit_span_ids(root, compiled)
+            ref_ids = tuple(f"er-{sid}" for sid in span_ids)
+            await self._evidence.record_validation(
+                root.unit_id,
+                gate,
+                candidate_id=candidate.id,
+                source_version_id=source_version_id,
+                reference_ids=ref_ids,
+            )
 
             if gate.get("decision") == "rejected":
                 # 机器已判 rejected → decision_status 由确定性 Gate Policy 写入终态

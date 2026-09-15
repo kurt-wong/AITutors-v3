@@ -1,40 +1,42 @@
-"""Evidence Promotion Service — Phase 1 (75_EVIDENCE_PROMOTION_CONTRACT.md v1.1.0).
+"""Evidence Promotion Service — DB-backed（75_EVIDENCE_PROMOTION_CONTRACT + EB-008）。
 
 Phase 1 responsibilities:
-1. Create EvidenceReference list from ResolvedRun (bridge: Source Binding → Evidence Lifecycle)
-2. Record ValidationEvent from Gate decisions (append-only event log)
+1. Create EvidenceReference list from ResolvedRun（bridge: Source Binding → Evidence Lifecycle）
+2. Record ValidationEvent from Gate decisions → **持久化到 validation_events**（EB-008 §5.1）
 3. Provide EvidencePromotionService for GateService integration
 
-Phase 1 Hardening (adversarial review 2026-09-13):
-- Append-only enforced by AppendOnlyEventLog (tuple-based, Critical 1 fix)
-- State machine: REJECTED terminal, INVALIDATED requires prior VALIDATED (Critical 2 fix)
-- ValidationEvent.reference_ids links to EvidenceReference IDs (Critical 3 fix)
-- validation_method derived from gate layers, not hardcoded (High 4 fix)
-- Structured CheckResult objects replace narrative strings (High 5 fix)
-- is_evidence_validated uses timestamp, not list position (Medium 7 fix)
+EB-008（92号 §5.1）改造：
+- 移除 in-memory AppendOnlyEventLog（DEC-016 Decision-3：所有关键证据必须持久化）
+- 改为注入 EvidenceRepository（validation_events INSERT-only）
+- record_validation / is_evidence_validated 为 async（DB 路径）
+- claim 的 Authority 投影由 repository 承担（latest-by-validated_at wins）
 
-Phase 1 does NOT:
-- Create explicit EvidenceProposal / EvidenceClaim dataclasses (Phase 2)
-- Change ResolvedSpan schema (frozen — architecture review)
-- Change existing pipeline flow (additive only)
+EvidenceReferences 仍为 per-run 内存对象（Proposal 层元数据，非 Authority；R2）。
+其 ID 通过 ValidationEvent.reference_ids 持久化（Critical 3），可从 DB 事件反查。
 
 Architecture principle: Resolver produces ResolvedSpan (location). EvidenceReference
 adds proposal metadata. Neither alone constitutes evidence authority. Only
-ValidationEvent (from Gate) produces authority.
+ValidationEvent (from Gate, persisted in validation_events) produces authority.
 """
 
 from __future__ import annotations
 
 import uuid
+from typing import TYPE_CHECKING
 
 from app.domains.evidence.models import (
-    AppendOnlyEventLog,
+    AUTHORITY_VALIDATED,
     CheckResult,
     EvidenceReference,
     ProposerIdentity,
     ValidationEvent,
 )
 from app.domains.resolver.span import ResolvedRun
+from app.models.evidence import ValidationEventRecord
+
+if TYPE_CHECKING:
+    # 避免 promotion ↔ repository 循环导入（repository 依赖 domain models）
+    from app.repositories.evidence_repository import EvidenceRepository
 
 
 def create_evidence_references(
@@ -46,13 +48,6 @@ def create_evidence_references(
     Each resolved span becomes an evidence proposal. The proposer identity
     records who made the proposal (provenance). This does NOT grant evidence
     authority — that requires a ValidationEvent from Gate.
-
-    Args:
-        resolved_run: Output of SourceResolver.resolve()
-        proposer: Who is proposing these evidence candidates
-
-    Returns:
-        Tuple of EvidenceReference, one per ResolvedSpan.
     """
     return tuple(
         EvidenceReference.from_resolved_span(span, proposer)
@@ -63,39 +58,30 @@ def create_evidence_references(
 def _derive_validation_method(gate_decision: dict) -> str:
     """Derive validation_method from actual gate layer statuses.
 
-    Phase 1 Hardening (High 4 fix): Previously hardcoded "frozen_header_rule"
-    for all outcomes. Now derives from which layer caused the failure:
+    Phase 1 Hardening (High 4 fix): derives from which layer caused the failure:
     - provenance fail (text_hash mismatch) → "byte_proven"
     - structural/semantic fail → "structural_consistency"
     - auto_approve or admission fail → "frozen_header_rule"
     """
     layers = gate_decision.get("layers", {})
 
-    # Check provenance layer first (byte_proven failures are most specific)
     provenance = layers.get("provenance", {})
     if provenance.get("status") == "fail":
         return "byte_proven"
 
-    # Check structural and semantic layers
     structural = layers.get("structural", {})
     semantic = layers.get("semantic", {})
     if structural.get("status") == "fail" or semantic.get("status") == "fail":
         return "structural_consistency"
 
-    # Default: frozen_header_rule (admission/grammar checks)
     return "frozen_header_rule"
 
 
 def _extract_checks(gate_decision: dict) -> tuple[CheckResult, ...]:
-    """Extract structured CheckResult objects from gate decision layers.
-
-    Phase 1 Hardening (High 5 fix): Gate reasons are narrative strings.
-    This converts them to structured checks with machine-parseable IDs.
-    """
+    """Extract structured CheckResult objects from gate decision layers."""
     layers = gate_decision.get("layers", {})
     checks: list[CheckResult] = []
 
-    # Map layer names to check IDs
     layer_check_ids = {
         "structural": "STRUCTURAL_CONSISTENCY",
         "provenance": "BYTE_PROVEN",
@@ -126,32 +112,16 @@ def record_validation_event(
     validator: str = "gate/v1",
     reference_ids: tuple[str, ...] = (),
 ) -> ValidationEvent | None:
-    """Create a ValidationEvent from a Gate decision dict.
+    """Create a ValidationEvent from a Gate decision dict (pure builder).
 
     Maps gate_decision.decision to validation_result:
-    - "auto_approve" → "validated" (all checks passed, strict-auto grammar verified)
-    - "rejected"     → "rejected"  (structural/semantic contradiction)
-    - "pending_review" → None (validation not concluded; human review needed)
-
-    Phase 1 Hardening:
-    - validation_method derived from gate layers (High 4 fix)
-    - Structured CheckResult objects (High 5 fix)
-    - reference_ids links to EvidenceReference IDs (Critical 3 fix)
-
-    Args:
-        claim_id: Identifier for what was validated (e.g., candidate unit_id)
-        gate_decision: Output of GatePolicy.evaluate()
-        validator: Validator identifier (deterministic, not LLM)
-        reference_ids: EvidenceReference IDs covered by this validation
-
-    Returns:
-        ValidationEvent if validation concluded (validated/rejected),
-        None if pending_review (still awaiting human validation).
+    - "auto_approve" → "validated"
+    - "rejected"     → "rejected"
+    - "pending_review" → None (validation not concluded)
     """
     decision = gate_decision.get("decision")
 
     if decision == "pending_review":
-        # Validation not concluded. No ValidationEvent.
         return None
 
     if decision not in ("auto_approve", "rejected"):
@@ -160,13 +130,8 @@ def record_validation_event(
             f"must be 'auto_approve', 'rejected', or 'pending_review'"
         )
 
-    # Derive validation_method from actual gate layers (High 4 fix)
     validation_method = _derive_validation_method(gate_decision)
-
-    # Extract structured checks (High 5 fix)
     checks = _extract_checks(gate_decision)
-
-    # Map decision to validation_result
     validation_result = "validated" if decision == "auto_approve" else "rejected"
 
     return ValidationEvent(
@@ -181,31 +146,26 @@ def record_validation_event(
 
 
 class EvidencePromotionService:
-    """Phase 1 service for Evidence Promotion Contract integration.
+    """DB-backed Evidence Promotion service（EB-008 §5.1）。
 
-    Provides the bridge between Resolver output and Gate validation recording.
-    Designed for additive integration with GateService — does not change existing
-    pipeline behavior.
-
-    Phase 1 Hardening state:
-    - Append-only enforced by AppendOnlyEventLog (tuple-based, Critical 1 fix)
-    - State machine enforcement in AppendOnlyEventLog.append() (Critical 2 fix)
-    - ValidationEvent ↔ EvidenceReference linking via reference_ids (Critical 3 fix)
-    - Per-run isolation: create new instance per GateService.run() call
-
-    Architecture review (2026-09-13): State machine is in the ledger layer,
-    not the service layer. This prevents bypass via direct log.append().
+    - ValidationEvents 持久化到 validation_events（INSERT-only Repository）
+    - replay 幂等由 Repository 保证（同结果 → no-op，R1-R5）
+    - EvidenceReferences 为 per-run Proposal 元数据（R2，非 Authority）
 
     Usage in GateService.run():
-        promo = EvidencePromotionService()  # fresh per run
+        promo = EvidencePromotionService(EvidenceRepository(session))
         refs = promo.create_references(resolved_run, proposer_identity)
         ...
-        event = promo.record_validation(unit_id, gate_decision, reference_ids=...)
+        await promo.record_validation(
+            root.unit_id, gate,
+            candidate_id=candidate.id,
+            source_version_id=source_version_id,
+            reference_ids=...,
+        )
     """
 
-    def __init__(self) -> None:
-        # Phase 1: in-memory append-only log. Phase 2: DB persistence.
-        self._validation_log = AppendOnlyEventLog()
+    def __init__(self, repository: EvidenceRepository) -> None:
+        self._repository = repository
         self._evidence_references: tuple[EvidenceReference, ...] = ()
 
     def create_references(
@@ -213,25 +173,26 @@ class EvidencePromotionService:
         resolved_run: ResolvedRun,
         proposer: ProposerIdentity,
     ) -> tuple[EvidenceReference, ...]:
-        """Create and store EvidenceReferences from a ResolvedRun."""
+        """Create and store EvidenceReferences from a ResolvedRun (per-run, Proposal 层)."""
         refs = create_evidence_references(resolved_run, proposer)
         self._evidence_references = self._evidence_references + refs
         return refs
 
-    def record_validation(
+    async def record_validation(
         self,
         claim_id: str,
         gate_decision: dict,
+        *,
+        candidate_id: uuid.UUID,
+        source_version_id: uuid.UUID,
         validator: str = "gate/v1",
         reference_ids: tuple[str, ...] = (),
-    ) -> ValidationEvent | None:
-        """Record a ValidationEvent from a Gate decision. Append-only.
+    ) -> ValidationEventRecord | None:
+        """Record + persist a ValidationEvent from a Gate decision.
 
-        Phase 1 Hardening:
-        - State machine enforcement in AppendOnlyEventLog.append() (Critical 2 fix)
-        - reference_ids linking (Critical 3 fix)
-
-        Raises ValueError on state machine violation.
+        pending_review → None（验证未结论，不落事件——fail-closed by design，92号 §7 风险6）。
+        replay（同结果）→ 返回既有行（R4，不新增）。
+        状态机违规 → ValueError（terminal 拒新事件）。
         """
         event = record_validation_event(
             claim_id=claim_id,
@@ -241,46 +202,31 @@ class EvidencePromotionService:
         )
         if event is None:
             return None
-
-        # State machine enforcement is INSIDE AppendOnlyEventLog.append()
-        # Direct calls to _validation_log.append() cannot bypass it.
-        self._validation_log.append(event)
-        return event
-
-    @property
-    def validation_events(self) -> tuple[ValidationEvent, ...]:
-        """All recorded ValidationEvents (append-only, read-only access)."""
-        return self._validation_log.events
+        return await self._repository.append_event(
+            event,
+            candidate_id=candidate_id,
+            source_version_id=source_version_id,
+        )
 
     @property
     def evidence_references(self) -> tuple[EvidenceReference, ...]:
-        """All created EvidenceReferences (read-only access)."""
+        """All created EvidenceReferences (read-only, per-run Proposal 层)."""
         return self._evidence_references
-
-    def get_events_for_claim(self, claim_id: str) -> tuple[ValidationEvent, ...]:
-        """Get all ValidationEvents for a specific claim."""
-        return self._validation_log.for_claim(claim_id)
 
     def get_references_for_ids(
         self, reference_ids: tuple[str, ...]
     ) -> tuple[EvidenceReference, ...]:
-        """Get EvidenceReferences by their IDs. Critical 3 fix: enables tracing
-        from ValidationEvent back to the EvidenceReferences it validated."""
+        """Get EvidenceReferences by their IDs (Critical 3: ValidationEvent → references)."""
         id_set = set(reference_ids)
         return tuple(r for r in self._evidence_references if r.reference_id in id_set)
 
-    def is_evidence_validated(self, claim_id: str) -> bool:
-        """Check if a claim has a terminal validated event.
+    async def is_evidence_validated(
+        self, candidate_id: uuid.UUID, claim_id: str
+    ) -> bool:
+        """Check if (candidate, claim) Authority projection is VALIDATED.
 
-        R4: Only ValidationEvent produces Evidence Authority.
-        A claim is validated only if its LATEST event (by timestamp) has
-        result="validated". (A later INVALIDATED event supersedes a prior validated.)
-
-        Phase 1 Hardening (Medium 7 fix): Uses timestamp ordering, not list position.
+        R4: Only ValidationEvent (persisted) produces Evidence Authority.
+        Latest-by-timestamp wins: a later INVALIDATED supersedes prior validated.
         """
-        events = self.get_events_for_claim(claim_id)
-        if not events:
-            return False
-        # Latest event by timestamp wins (Medium 7 fix)
-        latest = max(events, key=lambda e: e.validated_at)
-        return latest.validation_result == "validated"
+        state, _ = await self._repository.project_authority(candidate_id, claim_id)
+        return state == AUTHORITY_VALIDATED

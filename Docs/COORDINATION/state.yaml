@@ -11,7 +11,7 @@ agents:
     repository: kurt-wong/AITutors-v3
     branch: main
     commit: 69a6c0b
-    status: eb008_design_frozen
+    status: eb008_p1_implemented
   preprocessing:
     agent: dsh
     repository: kurt-wong/Aitutors-preprocessing
@@ -165,10 +165,10 @@ open_questions:
 
   - id: EB-008
     question: "Admission Evidence Authority enforcement: how to enforce without breaking 20 §8.2 dual-entry and materialization transaction"
-    status: design_frozen
+    status: p1_implemented
     owner: claude
     blocked_by: none
-    note: "FINAL design at Docs/DECISIONS/92_EB008_EVIDENCE_AUTHORITY_ENFORCEMENT_FINAL.md. Owner confirmed core direction (Review-5). Implements DEC-016 (renamed from DEC-013 due to cross-ledger conflict). Implementation Checklist §5: validation_events table, review proof gen/verify, Admission enforcement, invalidate cascade, append-only protection. Design phase complete; implementation phase entry."
+    note: "Phase-1 implemented per92号 §5 Checklist (5 items): validation_events table (Alembic 0011 + ORM + EvidenceRepository INSERT-only), review proof (proof.py + APP_SECRET), Admission Authority enforcement (project_authority + fail-closed in approve()), invalidate cascade (annotation supersede wired; sv entry available), append-only app-layer protection. Tests: 837 passed (test_eb008_evidence_authority.py 26 acceptance tests). Next: DSH code attack verification."
 
 decisions:
   - id: DEC-001

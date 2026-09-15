@@ -50,7 +50,7 @@
 | EB-003 | Missing punctuation contextual rule | Open |
 | EB-004 | _locate_options() CONTRACT GAP | Open, confirmed |
 | EB-005 | Formula FP structural exclusion | Open, INFERRED |
-| EB-008 | Admission Evidence Authority enforcement | **Design Frozen** (92号 FINAL; DEC-016; implementation entry) |
+| EB-008 | Admission Evidence Authority enforcement | **P1 Implemented** (92号 §5 五项落地; 837 tests passed; awaiting DSH code attack) |
 
 ---
 

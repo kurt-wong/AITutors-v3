@@ -29,6 +29,8 @@ from app.domains.evidence.promotion import (
     record_validation_event,
 )
 from app.domains.resolver.span import ResolvedSpan
+from app.repositories.evidence_repository import EvidenceRepository
+from tests.eb008_helpers import seed_candidate
 
 SVID = uuid.UUID("00000000-0000-0000-0000-00000000000c")
 
@@ -65,11 +67,11 @@ class TestSemanticIRBypass:
     V3 核心原则: Only Validated Evidence may enter Semantic IR.
     """
 
-    def test_claim_without_validation_event_is_not_validated(self):
+    async def test_claim_without_validation_event_is_not_validated(self, session):
         """EvidenceClaim 存在但无 ValidationEvent → is_evidence_validated = False."""
-        service = EvidencePromotionService()
+        sv, _ann, cand = await seed_candidate(session)
+        service = EvidencePromotionService(EvidenceRepository(session))
 
-        # 创建 EvidenceReference (Proposal 层)
         proposer = ProposerIdentity(producer_type="llm", model="test-model")
         span = mk_span("span-001")
         refs = service.create_references(
@@ -78,32 +80,23 @@ class TestSemanticIRBypass:
         )
         assert len(refs) == 1
 
-        # 不产生 ValidationEvent
-        # is_evidence_validated 必须返回 False
-        assert service.is_evidence_validated("Q1") is False, (
+        assert await service.is_evidence_validated(cand.id, "Q1") is False, (
             "Claim without ValidationEvent must NOT be validated"
         )
 
-    def test_unvalidated_claim_cannot_enter_ir(self):
-        """未经 ValidationEvent 的 claim 不能进入 Semantic IR.
+    async def test_unvalidated_claim_cannot_enter_ir(self, session):
+        """未经 ValidationEvent 的 claim 不能进入 Semantic IR."""
+        sv, _ann, cand = await seed_candidate(session)
+        service = EvidencePromotionService(EvidenceRepository(session))
 
-        验证: EvidencePromotionService.is_evidence_validated() 是 IR 入口的守卫.
-        """
-        service = EvidencePromotionService()
-
-        # 构造一个 "伪造" 的 claim_id — 没有经过 Gate validation
         forged_claim_id = "forged-Q1"
+        assert await service.is_evidence_validated(cand.id, forged_claim_id) is False
+        assert await service.is_evidence_validated(cand.id, "nonexistent-claim") is False
 
-        # 任何未经 ValidationEvent 的 claim 必须被拒绝
-        assert service.is_evidence_validated(forged_claim_id) is False
-
-        # 即使手动构造 ValidationEvent 对象，不经过 record_validation 也不算
-        # 真正的防护在于: 没有事件 = 不 validated
-        assert service.is_evidence_validated("nonexistent-claim") is False
-
-    def test_rejected_claim_is_not_validated(self):
+    async def test_rejected_claim_is_not_validated(self, session):
         """rejected claim 不能进入 Semantic IR."""
-        service = EvidencePromotionService()
+        sv, _ann, cand = await seed_candidate(session)
+        service = EvidencePromotionService(EvidenceRepository(session))
 
         gate_decision_rejected = {
             "decision": "rejected",
@@ -112,35 +105,43 @@ class TestSemanticIRBypass:
             },
         }
 
-        event = service.record_validation("Q-rejected", gate_decision_rejected)
-        assert event is not None
-        assert event.validation_result == "rejected"
-        assert service.is_evidence_validated("Q-rejected") is False, (
+        rec = await service.record_validation(
+            "Q-rejected", gate_decision_rejected,
+            candidate_id=cand.id, source_version_id=sv.id,
+        )
+        assert rec is not None
+        assert rec.validation_result == "rejected"
+        assert await service.is_evidence_validated(cand.id, "Q-rejected") is False, (
             "Rejected claim must NOT be validated"
         )
 
-    def test_invalidated_claim_is_not_validated(self):
+    async def test_invalidated_claim_is_not_validated(self, session):
         """validated → invalidated → 不再是 validated."""
-        service = EvidencePromotionService()
+        sv, _ann, cand = await seed_candidate(session)
+        repo = EvidenceRepository(session)
+        service = EvidencePromotionService(repo)
 
-        # 先 validated
         gate_approve = {"decision": "auto_approve", "layers": {}}
-        service.record_validation("Q-inval", gate_approve)
-        assert service.is_evidence_validated("Q-inval") is True
+        await service.record_validation(
+            "Q-inval", gate_approve,
+            candidate_id=cand.id, source_version_id=sv.id,
+        )
+        assert await service.is_evidence_validated(cand.id, "Q-inval") is True
 
-        # 再 invalidated (使用更晚的时间戳确保 max() 选中它)
         later = datetime.now(timezone.utc) + timedelta(seconds=1)
         inv_event = ValidationEvent(
             event_id="ve-inval-001",
             claim_id="Q-inval",
             validation_result="invalidated",
             checks=(),
-            validation_method="human_review",
-            validator="human",
+            validation_method="structural_consistency",
+            validator="system/v1",
             validated_at=later,
         )
-        service._validation_log.append(inv_event)
-        assert service.is_evidence_validated("Q-inval") is False, (
+        await repo.append_event(
+            inv_event, candidate_id=cand.id, source_version_id=sv.id,
+        )
+        assert await service.is_evidence_validated(cand.id, "Q-inval") is False, (
             "Invalidated claim must NOT be validated"
         )
 
@@ -241,12 +242,12 @@ class TestEvidenceAuthorityLifecycle:
         for c in event.checks:
             assert c.result in ("pass", "fail")
 
-    def test_validated_evidence_traceable_to_references(self):
+    async def test_validated_evidence_traceable_to_references(self, session):
         """Q5: ValidatedEvidence 对应哪些 span → reference_ids 可追溯."""
-        service = EvidencePromotionService()
+        sv, _ann, cand = await seed_candidate(session)
+        service = EvidencePromotionService(EvidenceRepository(session))
         proposer = ProposerIdentity(producer_type="llm")
 
-        # 创建多个 EvidenceReferences
         roles = ["stem", "option", "answer", "explanation"]
         spans = tuple(
             mk_span(f"span-trace-{i}", role=role, line_ref=f"P1L00{i+1}")
@@ -257,44 +258,44 @@ class TestEvidenceAuthorityLifecycle:
             proposer,
         )
 
-        # Record validation with reference_ids
         ref_ids = tuple(r.reference_id for r in refs)
         gate_decision = {"decision": "auto_approve", "layers": {}}
-        event = service.record_validation(
-            "Q-trace", gate_decision, reference_ids=ref_ids
+        rec = await service.record_validation(
+            "Q-trace", gate_decision,
+            candidate_id=cand.id, source_version_id=sv.id,
+            reference_ids=ref_ids,
         )
 
-        assert event is not None
-        assert event.reference_ids == ref_ids
+        assert rec is not None
+        assert tuple(rec.reference_ids or ()) == ref_ids
 
-        # 从 ValidationEvent 可以追溯到 EvidenceReferences
-        traced = service.get_references_for_ids(event.reference_ids)
+        traced = service.get_references_for_ids(tuple(rec.reference_ids or ()))
         assert len(traced) == 4
         assert {r.span_id for r in traced} == {s.span_id for s in spans}
 
-    def test_ir_only_consumes_validated(self):
+    async def test_ir_only_consumes_validated(self, session):
         """Q6: IR 是否只消费 validated → 无 bypass.
 
-        验证 is_evidence_validated 是唯一入口:
         - validated → True
         - rejected → False
-        - invalidated → False
         - no event → False
         """
-        service = EvidencePromotionService()
+        sv, _ann, cand = await seed_candidate(session)
+        service = EvidencePromotionService(EvidenceRepository(session))
 
-        # Case 1: validated
-        service.record_validation("Q-valid", {"decision": "auto_approve", "layers": {}})
-        assert service.is_evidence_validated("Q-valid") is True
-
-        # Case 2: rejected
-        service.record_validation(
-            "Q-rej", {"decision": "rejected", "layers": {}}
+        await service.record_validation(
+            "Q-valid", {"decision": "auto_approve", "layers": {}},
+            candidate_id=cand.id, source_version_id=sv.id,
         )
-        assert service.is_evidence_validated("Q-rej") is False
+        assert await service.is_evidence_validated(cand.id, "Q-valid") is True
 
-        # Case 3: no event
-        assert service.is_evidence_validated("Q-none") is False
+        await service.record_validation(
+            "Q-rej", {"decision": "rejected", "layers": {}},
+            candidate_id=cand.id, source_version_id=sv.id,
+        )
+        assert await service.is_evidence_validated(cand.id, "Q-rej") is False
+
+        assert await service.is_evidence_validated(cand.id, "Q-none") is False
 
 
 # ---------------------------------------------------------------------------
@@ -347,17 +348,13 @@ class Test157InvalidBindingCases:
                 f"Target {t['case_id']}/{t['unit_id']} expected REJECT, got: {behavior}"
             )
 
-    def test_invalid_binding_produces_no_validated_evidence(self, corpus):
-        """Invalid binding evidence 不能产生 validated evidence.
-
-        模拟: 即使 Resolver 错误地返回了 exact span（结构有效但语义无效），
-        Gate grammar verification 应该返回 None → pending_review → 不产生 ValidationEvent.
-        """
+    async def test_invalid_binding_produces_no_validated_evidence(self, session, corpus):
+        """Invalid binding evidence 不能产生 validated evidence."""
         from app.domains.gate.grammar import verify
 
-        service = EvidencePromotionService()
+        sv, _ann, cand = await seed_candidate(session)
+        service = EvidencePromotionService(EvidenceRepository(session))
 
-        # 取样验证: 每种 reason 至少验证一个
         sampled = []
         seen_reasons = set()
         for t in corpus["targets"]:
@@ -370,13 +367,9 @@ class Test157InvalidBindingCases:
             answer_preview = t.get("answer_preview", "")
             unit_type = t.get("original_question_type", "short_answer")
 
-            # Grammar verification: invalid content → None → pending_review
             if unit_type in ("single_choice", "multiple_choice", "true_false"):
                 result = verify(unit_type, answer_preview, ["A", "B", "C", "D"])
-                # Invalid content 应该返回 None（无法判定）或 False
-                # None → pending_review → 不产生 ValidationEvent
                 if result is None:
-                    # pending_review → record_validation_event returns None
                     event = record_validation_event(
                         claim_id=f"{t['case_id']}-{t['unit_id']}",
                         gate_decision={"decision": "pending_review", "layers": {}},
@@ -385,12 +378,10 @@ class Test157InvalidBindingCases:
                         f"pending_review must NOT produce ValidationEvent for {t['unit_id']}"
                     )
                 elif result is False:
-                    # rejected → ValidationEvent with rejected
                     pass  # rejected is handled correctly
 
-            # 验证: 无论哪种路径，未经过 auto_approve 的 claim 不是 validated
             claim_id = f"{t['case_id']}-{t['unit_id']}"
-            assert service.is_evidence_validated(claim_id) is False, (
+            assert await service.is_evidence_validated(cand.id, claim_id) is False, (
                 f"Invalid binding {claim_id} must NOT be validated"
             )
 
@@ -446,15 +437,13 @@ class TestEvidenceAuthorityFullLifecycle:
     验证正常路径和异常路径都经过 Evidence Authority Ledger.
     """
 
-    def test_full_lifecycle_happy_path(self):
+    async def test_full_lifecycle_happy_path(self, session):
         """正常路径: Fragment → Proposal → Validation → validated."""
-        service = EvidencePromotionService()
+        sv, _ann, cand = await seed_candidate(session)
+        service = EvidencePromotionService(EvidenceRepository(session))
         proposer = ProposerIdentity(producer_type="llm", model="qwen3.5-9b")
 
-        # Step 1: SourceFragment (ResolvedSpan)
         span = mk_span("span-full-001")
-
-        # Step 2: Proposal (EvidenceReference)
         refs = service.create_references(
             type("FakeRun", (), {"resolved_spans": (span,)})(),
             proposer,
@@ -462,7 +451,6 @@ class TestEvidenceAuthorityFullLifecycle:
         assert len(refs) == 1
         assert refs[0].proposer.producer_type == "llm"
 
-        # Step 3: Validation (ValidationEvent)
         gate_decision = {
             "decision": "auto_approve",
             "layers": {
@@ -470,24 +458,25 @@ class TestEvidenceAuthorityFullLifecycle:
             },
         }
         ref_ids = tuple(r.reference_id for r in refs)
-        event = service.record_validation(
-            "Q-full", gate_decision, reference_ids=ref_ids
+        rec = await service.record_validation(
+            "Q-full", gate_decision,
+            candidate_id=cand.id, source_version_id=sv.id,
+            reference_ids=ref_ids,
         )
 
-        # Step 4: Verify Evidence Authority
-        assert event is not None
-        assert event.validation_result == "validated"
-        assert service.is_evidence_validated("Q-full") is True
-        assert event.reference_ids == ref_ids
+        assert rec is not None
+        assert rec.validation_result == "validated"
+        assert await service.is_evidence_validated(cand.id, "Q-full") is True
+        assert tuple(rec.reference_ids or ()) == ref_ids
 
-        # Step 5: Traceability
-        traced = service.get_references_for_ids(event.reference_ids)
+        traced = service.get_references_for_ids(tuple(rec.reference_ids or ()))
         assert len(traced) == 1
         assert traced[0].span_id == "span-full-001"
 
-    def test_full_lifecycle_rejection_path(self):
+    async def test_full_lifecycle_rejection_path(self, session):
         """异常路径: Fragment → Proposal → Rejection → NOT validated."""
-        service = EvidencePromotionService()
+        sv, _ann, cand = await seed_candidate(session)
+        service = EvidencePromotionService(EvidenceRepository(session))
         proposer = ProposerIdentity(producer_type="llm")
 
         span = mk_span("span-rej-001")
@@ -502,36 +491,42 @@ class TestEvidenceAuthorityFullLifecycle:
                 "structural": {"status": "fail", "reasons": ["invalid content"]},
             },
         }
-        event = service.record_validation(
+        rec = await service.record_validation(
             "Q-rej-full", gate_decision,
+            candidate_id=cand.id, source_version_id=sv.id,
             reference_ids=tuple(r.reference_id for r in refs),
         )
 
-        assert event is not None
-        assert event.validation_result == "rejected"
-        assert service.is_evidence_validated("Q-rej-full") is False
+        assert rec is not None
+        assert rec.validation_result == "rejected"
+        assert await service.is_evidence_validated(cand.id, "Q-rej-full") is False
 
-    def test_full_lifecycle_invalidation_path(self):
+    async def test_full_lifecycle_invalidation_path(self, session):
         """Invalidation 路径: validated → source change → invalidated → NOT validated."""
-        service = EvidencePromotionService()
+        sv, _ann, cand = await seed_candidate(session)
+        repo = EvidenceRepository(session)
+        service = EvidencePromotionService(repo)
 
-        # 先 validated
-        service.record_validation("Q-inv", {"decision": "auto_approve", "layers": {}})
-        assert service.is_evidence_validated("Q-inv") is True
+        await service.record_validation(
+            "Q-inv", {"decision": "auto_approve", "layers": {}},
+            candidate_id=cand.id, source_version_id=sv.id,
+        )
+        assert await service.is_evidence_validated(cand.id, "Q-inv") is True
 
-        # Source 变化 → invalidated (使用更晚时间戳)
         later = datetime.now(timezone.utc) + timedelta(seconds=1)
         inv_event = ValidationEvent(
             event_id="ve-inv-001",
             claim_id="Q-inv",
             validation_result="invalidated",
             checks=(),
-            validation_method="human_review",
-            validator="human-review-console",
+            validation_method="structural_consistency",
+            validator="system/v1",
             validated_at=later,
         )
-        service._validation_log.append(inv_event)
+        await repo.append_event(
+            inv_event, candidate_id=cand.id, source_version_id=sv.id,
+        )
 
-        assert service.is_evidence_validated("Q-inv") is False, (
+        assert await service.is_evidence_validated(cand.id, "Q-inv") is False, (
             "After INVALIDATED, claim must NOT be validated"
         )

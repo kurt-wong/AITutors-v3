@@ -231,6 +231,56 @@ class ValidationEvent:
 # State machine constants (moved from promotion.py for encapsulation)
 _TERMINAL_STATES = frozenset({"rejected", "invalidated"})
 
+# Authority 投影状态（Rev-4 §5 /92号 §5.3）。定义在 domain 层，供 Repository/Service
+# 共享（避免 promotion ↔ repository 循环导入）。
+AUTHORITY_NONE = "none"
+AUTHORITY_VALIDATED = "validated"
+AUTHORITY_REJECTED = "rejected"
+AUTHORITY_INVALIDATED = "invalidated"
+
+
+def enforce_state_transition(
+    existing_events: tuple[ValidationEvent, ...],
+    new_result: str,
+    claim_id: str,
+) -> None:
+    """Enforce state machine transitions. Raises ValueError on violation.
+
+    EB-008（92号 §5.1「状态机接入」）：本函数是状态机的唯一实现，
+    供 AppendOnlyEventLog（domain 内存 log）与 EvidenceRepository（DB 写入路径）共用。
+
+    - 首事件：validated/rejected 允许；invalidated 禁止（无 prior VALIDATED）
+    - REJECTED / INVALIDATED 为 terminal：拒绝一切新事件
+    - VALIDATED → 仅 INVALIDATED 允许
+
+    注意：同结果重放（replay idempotency，R1-R5）由调用方（EvidenceRepository）
+    在调用本函数**之前**判定为 no-op；本函数只判定非法迁移。
+    """
+    if not existing_events:
+        # First event: must be validated or rejected
+        if new_result == "invalidated":
+            raise ValueError(
+                f"Cannot INVALIDATE claim {claim_id!r}: no prior VALIDATED event"
+            )
+        return
+
+    # Find latest event by timestamp (Medium 7 fix)
+    latest = max(existing_events, key=lambda e: e.validated_at)
+
+    # Terminal states: no more events allowed
+    if latest.validation_result in _TERMINAL_STATES:
+        raise ValueError(
+            f"Claim {claim_id!r} is {latest.validation_result.upper()} (terminal); "
+            f"cannot append new ValidationEvent"
+        )
+
+    # VALIDATED → only INVALIDATED allowed
+    if latest.validation_result == "validated" and new_result != "invalidated":
+        raise ValueError(
+            f"Claim {claim_id!r} is VALIDATED; only INVALIDATED transition allowed, "
+            f"got {new_result!r}"
+        )
+
 
 class AppendOnlyEventLog:
     """Append-only event log with built-in state machine enforcement.
@@ -274,34 +324,9 @@ class AppendOnlyEventLog:
         """Enforce state machine transitions. Raises ValueError on violation.
 
         Critical 2 fix: State machine enforcement at ledger level.
-        - REJECTED is terminal: no events after rejection
-        - INVALIDATED requires prior VALIDATED
-        - VALIDATED → only INVALIDATED allowed
+        EB-008：逻辑委托共享函数 enforce_state_transition（DB 写入路径同源）。
         """
-        if not existing_events:
-            # First event: must be validated or rejected
-            if new_result == "invalidated":
-                raise ValueError(
-                    f"Cannot INVALIDATE claim {claim_id!r}: no prior VALIDATED event"
-                )
-            return
-
-        # Find latest event by timestamp (Medium 7 fix)
-        latest = max(existing_events, key=lambda e: e.validated_at)
-
-        # Terminal states: no more events allowed
-        if latest.validation_result in _TERMINAL_STATES:
-            raise ValueError(
-                f"Claim {claim_id!r} is {latest.validation_result.upper()} (terminal); "
-                f"cannot append new ValidationEvent"
-            )
-
-        # VALIDATED → only INVALIDATED allowed
-        if latest.validation_result == "validated" and new_result != "invalidated":
-            raise ValueError(
-                f"Claim {claim_id!r} is VALIDATED; only INVALIDATED transition allowed, "
-                f"got {new_result!r}"
-            )
+        enforce_state_transition(existing_events, new_result, claim_id)
 
     def append(self, event: ValidationEvent) -> None:
         """Append an event with state machine validation.

@@ -3138,3 +3138,16 @@ Owner Review-5 确认核心设计方向，完成收尾：
 产出：`Docs/DECISIONS/92_EB008_EVIDENCE_AUTHORITY_ENFORCEMENT_FINAL.md`
 
 EB-008 设计阶段结束。实现阶段入口 = 92号 + 本 commit。
+
+## 2026-09-15 — EB-008 Implementation Phase-1（92号 §5 Checklist）
+
+五项落地：validation_events 表（Alembic 0011 + EvidenceRepository INSERT-only +
+状态机共享函数）；review proof（proof.py + APP_SECRET 启动校验）；Admission
+Authority enforcement（approve() 投影 fail-closed + human proof 验证）；invalidate
+级联（annotation supersede 接线 + sv 入口）；append-only 应用层双保护。
+EvidencePromotionService 去 in-memory（DEC-016 Decision-3）。
+
+测试：新增 test_eb008_evidence_authority.py（26 验收）；既有测试适配；
+全量 837 passed / 1 xfailed（F-4 保留）。
+
+下一步：DSH 代码攻击测试 → 完整 V3 业务链。

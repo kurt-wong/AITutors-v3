@@ -3673,3 +3673,52 @@ Owner 终裁（DEC-013 L2 升级）→ L2 Decision Record → 实现阶段
 ### 状态
 
 **EB-008 设计阶段结束。实现阶段入口 = 92号 + 最终 commit。**
+
+---
+
+## EB-008 Implementation Phase-1 完成（2026-09-15）
+
+### 任务
+
+按92号 §5 Implementation Checklist 落地五项（Owner 指令：validation_events → proof → Admission enforcement → invalidate → replay 测试）。
+
+### 实现内容
+
+1. **validation_events 表**（§5.1）
+   - ORM `ValidationEventRecord`（app/models/evidence.py）+ Alembic 0011
+   - `EvidenceRepository`（INSERT-only；唯一写入口 append_event）
+   - 状态机抽取 `enforce_state_transition`（domain log 与 DB 写入路径同源）
+   - `EvidencePromotionService` 去 in-memory，注入 Repository（DEC-016 D3）
+   - GateService：事件落库移到 candidate 解析后（需 candidate_id）
+2. **Review Proof**（§5.2）
+   - `app/domains/evidence/proof.py`：generate/verify（SHA256 + APP_SECRET ≥32B）
+   - Settings.app_secret + .env.example + 非 test 启动校验（main.py lifespan）
+   - human approve/reject → human_review ValidationEvent + proof（AdmissionService 内）
+3. **Admission Authority enforcement**（§5.3）
+   - approve()：project_authority 投影；非 validated → fail-closed（保持 pending）
+   - human_review 事件 → verify_review_proof；失败 → fail-closed
+   - 双入口保持（auto_gate + human，20 §8.2 不破坏）
+4. **Invalidate 级联**（§5.4）
+   - `invalidate_claims_for_source_version` / `_for_annotation`
+   - annotation valid→superseded 已接线（snapshot_repository.set_annotation_status）
+   - INVALIDATED terminal；审计 checks.detail 记原因
+5. **Append-only**（§5.5 Phase-1）
+   - Repository 无 update/delete；insert 前状态机检查；replay 同结果 no-op（R4）
+   - DB 触发器留作后续加固（92号 §7 风险 2）
+
+### 测试
+
+- 新增 `tests/test_eb008_evidence_authority.py`（26 验收测试，覆盖 §5 五项验收标准）
+- 既有测试适配 DB-backed API（promotion/adversarial/hardening/c2/admission/schema）
+- spec_gap F-2 缺口证明移除（闭合）；F-4 保留 xfail
+- **全量：837 passed, 1 xfailed**（连续两轮稳定）
+
+### 已知边界
+
+- source_version supersede 无生产触发点（方法已提供，待调用方接线）
+- APP_SECRET 已写入 backend/.env（本地生成，未入库）
+- DB 触发器加固（§5.5 后续项）未做
+
+### 状态
+
+**EB-008 P1 实现完成，待 DSH 代码攻击测试。**

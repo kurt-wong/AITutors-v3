@@ -7,6 +7,8 @@ os.environ.setdefault(
     "DATABASE_URL",
     "postgresql+asyncpg://aitutors:change-me@localhost:5432/aitutors",
 )
+# EB-008 §5.2：test 环境注入满足 ≥32 字节的 APP_SECRET（proof 生成/验证可用）
+os.environ.setdefault("APP_SECRET", "test-app-secret-32-bytes-minimum!!")
 
 import pytest
 import pytest_asyncio

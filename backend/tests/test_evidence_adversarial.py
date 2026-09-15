@@ -30,6 +30,8 @@ from app.domains.evidence.promotion import (
     record_validation_event,
 )
 from app.domains.resolver.span import ResolvedRun, ResolvedSpan
+from app.repositories.evidence_repository import EvidenceRepository
+from tests.eb008_helpers import rejected_gate_decision, seed_candidate
 
 
 def _make_span(span_id="sp-1", role="answer", svid=None):
@@ -79,34 +81,48 @@ def _gate_rejected() -> dict:
 # ---------------------------------------------------------------------------
 
 class TestAttackAppendOnlyNotEnforced:
-    def test_clear_internal_log_blocked(self):
-        """Critical 1 fix: AppendOnlyEventLog has no clear() method.
-        Internal storage is tuple — cannot be cleared."""
-        service = EvidencePromotionService()
-        service.record_validation("claim-1", _gate_auto_approve())
-        assert len(service.validation_events) == 1
-        # AppendOnlyEventLog has no clear() method
-        assert not hasattr(service._validation_log, "clear")
-        # events property returns immutable tuple
-        assert isinstance(service.validation_events, tuple)
+    async def test_clear_internal_log_blocked(self, session):
+        """EB-008 §5.5: Repository 无 update/delete；唯一写入口 append_event。"""
+        sv, _ann, cand = await seed_candidate(session)
+        repo = EvidenceRepository(session)
+        service = EvidencePromotionService(repo)
+        await service.record_validation(
+            "claim-1", _gate_auto_approve(),
+            candidate_id=cand.id, source_version_id=sv.id,
+        )
+        rows = await repo.find_events_for_claim(cand.id, "claim-1")
+        assert len(rows) == 1
+        # 无 update/delete 方法（append-only 应用层保护）
+        assert not hasattr(repo, "update_event")
+        assert not hasattr(repo, "delete_event")
+        assert not hasattr(repo, "clear")
 
-    def test_tuple_is_immutable(self):
-        """Critical 1 fix: Tuple cannot be mutated via list methods."""
-        service = EvidencePromotionService()
-        service.record_validation("claim-1", _gate_auto_approve())
-        # Tuple has no append/clear/reverse methods
-        events_tuple = service.validation_events
+    async def test_tuple_is_immutable(self, session):
+        """Critical 1 fix: domain log tuple 不可变；DB 层无 UPDATE/DELETE 路径。"""
+        log = AppendOnlyEventLog()
+        log.append(ValidationEvent(
+            event_id="ve-1", claim_id="claim-1", validation_result="validated",
+            checks=(), validation_method="frozen_header_rule", validator="gate/v1",
+        ))
+        events_tuple = log.events
         assert not hasattr(events_tuple, "append")
         assert not hasattr(events_tuple, "clear")
         assert not hasattr(events_tuple, "reverse")
 
-    def test_state_machine_blocks_rejected_after_validated(self):
-        """Critical 2 fix: VALIDATED → only INVALIDATED allowed, not REJECTED."""
-        service = EvidencePromotionService()
-        service.record_validation("claim-1", _gate_auto_approve())
+    async def test_state_machine_blocks_rejected_after_validated(self, session):
+        """Critical 2 fix: VALIDATED → only INVALIDATED allowed, not REJECTED（DB 路径）。"""
+        sv, _ann, cand = await seed_candidate(session)
+        service = EvidencePromotionService(EvidenceRepository(session))
+        await service.record_validation(
+            "claim-1", _gate_auto_approve(),
+            candidate_id=cand.id, source_version_id=sv.id,
+        )
         # Cannot append REJECTED after VALIDATED
         with pytest.raises(ValueError, match="only INVALIDATED transition allowed"):
-            service.record_validation("claim-1", _gate_rejected())
+            await service.record_validation(
+                "claim-1", _gate_rejected(),
+                candidate_id=cand.id, source_version_id=sv.id,
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -114,40 +130,40 @@ class TestAttackAppendOnlyNotEnforced:
 # ---------------------------------------------------------------------------
 
 class TestAttackNoLinkBetweenLayers:
-    def test_validation_event_traces_to_evidence_reference(self):
+    async def test_validation_event_traces_to_evidence_reference(self, session):
         """Critical 3 fix: ValidationEvent.reference_ids links to EvidenceReference."""
-        service = EvidencePromotionService()
+        sv, _ann, cand = await seed_candidate(session)
+        service = EvidencePromotionService(EvidenceRepository(session))
         span = _make_span("sp-answer-1")
         run = ResolvedRun(source_version_id=span.source_version_id, resolved_spans=(span,))
         service.create_references(run, ProposerIdentity(producer_type="llm"))
-        # Record validation with reference_ids
-        event = service.record_validation(
-            "unit-1", _gate_auto_approve(), reference_ids=("er-sp-answer-1",)
+        rec = await service.record_validation(
+            "unit-1", _gate_auto_approve(),
+            candidate_id=cand.id, source_version_id=sv.id,
+            reference_ids=("er-sp-answer-1",),
         )
-        assert event is not None
-        # Event has reference_ids
-        assert event.reference_ids == ("er-sp-answer-1",)
-        # Can trace back to references
-        traced = service.get_references_for_ids(event.reference_ids)
+        assert rec is not None
+        assert tuple(rec.reference_ids or ()) == ("er-sp-answer-1",)
+        traced = service.get_references_for_ids(tuple(rec.reference_ids or ()))
         assert len(traced) == 1
         assert traced[0].span_id == "sp-answer-1"
 
-    def test_can_determine_which_spans_were_validated(self):
+    async def test_can_determine_which_spans_were_validated(self, session):
         """Critical 3 fix: reference_ids enables tracing from claim to spans."""
-        service = EvidencePromotionService()
+        sv, _ann, cand = await seed_candidate(session)
+        service = EvidencePromotionService(EvidenceRepository(session))
         s1 = _make_span("sp-stem", "stem")
         s2 = _make_span("sp-answer", "answer")
         run = ResolvedRun(source_version_id=s1.source_version_id, resolved_spans=(s1, s2))
         service.create_references(run, ProposerIdentity(producer_type="llm"))
-        # Record validation with both reference_ids
-        event = service.record_validation(
+        rec = await service.record_validation(
             "unit-1",
             _gate_auto_approve(),
+            candidate_id=cand.id, source_version_id=sv.id,
             reference_ids=("er-sp-stem", "er-sp-answer"),
         )
-        assert event is not None
-        # Can determine which spans were validated
-        traced = service.get_references_for_ids(event.reference_ids)
+        assert rec is not None
+        traced = service.get_references_for_ids(tuple(rec.reference_ids or ()))
         assert len(traced) == 2
         assert {r.span_id for r in traced} == {"sp-stem", "sp-answer"}
 
@@ -228,12 +244,14 @@ class TestAttackProposerIdentityWrong:
 
 class TestAttackAccumulation:
     def test_fresh_service_per_run(self):
-        """Medium 9 fix: GateService creates fresh EvidencePromotionService per run."""
+        """Medium 9 fix: GateService creates fresh EvidencePromotionService per run.
+        EB-008 §5.1: DB-backed via EvidenceRepository(session) 注入。"""
         import inspect
         from app.domains.gate.service import GateService
         source = inspect.getsource(GateService.run)
-        # Fresh service created inside run()
-        assert "self._evidence = EvidencePromotionService()" in source
+        # Fresh DB-backed service created inside run()
+        assert "self._evidence = EvidencePromotionService(EvidenceRepository(" in source
+        assert "EvidencePromotionService()" not in source  # 无 in-memory 构造（DEC-016 D3）
 
 
 # ---------------------------------------------------------------------------
@@ -241,32 +259,34 @@ class TestAttackAccumulation:
 # ---------------------------------------------------------------------------
 
 class TestAttackLatestByPositionNotTime:
-    def test_timestamp_order_determines_latest(self):
-        """Medium 7 fix: is_evidence_validated uses timestamp, not list position."""
-        service = EvidencePromotionService()
-        # Create event with LATER timestamp but append FIRST
-        late_event = ValidationEvent(
-            event_id="ve-late",
-            claim_id="claim-1",
-            validation_result="validated",
-            checks=(),
-            validation_method="frozen_header_rule",
-            validator="gate/v1",
+    async def test_timestamp_order_determines_latest(self, session):
+        """Medium 7 fix: Authority 投影 uses timestamp, not list/insert position."""
+        from datetime import datetime, timedelta, timezone
+
+        sv, _ann, cand = await seed_candidate(session)
+        repo = EvidenceRepository(session)
+        service = EvidencePromotionService(repo)
+        # claim-1 validated at T；claim-2 rejected at T+1s（插入顺序无关）
+        later = datetime.now(timezone.utc) + timedelta(seconds=1)
+        await repo.append_event(
+            ValidationEvent(
+                event_id="ve-late", claim_id="claim-1",
+                validation_result="validated", checks=(),
+                validation_method="frozen_header_rule", validator="gate/v1",
+                validated_at=later,
+            ),
+            candidate_id=cand.id, source_version_id=sv.id,
         )
-        early_event = ValidationEvent(
-            event_id="ve-early",
-            claim_id="claim-2",
-            validation_result="rejected",
-            checks=(),
-            validation_method="frozen_header_rule",
-            validator="gate/v1",
+        await repo.append_event(
+            ValidationEvent(
+                event_id="ve-early", claim_id="claim-2",
+                validation_result="rejected", checks=(),
+                validation_method="frozen_header_rule", validator="gate/v1",
+            ),
+            candidate_id=cand.id, source_version_id=sv.id,
         )
-        # Append late first, then early
-        service._validation_log.append(late_event)
-        service._validation_log.append(early_event)
-        # claim-1 is validated, claim-2 is rejected
-        assert service.is_evidence_validated("claim-1") is True
-        assert service.is_evidence_validated("claim-2") is False
+        assert await service.is_evidence_validated(cand.id, "claim-1") is True
+        assert await service.is_evidence_validated(cand.id, "claim-2") is False
 
 
 # ---------------------------------------------------------------------------
@@ -306,15 +326,20 @@ class TestAttackNoStateMachine:
         with pytest.raises(ValueError, match="no prior VALIDATED"):
             log.append(event)
 
-    def test_cannot_append_after_rejected(self):
-        """Critical 2 fix: REJECTED is terminal."""
-        service = EvidencePromotionService()
-        service.record_validation("claim-1", _gate_rejected())
-        # Terminal state reached
-        assert service.is_evidence_validated("claim-1") is False
-        # Cannot append another event
+    async def test_cannot_append_after_rejected(self, session):
+        """Critical 2 fix: REJECTED is terminal（DB 路径）。"""
+        sv, _ann, cand = await seed_candidate(session, gate=rejected_gate_decision())
+        service = EvidencePromotionService(EvidenceRepository(session))
+        await service.record_validation(
+            "claim-1", _gate_rejected(),
+            candidate_id=cand.id, source_version_id=sv.id,
+        )
+        assert await service.is_evidence_validated(cand.id, "claim-1") is False
         with pytest.raises(ValueError, match="terminal"):
-            service.record_validation("claim-1", _gate_auto_approve())
+            await service.record_validation(
+                "claim-1", _gate_auto_approve(),
+                candidate_id=cand.id, source_version_id=sv.id,
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -322,9 +347,10 @@ class TestAttackNoStateMachine:
 # ---------------------------------------------------------------------------
 
 class TestAttackGranularityMismatch:
-    def test_reference_ids_determine_coverage(self):
+    async def test_reference_ids_determine_coverage(self, session):
         """Critical 3 fix: reference_ids explicitly lists which spans a unit covers."""
-        service = EvidencePromotionService()
+        sv, _ann, cand = await seed_candidate(session)
+        service = EvidencePromotionService(EvidenceRepository(session))
         spans = (
             _make_span("sp-stem", "stem"),
             _make_span("sp-opt-a", "option"),
@@ -332,14 +358,13 @@ class TestAttackGranularityMismatch:
         )
         run = ResolvedRun(source_version_id=spans[0].source_version_id, resolved_spans=spans)
         service.create_references(run, ProposerIdentity(producer_type="llm"))
-        # Record validation with explicit reference_ids
-        event = service.record_validation(
+        rec = await service.record_validation(
             "unit-1",
             _gate_auto_approve(),
+            candidate_id=cand.id, source_version_id=sv.id,
             reference_ids=("er-sp-stem", "er-sp-opt-a", "er-sp-answer"),
         )
-        assert event is not None
-        # Coverage is determinate: 3 references explicitly linked
-        assert len(event.reference_ids) == 3
-        traced = service.get_references_for_ids(event.reference_ids)
+        assert rec is not None
+        assert len(rec.reference_ids or []) == 3
+        traced = service.get_references_for_ids(tuple(rec.reference_ids or ()))
         assert len(traced) == 3

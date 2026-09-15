@@ -13,6 +13,7 @@ from sqlalchemy import func, select, text
 
 from app.core.hashing import sha256_hex
 from app.db.session import async_session_maker
+from app.domains.evidence.models import CheckResult, ValidationEvent
 from app.domains.gate.admission import AdmissionService
 from app.models.content import InstanceRoleContent, Question, QuestionInstance, UnitGroup
 from app.models.snapshot import (
@@ -22,6 +23,7 @@ from app.models.snapshot import (
 from app.models.source import DocumentSourceLine
 from app.repositories.base import AppendOnlyViolation, RepositoryError
 from app.repositories.content_repository import ContentRepository
+from app.repositories.evidence_repository import EvidenceRepository
 from app.repositories.snapshot_repository import SnapshotRepository
 from app.repositories.source_repository import SourceRepository
 
@@ -148,6 +150,25 @@ async def _make_candidate(session, sv, ann, gate):
     )
 
 
+async def _seed_authority(session, cand, sv, claim_id="Q1"):
+    """EB-008 §5.3：approve 前置 —— 落 validated Authority 事件（fail-closed 要求）。
+
+    模拟 GateService auto 路径已持久化的 ValidationEvent（claim = payload IR root unit）。
+    """
+    await EvidenceRepository(session).append_event(
+        ValidationEvent(
+            event_id=f"ve-{uuid.uuid4().hex[:8]}",
+            claim_id=claim_id,
+            validation_result="validated",
+            checks=(CheckResult(check_id="BYTE_PROVEN", result="pass"),),
+            validation_method="frozen_header_rule",
+            validator="gate/v1",
+        ),
+        candidate_id=cand.id, source_version_id=sv.id,
+    )
+    await session.flush()
+
+
 async def _counts(session, model):
     return (await session.execute(select(func.count()).select_from(model))).scalar()
 
@@ -164,6 +185,7 @@ async def test_approve_materializes_same_tx(session):
     sv, ann = await _seed(session)
     cand = await _make_candidate(session, sv, ann, _auto_gd())
     await session.flush()
+    await _seed_authority(session, cand, sv)  # EB-008 fail-closed 前置
     admission = AdmissionService(session)
     decided = await admission.approve(candidate_id=cand.id,
                                       provenance={"source": "auto_gate"})
@@ -233,6 +255,7 @@ async def test_approved_approve_noop_no_second_event(session):
     sv, ann = await _seed(session)
     cand = await _make_candidate(session, sv, ann, _auto_gd())
     await session.flush()
+    await _seed_authority(session, cand, sv)  # EB-008 fail-closed 前置
     admission = AdmissionService(session)
     await admission.approve(candidate_id=cand.id, provenance={"source": "auto_gate"})
     await session.flush()
@@ -353,6 +376,8 @@ async def _purge_materialized(session, *, sv_id: str, doc_id: str) -> None:
     if cands:
         ph = ",".join(f"'{c}'" for c in cands)
         await session.execute(text(
+            f"DELETE FROM validation_events WHERE candidate_id IN ({ph})"))
+        await session.execute(text(
             f"DELETE FROM admission_events WHERE candidate_id IN ({ph})"))
         await session.execute(text(
             f"DELETE FROM admission_candidates WHERE id IN ({ph})"))
@@ -390,6 +415,7 @@ async def test_materialized_unit_group_unit_type_is_candidate_a_domain():
             sv_id, doc_id = str(sv.id), str(sv.document_id)
             cand = await _make_candidate(s1, sv, ann, _auto_gd())
             await s1.flush()
+            await _seed_authority(s1, cand, sv)  # EB-008 fail-closed 前置
             # 复现原 bug 前提：candidate=A 域 standalone_unit，payload IR root=standalone_question
             assert cand.unit_type == "standalone_unit"
             assert cand.payload["ir_snapshot"]["units"][0]["unit_type"] == "standalone_question"
@@ -423,6 +449,7 @@ async def test_materialized_instance_inherits_candidate_le_provenance():
             sv_id, doc_id = str(sv.id), str(sv.document_id)
             cand = await _make_candidate(s1, sv, ann, _auto_gd())
             await s1.flush()
+            await _seed_authority(s1, cand, sv)  # EB-008 fail-closed 前置
             expected = (cand.logical_execution_stage,
                         cand.logical_execution_hash, cand.attempt_id)
             await AdmissionService(s1).approve(
@@ -463,6 +490,7 @@ async def test_materialize_failure_rolls_back_all_a_domain_rows():
             sv_id, doc_id = str(sv.id), str(sv.document_id)
             cand = await _make_candidate(s1, sv, ann, _auto_gd())
             cand_id = cand.id
+            await _seed_authority(s1, cand, sv)  # EB-008 fail-closed 前置
             await s1.commit()
 
         # 注入失败：create_role_content 抛异常（Question + Instance 已 flush）
@@ -513,6 +541,7 @@ async def test_concurrent_approve_single_materialization():
             sv_id, doc_id = str(sv.id), str(sv.document_id)
             cand = await _make_candidate(s1, sv, ann, _auto_gd())
             cand_id = str(cand.id)
+            await _seed_authority(s1, cand, sv)  # EB-008 fail-closed 前置
             await s1.commit()
 
         async def _approve():

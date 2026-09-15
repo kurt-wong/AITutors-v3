@@ -31,6 +31,8 @@ from app.domains.evidence.promotion import (
     _extract_checks,
 )
 from app.domains.resolver.span import ResolvedRun, ResolvedSpan
+from app.repositories.evidence_repository import EvidenceRepository
+from tests.eb008_helpers import rejected_gate_decision, seed_candidate
 
 
 def _make_span(span_id="sp-1", role="answer", svid=None):
@@ -114,22 +116,27 @@ class TestAttackAppendOnlyLog:
         with pytest.raises(FrozenInstanceError):
             log.events[0].validation_result = "rejected"
 
-    def test_bypass_log_via_direct_append_blocked(self):
-        """HIGH-2 FIX: State machine enforced in AppendOnlyEventLog.append()."""
-        service = EvidencePromotionService()
-        service.record_validation("c1", _gate_rejected())
-        # ATTACK: append validated via direct log access — should FAIL
+    async def test_bypass_log_via_direct_append_blocked(self, session):
+        """HIGH-2 FIX: State machine enforced in DB write path (append_event)."""
+        sv, _ann, cand = await seed_candidate(session, gate=rejected_gate_decision())
+        repo = EvidenceRepository(session)
+        service = EvidencePromotionService(repo)
+        await service.record_validation(
+            "c1", _gate_rejected(),
+            candidate_id=cand.id, source_version_id=sv.id,
+        )
+        # ATTACK: append validated on terminal claim — should FAIL
         later_time = datetime.now(timezone.utc) + timedelta(seconds=1)
         fake_event = ValidationEvent(
             event_id="ve-fake", claim_id="c1", validation_result="validated",
             checks=(), validation_method="frozen_header_rule", validator="attacker",
             validated_at=later_time,
         )
-        # State machine blocks this — c1 is REJECTED (terminal)
         with pytest.raises(ValueError, match="terminal"):
-            service._validation_log.append(fake_event)
-        # Attack blocked — c1 still rejected
-        assert service.is_evidence_validated("c1") is False
+            await repo.append_event(
+                fake_event, candidate_id=cand.id, source_version_id=sv.id,
+            )
+        assert await service.is_evidence_validated(cand.id, "c1") is False
 
 
 # ---------------------------------------------------------------------------
@@ -137,46 +144,52 @@ class TestAttackAppendOnlyLog:
 # ---------------------------------------------------------------------------
 
 class TestAttackStateMachine:
-    def test_direct_log_append_bypasses_state_machine_blocked(self):
-        """HIGH-2 FIX: State machine enforced in AppendOnlyEventLog.append()."""
-        service = EvidencePromotionService()
-        service.record_validation("c1", _gate_rejected())
-        # ATTACK: append validated via direct log access — should FAIL
+    async def test_direct_log_append_bypasses_state_machine_blocked(self, session):
+        """HIGH-2 FIX: State machine enforced in DB write path (append_event)."""
+        sv, _ann, cand = await seed_candidate(session, gate=rejected_gate_decision())
+        repo = EvidenceRepository(session)
+        service = EvidencePromotionService(repo)
+        await service.record_validation(
+            "c1", _gate_rejected(),
+            candidate_id=cand.id, source_version_id=sv.id,
+        )
         later_time = datetime.now(timezone.utc) + timedelta(seconds=1)
         fake_event = ValidationEvent(
             event_id="ve-fake", claim_id="c1", validation_result="validated",
             checks=(), validation_method="frozen_header_rule", validator="attacker",
             validated_at=later_time,
         )
-        # State machine blocks this — c1 is REJECTED (terminal)
         with pytest.raises(ValueError, match="terminal"):
-            service._validation_log.append(fake_event)
-        # Attack blocked — c1 still rejected
-        assert service.is_evidence_validated("c1") is False
+            await repo.append_event(
+                fake_event, candidate_id=cand.id, source_version_id=sv.id,
+            )
+        assert await service.is_evidence_validated(cand.id, "c1") is False
 
-    def test_manipulated_timestamps_confuse_state_machine(self):
-        """ATTACK: Create events with manipulated timestamps to confuse ordering."""
-        service = EvidencePromotionService()
-        # Create event with FUTURE timestamp
+    async def test_manipulated_timestamps_confuse_state_machine(self, session):
+        """ATTACK: FUTURE timestamp event then rejected — state machine still blocks."""
+        sv, _ann, cand = await seed_candidate(session)
+        repo = EvidenceRepository(session)
+        service = EvidencePromotionService(repo)
         future_time = datetime.now(timezone.utc) + timedelta(days=365)
         future_event = ValidationEvent(
             event_id="ve-future", claim_id="c1", validation_result="validated",
             checks=(), validation_method="frozen_header_rule", validator="gate/v1",
             validated_at=future_time,
         )
-        service._validation_log.append(future_event)
-        # Now record rejected via proper path
-        # State machine sees latest = future_event (validated)
-        # Should block REJECTED after VALIDATED
+        await repo.append_event(
+            future_event, candidate_id=cand.id, source_version_id=sv.id,
+        )
+        # latest = future validated → REJECTED blocked
         with pytest.raises(ValueError, match="only INVALIDATED transition allowed"):
-            service.record_validation("c1", _gate_rejected())
+            await service.record_validation(
+                "c1", _gate_rejected(),
+                candidate_id=cand.id, source_version_id=sv.id,
+            )
 
-    def test_equal_timestamps_ambiguous(self):
-        """ATTACK: What if two events have identical timestamps?
-
-        State machine blocks VALIDATED → REJECTED, so this attack fails.
-        """
-        service = EvidencePromotionService()
+    async def test_equal_timestamps_ambiguous(self, session):
+        """ATTACK: identical timestamps — VALIDATED → REJECTED still blocked."""
+        sv, _ann, cand = await seed_candidate(session)
+        repo = EvidenceRepository(session)
         now = datetime.now(timezone.utc)
         e1 = ValidationEvent(
             event_id="ve-1", claim_id="c1", validation_result="validated",
@@ -188,10 +201,9 @@ class TestAttackStateMachine:
             checks=(), validation_method="frozen_header_rule", validator="gate/v1",
             validated_at=now,  # same timestamp
         )
-        service._validation_log.append(e1)
-        # State machine blocks VALIDATED → REJECTED
+        await repo.append_event(e1, candidate_id=cand.id, source_version_id=sv.id)
         with pytest.raises(ValueError, match="only INVALIDATED transition allowed"):
-            service._validation_log.append(e2)
+            await repo.append_event(e2, candidate_id=cand.id, source_version_id=sv.id)
 
 
 # ---------------------------------------------------------------------------
@@ -199,43 +211,48 @@ class TestAttackStateMachine:
 # ---------------------------------------------------------------------------
 
 class TestAttackReferenceIdsLinking:
-    def test_fake_reference_ids_accepted(self):
+    async def test_fake_reference_ids_accepted(self, session):
         """ATTACK: Can we pass fake reference_ids that don't exist?"""
-        service = EvidencePromotionService()
+        sv, _ann, cand = await seed_candidate(session)
+        service = EvidencePromotionService(EvidenceRepository(session))
         span = _make_span("sp-1")
         service.create_references(_make_run(span), ProposerIdentity(producer_type="llm"))
-        # ATTACK: pass fake reference_ids
-        event = service.record_validation(
-            "c1", _gate_auto_approve(), reference_ids=("er-fake-1", "er-fake-2")
+        rec = await service.record_validation(
+            "c1", _gate_auto_approve(),
+            candidate_id=cand.id, source_version_id=sv.id,
+            reference_ids=("er-fake-1", "er-fake-2"),
         )
-        assert event is not None
-        # Event stores fake reference_ids
-        assert event.reference_ids == ("er-fake-1", "er-fake-2")
-        # But get_references_for_ids returns empty (no matching references)
-        traced = service.get_references_for_ids(event.reference_ids)
+        assert rec is not None
+        assert tuple(rec.reference_ids or ()) == ("er-fake-1", "er-fake-2")
+        traced = service.get_references_for_ids(tuple(rec.reference_ids or ()))
         assert len(traced) == 0
         # CONFIRMED GAP: no validation that reference_ids actually exist
 
-    def test_empty_reference_ids_accepted(self):
+    async def test_empty_reference_ids_accepted(self, session):
         """ATTACK: Can we record validation with empty reference_ids?"""
-        service = EvidencePromotionService()
-        event = service.record_validation("c1", _gate_auto_approve(), reference_ids=())
-        assert event is not None
-        assert event.reference_ids == ()
+        sv, _ann, cand = await seed_candidate(session)
+        service = EvidencePromotionService(EvidenceRepository(session))
+        rec = await service.record_validation(
+            "c1", _gate_auto_approve(),
+            candidate_id=cand.id, source_version_id=sv.id, reference_ids=(),
+        )
+        assert rec is not None
+        assert not rec.reference_ids
         # This is allowed — but means no linking
 
-    def test_reference_id_format_not_enforced(self):
+    async def test_reference_id_format_not_enforced(self, session):
         """ATTACK: Is reference_id format enforced?"""
-        service = EvidencePromotionService()
+        sv, _ann, cand = await seed_candidate(session)
+        service = EvidencePromotionService(EvidenceRepository(session))
         span = _make_span("sp-1")
         service.create_references(_make_run(span), ProposerIdentity(producer_type="llm"))
-        # ATTACK: pass reference_ids with wrong format
-        event = service.record_validation(
-            "c1", _gate_auto_approve(), reference_ids=("wrong-format", "er-sp-1")
+        rec = await service.record_validation(
+            "c1", _gate_auto_approve(),
+            candidate_id=cand.id, source_version_id=sv.id,
+            reference_ids=("wrong-format", "er-sp-1"),
         )
-        assert event is not None
-        # Event stores wrong-format reference_ids
-        assert "wrong-format" in event.reference_ids
+        assert rec is not None
+        assert "wrong-format" in (rec.reference_ids or [])
         # CONFIRMED GAP: no format validation
 
 
@@ -368,9 +385,11 @@ class TestAttackPerRunIsolation:
 # ---------------------------------------------------------------------------
 
 class TestAttackTimestampOrdering:
-    def test_future_timestamp_wins(self):
-        """Does future timestamp win over past?"""
-        service = EvidencePromotionService()
+    async def test_future_timestamp_wins(self, session):
+        """Does future timestamp win over past? (latest-by-validated_at)"""
+        sv, _ann, cand = await seed_candidate(session)
+        repo = EvidenceRepository(session)
+        service = EvidencePromotionService(repo)
         past = datetime.now(timezone.utc) - timedelta(days=1)
         future = datetime.now(timezone.utc) + timedelta(days=1)
 
@@ -381,17 +400,19 @@ class TestAttackTimestampOrdering:
         )
         e_future = ValidationEvent(
             event_id="ve-future", claim_id="c1", validation_result="invalidated",
-            checks=(), validation_method="human_review", validator="gate/v1",
+            checks=(), validation_method="structural_consistency", validator="system/v1",
             validated_at=future,
         )
-        service._validation_log.append(e_past)
-        service._validation_log.append(e_future)
+        await repo.append_event(e_past, candidate_id=cand.id, source_version_id=sv.id)
+        await repo.append_event(e_future, candidate_id=cand.id, source_version_id=sv.id)
         # max(validated_at) returns future → invalidated → False
-        assert service.is_evidence_validated("c1") is False
+        assert await service.is_evidence_validated(cand.id, "c1") is False
 
-    def test_past_timestamp_loses(self):
+    async def test_past_timestamp_loses(self, session):
         """Does past timestamp lose to future?"""
-        service = EvidencePromotionService()
+        sv, _ann, cand = await seed_candidate(session)
+        repo = EvidenceRepository(session)
+        service = EvidencePromotionService(repo)
         past = datetime.now(timezone.utc) - timedelta(days=1)
         future = datetime.now(timezone.utc) + timedelta(days=1)
 
@@ -405,11 +426,14 @@ class TestAttackTimestampOrdering:
             checks=(), validation_method="frozen_header_rule", validator="gate/v1",
             validated_at=future,
         )
-        service._validation_log.append(e_past_rejected)
-        service._validation_log.append(e_future_validated)
-        # c1 is validated, c2 is rejected
-        assert service.is_evidence_validated("c1") is True
-        assert service.is_evidence_validated("c2") is False
+        await repo.append_event(
+            e_past_rejected, candidate_id=cand.id, source_version_id=sv.id,
+        )
+        await repo.append_event(
+            e_future_validated, candidate_id=cand.id, source_version_id=sv.id,
+        )
+        assert await service.is_evidence_validated(cand.id, "c1") is True
+        assert await service.is_evidence_validated(cand.id, "c2") is False
 
 
 # ---------------------------------------------------------------------------

@@ -38,6 +38,7 @@ from test_gate_service import SINGLE_LINES, _single_units
 _CLEANUP_TABLES = (
     "admission_events", "instance_role_contents", "material_links",
     "unit_group_members", "question_instances", "unit_groups", "materials",
+    "validation_events",  # EB-008：FK → admission_candidates / source_versions
     "admission_candidates", "semantic_annotations", "document_source_lines",
     "task_claims", "document_source_versions", "documents", "questions", "tasks",
 )

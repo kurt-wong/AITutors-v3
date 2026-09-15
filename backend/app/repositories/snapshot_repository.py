@@ -183,7 +183,11 @@ class SnapshotRepository(BaseRepository):
     async def set_annotation_status(
         self, annotation_id: uuid.UUID, new_status: str
     ) -> SemanticAnnotation:
-        """只允许 valid→superseded 流转（20 §4.7；不作通用 UPDATE）。"""
+        """只允许 valid→superseded 流转（20 §4.7；不作通用 UPDATE）。
+
+        EB-008 §5.4：annotation 变更触发 Evidence Authority invalidate 级联——
+        该 annotation 下所有 latest=VALIDATED 的 claim → INVALIDATED（terminal）。
+        """
         row = await self._session.get(SemanticAnnotation, annotation_id)
         if row is None:
             raise RepositoryError(f"annotation {annotation_id} not found")
@@ -193,6 +197,13 @@ class SnapshotRepository(BaseRepository):
                 f"(only valid→superseded allowed)"
             )
         row.status = new_status
+        # EB-008 §5.4 级联：annotation superseded → 旧 Authority INVALIDATED
+        from app.repositories.evidence_repository import EvidenceRepository
+
+        await EvidenceRepository(self._session).invalidate_claims_for_annotation(
+            annotation_id,
+            reason=f"annotation {annotation_id} superseded",
+        )
         return row
 
     # ------------------------------------------------------------------ 段 G

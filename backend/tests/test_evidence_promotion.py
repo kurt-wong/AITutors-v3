@@ -31,6 +31,8 @@ from app.domains.evidence.promotion import (
     record_validation_event,
 )
 from app.domains.resolver.span import ResolvedRun, ResolvedSpan
+from app.repositories.evidence_repository import EvidenceRepository
+from tests.eb008_helpers import rejected_gate_decision, seed_candidate
 
 
 # ---------------------------------------------------------------------------
@@ -327,70 +329,122 @@ class TestRecordValidationEvent:
 
 
 # ---------------------------------------------------------------------------
-# EvidencePromotionService
+# EvidencePromotionService (EB-008 §5.1: DB-backed via EvidenceRepository)
 # ---------------------------------------------------------------------------
 
 class TestEvidencePromotionService:
-    def test_create_references(self):
-        service = EvidencePromotionService()
+    async def test_create_references(self, session):
+        service = EvidencePromotionService(EvidenceRepository(session))
         run = _make_run(_make_span("sp-1"), _make_span("sp-2"))
         refs = service.create_references(run, _make_proposer())
         assert len(refs) == 2
 
-    def test_record_validation_validated(self):
-        service = EvidencePromotionService()
-        event = service.record_validation("claim-1", _gate_auto_approve())
-        assert event is not None
-        assert len(service.validation_events) == 1
+    async def test_record_validation_validated(self, session):
+        sv, _ann, cand = await seed_candidate(session)
+        service = EvidencePromotionService(EvidenceRepository(session))
+        rec = await service.record_validation(
+            "claim-1", _gate_auto_approve(),
+            candidate_id=cand.id, source_version_id=sv.id,
+        )
+        assert rec is not None
+        assert rec.validation_result == "validated"
+        # EB-008：事件持久化到 validation_events（非内存）
+        rows = await EvidenceRepository(session).find_events_for_claim(cand.id, "claim-1")
+        assert len(rows) == 1
 
-    def test_append_only_enforced(self):
-        """Critical 1 fix: append-only enforced by tuple-based log."""
-        service = EvidencePromotionService()
-        service.record_validation("claim-1", _gate_auto_approve())
-        # events property returns immutable tuple
-        assert isinstance(service.validation_events, tuple)
-        assert not hasattr(service._validation_log, "clear")
+    async def test_append_only_enforced(self, session):
+        """EB-008 §5.5：Repository 无 update/delete；唯一写入口 append_event。"""
+        repo = EvidenceRepository(session)
+        assert not hasattr(repo, "update_event")
+        assert not hasattr(repo, "delete_event")
+        from app.repositories.base import AppendOnlyViolation
+        from app.repositories.evidence_repository import (
+            delete_validation_event,
+            update_validation_event,
+        )
+        with pytest.raises(AppendOnlyViolation):
+            await update_validation_event()
+        with pytest.raises(AppendOnlyViolation):
+            await delete_validation_event()
 
-    def test_state_machine_rejected_terminal(self):
-        """Critical 2 fix: REJECTED is terminal."""
-        service = EvidencePromotionService()
-        service.record_validation("claim-1", _gate_rejected())
+    async def test_state_machine_rejected_terminal(self, session):
+        """Critical 2 fix: REJECTED is terminal（DB 路径同状态机）。"""
+        sv, _ann, cand = await seed_candidate(session, gate=rejected_gate_decision())
+        service = EvidencePromotionService(EvidenceRepository(session))
+        await service.record_validation(
+            "claim-1", _gate_rejected(),
+            candidate_id=cand.id, source_version_id=sv.id,
+        )
         with pytest.raises(ValueError, match="terminal"):
-            service.record_validation("claim-1", _gate_auto_approve())
+            await service.record_validation(
+                "claim-1", _gate_auto_approve(),
+                candidate_id=cand.id, source_version_id=sv.id,
+            )
 
-    def test_is_evidence_validated_true(self):
-        service = EvidencePromotionService()
-        service.record_validation("claim-1", _gate_auto_approve())
-        assert service.is_evidence_validated("claim-1") is True
+    async def test_replay_same_result_is_noop(self, session):
+        """EB-008 R4：replay 同结果 → no-op，不新增行（replay 永不改变 Authority）。"""
+        sv, _ann, cand = await seed_candidate(session)
+        service = EvidencePromotionService(EvidenceRepository(session))
+        first = await service.record_validation(
+            "claim-1", _gate_auto_approve(),
+            candidate_id=cand.id, source_version_id=sv.id,
+        )
+        second = await service.record_validation(
+            "claim-1", _gate_auto_approve(),
+            candidate_id=cand.id, source_version_id=sv.id,
+        )
+        assert first.id == second.id
+        rows = await EvidenceRepository(session).find_events_for_claim(cand.id, "claim-1")
+        assert len(rows) == 1
 
-    def test_is_evidence_validated_false_rejected(self):
-        service = EvidencePromotionService()
-        service.record_validation("claim-1", _gate_rejected())
-        assert service.is_evidence_validated("claim-1") is False
+    async def test_is_evidence_validated_true(self, session):
+        sv, _ann, cand = await seed_candidate(session)
+        service = EvidencePromotionService(EvidenceRepository(session))
+        await service.record_validation(
+            "claim-1", _gate_auto_approve(),
+            candidate_id=cand.id, source_version_id=sv.id,
+        )
+        assert await service.is_evidence_validated(cand.id, "claim-1") is True
 
-    def test_is_evidence_validated_superseded_by_invalidation(self):
-        from datetime import datetime, timezone, timedelta
-        service = EvidencePromotionService()
-        service.record_validation("claim-1", _gate_auto_approve())
-        assert service.is_evidence_validated("claim-1") is True
-        # Simulate invalidation with LATER timestamp (bypasses state machine for this test)
-        # Note: In production, INVALIDATED would come from human_review path
+    async def test_is_evidence_validated_false_rejected(self, session):
+        sv, _ann, cand = await seed_candidate(session, gate=rejected_gate_decision())
+        service = EvidencePromotionService(EvidenceRepository(session))
+        await service.record_validation(
+            "claim-1", _gate_rejected(),
+            candidate_id=cand.id, source_version_id=sv.id,
+        )
+        assert await service.is_evidence_validated(cand.id, "claim-1") is False
+
+    async def test_is_evidence_validated_superseded_by_invalidation(self, session):
+        from datetime import datetime, timedelta, timezone
+
+        sv, _ann, cand = await seed_candidate(session)
+        service = EvidencePromotionService(EvidenceRepository(session))
+        await service.record_validation(
+            "claim-1", _gate_auto_approve(),
+            candidate_id=cand.id, source_version_id=sv.id,
+        )
+        assert await service.is_evidence_validated(cand.id, "claim-1") is True
+        # EB-008 §5.4：VALIDATED → INVALIDATED 后投影为 invalidated（latest wins）
         later_time = datetime.now(timezone.utc) + timedelta(seconds=1)
         invalidation = ValidationEvent(
             event_id="ve-inval-1",
             claim_id="claim-1",
             validation_result="invalidated",
             checks=(),
-            validation_method="human_review",
-            validator="human",
+            validation_method="structural_consistency",
+            validator="system/v1",
             validated_at=later_time,
         )
-        service._validation_log.append(invalidation)
-        assert service.is_evidence_validated("claim-1") is False
+        await EvidenceRepository(session).append_event(
+            invalidation,
+            candidate_id=cand.id, source_version_id=sv.id,
+        )
+        assert await service.is_evidence_validated(cand.id, "claim-1") is False
 
-    def test_get_references_for_ids(self):
+    async def test_get_references_for_ids(self, session):
         """Critical 3 fix: can trace from ValidationEvent back to EvidenceReferences."""
-        service = EvidencePromotionService()
+        service = EvidencePromotionService(EvidenceRepository(session))
         span = _make_span("sp-1")
         service.create_references(_make_run(span), _make_proposer())
         refs = service.get_references_for_ids(("er-sp-1",))
@@ -415,11 +469,15 @@ class TestFrozenRules:
         assert not hasattr(ref, "validated")
         assert not hasattr(ref, "authority")
 
-    def test_r4_only_validation_produces_authority(self):
-        service = EvidencePromotionService()
-        assert service.is_evidence_validated("claim-1") is False
-        service.record_validation("claim-1", _gate_auto_approve())
-        assert service.is_evidence_validated("claim-1") is True
+    async def test_r4_only_validation_produces_authority(self, session):
+        sv, _ann, cand = await seed_candidate(session)
+        service = EvidencePromotionService(EvidenceRepository(session))
+        assert await service.is_evidence_validated(cand.id, "claim-1") is False
+        await service.record_validation(
+            "claim-1", _gate_auto_approve(),
+            candidate_id=cand.id, source_version_id=sv.id,
+        )
+        assert await service.is_evidence_validated(cand.id, "claim-1") is True
 
 
 # ---------------------------------------------------------------------------
@@ -427,29 +485,43 @@ class TestFrozenRules:
 # ---------------------------------------------------------------------------
 
 class TestGateIntegration:
-    def test_full_flow_validated_with_linking(self):
+    async def test_full_flow_validated_with_linking(self, session):
         """Full flow with Critical 3 fix: ValidationEvent ↔ EvidenceReference linking."""
-        service = EvidencePromotionService()
+        sv, _ann, cand = await seed_candidate(session)
+        service = EvidencePromotionService(EvidenceRepository(session))
         span = _make_span("sp-answer-1", "answer")
         service.create_references(_make_run(span), ProposerIdentity(producer_type="llm"))
 
-        event = service.record_validation(
-            "unit-1", _gate_auto_approve(), reference_ids=("er-sp-answer-1",)
+        rec = await service.record_validation(
+            "unit-1", _gate_auto_approve(),
+            candidate_id=cand.id, source_version_id=sv.id,
+            reference_ids=("er-sp-answer-1",),
         )
-        assert event is not None
-        assert event.validation_result == "validated"
-        assert service.is_evidence_validated("unit-1") is True
+        assert rec is not None
+        assert rec.validation_result == "validated"
+        assert await service.is_evidence_validated(cand.id, "unit-1") is True
         # Critical 3: trace back to references
-        traced = service.get_references_for_ids(event.reference_ids)
+        traced = service.get_references_for_ids(tuple(rec.reference_ids or ()))
         assert len(traced) == 1
         assert traced[0].span_id == "sp-answer-1"
 
-    def test_multiple_claims_independent(self):
-        service = EvidencePromotionService()
-        service.record_validation("unit-1", _gate_auto_approve())
-        service.record_validation("unit-2", _gate_rejected())
-        service.record_validation("unit-3", {"decision": "pending_review"})
+    async def test_multiple_claims_independent(self, session):
+        sv, _ann, cand = await seed_candidate(session)
+        service = EvidencePromotionService(EvidenceRepository(session))
+        await service.record_validation(
+            "unit-1", _gate_auto_approve(),
+            candidate_id=cand.id, source_version_id=sv.id,
+        )
+        await service.record_validation(
+            "unit-2", _gate_rejected(),
+            candidate_id=cand.id, source_version_id=sv.id,
+        )
+        assert await service.record_validation(
+            "unit-3", {"decision": "pending_review"},
+            candidate_id=cand.id, source_version_id=sv.id,
+        ) is None
 
-        assert service.is_evidence_validated("unit-1") is True
-        assert service.is_evidence_validated("unit-2") is False
-        assert len(service.validation_events) == 2
+        assert await service.is_evidence_validated(cand.id, "unit-1") is True
+        assert await service.is_evidence_validated(cand.id, "unit-2") is False
+        rows = await EvidenceRepository(session).find_events_for_candidate(cand.id)
+        assert len(rows) == 2
