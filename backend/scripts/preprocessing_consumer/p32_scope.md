@@ -1,9 +1,23 @@
 # P3.2 / EB-004 Experimental Enforcement Verification — Scope Document
 
 **Date**: 2026-09-15
-**Status**: DRAFT — awaiting Owner review
-**Authority**: Owner approval 2026-09-15 (EXPERIMENT ONLY)
+**Status**: APPROVED WITH MINOR CLARIFICATIONS
+**Authority**: Owner review 2026-09-15
 **Prerequisites**: claude4-attribution.json paper names corrected (84fd39f)
+
+## Owner Review Status
+
+APPROVED WITH MINOR CLARIFICATIONS
+
+This experiment validates enforcement behavior only.
+It does not define Evidence Authority architecture,
+Resolver boundary,
+Producer Contract,
+or future implementation decisions.
+
+Experimental Adapter is an untrusted evidence producer.
+
+Evidence Authority Validation is considered the control point under verification.
 
 ---
 
@@ -28,9 +42,11 @@ SourceVersion (V3 formal object, sealed)
     ↓
 Producer Evidence Region (from preprocessing manifest)
     ↓
-Experimental Adapter (EXPERIMENT CONSTRUCT — not production code)
+Experimental Adapter (UNTRUSTED PRODUCER SIMULATION)
     ↓
-Resolved Evidence (adapter output)
+Resolved Evidence (untrusted derived evidence)
+    ↓
+Evidence Authority Validation (CONTROL POINT UNDER VERIFICATION)
     ↓
 Gate decision (V3 formal GateService)
     ↓
@@ -43,12 +59,13 @@ Admission request (V3 formal AdmissionService)
 |---|---|
 | SourceVersion | V3 formal (sealed, immutable) |
 | Producer Evidence Region | Producer fact (from manifest) |
-| Experimental Adapter | **EXPERIMENT CONSTRUCT** — must not become second V3 |
-| Resolved Evidence | Adapter output (derived, not authoritative) |
+| Experimental Adapter | **UNTRUSTED** — no authority, producer simulation only |
+| Resolved Evidence | **UNTRUSTED** derived evidence |
+| Evidence Authority Validation | **CONTROL POINT** under verification |
 | Gate decision | V3 formal |
 | Admission request | V3 formal |
 
-**Critical constraint**: Experimental Adapter must be clearly separated from production code. If adapter logic is needed in production, it must go through separate L2 Decision.
+**Critical constraint**: Experimental Adapter has no authority. Its output must be treated as untrusted derived evidence. If adapter logic is needed in production, it must go through separate L2 Decision.
 
 ---
 
@@ -63,7 +80,19 @@ Admission request (V3 formal AdmissionService)
 | mutated evidence rejected | Evidence modified after validation blocked | 100% |
 | **bypass path count** | Paths that bypass Evidence Authority | **0** |
 
-**bypass path count is the critical metric.** It directly tests BUG-V3-048: does Admission actually depend on Evidence Authority, or only on gate_decision?
+### Bypass Path Definition (frozen)
+
+A bypass path exists when:
+
+```text
+Admission.success == true
+AND
+Evidence Authority validation == invalid OR absent
+```
+
+Any instance of illegal Evidence + Admission accepted counts as bypass.
+
+**NOT counted as bypass**: Gate reject, Adapter failure, Validation failure.
 
 ---
 
@@ -99,16 +128,62 @@ This experiment does NOT decide:
 
 ---
 
-## 6. Deliverables
+## 6. Experiment Data Classification
+
+Results must be classified into three levels. No mixing.
+
+| Type | Meaning |
+|---|---|
+| OBSERVED | Direct experimental observation |
+| INFERENCE | Analysis based on experimental results |
+| DECISION | Architecture decision (Owner only) |
+
+**Correct format**:
+```text
+OBSERVED: N8 admission accepted invalid evidence.
+INFERENCE: Admission may depend only on gate_decision.
+DECISION: Pending owner review.
+```
+
+**Incorrect format**:
+```text
+N8 failed. Therefore Admission must be redesigned.
+```
+
+---
+
+## 7. Experimental Adapter Rules
+
+### Allowed
+
+- Construct valid evidence
+- Construct invalid evidence
+- Construct forged evidence
+- Construct mutated evidence
+- Construct stale evidence
+
+### Forbidden
+
+- Copy production Resolver
+- Introduce preprocessing parser
+- Auto-fix evidence
+- Auto-fill metadata
+- Use LLM to judge validity
+
+**Reason**: Experiment tests whether Admission blocks wrong results, not whether adapter produces right results.
+
+---
+
+## 8. Deliverables
 
 1. Experiment script (experimental, not production)
 2. Results JSON with per-attack-vector outcomes
-3. Findings report (bypass path analysis)
+3. Findings report (bypass path analysis, OBSERVED/INFERENCE separated)
 4. State.yaml update (FACT entries, confidence=OBSERVED)
 
 ---
 
-## 7. Constraints
+## 9. Constraints
 
 - Zero production code modification
 - Zero Frozen Spec modification
