@@ -1,7 +1,7 @@
 # Cross-Agent Coordination — Current State
 
 **Workstream**: EB-0.3B Evidence Resolution Boundary Discovery
-**Status**: OPEN — Owner **Contract v0.2 Freeze Candidate Finalization v1 已入册**（DEC-030）· **接口键命名 `source_content_sha256` 已采纳**（OQ-8′ 关闭；全文词面收口完成，`source_version_id` 专用化为 V3 内部 FK）· **bytes 能力冻结确认**（传输 OQ-12″ 仍暂缓）· **双状态体系终局确认** · **废止旧「Semantic Unavailable」表述** · Contract v0.2 = **Freeze Candidate Finalized**（六项冻结范围；DRAFT / NOT FROZEN；DA 表 34 行；OQ 1~21）· **等待 Owner Freeze 令（五步序 Step 3）** · preprocessing @ `1657625`（Producer Alignment v5 并行，待 DEC-030 键名双边确认）
+**Status**: OPEN — Owner **Final Decision v1 已入册**（DEC-031）· **四项原则终局确认**（Identity Authority `source_content_sha256` / 双层职责 / 命名 / 16 份 Semantic Pending + 补充三禁）· **Step 1 快照 + Step 2 回填获执行授权（DSH 任务）** · **冻结条件机械化 = Step 2 完成并验证（逐份 Manifest hash = IR hash）→ Contract v0.2 Freeze** · **OQ-18 关闭** · 五项延期（OQ-15/OQ-13/OQ-10/DEC 编号/OQ-12″）非架构阻塞 · Contract v0.2 = **Freeze Candidate Finalized**（六项冻结范围；DRAFT / NOT FROZEN；DA 表 35 行；OQ 1~21）· **待 DSH 执行 Step 1/2 + 验证报告** · preprocessing @ `1657625`（Producer Alignment v5 并行；Step 1/2 执行授权已下）
 **Last Updated**: 2026-09-16
 **Canonical Ledger**: DSH repo (kurt-wong/Aitutors-preprocessing). This is V3 mirror.
 
@@ -22,12 +22,13 @@
 | **DEC-028** | **Interface Finalization Revision v1**（≡ DSH DEC-023，ODR v1.4 §1quinquies）: **Part1 source identity = SHA256(raw bytes) 64 小写 hex + 「Source identity belongs to content hash, not storage location」+ path 非身份（禁暗示 path 参与身份/版本/hash 判断）** · Part2 `source_file` = locator 非 identity，路径变化不改 id · **Part3 16 份改 Identity Available / Semantic Pending（可恢复），IR 重生成允许+四约束** · Part4 Scope 保持 87（禁 IR=Interface） · **Part5 语义层终局词表加 `unknown`（`{ready,incomplete,unknown}`）+ 决策层 `{pending_review,approved,rejected}`，禁合并** · **Part6 unknown → reviewable record → pending_review workflow**。⚠️ **与 V3 `DEC-023`(Interface Scope) 同号异文（第三处撞号）** |
 | **DEC-029** | **Freeze Candidate Review v1**（Owner 六条原则）: **原则5 接口键命名提案 = `source_content_sha256`**（`PROPOSAL`；**已由 DEC-030 采纳**）· **原则6 source bytes 交付只冻能力、不冻传输**（能力 = V3 必须能得 raw bytes + 重算验证 fail-closed + 独立 IR = binding；传输 HOW = 暂缓 OQ-12″）· 原则3 16 份四保证对齐。契约冻结范围 = **六项**（+bytes 能力） |
 | **DEC-030** | **Freeze Candidate Finalization v1**（Owner Final Decision）: **D1 接口键命名 `source_content_sha256` = SHA256(raw bytes) 已采纳**（path 禁参与 identity；V3 内部 `source_version_id` 保持内部含义 = uuid.UUID FK，非跨系统键；契约全文词面收口完成；OQ-8′ 关闭）· **D2 bytes 能力冻结确认**（取得 raw bytes + 独立 SHA256 + 比对 + fail-closed；不冻结传输方式）· **D3 双状态体系终局确认**（Semantic `ready/incomplete/unknown` + Decision `pending_review/approved/rejected`，禁合并；unknown 单元必须生成 reviewable record 进 pending_review；禁 silent skip/convert/fallback）· **D4 文字收口**（删旧「Semantic Unavailable」表述 · 消除 `source_version_id` 接口键歧义 · 补 bytes 能力要求 · 确认 87/71/16）。**契约文本侧收口完成，仍 NOT FROZEN，待 Owner Freeze 令** |
+| **DEC-031** | **Owner Final Decision v1**: **原则1 Identity Authority 终局确认**（`source_content_sha256` = SHA256(original source bytes) 64 小写 hex；内容 hash 决定身份；path 仅 locator；path 变化不得影响 identity；**禁止任何系统用 path 做唯一身份判断**）· **原则2 双层职责终局确认**（Manifest 回答「这是哪个文件」/ IR 回答「这个文件表达了什么」；V3：Manifest 验证身份、IR 提供语义，不得混淆）· **原则3 命名终局确认**（跨系统 `source_content_sha256` / V3 内部 `source_version_id`；禁两概念同名）· **原则4 16 份处理终局确认**（Identity Available / Semantic Pending；**允许重跑 preprocessing 生成 IR**；约束：sha 保持一致 / 不建新 identity / 不改历史 manifest / 不删已有记录）· **执行授权**：DSH 执行 Step 1 快照（文件列表 + sha + R50 关联）+ Step 2 回填 87 + 逐份验证 Manifest hash = IR hash + 验证报告（87 清单/hash 一致性/IR 覆盖/16 pending）· **冻结条件机械化 = Step 2 完成并验证 → Contract v0.2 Freeze** · **OQ-18 关闭**（五步序优先显式确认）· 五项延期（OQ-15/OQ-13/OQ-10/DEC 编号/OQ-12″）非架构阻塞 · **V3 下一阶段核心风险 = 消费端验证链**（bytes→重算→验证 Manifest→验证 IR→fail-closed） |
 
-**跨仓编号对照（引用任一侧必须双向标注）**：四项 V3 = `DEC-023~026` / DSH = `DEC-021-1~4`；Finalization v1 = V3 `DEC-027` / DSH `DEC-022`；Revision v1 = V3 `DEC-028` / DSH `DEC-023`；Freeze Candidate Review = V3 `DEC-029`；**Freeze Candidate Finalization = V3 `DEC-030`**（DSH 侧待登记）。**撞号累积 3 处**：DSH `DEC-021`≠V3 `DEC-021`(B2)；DSH `DEC-022`≠V3 `DEC-022`(B3)；DSH `DEC-023`≠V3 `DEC-023`(Interface Scope)。**`source_version_id` 字段撞名已由 DEC-030 消除**（接口键 = `source_content_sha256`；≠ DEC-record-ID 撞号，后者仍需 Owner 定跨仓编号约定）。**建议 Owner 立即定跨仓编号约定**。
+**跨仓编号对照（引用任一侧必须双向标注）**：四项 V3 = `DEC-023~026` / DSH = `DEC-021-1~4`；Finalization v1 = V3 `DEC-027` / DSH `DEC-022`；Revision v1 = V3 `DEC-028` / DSH `DEC-023`；Freeze Candidate Review = V3 `DEC-029`；Freeze Candidate Finalization = V3 `DEC-030`（DSH 侧待登记）；**Owner Final Decision v1 = V3 `DEC-031`**（DSH 侧待登记）。**撞号累积 3 处**：DSH `DEC-021`≠V3 `DEC-021`(B2)；DSH `DEC-022`≠V3 `DEC-022`(B3)；DSH `DEC-023`≠V3 `DEC-023`(Interface Scope)。**`source_version_id` 字段撞名已由 DEC-030 消除**（接口键 = `source_content_sha256`；≠ DEC-record-ID 撞号）。**DEC 编号统一 = DEC-031 建议延期项**（文档管理问题，非架构阻塞）。
 
-**汇总表位置**：Decision Alignment Table = Contract v0.2 DRAFT §5.3（DA-1~34）；Implementation Status Table = 同文件 §5.4；五步序 = §5.5；冻结范围六项 = §0；责任边界 = §0.5；命名 = §1.2a（DECISION）；bytes 能力 = §2.3；**Freeze 前执行步骤清单 = §8**。V3 消费侧对齐 = Consumer Alignment v3；DEC-029 评审报告 = Freeze Candidate Review（历史记录）。
+**汇总表位置**：Decision Alignment Table = Contract v0.2 DRAFT §5.3（**DA-1~35**）；Implementation Status Table = 同文件 §5.4；五步序 = §5.5；冻结范围六项 = §0；责任边界 = §0.5；命名 = §1.2a（DECISION）；bytes 能力 + 验证链风险 = §2.3；**Freeze 前执行步骤清单 = §8**。V3 消费侧对齐 = Consumer Alignment v3；DEC-029 评审报告 = Freeze Candidate Review（历史记录）。
 
-**开放冻结前提**（v0.2 DRAFT §8，按 DEC-026 五步序 + DEC-030）——**契约文本侧已收口**（命名采纳 + 词面收口 + 废止 Semantic Unavailable + bytes 能力 + 87/71/16）。**Freeze 前剩余（按序）**：Step 1 快照 · Step 2 回填（键名 `source_content_sha256` 已裁，按此回填；OQ-10 md/PDF 分层仍开放）· OQ-18 次序对齐（已收窄为纯次序之争）· DSH 键名双边确认 · OQ-15 legacy 披露 · OQ-21 16 份呈现机制 · **Owner Freeze 令（Step 3）**。**已不再阻塞**：~~OQ-8 命名~~（DEC-030 已裁）· ~~OQ-8 格式~~（64 hex）· ~~OQ-12 身份维度~~（path 非身份）· ~~OQ-12′ bytes 能力~~（→冻结；传输 OQ-12″ 暂缓）· ~~OQ-5/OQ-19/OQ-20 值集~~ · ~~OQ-14~~（Semantic Pending）· ~~OQ-6~~/~~OQ-11 当前面~~/~~排期归属~~。**V3 实现无五步对应步骤，排期 UNKNOWN**。
+**开放冻结前提**（v0.2 DRAFT §8，按 DEC-026 五步序 + DEC-031）——**契约文本侧已收口**（DEC-030/031）。**冻结条件已机械化（DEC-031 §六）= Step 2 完成并验证后进入 Freeze，无需另行 Owner Freeze 令**。**Freeze 前剩余（DSH 任务，执行授权已下）**：Step 1 快照（文件列表 + `source_content_sha256` + R50 关联）· Step 2 回填 87 + 逐份验证 Manifest hash = IR hash + 验证报告（87 清单 / hash 一致性 / IR 覆盖 / 16 pending）。**已不再阻塞**：~~OQ-18~~（**DEC-031 关闭**）· ~~DSH 键名双边确认~~（Owner 终局确认，DSH 按本名执行即落地）· ~~OQ-15/OQ-13/OQ-10/DEC 编号/OQ-12″ 传输~~（**DEC-031 建议延期，非架构阻塞**）· ~~OQ-8 命名/格式~~/~~OQ-12 身份~~/~~OQ-12′ 能力~~/~~OQ-5/19/20 值集~~/~~OQ-14~~/~~OQ-6~~/~~OQ-11 当前面~~/~~排期归属~~。**开放但不在冻结条件内**：OQ-21（16 份呈现机制）、OQ-17（存量 1 例）、OQ-16′（pending→rejected 准则 + 载体）。**V3 实现无五步对应步骤，排期 UNKNOWN**；**DEC-031 指明 V3 下一阶段核心架构风险 = 消费端验证链**。
 
 ---
 
@@ -35,8 +36,8 @@
 
 | Agent | Repo | Commit | Status |
 |---|---|---|---|
-| Claude (V3) | AITutors-v3 | 5dc86aa | freeze_candidate_finalization_v1_naming_adopted_text_finalized |
-| DSH (Preprocessing) | Aitutors-preprocessing | 1657625 | odr_v14_producer_alignment_v5_parallel_pending_dec030_keyname_bilateral_confirm |
+| Claude (V3) | AITutors-v3 | cce6f8a | owner_final_decision_v1_registered_contract_merged_awaiting_dsh_step1_step2 |
+| DSH (Preprocessing) | Aitutors-preprocessing | 1657625 | odr_v14_producer_alignment_v5_parallel_step1_step2_execution_authorized_dec031 |
 
 ---
 
@@ -80,6 +81,7 @@
 | FACT-045 | **语义层终局词表 + 路由已裁（DEC-028 Part 5/6）**: `SEMANTIC_STATUS` 终局 = `{ready,incomplete,unknown}`（加 unknown，取代四状态机合并记法）+ `DECISION_STATUS` = `{pending_review,approved,rejected}`，禁合并；unknown → reviewable record → pending_review（关闭 OQ-19 路由 + OQ-20 值集）。V3 现状：`SEMANTIC_STATUS` 冻结 `{ready,incomplete}` 须解冻加值（not started）；unknown→pending_review 在 candidate-gated-on-ready 架构下无执行面（not started）；reviewable record 载体 = UNKNOWN | Both | observed |
 | FACT-046 | **Freeze Candidate Review 两决策（DEC-029 原则5/6）**: (a) 接口键命名提案 = `source_content_sha256`（PROPOSAL；**已由 DEC-030 采纳，见 FACT-047**）。(b) source bytes 交付只冻能力（V3 必须能得 raw bytes + 重算验证 fail-closed + 独立 IR = binding）、传输暂缓（OQ-12″）。零 V3 实现、零数据 | Both | observed |
 | FACT-047 | **Freeze Candidate Finalization（DEC-030）**: (a) 接口键命名 `source_content_sha256` **已采纳**（=SHA256(raw bytes) 64 hex；V3 内部 `source_version_id` = uuid.UUID FK 专用化为内部词面；契约全文词面收口完成，52 处新名；OQ-8′ 关闭）。(b) bytes 能力冻结确认。(c) 双状态体系终局确认（禁合并；unknown→reviewable record→pending_review；禁 silent skip/convert/fallback）。(d) 废止旧「Semantic Unavailable」表述；87/71/16 确认。契约 = Freeze Candidate Finalized，仍 NOT FROZEN。零代码、零数据 | V3 | observed |
+| FACT-048 | **Owner Final Decision v1（DEC-031）**: (a) 四项原则终局确认（Identity Authority：`source_content_sha256` = SHA256(original source bytes) 64 小写 hex、path 仅 locator、禁任何系统用 path 做唯一身份判断；双层职责：Manifest=「哪个文件」/ IR=「表达什么」；命名终局；16 份 Identity Available / Semantic Pending + 允许重跑 preprocessing + 补充三禁）。(b) **Step 1 快照 + Step 2 回填执行授权（DSH）**：快照记录文件列表+sha+R50 关联；回填后逐份验证 Manifest hash = IR hash；验证报告含 87 清单/hash 一致性/IR 覆盖/16 pending。(c) **冻结条件机械化** = Step 2 完成并验证 → Freeze；OQ-18 关闭。(d) 五项延期（OQ-15/13/10/DEC 编号/OQ-12″）非架构阻塞。(e) V3 下一阶段核心风险 = 消费端验证链（bytes→重算→验证 Manifest→验证 IR→fail-closed）。契约文本本轮合并；仍 NOT FROZEN | Owner | observed |
 
 ---
 
@@ -93,7 +95,7 @@
 | EB-004 | _locate_options() CONTRACT GAP | Open, confirmed |
 | EB-005 | Formula FP structural exclusion | Open, INFERRED |
 | EB-008 | Admission Evidence Authority enforcement | **Implementation completed, external adversarial verification pending** (P1 local: 88aeae8 + notes b5ddbe3; External verification evidence unavailable in current repository state; NOT VERIFIED / NOT DSH approved / step-6 NOT released) |
-| EB-009 | Integration Contract v0.2 freeze readiness | **Freeze Candidate Finalized / NOT FROZEN**（DEC-030）— 冻结范围 = **六项**（DEC-029 + DEC-030）。**命名 `source_content_sha256` 已采纳**（OQ-8′ 关闭，词面收口完成）· **bytes 能力冻结确认**。**契约文本侧已收口**。冻结 = 五步序 Step 3。**Freeze 前剩余（按序）** = Step1 快照 · Step2 回填（新名）+ OQ-10 · OQ-18 次序对齐 · DSH 键名确认 · OQ-15 · OQ-21 · **Owner Freeze 令**。**已不再阻塞**：~~OQ-8 命名/格式~~/~~OQ-12 身份~~/~~OQ-12′ 能力~~/~~OQ-5/19/20 值集~~/~~OQ-14~~/~~OQ-6~~/~~OQ-11 当前面~~/~~排期归属~~。**V3 identity verification = not implemented（not started）；V3 用 path 作 locator 已符合 path 非身份；V3 实现无五步对应步骤，排期 UNKNOWN** |
+| EB-009 | Integration Contract v0.2 freeze readiness | **Freeze Candidate Finalized / NOT FROZEN**（DEC-031）— 冻结范围 = **六项**（DEC-029/030/031）。**四项原则终局确认**；**Step 1/2 执行授权已下（DSH）**；**冻结条件机械化 = Step 2 完成并验证 → Freeze**（无需另行 Owner Freeze 令）。**Freeze 前剩余（DSH 任务）** = Step 1 快照（文件列表+sha+R50 关联）· Step 2 回填 87 + 逐份验证 Manifest hash = IR hash + 验证报告（87 清单/hash 一致性/IR 覆盖/16 pending）。**已不再阻塞**：~~OQ-18~~（DEC-031 关闭）· ~~DSH 键名确认~~（Owner 终局确认）· ~~OQ-15/OQ-13/OQ-10/DEC 编号/OQ-12″ 传输~~（DEC-031 延期）· ~~OQ-8 命名/格式~~/~~OQ-12 身份~~/~~OQ-12′ 能力~~/~~OQ-5/19/20 值集~~/~~OQ-14~~/~~OQ-6~~/~~OQ-11 当前面~~/~~排期归属~~。**开放但不在冻结条件内**：OQ-21 · OQ-17 · OQ-16′。**V3 identity verification = not started；V3 用 path 作 locator 已符合 path 非身份；V3 实现无五步对应步骤，排期 UNKNOWN；下一阶段核心风险 = 消费端验证链** |
 
 ---
 
@@ -140,6 +142,6 @@
 | **Consumer Decision Alignment v1（FINALIZATION 四项裁决 V3 侧对齐；已被 v2 取代，保留审计）** | `Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-CONSUMER-DECISION-ALIGNMENT-v1.md` |
 | **Consumer Alignment v2（Interface Decision Finalization v1 V3 侧对齐；已被 v3 取代，保留审计）** | `Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-CONSUMER-DECISION-ALIGNMENT-v2.md` |
 | **Consumer Alignment v3（Interface Finalization Revision v1 V3 侧对齐；取代 v2；Part 10 格式 Decision Alignment Summary + Remaining UNKNOWN）** | `Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-CONSUMER-DECISION-ALIGNMENT-v3.md` |
-| **Contract v0.2 DRAFT（Freeze Candidate Finalized，DRAFT / NOT FROZEN；§0 冻结范围六项 + §0.5 责任边界 + §1.2/§1.2a 接口键命名 `source_content_sha256`（DECISION）+ §2.3 bytes 能力 + §8 Freeze 前执行步骤清单；DA-1~34）** | `Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-CONTRACT-v0.2-DRAFT.md` |
-| **Contract v0.2 Freeze Candidate Review（DEC-029 历史记录；命名提案已由 DEC-030 采纳）** | `Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-CONTRACT-v0.2-FREEZE-CANDIDATE-REVIEW.md` |
+| **Contract v0.2 DRAFT（Freeze Candidate Finalized，DRAFT / NOT FROZEN；§0 冻结范围六项 + §0.5 责任边界 + §1.2/§1.2a 接口键命名 `source_content_sha256`（DECISION）+ §2.3 bytes 能力与验证链风险 + §8 Freeze 前执行步骤清单（机械冻结条件）；DA-1~35；DEC-031 并入）** | `Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-CONTRACT-v0.2-DRAFT.md` |
+| **Contract v0.2 Freeze Candidate Review（DEC-029 历史记录；命名提案已由 DEC-030 采纳、DEC-031 终局确认）** | `Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-CONTRACT-v0.2-FREEZE-CANDIDATE-REVIEW.md` |
 | Handoff 007 (B1/B2/B3 → DSH confirm; 含勘误横幅) | `Docs/COORDINATION/HANDOFFS/2026-09-16-Claude-to-DSH-007.md` |
