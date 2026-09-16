@@ -1,6 +1,6 @@
 # Preprocessing Integration Contract v0.2 — DRAFT（Freeze Candidate，已收口 / Finalized）
 
-> **状态**：**DRAFT（Freeze Candidate 已收口 / Finalized Candidate）。NOT FROZEN。** **本轮 = Owner Final Decision v1（V3 `DEC-031`）**：① 四项原则**终局确认**（Identity Authority / 双层职责模型 / 命名 / 16 份处理）② **Step 1 接口快照 + Step 2 `source_content_sha256` 回填获执行授权**（DSH 任务）③ **冻结条件机械化**：Step 2 完成并验证（逐份 Manifest hash = IR hash）后 → 进入 Contract v0.2 Freeze ④ 五项延期（legacy 79 披露 / 17 拒收 / OCR-PDF 扩展 / DEC 编号统一 / bytes 传输）。契约文本侧合并完成，**仍 NOT FROZEN**——待 DSH 执行 Step 1 + Step 2 并出验证报告。**v0.2 冻结范围 = 六项冻结内容**（见 §0），其余暂缓。
+> **状态**：**DRAFT（Freeze Candidate 已收口 / Finalized Candidate）。NOT FROZEN。** **本轮 = Contract v0.2 最终冻结收口·Consumer 侧（V3 `DEC-032`）**：Task 1 契约文本最终核验（八项表达完整无歧义——`source_content_sha256` / SHA256(raw bytes) / path non-identity / 双层职责 / 87-71-16 / Semantic Pending / bytes verification / fail-closed）· Task 2 Consumer Boundary 最终核验（五项能力 NOT IMPLEMENTED 显式登记，§5.6）· Task 3 下一阶段实现边界建立（Consumer Implementation Boundary，§5.6）· Task 4 16 份处理设计登记（§1.6，只登记不实施）。验证链延伸至 Gate→Admission（§2.3）；16 份约束补充血统关系（§1.6⑦）。**上轮 = Owner Final Decision v1（V3 `DEC-031`）**：① 四项原则**终局确认**（Identity Authority / 双层职责模型 / 命名 / 16 份处理）② **Step 1 接口快照 + Step 2 `source_content_sha256` 回填获执行授权**（DSH 任务）③ **冻结条件机械化**：Step 2 完成并验证（逐份 Manifest hash = IR hash）后 → 进入 Contract v0.2 Freeze ④ 五项延期（legacy 79 披露 / 17 拒收 / OCR-PDF 扩展 / DEC 编号统一 / bytes 传输）。契约文本侧合并完成，**仍 NOT FROZEN**——待 DSH 执行 Step 1 + Step 2 并出验证报告。**v0.2 冻结范围 = 六项冻结内容**（见 §0），其余暂缓。
 > **定位**：AITutors-preprocessing（producer）→ AITutors-v3（consumer）的跨项目输出契约。**本版职责 = 冻结 V3 消费边界**。
 > **上游**：v0.1 DRAFT @ `1fbaf5e`；Owner B1/B2/B3（DEC-019/020~022）+ DEC-B1 细化（§1bis）+ CONTRACT-DECISION-FINALIZATION v1 四项（V3 `DEC-023`~`026` ≡ DSH `DEC-021-1`~`4`）+ Interface Decision Finalization v1（V3 `DEC-027` ≡ DSH `DEC-022`，Part 1–6）+ Interface Finalization Revision v1（ODR v1.4 §1quinquies；V3 `DEC-028` ≡ DSH `DEC-023`，Part 1–6）+ Freeze Candidate Review v1（V3 `DEC-029`：命名提案 + bytes 能力冻结 + 16 份四保证对齐）+ Freeze Candidate Finalization v1（V3 `DEC-030`：命名采纳 + 文字收口，DSH 侧待登记）+ **Owner Final Decision v1（V3 `DEC-031`：四项原则终局确认 + Step 1/2 执行授权 + 机械冻结条件 + 五项延期，DSH 侧待登记）**；V3 侧事实基线 + Consumer Alignment v3 + Freeze Candidate Review 报告；producer 侧 = Interface Facts v2.1 + Producer Alignment v5 @ preprocessing `1657625`（含未提交工作树）。
 > **本契约不做什么**：不定义 V3 内部实现；不替 DSH 决定生产侧实现；不修改任何代码 / adapter / 数据库 schema。
@@ -149,6 +149,14 @@
 
 - `source_file` / path / absolute path / directory = **locator information**（辅助定位 source），**不是** identity information。**任何文档不得暗示 path 参与**：文件唯一判断 / source identity 判断 / version 判断 / hash identity 判断。
 - 正确表述：「**`source_file` 用于辅助定位 source，`source_content_sha256` 用于跨系统唯一识别 source**」。
+- **边界公式（`REQUIREMENT`，DEC-032 Task 3，Owner 原文入册）**：
+
+  ```
+  path → 找文件
+  SHA256(bytes) → 证明文件身份
+  ```
+
+  **path 只能用于找到 bytes，绝不能用于证明 bytes 是哪个 source。** 这是下一阶段实现必须严格遵守的边界。
 - 未来 Windows / NAS / Linux / Object Storage / Cloud 路径变化：**不得导致 `source_content_sha256` 变化**（身份 = 内容 hash，与存储位置无关）。
 - **V3 现状（`OBSERVED`）**：V3 仅将 `source_file` 用作 `Path(manifest.source_file)` 加载源文件（`runner.py:241`；`runner_b2.py:320`；`runner_b3.py:184`），全仓**无任何以 path 做身份/版本/hash 判断**的代码——**符合**本原则。跨系统双层当前靠 path 值相等关联 = **不合规现状**（正是本原则要消除的）。
 - **OBSERVED 缺口**：consumer 路径写入 `documents.original_sha256` 的值是 canonical_json 包裹 joined-text（`runner.py:71-73` `file_sha = sha256_hex(body_text)`；`hashing.py:60-62`），**不是** raw bytes sha——该绑定当前不成立。`IMPLEMENTATION: not started`。
@@ -194,7 +202,21 @@ producer 当前不产出 version→version 关系指针。跨版本 lineage 属�
 
 **禁止**：将「IR available」等同于「Interface available」——接口身份以 87 为准，不以 IR 71 为准。
 
-**16 份 Identity-only = Semantic Pending（`DECISION`，DEC-028 Part 3 + DEC-029 原则 3 + DEC-031 原则 4 终局确认，取代 DEC-027 Part 4 的「Semantic Unavailable」）**：接口面 87 中 **16 份**（87−71）无 IR 语义承载，**不是永久缺失，而是可恢复的 Semantic Pending**——**Identity Available / Semantic Pending**。**允许重新执行 preprocessing 生成 IR（DEC-031 明确授权）**，但**约束（不变量，须同时成立）**：① **source bytes hash 不变**（source bytes 不许改；`source_content_sha256` 必须保持一致）② **source identity 不变**（身份键必须一致；**不创建新的 identity**）③ **IR 版本可追踪**（新 IR 必须绑定身份键）④ **禁止覆盖历史事实**（生成后 IR 必须重过 identity verification + semantic validation；禁改原 source / 禁 re-OCR 覆盖 / 禁新 hash 替旧 hash）⑤ **不修改历史 manifest** ⑥ **不删除已有记录**（⑤⑥ = DEC-031 原则 4 补充）。V3 应完成身份对账、暂不语义消费、标记 pending（V3 无此分离/标记能力，Consumer Alignment v3 §3.1）。接口面是否设呈现字段 = 未裁（OQ-21 / DSH 同）。
+**16 份 Identity-only = Semantic Pending（`DECISION`，DEC-028 Part 3 + DEC-029 原则 3 + DEC-031 原则 4 终局确认，取代 DEC-027 Part 4 的「Semantic Unavailable」）**：接口面 87 中 **16 份**（87−71）无 IR 语义承载，**不是永久缺失，而是可恢复的 Semantic Pending**——**Identity Available / Semantic Pending**。**允许重新执行 preprocessing 生成 IR（DEC-031 明确授权）**，但**约束（不变量，须同时成立）**：① **source bytes hash 不变**（source bytes 不许改；`source_content_sha256` 必须保持一致）② **source identity 不变**（身份键必须一致；**不创建新的 identity**）③ **IR 版本可追踪**（新 IR 必须绑定身份键）④ **禁止覆盖历史事实**（生成后 IR 必须重过 identity verification + semantic validation；禁改原 source / 禁 re-OCR 覆盖 / 禁新 hash 替旧 hash）⑤ **不修改历史 manifest** ⑥ **不删除已有记录**（⑤⑥ = DEC-031 原则 4 补充）⑦ **保留新旧 IR 的血统关系**（DEC-032 Task 4，Owner 原文入册——新 IR 与既有 IR 记录之间的来源血统必须显式可追踪，不得断代）。V3 应完成身份对账、暂不语义消费、标记 pending（V3 无此分离/标记能力，Consumer Alignment v3 §3.1）。接口面是否设呈现字段 = 未裁（OQ-21 / DSH 同）。
+
+**16 份处理设计登记（`REQUIREMENT`，DEC-032 Task 4——只登记实现要求，不实施）**：未来执行路径：
+
+```
+Semantic Pending
+       ↓
+preprocessing（重新执行）
+       ↓
+new IR
+       ↓
+same source_content_sha256
+```
+
+该路径的实现要求 = 上述七约束不变量全部成立；血统关系（约束 ⑦）要求新 IR 记录与该 `source_content_sha256` 下既有 IR 记录（若有）的来源关联可追踪。**本登记不是实施令**——16 份的重跑执行须 Owner 单独下令（属数据动作，不在 DEC-031 Step 1/2 授权范围内）。
 
 ### 1.7 Legacy v1 Handling（`DECISION`，DEC-024 ≡ DSH DEC-021-2）
 
@@ -252,13 +274,25 @@ producer 当前不产出 version→version 关系指针。跨版本 lineage 属�
 
 **不冻结 / 暂缓（`UNKNOWN`，明确不属 v0.2 承诺）**：**HOW** bytes 达到 V3（共享 FS / 对象存储 / IR 内嵌 / manifest 相对路径解析 / 其它）= 暂缓项。传输是实现/部署形态，随环境变化，冻结它会把部署细节锁进接口契约。当前 `source_file` 为本机绝对路径、跨机不可解析（IF-v2 §2.1；`OBSERVED`）正说明传输形态未定——但**不阻塞**能力冻结：能力是「必须能拿到 bytes 并验证」，与「怎么拿」解耦。**OQ-12′ 处置**：能力维度已冻结（进承诺面）；传输维度暂缓（不进承诺面、不构成冻结阻塞）。**DEC-031 Owner 建议**：bytes 传输方式 = 实现阶段再决定，**非架构阻塞点**。
 
-**下一阶段核心架构风险（`REQUIREMENT`，DEC-031 Owner 原文入册）**：preprocessing 侧不再是 V3 最大架构风险；**V3 消费端必须真正实现验证链**——
+**下一阶段核心架构风险（`REQUIREMENT`，DEC-031 Owner 原文入册；DEC-032 延伸至 Gate/Admission）**：preprocessing 侧不再是 V3 最大架构风险；**V3 消费端必须真正实现验证链**——
 
 ```
-拿到 bytes → 自己计算 SHA256 → 验证 Manifest → 验证 IR → 失败关闭
+source bytes
+      ↓
+独立计算 SHA256
+      ↓
+验证 Manifest.source_content_sha256
+      ↓
+验证 IR 的 source_content_sha256
+      ↓
+确认身份与语义来源一致
+      ↓
+Gate
+      ↓
+Admission
 ```
 
-此链为 §0.5 六项消费义务 + 本节四条能力要求的执行面；当前 V3 零实现（§5.4）。
+任何关键验证失败：**fail-closed**——不得继续向下游消费（DEC-032 Task 3 完整链）。此链为 §0.5 六项消费义务 + 本节四条能力要求的执行面；当前 V3 零实现（§5.4 / §5.6）。
 
 - **可执行前提**（`OBSERVED`）：载体上有该字段 + 双方对「钉 raw bytes」一致。前者当前不成立（§1.1/§1.3 缺口）；后者已由 §2.1 DECISION 满足。
 - **实现状态**：`IMPLEMENTATION: not started`（依赖 §1 双层接口落地 + bytes 传输形态定案）。
@@ -415,9 +449,9 @@ schema 噪声不只 unit_type 一处：恰 1 例 `andalone_question` + 恰 1 例
 7. 禁止把 INCOMPLETE 报为 PENDING_REVIEW / REJECTED，或反向代用（§4.2-1/2）。
 8. 禁止 unresolved 答案槽位静默默认（继承 v0.1 §3.2 特别条款）。
 
-### 5.3 Decision Alignment Table（`DECISION` / `OBSERVED` / `UNKNOWN` 对照，DA-1~34）
+### 5.3 Decision Alignment Table（`DECISION` / `OBSERVED` / `UNKNOWN` 对照，DA-1~36）
 
-> 每行 = 一项裁决要求。DA-1~12 = B1/B2/B3；DA-13~20 = FINALIZATION v1（DEC-023~026）；DA-21~26 = Interface Decision Finalization v1（DEC-027）；DA-27~31 = Interface Finalization Revision v1（DEC-028）；DA-32~33 = Freeze Candidate Review v1（DEC-029）；DA-34 = Freeze Candidate Finalization v1（DEC-030）；**DA-35 = Owner Final Decision v1（DEC-031）**。
+> 每行 = 一项裁决要求。DA-1~12 = B1/B2/B3；DA-13~20 = FINALIZATION v1（DEC-023~026）；DA-21~26 = Interface Decision Finalization v1（DEC-027）；DA-27~31 = Interface Finalization Revision v1（DEC-028）；DA-32~33 = Freeze Candidate Review v1（DEC-029）；DA-34 = Freeze Candidate Finalization v1（DEC-030）；DA-35 = Owner Final Decision v1（DEC-031）；**DA-36 = Contract v0.2 最终冻结收口 Consumer 侧（DEC-032）**。
 
 | # | 裁决要求（DECISION） | OBSERVED 现状 | UNKNOWN |
 |---|---|---|---|
@@ -456,6 +490,7 @@ schema 噪声不只 unit_type 一处：恰 1 例 `andalone_question` + 恰 1 例
 | DA-33 | **source bytes 能力冻结**：V3 必须能获得 raw bytes + 重算验证（fail-closed）+ 独立于 IR；**不冻结传输**（DEC-029 原则 6 + DEC-030 Decision 2 确认） | V3 自算为 canonical_json 包裹非 raw bytes（`runner.py:71-73`）；零身份校验；`source_file` 本机绝对路径跨机不可解析 | bytes 具体传输方案（暂缓，OQ-12″）· V3 重算能力实现（not started） |
 | DA-34 | **Freeze Candidate Finalization（DEC-030）**：① 命名 `source_content_sha256` 采纳 + 全文词面收口 ② bytes 能力冻结确认 ③ 双状态体系终局确认（ready/incomplete/unknown + pending_review/approved/rejected，禁合并；unknown→reviewable record→pending_review，禁 silent skip/convert/fallback）④ 废止「Semantic Unavailable」旧表述 + 消除接口键歧义 | 契约文本已收口（DEC-030 轮）；V3/producer 实现面均未动（DECISION ≠ IMPLEMENTATION） | ~~DSH 双边确认键名~~ **已由 DEC-031 终局确认取代** · Step 1/2 数据前置 |
 | DA-35 | **Owner Final Decision v1（DEC-031）**：① 四项原则终局确认（Identity Authority：`source_content_sha256` = SHA256(original source bytes) 64 小写 hex，path 仅 locator，禁任何系统用 path 做唯一身份判断 / 双层职责：Manifest=「哪个文件」IR=「表达什么」，不得混淆 / 命名：跨系统 `source_content_sha256`、V3 内部 `source_version_id`，禁同名 / 16 份：Identity Available Semantic Pending，允许重跑 preprocessing，不建新 identity、不改历史 manifest、不删已有记录）② **Step 1 + Step 2 执行授权**（DSH 任务：快照含文件列表+sha+R50 关联；回填后逐份验证 Manifest hash = IR hash）③ **冻结条件机械化** = Step 2 完成并验证后进入 Freeze ④ 五项延期（OQ-15/OQ-13/OQ-10/DEC 编号/OQ-12″）非架构阻塞 ⑤ V3 下一阶段核心风险 = 消费端验证链（bytes→重算→验证 Manifest→验证 IR→fail-closed） | 契约文本侧本轮合并完成；DSH 执行 Step 1/2 = not started（授权已下）；V3 验证链 = not started | DSH Step 1 快照 · DSH Step 2 回填 + 验证报告 · OQ-10 md/PDF 分层（Step 2 内裁） |
+| DA-36 | **Contract v0.2 最终冻结收口 Consumer 侧（DEC-032）**：① **Task 1 文本核验通过**——八项表达完整无歧义（`source_content_sha256` / SHA256(raw bytes) / path non-identity / 双层职责 / 87-71-16 / Semantic Pending / bytes verification / fail-closed）② **Task 2 Consumer Boundary 最终核验**——五项能力 NOT IMPLEMENTED 显式登记（§5.6.1：Manifest identity verification / raw bytes acquisition / independent SHA256 verification / IR identity verification / identity gate）③ **Task 3 实现边界建立**（§5.6.2）：输入 = Manifest + raw bytes + IR；验证 = Manifest identity + IR identity + source-content consistency；失败 = fail-closed；成功 = 进入既有 Gate/Admission；**path → 找文件，SHA256(bytes) → 证明文件身份**（§1.3 边界公式）④ **Task 4 16 份设计登记**（§1.6）：Semantic Pending → preprocessing → new IR → same `source_content_sha256`；约束 ⑦ 新增「保留新旧 IR 的血统关系」；验证链延伸至 Gate→Admission（§2.3） | 契约文本核验完成（八项均在位，无需修正）；五项 NOT IMPLEMENTED 与 §5.4 / FACT-043 一致；实现边界与 16 份设计 = REQUIREMENT 登记，零实现 | bytes 传输形态（OQ-12″）· 实现排期（UNKNOWN）· 16 份重跑执行令（须 Owner 单独下令） |
 
 ### 5.4 Implementation Status Table（`DECISION ≠ IMPLEMENTATION`）
 
@@ -512,6 +547,61 @@ Step 5  Execute image recovery / historical cleanup
 **残留不一致（OQ-18，DEC-031 后关闭）**：DSH Dependency Map 边表 **E1** 曾写「`v0.2 冻结 → G1b 回填`（字段未定义不得回填，硬治理）」，方向与五步序（回填 → 冻结）相反。DEC-030 已消除其「字段未定义」关切（键名/算法/格式均已裁）；**DEC-031 Owner 授权 Step 1/2 执行并规定冻结条件 = Step 2 完成并验证后进入 Freeze，等于显式确认五步序优先（回填 → 冻结）**。E1 由 DSH 侧文档随 Step 1/2 执行更新对齐；OQ-18 **关闭**。
 
 **V3 侧边界（`OBSERVED` + `UNKNOWN`，本轮明确登记）**：**五步序全部是数据 / 契约动作，不含任何 V3 实现动作。** V3 的 IR 消费能力（V3-I1）、身份绑定（V3-I2/I3）、四状态机通道（V3-S1）**在五步序中没有对应步骤**——**V3 侧实现排期 = UNKNOWN，且不因本裁决而获得排期**。本契约不提案为其插入步骤。
+
+### 5.6 Consumer Boundary 最终核验 + 下一阶段实现边界（`OBSERVED` + `REQUIREMENT`，DEC-032 Task 2/3）
+
+> 本节为 **Contract v0.2 最终冻结收口（Consumer 侧）** 的新增登记：Task 2 = V3 当前真实状态的显式核验（五项能力 NOT IMPLEMENTED）；Task 3 = 下一阶段实现边界。**本节不含任何实现方案，不写业务代码，不改 schema。**
+
+#### 5.6.1 V3 Consumer 现状核验（`OBSERVED`，Task 2——五项全部 NOT IMPLEMENTED）
+
+| # | 能力 | 状态 | 证据 |
+|---|---|---|---|
+| 1 | **Manifest identity verification**（验证 Manifest 声明的 `source_content_sha256`） | **NOT IMPLEMENTED** | `manifest_reader.py:52` 无校验；Manifest dataclass 无 sha 字段（`manifest_reader.py:28-35`） |
+| 2 | **raw bytes acquisition**（获得 source 原始字节） | **NOT IMPLEMENTED** | `source_file` 为本机绝对路径跨机不可解析（IF-v2 §2.1）；无 bytes 获取机制 |
+| 3 | **independent SHA256 verification**（独立重算 SHA-256 并比对声明值） | **NOT IMPLEMENTED** | V3 自算为 canonical_json 包裹 joined-text（`runner.py:71-73`；`hashing.py:60-62`），非 raw bytes |
+| 4 | **IR identity verification**（验证 IR 的 `source_content_sha256`） | **NOT IMPLEMENTED** | V3 零 IR 消费能力（Grep `resolver_ir\|source_sha256` @ `backend/` = 0 命中） |
+| 5 | **identity gate**（身份闸门：不一致 → 拒收） | **NOT IMPLEMENTED** | 无身份闸门；`identity_version` 代码 0 命中；fail-closed 无执行面 |
+
+**这五项属于下一阶段，不是 V3 当前已有能力。** 本契约中任何 `REQUIREMENT`（§0.5 六义务 / §2.3 四条能力 / §5.1 七承诺）**均为义务面冻结候选，不得读作现状描述**——现状即上表五项 NOT IMPLEMENTED。既有 V3 Gate / Admission 链（EB-008 面，`admission.py` / `gate/`）不因本节变动，本契约不改其逻辑。
+
+#### 5.6.2 Consumer Implementation Boundary（`REQUIREMENT`，Task 3——下一阶段实现边界）
+
+**输入**：
+
+```
+Manifest + raw bytes + IR
+```
+
+**验证**：
+
+```
+Manifest identity    （重算 SHA256(bytes) == Manifest.source_content_sha256）
+IR identity          （IR.source_content_sha256 == Manifest.source_content_sha256）
+source-content consistency（身份与语义来源一致——同一 sha 锚定同一 bytes 与同一 IR）
+```
+
+**失败**：
+
+```
+fail-closed（任何关键验证失败 → 阻断消费，不得继续向下游）
+```
+
+**成功**：
+
+```
+进入既有 V3 Gate / Admission 链
+```
+
+**path 边界（binding，DEC-032 Task 3）**：
+
+```
+path → 找文件（locator only）
+SHA256(bytes) → 证明文件身份（identity）
+```
+
+**path 只能用于找到 bytes，绝不能用于证明 bytes 是哪个 source。** 这是下一阶段实现必须严格遵守的边界（§1.3 边界公式同源；冻结项 ④ 继承）。
+
+**边界性质**：本节登记的是**输入 / 验证 / 失败 / 成功**四面的边界约束，**不是实现方案**——载体形态（bytes 传输 OQ-12″）、落点设计（V3 哪一层执行验证）、排期（UNKNOWN，§5.5）均不在本节。实现启动须 Owner 单独下令。
 
 ---
 
@@ -570,7 +660,7 @@ Step 5  Execute image recovery / historical cleanup
 
 > **结构**：Decision 4 把 **Contract v0.2 冻结放在五步序的 Step 3**，其前置 = Step 1（接口快照冻结）+ Step 2（`source_content_sha256` 回填）。**DEC-031 后冻结条件机械化**：Step 2 完成并验证（逐份 Manifest hash = IR hash）→ 进入 Contract v0.2 Freeze。契约文本侧已收口（DEC-030/031）；剩余全部是 **DSH 数据执行**。
 
-**已完成（DEC-030 + DEC-031，契约文本侧）**：
+**已完成（DEC-030 + DEC-031 + DEC-032，契约文本侧）**：
 
 - ✅ 接口键命名 `source_content_sha256` 采纳 + 全文词面收口 + **Owner 终局确认**（OQ-8′ 关闭；DEC-030/031）。
 - ✅ source bytes 能力冻结确认（§2.3；传输 OQ-12″ 暂缓，DEC-031 建议延期）。
@@ -578,6 +668,7 @@ Step 5  Execute image recovery / historical cleanup
 - ✅ 废止旧「Semantic Unavailable」表述（DA-20/25、§7）；`source_version_id` 接口键歧义消除。
 - ✅ 四项原则终局确认 + 16 份补充三禁（DEC-031 原则 1–4，§0.1/§1.1/§1.6）。
 - ✅ **Step 1/2 执行授权下达**（DEC-031 §二）；OQ-18 关闭（五步序优先显式确认）。
+- ✅ **Consumer 侧最终冻结收口（DEC-032）**：Task 1 文本核验通过（八项完整）· Task 2 五项 NOT IMPLEMENTED 显式登记（§5.6.1）· Task 3 实现边界建立（§5.6.2 + §1.3 边界公式）· Task 4 16 份设计登记（§1.6，约束 ⑦ 血统关系）· 验证链延伸至 Gate→Admission（§2.3）。
 
 **Freeze 前执行步骤（DSH 任务，DEC-031 执行授权已下，全部 not started）**：
 
@@ -611,12 +702,12 @@ Step 5  Execute image recovery / historical cleanup
 
 ## 边界声明
 
-**本文件做了**：Owner B1/B2/B3 裁决的契约化（§1-4）+ DEC-B1 细化（§1.1）+ FINALIZATION v1 四项（§1.6/§1.7/§3.2+§4.1/§5.5）+ Interface Decision Finalization v1（DEC-027）+ Interface Finalization Revision v1（DEC-028：source identity 64hex + path 非身份 + 16 份 Semantic Pending + 语义层终局词表加 unknown + unknown→pending_review）+ Freeze Candidate Review v1（DEC-029：命名提案 + bytes 能力冻结 + 16 份四保证）+ Freeze Candidate Finalization v1（DEC-030：命名采纳 + 词面收口 + bytes/双状态确认 + 废止「Semantic Unavailable」）+ **Owner Final Decision v1（DEC-031）**：**四项原则终局确认**（§0.1/§1.1/§1.6/§1.2a）+ **Step 1/2 执行授权**（§5.4/§8）+ **机械冻结条件**（Step 2 验证通过 → Freeze，§8）+ **五项延期清单**（§0.2/§6）+ **V3 下一阶段核心风险 = 消费端验证链**（§2.3）；V3 消费边界义务面（§5.1-5.2）；**Decision Alignment Table（§5.3，DA-1~35）** 与 **Implementation Status Table（§5.4）**；v0.1 差异对照（§7）；开放项 OQ-1~21 与冻结前提更新（§6/§8）。每条款标 DECISION/OBSERVED/UNKNOWN/REQUIREMENT。
+**本文件做了**：Owner B1/B2/B3 裁决的契约化（§1-4）+ DEC-B1 细化（§1.1）+ FINALIZATION v1 四项（§1.6/§1.7/§3.2+§4.1/§5.5）+ Interface Decision Finalization v1（DEC-027）+ Interface Finalization Revision v1（DEC-028：source identity 64hex + path 非身份 + 16 份 Semantic Pending + 语义层终局词表加 unknown + unknown→pending_review）+ Freeze Candidate Review v1（DEC-029：命名提案 + bytes 能力冻结 + 16 份四保证）+ Freeze Candidate Finalization v1（DEC-030：命名采纳 + 词面收口 + bytes/双状态确认 + 废止「Semantic Unavailable」）+ Owner Final Decision v1（DEC-031：四项原则终局确认 §0.1/§1.1/§1.6/§1.2a + Step 1/2 执行授权 §5.4/§8 + 机械冻结条件 §8 + 五项延期 §0.2/§6 + V3 下一阶段核心风险 = 消费端验证链 §2.3）+ **Contract v0.2 最终冻结收口 Consumer 侧（DEC-032）**：**Task 1 文本核验通过**（八项完整）· **Task 2 五项 NOT IMPLEMENTED 显式登记**（§5.6.1）· **Task 3 实现边界建立**（§5.6.2：输入/验证/失败/成功四面 + path 边界公式 §1.3）· **Task 4 16 份设计登记**（§1.6，约束 ⑦ 血统关系）· 验证链延伸至 Gate→Admission（§2.3）；V3 消费边界义务面（§5.1-5.2）；**Decision Alignment Table（§5.3，DA-1~36）** 与 **Implementation Status Table（§5.4）**；v0.1 差异对照（§7）；开放项 OQ-1~21 与冻结前提更新（§6/§8）。每条款标 DECISION/OBSERVED/UNKNOWN/REQUIREMENT。
 
-**本文件没做**：未把 DECISION 描述为已实现（§5.4 全表 `not started` / `authorized, not started` / `deferred` / `UNKNOWN`）；未把契约描述为已冻结（DRAFT / NOT FROZEN——冻结条件 = DSH Step 2 完成并验证，尚未满足）；未替 DSH 执行 Step 1/2（授权已下，执行属 DSH 任务）；未修改 V3 代码 / adapter / 数据库 schema / EB-008 / admission 逻辑；未修改 preprocessing；未执行任何数据动作（Step 1~5 均未启动——本轮仅契约文字合并）。
+**本文件没做**：未把 DECISION 描述为已实现（§5.4 全表 `not started` / `authorized, not started` / `deferred` / `UNKNOWN`；**§5.6.1 五项 NOT IMPLEMENTED 显式登记**）；未把契约描述为已冻结（DRAFT / NOT FROZEN——冻结条件 = DSH Step 2 完成并验证，尚未满足）；未替 DSH 执行 Step 1/2（授权已下，执行属 DSH 任务）；未修改 V3 代码 / adapter / 数据库 schema / EB-008 / admission 逻辑；未修改 preprocessing；未执行任何数据动作（Step 1~5 均未启动；16 份重跑 = 仅设计登记，未实施）；**未把 §5.6 实现边界读作实现方案或排期承诺**（边界 ≠ 设计 ≠ 排期）。
 
 **EB-008 状态**：不因本文件变动。AuthorityIdentity 三元绑定（`evidence.py:28-29`）为既有冻结设计，本契约仅引用不改。
 
 ---
 
-*v0.2 DRAFT（Freeze Candidate Finalized）— 2026-09-16，Claude（AITutors-v3 Consumer Owner）。本轮 = Owner Final Decision v1（V3 `DEC-031`）：四项原则终局确认（Identity Authority / 双层职责 / 命名 `source_content_sha256` / 16 份 Semantic Pending + 补充三禁）+ Step 1/2 执行授权（DSH 任务）+ 机械冻结条件（Step 2 完成并验证 Manifest hash = IR hash → Freeze）+ 五项延期（OQ-15/13/10/DEC 编号/OQ-12″）+ V3 下一阶段核心风险 = 消费端验证链（bytes→重算→验证 Manifest→验证 IR→fail-closed）。DA-1~35。V3 代码 `b5ddbe3`（其后仅文档提交，代码未变）· preprocessing `1657625`（+ DSH 并行未提交工作树）· v0.1 `1fbaf5e`（未改）。**冻结范围 = §0 六项；状态 DRAFT / NOT FROZEN——冻结待 DSH Step 1/2 执行 + 验证报告**。DECISION ≠ IMPLEMENTATION。*
+*v0.2 DRAFT（Freeze Candidate Finalized）— 2026-09-16，Claude（AITutors-v3 Consumer Owner）。本轮 = Contract v0.2 最终冻结收口 Consumer 侧（V3 `DEC-032`）：Task 1 文本核验通过（八项完整）· Task 2 五项 NOT IMPLEMENTED 显式登记（§5.6.1）· Task 3 实现边界建立（§5.6.2 + §1.3 边界公式）· Task 4 16 份设计登记（§1.6 约束 ⑦ 血统关系）· 验证链延伸 Gate→Admission（§2.3）。上轮 = Owner Final Decision v1（V3 `DEC-031`）：四项原则终局确认 + Step 1/2 执行授权 + 机械冻结条件 + 五项延期 + V3 下一阶段核心风险 = 消费端验证链。DA-1~36。V3 代码 `b5ddbe3`（其后仅文档提交，代码未变）· preprocessing `1657625`（+ DSH 并行未提交工作树）· v0.1 `1fbaf5e`（未改）。**冻结范围 = §0 六项；状态 DRAFT / NOT FROZEN——冻结待 DSH Step 1/2 执行 + 验证报告**。DECISION ≠ IMPLEMENTATION。*
