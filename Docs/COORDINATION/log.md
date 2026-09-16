@@ -69,4 +69,21 @@
 
 ---
 
-*（历史轮次：DEC-033 Freeze Finalization Audit · DEC-032 Freeze 前最终登记 · DEC-031 Owner Final Decision v1 · DEC-030 Freeze Candidate Finalization · DEC-029 Freeze Candidate Review · DEC-027/028 Interface Finalization · DEC-023~026 FINALIZATION 四项 · DEC-020~022 B1/B2/B3 —— 详见 CURRENT.md 决策表与契约 §5.3。）*
+## 2026-09-16 — Round: Freeze Artifact remote 可复现闭环（V3 `DEC-035`，B-1 CLOSED）
+
+**Owner 指令**：完成 Contract v0.2 Freeze Artifact remote 可复现闭环——消除 B-1，仅执行冻结对象 remote verification 前置动作。严格限制：① 禁改 Contract 正文 ② 禁改 Freeze Artifact 内容 ③ 禁新增设计 ④ 禁触 `source_content_sha256` / bytes / Semantic Pending / identity 相关条款 ⑤ **本轮仅处理 git remote 状态**。执行 A Push · B 验证（ls-remote + merge-base is-ancestor，必须 PASS）· C Blob 验证（重算 sha256，必须 == `9c6b9063…7528`）· D 登记（**仅** state.yaml / CURRENT.md / log.md，记录 B-1 CLOSED + 状态 REMOTE VERIFIED；Registration commit 与 Freeze Artifact 必须继续分离）。
+
+**执行结果**：
+
+- **A Push** —— 无需动作：`f4941ff` 自 DEC-034 轮（`69a6c0b..305bd81`）已在 origin/main；`git log origin/main..HEAD` 为空。
+- **B 验证** —— `git ls-remote origin HEAD` = `305bd81796bff4ef93c96219545ee96d1d3a67ad`（== refs/heads/main）；`git merge-base --is-ancestor f4941ff origin/main` = **PASS**。
+- **C Blob 验证** —— `git show f4941ff:Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-CONTRACT-v0.2-DRAFT.md | sha256sum` = `9c6b9063e81fb2a66d85794b280c9d931f1b0074b39abf472033218149b17528` == 登记值 = **PASS**。
+- **D 登记** —— 三账本更新：DEC-035 / FACT-052 / EB-009（status = `freeze_artifact_remote_verified_b1_closed_…`）/ workstream / Agents。**契约与 GAP MAP 本轮未触**。
+
+**状态**：**B-1 CLOSED**。**Contract v0.2 Freeze Artifact = REMOTE VERIFIED**（commit `f4941ff`，sha256 `9c6b9063…7528`）。Freeze Artifact / Freeze Registration 分离保持（本轮 registration commit ≠ `f4941ff`）。契约状态不变 = **READY FOR FREEZE / NOT FROZEN**。**建议 Owner 发 Freeze 令**。
+
+**边界**：零 Contract 内容修改 · 零 Freeze Artifact 修改 · 零新增设计 · 零代码 / 零 schema / 零数据 / 零 IR · 仅 git remote 状态处理。**Contract Freeze ≠ V3 Implementation；Requirement ≠ Existing Capability。**
+
+---
+
+*（历史轮次：DEC-034 Freeze Object Final Alignment · DEC-033 Freeze Finalization Audit · DEC-032 Freeze 前最终登记 · DEC-031 Owner Final Decision v1 · DEC-030 Freeze Candidate Finalization · DEC-029 Freeze Candidate Review · DEC-027/028 Interface Finalization · DEC-023~026 FINALIZATION 四项 · DEC-020~022 B1/B2/B3 —— 详见 CURRENT.md 决策表与契约 §5.3。）*
