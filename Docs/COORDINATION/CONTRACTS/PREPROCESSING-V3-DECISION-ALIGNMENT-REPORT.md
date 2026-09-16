@@ -4,6 +4,14 @@
 > **性质**：决策对齐记录。**非实现 · 非冻结 · 不替 DSH 决定生产侧实现。**
 > **三态纪律**：每条结论标 `DECISION`（Owner 架构选择）/ `OBSERVED`(有实测锚) / `UNKNOWN`（无证据，不推断）。**DECISION ≠ IMPLEMENTATION**——架构选择已下达，实现尚未发生。
 >
+> **2026-09-16 后续（FINALIZATION v1 轮）**：Owner 追加四项裁决（Interface Scope / Legacy v1 / 四状态机 / 五步执行序）。**该轮的 V3 侧对齐报告另文** = `PREPROCESSING-V3-CONSUMER-DECISION-ALIGNMENT-v1.md`。本文件**未废止**：其 §1-3 的 B1/B2/B3 逐项细节与证据锚继续有效，FINALIZATION 轮文件不重复这些表格。两文件并读。
+>
+> **本轮状态变更（据 DEC-023~026）**：
+> - **OQ-6 已关闭**（§1.3 B1-G5 的「79 份处置未裁」→ 已裁 = historical asset 隔离，DEC-024）。
+> - **§3.1/§3.4 的「UNKNOWN/PENDING」泛称已被四值词表取代**（READY/INCOMPLETE/PENDING_REVIEW/REJECTED，DEC-025）。
+> - **排期归属已裁**（DEC-026 五步序，数据动作）；**V3 侧实现仍无排期步骤**（见新文件 §4.4）。
+> - **§2.2 / §1.2 中「79 份 v1 在 C-IN-1 下必被拒收」的精度更正**：该表述对 producer/IR 面成立，**对 V3 消费面不成立**（V3 代码 `identity_version` / `C-IN-1` 均 0 命中）。权威记录 = GAP-MAP §0 E-3。
+>
 > **2026-09-16 更新（并入 IF-v2 / Readiness）**：
 > - **B1 双层架构保留**。曾有一条指令将 transport 写作「IR → V3，manifest 不作 source identity authority」，与两仓已入册的 DEC-019 / DEC-020 相反；经 Owner 确认**按双层理解**——Manifest = Source Identity Authority（身份对账面），IR = Semantic Consumption Authority（语义消费面），**语义消费方向 = IR → V3**。本报告 §1 据此维持。
 > - **两张汇总表移入契约**：Decision Alignment Table = `PREPROCESSING-V3-CONTRACT-v0.2-DRAFT.md` §5.3；Implementation Status Table = 同文件 §5.4。本报告保留逐项细节与证据锚。

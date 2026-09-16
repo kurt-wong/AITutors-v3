@@ -7,14 +7,16 @@
 >
 > **2026-09-16 更新**：Owner 已下达 B1/B2/B3 **架构裁决**（`DECISION`，见 `PREPROCESSING-V3-DECISION-ALIGNMENT-REPORT.md` §0）。本文件的 Gap 登记随之更新：三项 blocker 的**架构方向已定，实现均未开始**（`IMPLEMENTATION: not started`）。**DECISION ≠ IMPLEMENTATION**——本文件仍只登记事实与缺口，不提案实现。
 >
+> **2026-09-16 第二轮更新（FINALIZATION v1 四项裁决后）**：Owner 追加裁决 Interface Scope（=87）/ Legacy v1（historical asset）/ 四状态机（READY·INCOMPLETE·PENDING_REVIEW·REJECTED）/ 五步执行序。V3 侧对齐报告 = `PREPROCESSING-V3-CONSUMER-DECISION-ALIGNMENT-v1.md`（同批）。本文件据此新增 §0 E-3 精度更正与 G-6~G-9 四项 Gap，并更新 §3 裁决事实输入。**DECISION ≠ IMPLEMENTATION 不变。**
+>
 > **证据基线**：
 > | 侧 | 基线 |
 > |---|---|
 > | V3 代码 | `b5ddbe3`（其后仅文档提交，代码未变） |
-> | preprocessing | `746e35c`（Owner 暂停令；Interface Facts v1 @ `17c55d8`；Reconciliation v0.2 @ `ad1abdd`） |
-> | 被分析契约 | v0.1 @ `1fbaf5e`（未改）；v0.2 DRAFT 见 `PREPROCESSING-V3-CONTRACT-v0.2-DRAFT.md`（NOT FROZEN） |
+> | preprocessing | `bbb5c70`（DEC-B1 入册）+ 未提交工作树（ODR v1.2 §1ter / Readiness v3.2 / Gap List v1.2 / Dependency Map v2.2 / Producer Decision Alignment v1） |
+> | 被分析契约 | v0.1 @ `1fbaf5e`（未改）；v0.2 DRAFT 见 `PREPROCESSING-V3-CONTRACT-v0.2-DRAFT.md`（NOT FROZEN，本轮已并入四项裁决） |
 >
-> **本轮关键输入**：DSH `INTEGRATION/PREPROCESSING-PRODUCER-FACT-RECONCILIATION-v0.2.md` @ `ad1abdd`（逐行亲读 V3 代码，**更正了我方两处结论**——经我亲验，两处更正均成立，见 §0）；DSH `INTEGRATION/PREPROCESSING-PRODUCER-INTERFACE-FACTS.md` v1 @ `17c55d8`（生产侧五输出面清点、identity 87/79 分裂、hash 零产出确认、schema 噪声第 2 例）；Owner B1/B2/B3 架构裁决（2026-09-16 指令）。另：preprocessing 侧 Owner 暂停令（`746e35c`）仍生效。
+> **本轮关键输入**：Owner Decision Record v1.2（§1 + §1bis DEC-B1 + §1ter 四项裁决）；DSH `PREPROCESSING-PRODUCER-DECISION-ALIGNMENT-v1.md`（并行产出）；DSH Readiness v3（三点交集定量、87/87 R50 成员资格）；V3 侧 Consumer Decision Alignment v1。前轮输入（IF-v2 / Reconciliation v0.2 / Owner B1-B3 裁决 / 暂停令 `746e35c`）继续有效。
 
 ---
 
@@ -26,6 +28,7 @@ DSH Reconciliation v0.2 指出我方 BLOCKER-ANALYSIS / Review v0.2 的两处错
 |---|---|---|---|
 | **E-1** | CB-3：candidate 层落 `composite_unit`，「三处解释互相矛盾」 | candidate 层**零落库**——该单元 `semantic_status=incomplete` → `runner_b2.py:232-239` skip+continue，**永不到达** `:252`。即便到达，IRBuilder 从**洗白后** payload 取值（`ir.py:108`）会落 `standalone_unit`，非 `composite_unit` | ✅ 成立：`runner_b2.py:231-252`；`ir.py:106-108`；`annotation_adapter.py:42` |
 | **E-2** | Review §A.3：`splitlines()` 规范化在 `compute_body_hash`（`source_loader.py:43-46`） | `splitlines()` 在 `load_source_lines`（`source_loader.py:27`）；`compute_body_hash` 本身只做 `"\n".join` + sha256。**6/12 DIFFER 结论不变** | ✅ 成立：`source_loader.py:24-46` |
+| **E-3** | 本文件旧 §2.2 G-1 / §3 与 BLOCKER-ANALYSIS：「79 份 v1 在 C-IN-1 下必被拒收」 | **精度修正（本轮，非结论反转）**：C-IN-1 在 **producer/IR 面已实现**（`resolver_reference.py` 生成时拒收）；在 **V3 消费面未实现**——`identity_version` 与 `C-IN-1` 在 V3 全仓代码 **0 命中**。若 v1 manifest 被送入 V3，V3 **会照常消费** | ✅ 成立：`Grep identity_version\|C-IN-1 @ backend/**/*.py` = 0；`manifest_reader.py:28-35` dataclass 无该字段；producer 侧见 IF-v2 §2.4 |
 
 **更正后的 CB-3 事实形态**（取代 BLOCKER-ANALYSIS §CB-3 的「当前事实」段）：
 
@@ -130,7 +133,7 @@ DSH Reconciliation v0.2 B1 问题 4 补充事实：**不存在任何双方 ack �
 
 INTERFACE FACTS v1 §0 核心合取事实（生产侧硬约束）：**没有任何单一输出面同时具备「全语料覆盖 + md sha 锚 + 持续产出」**——manifest 全覆盖但零 sha；IR 有 sha 但只是 88 条一次性冻结样本工件（71 条 ADMITTED 携 `ir` 对象）；OCR 清单锚 PDF 非 md。
 
-**identity 面分裂（覆盖上限事实）**：166 份 manifest 中 identity v2 = **87 份** / v1 legacy = **79 份**。79 份 v1 在 C-IN-1 下必被拒收——**任何载体裁决的可消费覆盖面以 87 份为上限**，79 份处置是独立事实问题（INTERFACE FACTS v1 §1 S2）。
+**identity 面分裂（覆盖上限事实，已由 DEC-023 升格为接口面裁决）**：166 份 manifest 中 identity v2 = **87 份** / v1 legacy = **79 份**。**Interface Scope = 87（字段口径）**（DEC-023 ≡ DSH DEC-021-1）。79 份 v1 的处置已由 **DEC-024 裁定 = historical asset 隔离，四禁，迁移走独立 Legacy Migration Plan**——不再是独立事实问题。**但隔离的 V3 侧执行面 = 0**（§0 E-3）。
 
 **实现缺口**（`IMPLEMENTATION: not started`）：B1-G1 Manifest 无 `source_version_id` 载体 · B1-G2 关联字段定义项 · B1-G3 V3 零 IR 消费能力 · B1-G4 V3 内部 UUID ≠ 跨系统键且 consumer 写入 canonical_json 包裹值。详见 Alignment Report §1.3。
 
@@ -164,11 +167,56 @@ INTERFACE FACTS v1 §0 核心合取事实（生产侧硬约束）：**没有任�
 
 契约 §3.1 required 清单中，V3 零消费的字段见 §2.1 末行。这些字段是 producer 自证层，V3 重新推导（行/hash 见 L5）。**不影响冻结**，但 v0.2 措辞应如实标注 V3 当前消费范围。
 
+**G-6 · 接口面识别 Gap（对应 DEC-023）— 架构已裁决，实现未开始**
+
+> **DECISION（DEC-023 ≡ DSH DEC-021-1）**：Interface Scope = 87（字段口径）；IR 当前冻结面 = 71 ADMITTED。
+
+V3 **无「接口面」概念**：`identity_version` 在 V3 全仓代码 **0 命中**（§0 E-3 同批实测）；`Manifest` dataclass 无该字段（`manifest_reader.py:28-35`）。V3 读到什么 manifest 就消费什么，**无法区分 87 与 79**。生产侧同样无文件级接口面清单工件（DSH §A.3/C.1）。
+
+**实现缺口**（`IMPLEMENTATION: not started`）：D1-G1 生产侧承载物 · D1-G2 V3 侧识别与过滤能力。详见 Consumer Alignment v1 §4.1。
+
+**G-7 · Legacy 隔离执行面 Gap（对应 DEC-024）— 架构已裁决，V3 侧零执行面**
+
+> **DECISION（DEC-024 ≡ DSH DEC-021-2）**：v1 legacy 79 = historical asset，不入 v0.2 接口；四禁；迁移走独立 Legacy Migration Plan。
+
+producer 侧 C-IN-1 **已实现**（IR 生成拒收）；**V3 侧 `identity_version` / `C-IN-1` 均 0 命中**——隔离由生产侧单边执行。若 v1 manifest 被送入 V3，V3 会照常消费（D2-G1）。
+
+**实现缺口**（`IMPLEMENTATION: not started` / 部分 `UNKNOWN`）：V3 消费侧 identity 闸门是否需要 = **UNKNOWN**（Owner 未下达 V3 实现设计）；legacy 披露形态 = OQ-15。
+
+**G-8 · 四状态机表达 Gap（对应 DEC-025）— 词表已裁，层归属未裁，实现未开始**
+
+> **DECISION（DEC-025 ≡ DSH DEC-021-3）**：READY / INCOMPLETE / PENDING_REVIEW / REJECTED 四值；三禁令（禁 auto conversion / silent fallback / silent skip）；unknown semantic 强制路由进 PENDING_REVIEW 或 REJECTED。
+
+**V3 侧结构发现（本轮）**：四个词分布在**两个互相正交、各自冻结**的值域里——READY/INCOMPLETE ∈ `SEMANTIC_STATUS`（`compile/__init__.py:28-29`，BUG-V3-018）；PENDING_REVIEW/REJECTED ∈ `DECISION_STATUS`（`gate/__init__.py:10-11`，10 §5.2）。且 `decision_status` 只存在于 candidate，candidate 只由 **ready 单元**产生（`runner_b2.py:231-264`）——**非 ready 单元永远进不了 PENDING_REVIEW / REJECTED**。
+
+**后果**：裁决点名的四个状态个体都能表达，但**对 unknown semantic 单元不可联合可达**。三条禁令在 V3 全部违反（洗白 / composite fallback / 静默 skip，同一条链的三个切面）。
+
+**实现缺口**（`IMPLEMENTATION: not started`）：D3-G1 三禁令零执行面 · D3-G2 可达通道不存在。**层归属 = UNKNOWN**（词表 vs 单一状态机，涉解冻两个域，OQ-5）；路由规则文本 = **UNKNOWN**（OQ-16）。
+
+**G-9 · 语义覆盖悬崖（对应 DEC-023 副产物）— 新登记，须 v0.2 落字**
+
+接口面 87 中有 **16 份**（87−71）**无 IR 语义承载**。双层裁决把语义消费从 manifest（87+ 面）移到 IR（71）——这 16 份在身份面内但**失去语义可消费性**。V3 今天**能**通过 manifest 消费它们的语义；双层落地后不能，除非 ① IR 扩产（未裁未排期）② 明确声明其语义面外地位 ③ 其他（本文件不预设）。
+
+DSH 从生产侧记为 D.2；本文件从 V3 消费侧登记为独立 Gap。**OQ-14**，须 v0.2 落字，否则接口存在未声明空档。
+
 ---
 
 ## 3. 供 Owner 裁决的 V3 侧事实输入
 
 > **状态更新（2026-09-16）**：Owner 已下达 B1/B2/B3 架构裁决（`DECISION`，Alignment Report §0）。以下事实输入仍有效——它们是 DECISION 的对账基线；实现缺口见各 G 项与 Alignment Report §1.3/§2.3/§3.3。**架构已定 ≠ 实现已发生。**
+>
+> **状态更新（2026-09-16 第二轮）**：Owner 追加 FINALIZATION v1 四项裁决（DEC-023~026 ≡ DSH DEC-021-1~4）。V3 侧对齐全文见 `PREPROCESSING-V3-CONSUMER-DECISION-ALIGNMENT-v1.md`。新增 Gap G-6~G-9 见 §2.2。以下 B1/B2/B3 分项事实输入继续有效。
+
+### FINALIZATION 四项裁决 — V3 侧事实输入（一句话版）
+
+| 裁决 | V3 侧核心事实 | Gap |
+|---|---|---|
+| **DEC-023** Interface Scope = 87 / IR 冻结面 71 | V3 `identity_version` 代码 0 命中，**无法识别接口面**；生产侧也无清单工件 | G-6 |
+| **DEC-024** Legacy 79 = historical asset | producer C-IN-1 已实现；**V3 侧零执行面**，v1 被送入会照常消费 | G-7 |
+| **DEC-025** 四状态机 | 四词分属**两个正交冻结层**，非 ready 单元**不可达** PENDING_REVIEW/REJECTED；三禁令全部违反 | G-8 |
+| **DEC-026** 五步执行序 | 五步全是数据/契约动作，**零 V3 实现动作**——V3 实现排期无对应步骤，= UNKNOWN | §5.5 / Consumer Alignment §4.4 |
+
+另：接口面 87 中 **16 份无 IR 语义承载** → 语义覆盖悬崖（**G-9 / OQ-14**）。
 
 ### B1（传输层）—— V3 侧事实
 
@@ -198,9 +246,9 @@ INTERFACE FACTS v1 §0 核心合取事实（生产侧硬约束）：**没有任�
 
 ## 4. 边界声明
 
-**本文件做了**：V3 消费管线五层现状（每层标 V3自有 / Contract声明）；字段来源逐个分类；五类 Gap 登记（G-1~G-5），其中 G-1/G-2/G-3 已并入 Owner 架构裁决状态（DECISION 采纳、实现未开始）；对既有 V3 文档两处错误的更正（§0，亲验确认，权威落点）；三项 blocker 的 V3 侧事实输入；producer 侧新事实并入（identity 87/79、五输出面合取约束、hash 零产出、norm_sha256 内部定义、噪声类级现象、Owner 暂停令）。
+**本文件做了**：V3 消费管线五层现状（每层标 V3自有 / Contract声明）；字段来源逐个分类；**九类 Gap 登记（G-1~G-9）**，其中 G-1/G-2/G-3 已并入 B1/B2/B3 裁决状态、G-6~G-9 已并入 FINALIZATION 四项裁决状态（均 `DECISION` 采纳、实现未开始或 `UNKNOWN`）；对既有 V3 文档**三处**的更正/精度修正（§0 E-1/E-2 结论更正 + E-3 精度修正，亲验确认，权威落点）；三项 blocker + 四项裁决的 V3 侧事实输入；producer 侧新事实并入（identity 87/79、五输出面合取约束、hash 零产出、norm_sha256 内部定义、噪声类级现象、Owner 暂停令、**Readiness v3 三点交集定量 + 87/87 R50 成员资格**）。
 
-**本文件没做（任务禁止项）**：未提出实现方案（G-4/G-5 仅登记，B1/B2/B3 缺口仅列不预判）；**未把 DECISION 描述为已实现**（全部标 `IMPLEMENTATION: not started` 或 `UNKNOWN`）；**未修改 EB-008**（L4 仅描述现状，其状态不变）；未冻结 contract；未修改 V3/preprocessing 任何代码或数据。
+**本文件没做（任务禁止项）**：未提出实现方案（G-4~G-9 仅登记，缺口仅列不预判形态）；**未把 DECISION 描述为已实现**（全部标 `IMPLEMENTATION: not started` 或 `UNKNOWN`）；**未修改 EB-008**（L4 仅描述现状，其状态不变）；未冻结 contract；未修改 V3/preprocessing 任何代码或数据；未执行任何数据动作。
 
 **与 BLOCKER-ANALYSIS 的关系**：BLOCKER-ANALYSIS §CB-3 早期版本含已被更正的 candidate 层推断（E-1）——**该文件已同批更正**，两文件事实形态现已一致。本文件 §0 保留错误→更正的对照记录，作为该更正的权威落点；BLOCKER-ANALYSIS 的 CB-1/CB-2 事实、裁决问题、依赖关系持续有效，其 producer 侧输入已并入 INTERFACE FACTS v1 新事实；其「待 Owner 裁决问题」中已由 DECISION 回答的部分见该文件状态更新。
 
@@ -208,4 +256,4 @@ INTERFACE FACTS v1 §0 核心合取事实（生产侧硬约束）：**没有任�
 
 ---
 
-*CONSUMER-GAP-MAP — 2026-09-16，Claude（AITutors-v3 Consumer Owner）。V3 代码基线 `b5ddbe3` · preprocessing `746e35c` · v0.1 契约 `1fbaf5e`（未改）· v0.2 DRAFT 另文（NOT FROZEN）。非契约 / 非冻结 / 无实现方案。DECISION ≠ IMPLEMENTATION。*
+*CONSUMER-GAP-MAP — 2026-09-16（第二轮：FINALIZATION v1 四项裁决并入），Claude（AITutors-v3 Consumer Owner）。V3 代码基线 `b5ddbe3` · preprocessing `bbb5c70`（+ DSH 并行未提交工作树）· v0.1 契约 `1fbaf5e`（未改）· v0.2 DRAFT 另文（NOT FROZEN，已并入四项裁决）。非契约 / 非冻结 / 无实现方案。DECISION ≠ IMPLEMENTATION。*

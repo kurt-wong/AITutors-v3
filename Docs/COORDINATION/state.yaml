@@ -4,21 +4,21 @@ workstream:
   id: EB-0.3B
   name: Evidence Resolution Boundary Discovery
   status: OPEN
-  note: "Owner B1/B2/B3 architecture decisions in both ledgers (DEC-019 @ b39b6da = DEC-020/021/022 @ 1243a7f). B1 dual-layer retained (confirmed 2026-09-16). Contract v0.2 DRAFT updated with IF-v2 + Readiness facts and carries Decision Alignment Table (5.3) + Implementation Status Table (5.4). NOT FROZEN. DECISION != IMPLEMENTATION — zero code change. Freeze prerequisites open: Owner approval, DSH interface-surface confirmation (OQ-8/12), OQ-5 landing layer, schedule ownership, OQ-11/OQ-6 coverage rulings."
+  note: "Owner FINALIZATION v1 four decisions registered (DEC-023~026 @ V3 = DEC-021-1~4 @ DSH): Interface Scope=87 / Legacy v1=historical asset / four-state semantic boundary / five-step execution ordering. Contract v0.2 DRAFT updated accordingly (sections 1.6/1.7/3.2/4/5.5, DA table now 20 rows, freeze prerequisites rewritten per DEC-026). Consumer Decision Alignment v1 delivered. NOT FROZEN. DECISION != IMPLEMENTATION - zero code change. Open freeze prerequisites: OQ-5 state-machine layer, OQ-8 field name/format, OQ-14 semantic coverage cliff (16 of 87 lack IR), OQ-16 routing rule text, OQ-18 E1 residual conflict. V3-side implementation has no slot in the five steps."
 
 agents:
   v3:
     agent: claude
     repository: kurt-wong/AITutors-v3
     branch: main
-    commit: 821c53b
-    status: decision_alignment_v02_draft
+    commit: 7561062
+    status: consumer_decision_alignment_v1_delivered
   preprocessing:
     agent: dsh
     repository: kurt-wong/Aitutors-preprocessing
     branch: main
-    commit: b39b6da
-    status: if_v2_readiness_v1_delivered_pending_contract_v02
+    commit: bbb5c70
+    status: dec_b1_registered_producer_alignment_v1_in_progress
 
 facts:
   - id: FACT-001
@@ -205,6 +205,30 @@ facts:
     date: "2026-09-16"
     note: "Contract v0.2 DRAFT sections 1/2/3/5.3/5.4 incorporate these. Producer gaps G1-G6 all require Contract freeze + Owner order before execution."
 
+  - id: FACT-038
+    statement: "V3 dual-layer non-compliance on BOTH halves (V3 @ b5ddbe3, re-verified): (1) Manifest = Source Identity Authority not met - manifest carries 0/166 any sha and V3 has zero identity-verification code (Grep identity_version|C-IN-1 @ backend/**/*.py = 0; Manifest dataclass at manifest_reader.py:28-35 has no such field); (2) IR = Semantic Consumption Authority not met - V3 semantic consumption comes entirely from manifest, IR consumption = 0 hits. Net: V3 today consumes the identity layer for semantic purposes while having no identity anchor."
+    source: v3
+    evidence: "backend/scripts/preprocessing_consumer/manifest_reader.py:28-35,44-75; Grep identity_version|C-IN-1|resolver_ir|source_sha256 @ backend/ = 0 hits; hashing canonical_json wrap runner.py:71-73 + hashing.py:60-62"
+    status: observed
+    date: "2026-09-16"
+    note: "Reported in PREPROCESSING-V3-CONSUMER-DECISION-ALIGNMENT-v1.md sections 1.1-1.2. Producer-side C-IN-1 IS implemented (resolver_reference.py rejects identity_version<2 at IR generation) - the invariant is producer-only, not bilateral."
+
+  - id: FACT-039
+    statement: "Four-state expressibility structural gap (V3 @ b5ddbe3): the Owner four-state vocabulary READY/INCOMPLETE/PENDING_REVIEW/REJECTED is distributed across TWO orthogonal frozen domains - SEMANTIC_STATUS={ready,incomplete} (compile/__init__.py:28-29, BUG-V3-018) and DECISION_STATUS={pending_review,approved,rejected} (gate/__init__.py:10-11, 10 section 5.2). decision_status exists only on candidates, and candidates are produced only from ready units (runner_b2.py:231-264; snapshot_repository.py:118-129). Therefore non-ready units can NEVER reach PENDING_REVIEW or REJECTED. The four states are individually expressible but NOT jointly reachable for exactly the unknown-semantic case Decision 3 targets. Whether the four values are (a) a logical vocabulary over two layers or (b) a mandate to unify into one enum (requires unfreezing two frozen domains) is UNKNOWN - requires Owner (OQ-5)."
+    source: v3
+    evidence: "backend/app/domains/compile/__init__.py:9,28-29; backend/app/domains/gate/__init__.py:10-11,17-18; backend/scripts/preprocessing_consumer/runner_b2.py:231-264; backend/app/repositories/snapshot_repository.py:118-129; backend/app/domains/compile/compiler.py:72-73"
+    status: observed
+    date: "2026-09-16"
+    note: "Headline V3-side finding of the FINALIZATION round. Reported in Consumer Decision Alignment v1 section 2 and GAP-MAP G-8. Also: the three prohibitions (no auto-conversion / no silent fallback / no silent skip) all fail in V3 as three facets of ONE path - read-no-check -> annotation whitening -> span else-branch -> silent incomplete skip."
+
+  - id: FACT-040
+    statement: "Semantic coverage cliff (cross-side, newly registered): of the 87 interface-face records, 16 (87-71) have NO IR semantic bearing. Under the dual-layer decision semantics move from manifest (87+ face) to IR (71 face), so those 16 remain in the identity face but LOSE semantic consumability. V3 can consume their semantics today via manifest; after dual-layer it cannot unless IR is expanded (undecided/unscheduled) or their out-of-semantics-face status is explicitly declared. DSH registers this as producer-side D.2; V3 registers it as consumer-side gap G-9 / OQ-14. Requires v0.2 wording."
+    source: both
+    evidence: "IF-v2 section 3.1/3.4 (IR 88 records / 71 ADMITTED); Readiness v3 section A.4 (71 subset-of 87, 16 without IR bearing); DSH Producer Decision Alignment v1 section D.2; V3 Consumer Decision Alignment v1 section 4.1"
+    status: observed
+    date: "2026-09-16"
+    note: "Same fact, two vantage points. Must be handled jointly at v0.2 wording time or the interface has an undeclared gap between identity face 87 and semantics face 71."
+
 
 open_questions:
   - id: EB-001
@@ -239,11 +263,11 @@ open_questions:
     note: "Phase-1 implemented per 92号 §5 Checklist (5 items): validation_events table (Alembic 0011 + ORM + EvidenceRepository INSERT-only), review proof (proof.py + APP_SECRET), Admission Authority enforcement (project_authority + fail-closed in approve()), invalidate cascade (annotation supersede wired; sv entry available), append-only app-layer protection. Tests: 837 passed (test_eb008_evidence_authority.py 26 acceptance tests). Commit 88aeae8 + notes b5ddbe3 (local; unpushed at calibration time). A claimed external Review-1 report (commit eea4a4e, attacks/ suite, EB008-IMPLEMENTATION-REVIEW-1.md) was checked 2026-09-15 and NOT found in this repository — not accepted as verification. NOT VERIFIED; NOT DSH approved; step-6 full V3 business chain NOT released. Design stays frozen (DEC-016 / 92号); only bugfix / test-addition / implementation-deviation fixes accepted. Collaboration model: EB-008 is a cross-boundary constraint under the Integration Contract, not a DSH-as-V3-QA flow (see Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-CONTRACT.md)."
 
   - id: EB-009
-    question: "Integration Contract v0.1 freeze readiness (Consumer Review v0.2)"
+    question: "Integration Contract v0.1 freeze readiness (Consumer Review v0.2 -> Contract v0.2 DRAFT)"
     status: v02_draft_ready_pending_freeze_prerequisites
     owner: owner
-    blocked_by: "Freeze prerequisites (v0.2 DRAFT section 8): (1) Owner approves v0.2 DRAFT as freeze candidate; (2) DSH confirms producer interface change surface (OQ-8 field naming, OQ-12 source_file form, interface-face 87); (3) OQ-5 UNKNOWN/PENDING_REVIEW landing layer undecided (touches frozen domains BUG-V3-018 semantic_status {ready,incomplete} and 10 section 5.2 decision_status); (4) implementation-schedule ownership undecided; (5) OQ-11 IR authority face 71 vs expand + OQ-6 v1-face 79 disposition undecided."
-    note: "Owner B1/B2/B3 architecture decisions registered both ledgers (DEC-019 @ preprocessing b39b6da = DEC-020/021/022 @ V3 1243a7f). B1 reading confirmed 2026-09-16: dual-layer RETAINED (Manifest=Source Identity Authority, IR=Semantic Consumption Authority, semantic consumption direction IR->V3); a contrary wording in a later instruction was clarified, not adopted as supersession. Contract v0.2 DRAFT updated with IF-v2 + Readiness facts: Decision Alignment Table section 5.3 (13 rows, DECISION/OBSERVED/UNKNOWN), Implementation Status Table section 5.4 (13 obligations, all not-started/deferred/UNKNOWN). DECISION != IMPLEMENTATION — zero code change on either side. Producer gaps G1-G6 all require Contract freeze + Owner order."
+    blocked_by: "Freeze prerequisites rewritten per DEC-026 five-step ordering (contract freeze is Step 3, gated on Step 1 + Step 2). PRE-FREEZE (data identity actions): (1) Step 1 interface snapshot frozen, carrier form + R50 lineage decided; (2) Step 2 source_version_id backfill complete over the 87 scope, with field name/format/md-vs-PDF layering decided (OQ-8) and R50 re-freeze paired (E2); (3) OQ-18 E1 residual conflict adjudicated. SAME-TIME WORDING: (4) Owner approves DRAFT as freeze candidate; (5) DSH confirms producer interface change surface (OQ-8, OQ-12); (6) OQ-5 four-state layer assignment (logical vocabulary vs single enum, touches two frozen domains); (7) OQ-14 semantic coverage cliff (16 of 87 lack IR); (8) OQ-16 PENDING_REVIEW->REJECTED routing rule text; (9) OQ-15 legacy 79 disclosure form. NO LONGER blocking: OQ-6 (closed by DEC-024), OQ-11 current face (decided = 71 by DEC-023; expansion decoupled by DEC-B1), schedule ownership (decided by DEC-026 for data actions)."
+    note: "Owner FINALIZATION v1 four decisions registered both ledgers: V3 DEC-023~026 = DSH DEC-021-1~4 (NOTE: DSH DEC-021 collides with V3 DEC-021 = B2 identity; cross-ledger ID mapping required whenever citing either). DEC-B1 refinement (ODR section 1bis) adds source-identity-independence-from-IR, which decouples V3 identity binding from V3 IR-loader capability. Contract v0.2 DRAFT updated: section 1.6 elevated to DECISION, new section 1.7 legacy handling, section 3.2 four-state vocabulary, section 4 four dispositions, new section 5.5 execution ordering, DA table now DA-1..20, freeze prerequisites structurally rewritten. Consumer Decision Alignment v1 delivered. DECISION != IMPLEMENTATION - zero code change on either side. V3-side implementation (IR loader / identity binding / four-state channel) has NO slot in the five steps - V3 implementation schedule is UNKNOWN and is not granted by DEC-026."
     date: "2026-09-16"
 
 decisions:
@@ -312,7 +336,31 @@ decisions:
     statement: "B3 Semantic Boundary (Owner architecture decision): unknown unit_type MUST NOT be auto-converted, MUST NOT silently fall back, MUST NOT enter Question materialization. Handling = UNKNOWN/PENDING."
     status: decided
     source: "Owner instruction 2026-09-16"
-    note: "ARCHITECTURE DECISION ONLY — current terminal state is silent incomplete->skip (annotation_adapter.py:42 whitening, runner_b2.py:232-239 skip); violates 'no auto-convert' and 'no silent fallback'. Landing layer for UNKNOWN/PENDING = UNKNOWN (OQ-5): SEMANTIC_STATUS frozen at {ready,incomplete} (compile/__init__.py:28-29, BUG-V3-018); pending_review reachable only from ready units. Contract wording: v0.2 DRAFT sections 3.2/4."
+    note: "ARCHITECTURE DECISION ONLY — current terminal state is silent incomplete->skip (annotation_adapter.py:42 whitening, runner_b2.py:232-239 skip); violates 'no auto-convert' and 'no silent fallback'. Landing layer for UNKNOWN/PENDING = UNKNOWN (OQ-5): SEMANTIC_STATUS frozen at {ready,incomplete} (compile/__init__.py:28-29, BUG-V3-018); pending_review reachable only from ready units. Contract wording: v0.2 DRAFT sections 3.2/4. SUPERSEDED IN PART by DEC-025: the vague 'UNKNOWN/PENDING' phrasing is replaced by the four-state vocabulary READY/INCOMPLETE/PENDING_REVIEW/REJECTED."
+
+  - id: DEC-023
+    statement: "FINALIZATION v1 Decision 1 - Interface Scope (Owner): Interface Scope = v2 standard interface set, current size = 87 records. Manifest interface scope: 87. IR semantic consumption current frozen scope: 71 ADMITTED records. 166 = total historical asset size, NOT the formal interface. 87 = current formal interface scope. 71 = current IR semantic consumption face, does NOT represent the complete interface. Backfill scope is therefore 87."
+    status: decided
+    source: "Owner instruction 2026-09-16 (CONTRACT-DECISION-FINALIZATION v1 Decision 1); recorded DSH-side as DEC-021-1 in ODR v1.2 section 1ter"
+    note: "ARCHITECTURE DECISION ONLY - not implemented. Cross-ledger ID mapping REQUIRED: this is DSH DEC-021-1. Implementation gaps: (a) no file-level interface-face roster artifact exists on producer side - 87 is a probe-derived set (DSH C.1); (b) V3 cannot recognize the interface face at all - identity_version has 0 hits in V3 code (D1-G2); (c) source_version_id coverage mechanism for the 87 not designed (D1-G3); (d) IR expansion mechanism not defined by this decision (D1-G4). Also newly registered: semantic coverage cliff - 16 of the 87 have no IR semantic bearing (OQ-14). Contract wording: v0.2 DRAFT section 1.6."
+
+  - id: DEC-024
+    statement: "FINALIZATION v1 Decision 2 - Legacy v1 Handling (Owner): v1 legacy data status = historical asset, not part of v0.2 interface. Current size = 79. Prohibited: auto-migration, auto-backfill, auto-regenerate IR, auto-join the 87 interface. Future handling, if ever needed, requires a separate Legacy Migration Plan that must NOT be mixed into the current Contract."
+    status: decided
+    source: "Owner instruction 2026-09-16 (CONTRACT-DECISION-FINALIZATION v1 Decision 2); recorded DSH-side as DEC-021-2 in ODR v1.2 section 1ter"
+    note: "ARCHITECTURE DECISION ONLY - not implemented. Cross-ledger ID mapping REQUIRED: this is DSH DEC-021-2. CLOSES OQ-6 (previously 'disposition of the 79 undecided'). Producer-side C-IN-1 is already implemented (IR generation rejects identity_version<2); V3-side has ZERO enforcement - identity_version and C-IN-1 have 0 hits in V3 code, so a v1 manifest handed to V3 would be consumed normally (D2-G1). Whether V3 needs a consumer-side identity gate is UNKNOWN. Contract wording: v0.2 DRAFT section 1.7."
+
+  - id: DEC-025
+    statement: "FINALIZATION v1 Decision 3 - Semantic Boundary (Owner): the system MUST distinguish four states - READY (semantic annotation complete, unit_type legal, can enter downstream consumption), INCOMPLETE (insufficient input, e.g. missing stem or required fields), PENDING_REVIEW (system cannot safely judge, e.g. unknown unit_type, semantic ambiguity, multiple interpretations possible), REJECTED (explicitly violates interface requirements). Mandatory rule: any unknown semantic MUST NOT be auto-converted, MUST NOT silently fall back, MUST NOT be silently skipped - it MUST enter PENDING_REVIEW or REJECTED, decided by an explicit rule."
+    status: decided
+    source: "Owner instruction 2026-09-16 (CONTRACT-DECISION-FINALIZATION v1 Decision 3); recorded DSH-side as DEC-021-3 in ODR v1.2 section 1ter"
+    note: "ARCHITECTURE DECISION ONLY - not implemented. Cross-ledger ID mapping REQUIRED: this is DSH DEC-021-3. SUPERSEDES the vague 'UNKNOWN/PENDING' phrasing in DEC-019 and DEC-022 - cite the four values from now on. DOES NOT resolve the layer assignment: V3 distributes these four words across TWO orthogonal frozen domains (SEMANTIC_STATUS={ready,incomplete} BUG-V3-018; DECISION_STATUS={pending_review,approved,rejected} 10 section 5.2), and non-ready units can never reach the decision layer. Whether the four values are a logical vocabulary over two layers or a mandate for a single enum (requires unfreezing two frozen domains) is UNKNOWN and requires Owner - OQ-5. The routing rule text for PENDING_REVIEW->REJECTED is also not given - OQ-16. Contract wording: v0.2 DRAFT sections 3.2/4.1/4.2."
+
+  - id: DEC-026
+    statement: "FINALIZATION v1 Decision 4 - Execution Ordering (Owner): all data actions MUST follow Step 1 Freeze interface snapshot -> Step 2 Generate/backfill source_version_id -> Step 3 Freeze Contract v0.2 -> Step 4 Execute data hygiene -> Step 5 Execute image recovery/historical cleanup. Reason: source identity must precede content modification; any image recovery, OCR fix, or markdown edit can cause content change -> hash change -> source_version_id invalid. Identity freeze takes priority."
+    status: decided
+    source: "Owner instruction 2026-09-16 (CONTRACT-DECISION-FINALIZATION v1 Decision 4); recorded DSH-side as DEC-021-4 in ODR v1.2 section 1ter"
+    note: "ARCHITECTURE DECISION ONLY - no step executed. Cross-ledger ID mapping REQUIRED: this is DSH DEC-021-4. STRUCTURAL CONSEQUENCE for freeze: Contract v0.2 freeze is Step 3, gated on Step 1 + Step 2 completing - freeze is no longer 'freeze first, implement later'. Previously-open 'schedule ownership' is now decided for DATA actions. V3-SIDE BOUNDARY: all five steps are data/contract actions and contain ZERO V3 implementation actions - V3 IR consumption capability, identity binding, and four-state channel have no corresponding step, so V3 implementation schedule remains UNKNOWN and is NOT granted by this decision. RESIDUAL CONFLICT: DSH Dependency Map edge E1 still asserts 'contract freeze -> backfill' (field undefined must not backfill), direction opposite to this decision; possible reconciliation is that the sha semantics are already settled by DEC-021/B2 and E1's residual force is only on field name/format (still undecided, OQ-8) - requires Owner adjudication, OQ-18. Contract wording: v0.2 DRAFT section 5.5; freeze prerequisites section 8 rewritten accordingly."
 
 prohibitions:
   - "No Resolver enhancement"
