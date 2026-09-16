@@ -1,15 +1,51 @@
-Version: v1.66
-Status: **P3.2/EB-004 Enforcement Verification 完成 + Cross-Agent Coordination v0.1 建立** —
-P3.2 实验：4/4 attack vectors BYPASS Admission Boundary（N1/N2/N7/N8）；
-AdmissionService.approve() 仅检查 gate_decision，零引用 Evidence Authority；
-EB-004 = EVIDENCED；BUG-V3-048 实验验证成立；
-Claude-4 审计：31 cases 四维归因，SEMANTIC=0；
-Cross-Agent Coordination Protocol v0.1 已建立（Docs/COORDINATION/）；
-**Docker 事故：PostgreSQL volume 幸存，MinIO/Redis 待重建（DSH 处理中）**；
+Version: v1.67
+Status: **Contract v0.2 = FROZEN（跨仓 Integration Contract 冻结完成）** —
+Owner Freeze 令已下达并登记（V3 `DEC-036`，2026-09-16）；
+Freeze Object = commit `f4941ff` · `Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-CONTRACT-v0.2-DRAFT.md` ·
+sha256 `9c6b9063e81fb2a66d85794b280c9d931f1b0074b39abf472033218149b17528`（唯一冻结对象，禁改）；
+Registration commit ≠ artifact（分离保持）；冻结范围六项；
+五项 V3 消费端能力 NOT IMPLEMENTED（契约 §5.6.1）；
+**下一阶段 = V3 Consumer Identity Verification 实现——须另获 Owner 实现令，未授权勿开工**；
+EB-008 P1 外部对抗验证 pending；
 C-01 = OPEN / PAUSED；BIND-1/2 PASS/FROZEN · BIND-3 UNPROVEN；
 **Last verified test baseline: 810 passed / 3 xfailed @ f88a7ad (2026-09-14)**
-下一步 = DSH 重建 Docker → 连通性验证 → 正式进入 preprocessing 联调阶段
-Date: 2026-09-15
+下一步 = 等 Owner 实现令 → bytes → SHA256 重算 → Manifest 验证 → IR 验证 → fail-closed → Gate → Admission
+Date: 2026-09-16
+
+## 0.0j Contract v0.2 FROZEN + 跨仓协调收口（2026-09-16）
+
+### 权威状态入口（新会话必读）
+
+1. `Docs/COORDINATION/state.yaml`（机读：workstream / facts / decisions / open_questions）
+2. `Docs/COORDINATION/CURRENT.md`（人读：状态行 / DEC 表 / EB-009 / Evidence Locations）
+3. `Docs/COORDINATION/log.md`（轮次流水，append-only，DEC-032 起）
+4. 契约正文 = Freeze Artifact @ `f4941ff`（**禁改**；现态由账本承载）
+
+### 冻结结果（DEC-030~036 链）
+
+- 接口键终局：跨系统 = `source_content_sha256`（SHA256(raw bytes)，64 小写 hex）；V3 内部 `source_version_id`（uuid FK）保持内部含义；path/`source_file` = locator only
+- 双层职责：Manifest = Source Identity Authority（哪个文件）；IR = Semantic Consumption Authority（表达什么）
+- Scope：接口面 87 · IR ADMITTED 71（1,664 单元）· 16 份 = Identity Available / Semantic Pending（允许重跑，Owner 另令）
+- 冻结时证据链：DSH Step 1/2 DONE + Verification PASS（DSH `DEC-026`/`027`/`028`，commits `e70807b`/`aad2237`/`67f564c`）+ B-1 CLOSED / REMOTE VERIFIED（`DEC-035`）
+- 冻结范围六项（未扩展）：Identity Authority / 双层职责 / 命名 / 16 份处理 / bytes 能力（只冻能力不冻传输 OQ-12″）/ 双状态体系
+
+### 下一阶段（未获授权）
+
+V3 Consumer Identity Verification 实现链：raw bytes → SHA256 recompute → Manifest verification → IR verification → fail-closed → Gate → Admission。
+五项 NOT IMPLEMENTED（§5.6.1 / G-15）：Manifest identity verification / raw bytes acquisition / independent SHA256 verification / IR identity verification / identity gate。
+**Contract Freeze ≠ Implementation**——须 Owner 实现令。
+
+### 开放项（非阻塞）
+
+OQ-21（16 份呈现）· OQ-17（存量 1 例）· OQ-16′（pending→rejected 准则+载体）· OQ-10 PDF 面 · OQ-12″ 传输 · 跨仓 DEC 撞号 3 处 · EB-008 P1 外部验证 pending
+
+### 已裁决、不再讨论
+
+path 是否 identity · `source_version_id` 命名 · 16 份是否重跑 · hash 是否唯一
+
+### 文档治理教训（本轮）
+
+会话引导文档 = 本文件（`restart-prompt.md`，L5）。**禁止在根目录另建 CLAUDE.md 等引导文档**（违反 `90 §1.2` 目录模型 + `91 §5.1` 文档创建禁令）。
 
 ## 0.0i P3.2 Enforcement Verification + Cross-Agent Coordination（2026-09-15）
 

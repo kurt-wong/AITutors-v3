@@ -538,7 +538,7 @@ prohibitions:
 
 protocol:
   startup:
-    - "Read CLAUDE.md (session bootstrap: startup protocol + status snapshot)"
+    - "Read restart-prompt.md (L5 session bootstrap, repo root)"
     - "Read state.yaml"
     - "Read CURRENT.md"
     - "Inspect referenced evidence files"

@@ -108,11 +108,11 @@
 
 **背景**：Owner 要求更新本地项目文档以便新开对话快速恢复状态（上下文过长，准备 compact/新会话）。
 
-**动作**：新建项目根 **`CLAUDE.md`**（新会话入口）——启动协议（读三账本）+ DEC-036 后状态快照（Contract `FROZEN` / Freeze Object `f4941ff` + sha256 / 下一阶段须 Owner 实现令 / 开放项 / 已裁决项）+ 协作约定（双仓 / 声明协议 / 账本纪律 / untracked 文件 / GateGuard / DEC 撞号）+ 关键文档地图。`CURRENT.md` Evidence Locations 增行。
+**动作（含违规修正）**：~~新建项目根 `CLAUDE.md`~~（commit `2a723a6`）——**违规**：违反 `90 §1.2` 根目录模型（L5 引导文档 = `restart-prompt.md`）与 `91 §5.1` 文档创建禁令（新建须显式确认）。**已修正**：删除 `CLAUDE.md`；改为更新 **`restart-prompt.md` → v1.67**（新章节 0.0j：权威状态入口 + DEC-030~036 冻结链 + 下一阶段未授权声明 + 开放项 + 文档治理教训）。三账本同步修正：`state.yaml` protocol.startup 指向 `restart-prompt.md` · `CURRENT.md` Evidence Locations 行改指 `restart-prompt.md`。
 
-**状态**：三账本与 `CLAUDE.md` 一致；Contract v0.2 = **`FROZEN`**（不变）。
+**状态**：三账本与 `restart-prompt.md` v1.67 一致；Contract v0.2 = **`FROZEN`**（不变）。
 
-**边界**：零代码 · 零 schema · 零 Contract 修改 · 零新裁决（纯引导文档，不承载独立裁决）。
+**边界**：零代码 · 零 schema · 零 Contract 修改 · 零新裁决（纯 L5 引导更新，不承载独立裁决）。
 
 ---
 
