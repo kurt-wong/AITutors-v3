@@ -4,21 +4,21 @@ workstream:
   id: EB-0.3B
   name: Evidence Resolution Boundary Discovery
   status: OPEN
-  note: "Interface Finalization Revision v1 registered (DEC-028 @ V3 = DEC-023 @ DSH, ODR v1.4 section 1quinquies): source identity = SHA256(raw bytes) 64-lowercase-hex (format decided) + principle 'Source identity belongs to content hash, not storage location' + path is locator NOT identity (no doc may imply path participates in identity/version/hash judgment) / 16 identity-only files reclassified from Semantic Unavailable to Semantic Pending (recoverable; IR regeneration allowed under four constraints: bytes unchanged, id consistent, new IR binds id, re-verify) / semantic-layer FINAL vocabulary {ready,incomplete,unknown} (adds unknown, supersedes four-state merged notation) + decision layer {pending_review,approved,rejected}, do NOT merge / unknown semantic -> reviewable record -> pending_review workflow (routing decided). Contract v0.2 freeze scope expanded to FIVE frozen principles (Identity + Scope + Semantic Boundary + Path Non-Identity + Identity-only Recovery Rule). Consumer Alignment v3 delivered (supersedes v2). Closes OQ-8 format, OQ-12 identity-dim, OQ-19 routing, OQ-20 value-set. DECISION != IMPLEMENTATION - zero code change. V3 identity verification capability = not implemented (not started); V3 uses source_file as locator only (compliant with path-non-identity). Third cross-ledger DEC ID collision (DSH DEC-023 vs V3 DEC-023 Interface Scope)."
+  note: "Freeze Candidate Review v1 registered (DEC-029): entered Contract v0.2 freeze-candidate review on Owner six principles. (a) Interface-key naming PROPOSAL = source_content_sha256 (was source_version_id) to disambiguate contract sha key vs V3 internal UUID FK same-name-different-type; V3 internal FK unchanged (no code/schema change); PROPOSED pending Owner adoption + DSH bilateral confirmation then full lexical rename (closes OQ-8' disambiguation dimension to a pending-adoption proposal). (b) source-bytes delivery: FREEZE capability only - V3 must obtain raw bytes + recompute+verify fail-closed + independent of IR (binding); transport HOW (shared FS / object store / IR-embedded / relative-path) DEFERRED, not a freeze blocker (closes OQ-12' capability; residual OQ-12'' transport). (c) 16-files four guarantees aligned to Owner wording. Contract v0.2 freeze scope expanded to SIX items (five principles + source-bytes capability). Consumer Freeze Candidate Review report delivered. DECISION != IMPLEMENTATION - zero code change, zero data action, contract still NOT FROZEN."
 
 agents:
   v3:
     agent: claude
     repository: kurt-wong/AITutors-v3
     branch: main
-    commit: 0a90df0
-    status: consumer_alignment_v3_delivered_contract_five_principles
+    commit: 4e0dd34
+    status: freeze_candidate_review_v1_delivered_naming_proposal_bytes_capability
   preprocessing:
     agent: dsh
     repository: kurt-wong/Aitutors-preprocessing
     branch: main
     commit: 1657625
-    status: odr_v14_producer_alignment_v5_parallel_contract_drafting_claude
+    status: odr_v14_producer_alignment_v5_parallel_pending_dec029_bilateral_confirm
 
 facts:
   - id: FACT-001
@@ -269,6 +269,14 @@ facts:
     date: "2026-09-16"
     note: "Closes OQ-19 and OQ-20 value-set. Residual OQ-16' = pending_review->rejected criteria + reviewable-record carrier. V3 implementation (unfreeze + reviewable-record mechanism) = not started."
 
+  - id: FACT-046
+    statement: "Freeze Candidate Review round two decisions (DEC-029, Owner principles 5/6): (1) Interface-key naming PROPOSAL = source_content_sha256 (was source_version_id in contract/interface sense). Rationale: V3 code's source_version_id is a uuid.UUID FK to document_source_versions (seal-layer, models/source.py:44-57 esp :50 forbids sha uniqueness) - same name, different semantics AND type as the contract sha key. Renaming the INTERFACE key (a contract term, zero code/data/schema) to source_content_sha256 makes them lexically distinct without touching V3 code; V3 internal FK and Document.original_sha256 columns stay unchanged. Maps cleanly to producer IR source_sha256 / provenance.source_version (same value). Status = PROPOSED, pending Owner adoption + DSH bilateral confirmation then full lexical rename - closes OQ-8' disambiguation to a pending-adoption proposal, NOT yet decided. (2) source-bytes delivery: FREEZE the capability only (V3 must obtain raw bytes + independently recompute SHA-256 + fail-closed on mismatch + independent of IR) as binding contract requirement; DEFER the transport scheme (shared FS / object store / IR-embedded / relative-path resolution) as implementation/deployment form - closes OQ-12' capability dimension, residual OQ-12'' transport (not a freeze blocker)."
+    source: both
+    evidence: "ODR six-principle Freeze Candidate Review directive; V3 PREPROCESSING-V3-CONTRACT-v0.2-FREEZE-CANDIDATE-REVIEW.md section 1/2; contract v0.2 DRAFT section 1.2a/2.3; models/source.py:33,37,44-57; snapshot_repository.py:42-45; runner_b2.py:158; runner.py:71-73; hashing.py:60-62"
+    status: observed
+    date: "2026-09-16"
+    note: "Naming is a PROPOSAL not a decision - full lexical rename deferred until Owner adopts. Bytes capability frozen / transport deferred. Both are contract-wording/capability-layer actions, zero V3 implementation, zero data. Requires DSH bilateral confirmation of the interface-key name (cross-system contract term)."
+
 
 open_questions:
   - id: EB-001
@@ -304,10 +312,10 @@ open_questions:
 
   - id: EB-009
     question: "Integration Contract v0.1 freeze readiness (Consumer Review v0.2 -> Contract v0.2 FROZEN CANDIDATE)"
-    status: v02_frozen_candidate_five_principles_pending_freeze_review
+    status: v02_freeze_candidate_review_v1_naming_proposed_bytes_capability_frozen
     owner: owner
-    blocked_by: "Freeze = Step 3 of five-step ordering (DEC-026), gated on Step 1 + Step 2. Freeze SCOPE = FIVE frozen principles (DEC-027 Part 6 three items + DEC-028 Part 1-6 expansion): (1) Identity source_version_id=SHA256(raw bytes) 64-lowercase-hex; (2) Scope 87/71/16; (3) Semantic Boundary Unknown!=Ready + unknown->reviewable-record->pending_review + two-layer final vocab; (4) Path Non-Identity (locator not identity); (5) Identity-only Recovery Rule (16 files Semantic Pending, IR regen allowed under four constraints). PRE-FREEZE (data identity actions): (1) Step 1 interface snapshot frozen + R50 lineage; (2) Step 2 source_version_id backfill over 87 + R50 re-freeze paired (E2); (3) OQ-18 E1 residual conflict adjudicated. SAME-TIME WORDING: (4) Owner approves DRAFT + confirms five-principle scope; (5) DSH confirms producer interface change surface (OQ-8' naming, OQ-12' bytes delivery); (6) OQ-8' source_version_id naming disambiguation; (7) OQ-15 legacy 79 disclosure; (8) OQ-21 16-files presentation mechanism. NO LONGER blocking: OQ-8 format (DEC-028 Part 1 = 64hex), OQ-12 identity-dim (path non-identity), OQ-5 (do not merge), OQ-19 routing (unknown->pending_review), OQ-20 value-set ({ready,incomplete,unknown}), OQ-14 (Semantic Pending), OQ-6 (DEC-024), OQ-11 current face (=71), schedule ownership (DEC-026)."
-    note: "Interface Finalization Revision v1 (V3 DEC-028 = DSH DEC-023, ODR v1.4 section 1quinquies) registered both ledgers. Contract v0.2 freeze scope expanded to five frozen principles (section 0). Consumer Alignment v3 delivered (supersedes v2). V3 identity verification capability = not implemented (not started); V3 uses source_file as locator only (compliant with path-non-identity). DECISION != IMPLEMENTATION - zero code change on either side. V3-side implementation (IR loader / identity binding / semantic-unknown unfreeze / reviewable-record mechanism) has NO slot in the five steps - V3 implementation schedule UNKNOWN, not granted. THIRD cross-ledger DEC ID collision (DSH DEC-023 vs V3 DEC-023)."
+    blocked_by: "Freeze = Step 3 of five-step ordering (DEC-026), gated on Step 1 + Step 2. Freeze SCOPE = SIX items (five principles + source-bytes capability, DEC-029): (1) Identity source_content_sha256=SHA256(raw bytes) 64-lowercase-hex [key name PROPOSED]; (2) Scope 87/71/16; (3) Semantic Boundary Unknown!=Ready + unknown->reviewable-record->pending_review + two-layer final vocab; (4) Path Non-Identity (locator not identity); (5) Identity-only Recovery Rule (16 files Semantic Pending, four guarantees); (6) Source-bytes capability frozen (V3 obtains raw bytes + recompute fail-closed + independent of IR), transport deferred. REMAINING TO FREEZE: (a) Owner adopts naming source_content_sha256 + DSH bilateral confirms key name + full lexical rename; (b) Step 1 interface snapshot frozen + R50 lineage; (c) Step 2 source_content_sha256 backfill over 87 + R50 re-freeze paired (E2); (d) OQ-18 E1 residual conflict adjudicated; (e) same-time wording: OQ-15 legacy 79 disclosure + OQ-21 16-files presentation. NO LONGER blocking: OQ-8 format (64hex), OQ-8' naming (-> proposed, awaiting adoption), OQ-12 identity-dim (path non-identity), OQ-12' bytes capability (-> frozen; OQ-12'' transport deferred), OQ-5 (do not merge), OQ-19 routing, OQ-20 value-set, OQ-14 (Semantic Pending), OQ-6 (DEC-024), OQ-11 current face (=71), schedule ownership (DEC-026)."
+    note: "Freeze Candidate Review v1 (V3 DEC-029) delivered. Naming scheme source_content_sha256 proposed (closes OQ-8' to pending-adoption); bytes capability frozen / transport deferred (closes OQ-12' capability). Contract v0.2 freeze scope = six items. Review report = PREPROCESSING-V3-CONTRACT-v0.2-FREEZE-CANDIDATE-REVIEW.md. Naming is the closest-to-freeze single step and the sole pending-adoption decision. Contract remains DRAFT / NOT FROZEN. Naming resolves the FIELD-name collision (source_version_id), DISTINCT from the DEC-record-ID collision (3 accumulated, needs Owner numbering convention). DECISION != IMPLEMENTATION - zero code, zero data."
     date: "2026-09-16"
 
 decisions:
@@ -413,6 +421,12 @@ decisions:
     status: decided
     source: "Owner instruction 2026-09-16 (Interface Finalization Revision v1); recorded DSH-side as DEC-023 in ODR v1.4 section 1quinquies"
     note: "ARCHITECTURE DECISION ONLY - not implemented. Cross-ledger ID mapping REQUIRED: this is DSH DEC-023 (NOTE: DSH DEC-023 collides with V3 DEC-023 = Interface Scope; THIRD collision after DEC-021 and DEC-022). CLOSES: OQ-8 format (64-lowercase-hex), OQ-12 identity dimension (path non-identity), OQ-14 (16 files = Semantic Pending, supersedes DEC-027 Part 4 'Unavailable'), OQ-19 routing (unknown -> reviewable record -> pending_review), OQ-20 value-set ({ready,incomplete,unknown}). RESIDUALS: OQ-8' naming disambiguation (contract sha vs V3 UUID same name), OQ-12' how source bytes delivered to V3 for recompute (transport, not path form), OQ-16' pending_review->rejected criteria + reviewable-record carrier form, OQ-21 16-files presentation mechanism. V3-side: identity verification capability = not implemented (not started); V3 uses source_file as locator only = COMPLIANT with path-non-identity; SEMANTIC_STATUS frozen at {ready,incomplete} needs unfreeze to add unknown (not started); unknown->pending_review has no V3 execution surface under candidate-gated-on-ready (not started). Contract v0.2 freeze scope expanded to five frozen principles. Consumer Alignment v3 delivered. DECISION != IMPLEMENTATION - zero code change."
+
+  - id: DEC-029
+    statement: "Freeze Candidate Review v1 (Owner six principles applied to Contract v0.2 freeze-candidate): (Principle 5) interface-key naming PROPOSAL = source_content_sha256 to disambiguate contract sha key from V3 internal UUID FK (same-name-different-type); V3 internal FK + original_sha256 columns unchanged (no code/schema); maps to producer IR source_sha256 / provenance.source_version (same value). (Principle 6) source-bytes delivery: FREEZE capability only - V3 must obtain raw bytes + recompute+verify fail-closed + independent of IR (binding contract requirement); DEFER transport scheme (shared FS / object store / IR-embedded / relative-path). (Principle 3) 16-files four guarantees aligned to Owner wording (bytes hash unchanged / identity unchanged / IR version trackable / no history overwrite). Principles 1-4 + 6 confirmed already in candidate or frozen this round; principle 5 is the sole pending-adoption item."
+    status: decided_partial_proposed
+    source: "Owner instruction 2026-09-16 (Contract v0.2 Freeze Candidate Review directive); DSH-side registration pending Producer Alignment v5"
+    note: "MIXED STATUS: Principle 6 capability freeze = DECIDED (binding); Principle 5 naming = PROPOSED (pending Owner adoption + DSH bilateral confirmation then full lexical rename) - NOT yet a frozen decision. CLOSES: OQ-8' disambiguation dimension (-> pending-adoption proposal), OQ-12' capability dimension (-> frozen; residual OQ-12'' transport deferred, not a blocker). Contract v0.2 freeze scope = SIX items (five principles + source-bytes capability). Contract remains DRAFT / NOT FROZEN. Freezing still gated on: Owner adopts naming + DSH confirms key name + Step 1 snapshot + Step 2 backfill (by new name) + OQ-18 E1 conflict + Owner freeze order (Step 3). DECISION != IMPLEMENTATION - zero code, zero data. Cross-ledger: naming scheme resolves the FIELD-name collision (source_version_id), which is DISTINCT from the DEC-record-ID collision (3 accumulated) - the latter still needs an Owner numbering convention."
 
 prohibitions:
   - "No Resolver enhancement"

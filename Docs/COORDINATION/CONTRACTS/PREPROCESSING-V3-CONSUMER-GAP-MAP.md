@@ -13,12 +13,14 @@
 >
 > **2026-09-16 第四轮更新（Interface Finalization Revision v1 后，ODR v1.4 §1quinquies）**：Owner 修正/固化——source identity 64 hex + **path 非身份原则**（belongs to content hash, not storage location）· 16 份改 **Semantic Pending（可恢复）**· 语义层终局词表加 **`unknown`**（`{ready,incomplete,unknown}`）· **unknown → reviewable record → pending_review**。V3 侧对齐 = `PREPROCESSING-V3-CONSUMER-DECISION-ALIGNMENT-v3.md`（取代 v2）。**关闭 OQ-8 格式 / OQ-12 身份维度 / OQ-19 路由 / OQ-20 值集**；16 份由 Unavailable 改 Pending。**DECISION ≠ IMPLEMENTATION 不变。**
 >
+> **2026-09-16 第五轮更新（Freeze Candidate Review v1，V3 `DEC-029`）**：进入 Contract v0.2 冻结候选评审。Owner 六条原则入册。**接口键命名提案 = `source_content_sha256`（`PROPOSAL`，待 Owner 采纳 + DSH 双边确认）**——关闭 OQ-8′ 消歧维度（从开放项变待采纳提案，§1.2a）；**source bytes 交付只冻能力、不冻传输**（能力 binding / 传输暂缓，关闭 OQ-12′ 能力维度，残余 OQ-12″ 传输）；16 份对齐 Owner 四保证。契约冻结范围扩为**六项**（+bytes 能力）。评审报告 = `PREPROCESSING-V3-CONTRACT-v0.2-FREEZE-CANDIDATE-REVIEW.md`。**DECISION ≠ IMPLEMENTATION 不变；契约仍 NOT FROZEN。**
+>
 > **证据基线**：
 > | 侧 | 基线 |
 > |---|---|
 > | V3 代码 | `b5ddbe3`（其后仅文档提交，代码未变） |
 > | preprocessing | `1657625`（Producer Alignment v4 入册）+ 未提交工作树（ODR **v1.4** §1quinquies / **Producer Alignment v5** / Interface Facts v2.1） |
-> | 被分析契约 | v0.1 @ `1fbaf5e`（未改）；v0.2 DRAFT 见 `PREPROCESSING-V3-CONTRACT-v0.2-DRAFT.md`（**Frozen Candidate**，DRAFT / NOT FROZEN，冻结范围 = 五项原则） |
+> | 被分析契约 | v0.1 @ `1fbaf5e`（未改）；v0.2 DRAFT 见 `PREPROCESSING-V3-CONTRACT-v0.2-DRAFT.md`（**Frozen Candidate**，DRAFT / NOT FROZEN，冻结范围 = 六项）；本轮评审报告 `PREPROCESSING-V3-CONTRACT-v0.2-FREEZE-CANDIDATE-REVIEW.md` |
 >
 > **本轮关键输入**：Owner Decision Record v1.2（§1 + §1bis DEC-B1 + §1ter 四项裁决）；DSH `PREPROCESSING-PRODUCER-DECISION-ALIGNMENT-v1.md`（并行产出）；DSH Readiness v3（三点交集定量、87/87 R50 成员资格）；V3 侧 Consumer Decision Alignment v1。前轮输入（IF-v2 / Reconciliation v0.2 / Owner B1-B3 裁决 / 暂停令 `746e35c`）继续有效。
 
@@ -219,6 +221,12 @@ DEC-027 Part 5 裁不合并 + UNKNOWN 属语义层；**DEC-028 Part 5 裁终局�
 
 固化原则 **Source identity belongs to content hash, not storage location**；`source_file`/path = locator only，任何文档不得暗示 path 参与身份/版本/hash 判断。**V3 现状符合**——仅将 `source_file` 用作 `Path(manifest.source_file)` 加载源文件（`runner.py:241`；`runner_b2.py:320`；`runner_b3.py:184`），全仓无任何以 path 做身份/版本/hash 判断的代码。**跨系统双层当前靠 path 值相等关联 = 不合规现状**（正是本原则要消除的）；升级为 `source_version_id` 关联 = not started（G-1/G-11）。残余未裁 = source bytes 如何交付给 V3 重算 hash（OQ-12′，传输方式非 path 形态）。
 
+**G-14 · 接口键命名提案 + bytes 能力冻结（DEC-029，第五轮 Freeze Candidate Review）**
+
+> **DECISION/PROPOSAL（DEC-029）**：(a) **接口键命名提案 = `source_content_sha256`**（`PROPOSAL`，待 Owner 采纳 + DSH 双边确认，契约 §1.2a）——V3 内部 UUID FK 不动（禁改代码/schema），改接口键（契约词）即可使二者词面永不同名，零代码/数据/schema；关闭 OQ-8′ 消歧维度（开放项→待采纳提案）。(b) **source bytes 交付只冻能力、不冻传输**——能力 = V3 必须能得 raw bytes + 重算验证 fail-closed + 独立 IR（binding，契约 §2.3）；传输 HOW = 暂缓（OQ-12″，共享 FS/对象存储/IR 内嵌/相对路径），不阻塞冻结；关闭 OQ-12′ 能力维度。
+
+**V3 侧核心事实**：命名冲突实证 = FACT-041（契约 sha 键 vs V3 `source_version_id` UUID FK 同名异义 + 第三概念 `original_sha256`）；V3 自算非 raw bytes（`runner.py:71-73` canonical_json 包裹）= bytes 能力实现缺口（B2-G1）。**两项均为契约措辞/能力层动作，零 V3 实现、零数据。** 命名采纳后契约全文词面收口 = 待采纳后执行；bytes 传输方案 = 暂缓（部署形态）。
+
 ---
 
 ## 3. 供 Owner 裁决的 V3 侧事实输入
@@ -230,6 +238,16 @@ DEC-027 Part 5 裁不合并 + UNKNOWN 属语义层；**DEC-028 Part 5 裁终局�
 > **状态更新（2026-09-16 第三轮）**：Owner 追加 Interface Decision Finalization v1（V3 `DEC-027` ≡ DSH `DEC-022`，Part 1–6）。V3 侧对齐全文见 `PREPROCESSING-V3-CONSUMER-DECISION-ALIGNMENT-v2.md`（取代 v1）。新增 Gap G-10~G-12 见 §2.2；关闭 OQ-5 + OQ-14。
 >
 > **状态更新（2026-09-16 第四轮）**：Owner 追加 Interface Finalization Revision v1（V3 `DEC-028` ≡ DSH `DEC-023`，Part 1–6）。V3 侧对齐全文见 `PREPROCESSING-V3-CONSUMER-DECISION-ALIGNMENT-v3.md`（取代 v2）。新增 Gap G-13；关闭 OQ-8 格式 / OQ-12 身份维度 / OQ-19 路由 / OQ-20 值集；16 份 Unavailable→Pending。
+>
+> **状态更新（2026-09-16 第五轮）**：进入 Contract v0.2 Freeze Candidate Review（V3 `DEC-029`）。新增 Gap G-14（接口键命名提案 `source_content_sha256` + bytes 能力冻结）；关闭 OQ-8′ 消歧维度（→待采纳提案）+ OQ-12′ 能力维度（→能力冻结 / 传输暂缓 OQ-12″）。评审报告 = `PREPROCESSING-V3-CONTRACT-v0.2-FREEZE-CANDIDATE-REVIEW.md`。
+
+### Freeze Candidate Review v1 — V3 侧事实输入（一句话版，DEC-029）
+
+| 裁决/提案 | V3 侧核心事实 | Gap |
+|---|---|---|
+| **原则 5** 接口键命名 = `source_content_sha256`（PROPOSAL 待采纳） | 契约 sha 键与 V3 UUID FK 同名异义（FACT-041）；改接口键零代码/schema 消歧 | G-14 / G-10 |
+| **原则 6** bytes 交付只冻能力、不冻传输 | V3 自算 canonical_json 非 raw bytes（`runner.py:71-73`）；零身份校验；传输形态未定（本机绝对路径） | G-14 / G-2（B2-G1） |
+| **原则 3** 16 份四保证对齐 | 改前轮四约束措辞；V3 无分离/标记能力 | G-9 / G-11 |
 
 ### Interface Finalization Revision v1 — V3 侧事实输入（一句话版，DEC-028 ≡ DSH DEC-023）
 
@@ -294,7 +312,7 @@ DEC-027 Part 5 裁不合并 + UNKNOWN 属语义层；**DEC-028 Part 5 裁终局�
 
 ## 4. 边界声明
 
-**本文件做了**：V3 消费管线五层现状（每层标 V3自有 / Contract声明）；字段来源逐个分类；**十三类 Gap 登记（G-1~G-13）**，其中 G-1/G-2/G-3 并入 B1/B2/B3、G-6~G-9 并入 FINALIZATION 四项、G-10~G-12 并入 Interface Decision Finalization v1、**G-13 并入 Interface Finalization Revision v1（DEC-028）**（均 `DECISION` 采纳、实现未开始或 `UNKNOWN`）；对既有 V3 文档**三处**更正（§0 E-1/E-2/E-3）；三项 blocker + 三轮裁决的 V3 侧事实输入；producer 侧新事实并入。
+**本文件做了**：V3 消费管线五层现状（每层标 V3自有 / Contract声明）；字段来源逐个分类；**十四类 Gap 登记（G-1~G-14）**，其中 G-1/G-2/G-3 并入 B1/B2/B3、G-6~G-9 并入 FINALIZATION 四项、G-10~G-12 并入 Interface Decision Finalization v1、G-13 并入 Interface Finalization Revision v1（DEC-028）、**G-14 并入 Freeze Candidate Review v1（DEC-029：命名提案 + bytes 能力冻结）**（均 `DECISION`/`PROPOSAL` 采纳或提案、实现未开始或 `UNKNOWN`）；对既有 V3 文档**三处**更正（§0 E-1/E-2/E-3）；三项 blocker + 各轮裁决的 V3 侧事实输入；producer 侧新事实并入。
 
 **本文件没做（任务禁止项）**：未提出实现方案（G-4~G-9 仅登记，缺口仅列不预判形态）；**未把 DECISION 描述为已实现**（全部标 `IMPLEMENTATION: not started` 或 `UNKNOWN`）；**未修改 EB-008**（L4 仅描述现状，其状态不变）；未冻结 contract；未修改 V3/preprocessing 任何代码或数据；未执行任何数据动作。
 
@@ -304,4 +322,4 @@ DEC-027 Part 5 裁不合并 + UNKNOWN 属语义层；**DEC-028 Part 5 裁终局�
 
 ---
 
-*CONSUMER-GAP-MAP — 2026-09-16（第四轮：Interface Finalization Revision v1 / DEC-028 并入，关闭 OQ-8 格式/OQ-12 身份维度/OQ-19 路由/OQ-20 值集，16 份改 Pending，新增 G-13 path 非身份核验），Claude（AITutors-v3 Consumer Owner）。V3 代码基线 `b5ddbe3` · preprocessing `1657625`（+ DSH 并行未提交工作树：ODR v1.4 / Producer Alignment v5）· v0.1 契约 `1fbaf5e`（未改）· v0.2 DRAFT 另文（**Frozen Candidate**，冻结范围 = 五项原则，DRAFT / NOT FROZEN）。非契约 / 非冻结 / 无实现方案。DECISION ≠ IMPLEMENTATION。*
+*CONSUMER-GAP-MAP — 2026-09-16（第五轮：Freeze Candidate Review v1 / DEC-029 并入，接口键命名提案 `source_content_sha256` + bytes 能力冻结/传输暂缓，关闭 OQ-8′ 消歧 + OQ-12′ 能力维度，新增 G-14），Claude（AITutors-v3 Consumer Owner）。V3 代码基线 `b5ddbe3` · preprocessing `1657625`（+ DSH 并行未提交工作树：ODR v1.4 / Producer Alignment v5）· v0.1 契约 `1fbaf5e`（未改）· v0.2 DRAFT 另文（**Frozen Candidate**，冻结范围 = 六项，DRAFT / NOT FROZEN）。非契约 / 非冻结 / 无实现方案。DECISION ≠ IMPLEMENTATION。*
