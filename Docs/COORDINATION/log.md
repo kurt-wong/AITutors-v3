@@ -34,7 +34,7 @@
 
 - Task 1 — 状态修正：契约 DRAFT（状态头 / 上游行 / 编号对照 / §1.2 后续动作 / §2 接口面 87 表达 / DA-35 / §5.4 五行 / §8 全节 / 边界声明 / 页脚）· GAP MAP（第九轮注记 + 三处状态行 + 证据基线 + 页脚）· FREEZE-CANDIDATE-REVIEW.md（历史状态过时声明注记，不改写历史表格）· CURRENT.md（状态行 / 冻结前提 / FACT-040 废止标记 / EB-009）· state.yaml（workstream / agents / DEC-030/031/032 注记 SUPERSEDED 标记 / EB-009）。
 - Task 2 — Freeze Evidence 登记：契约新增 **§9.1**（权威链 + 工件 sha256 登记表 + commit hash 汇总 + 脚本 + R50 血统冻结解释）；CURRENT.md Evidence Locations 增行。
-- Task 3 — Freeze Object：契约新增 **§9.2**（唯一冻结对象 = `PREPROCESSING-V3-CONTRACT-v0.2-DRAFT.md`；document sha256 = `9c6b9063e81fb2a66d85794b280c9d931f1b0074b39abf472033218149b17528`；commit/sha256 外部登记避免自引用；禁止多 commit 均为最终版本）。
+- Task 3 — Freeze Object：契约新增 **§9.2**（唯一冻结对象 = `PREPROCESSING-V3-CONTRACT-v0.2-DRAFT.md`；document sha256 = `9c6b9063e81fb2a66d85794b280c9d931f1b0074b39abf472033218149b17528`；**Freeze Artifact commit = `f4941ff`〔DEC-034 澄清，本轮原写「本登记 commit / 前驱 `c6e771c`」为歧义表述，已取代〕**；commit/sha256 外部登记避免自引用；禁止多 commit 均为最终版本）。
 - Task 4 — 关键词再验证 **通过**：`source_version_id` 残留全部 = V3 内部 UUID 定义 / 历史解释 / 禁止跨系统 identity 条款 / 消歧表；`source_content_sha256` = 唯一跨系统身份键；「Semantic Unavailable」残留全部 = 废止记录（FACT-040 本轮补废止标记）；「Semantic Pending」唯一现用词；path/`source_file` = 仅 locator。
 - Task 5 — 本报告。
 
@@ -46,4 +46,27 @@
 
 ---
 
-*（历史轮次：DEC-032 Freeze 前最终登记 · DEC-031 Owner Final Decision v1 · DEC-030 Freeze Candidate Finalization · DEC-029 Freeze Candidate Review · DEC-027/028 Interface Finalization · DEC-023~026 FINALIZATION 四项 · DEC-020~022 B1/B2/B3 —— 详见 CURRENT.md 决策表与契约 §5.3。）*
+## 2026-09-16 — Round: Freeze Object Final Alignment（V3 `DEC-034`）
+
+**Owner 指令**：完成 Contract v0.2 Freeze Object 最终一致化。三任务：① Freeze Object 定义统一——当前 `c6e771c` 与 `f4941ff` 两个 commit 均被描述为冻结相关；修正为明确区分 **Freeze Artifact**（= `PREPROCESSING-V3-CONTRACT-v0.2-DRAFT.md` 实际冻结内容版本；repository / commit / document / sha256）与 **Freeze Registration**（= DEC 登记 / 状态更新 / 日志提交；repository / commit / documents）；**禁止两个 commit 同时作为 Contract 冻结对象** ② Remote 可复现性检查——确认 Freeze Artifact commit = remote reachable；未 push 则只 push 不改内容 ③ 文档一致性扫描（Contract / CURRENT / state.yaml / GAP MAP / log：无 multiple Freeze Object / 无 ambiguous frozen commit / 无 READY-FROZEN 混用）④ 输出报告。禁止：修改契约原则 / schema / 代码 / IR / 数据。**冻结前不扩展设计范围**——唯一待解决 = 冻结对象唯一化 + remote 可复现性。
+
+**事实核实**：
+
+- `git show f4941ff:<契约路径> | sha256sum` = `9c6b9063e81fb2a66d85794b280c9d931f1b0074b39abf472033218149b17528`（== 工作树 == DEC-033 登记值）→ **`f4941ff` = Freeze Artifact commit**。
+- `git show c6e771c:<契约路径> | sha256sum` = `c8d895863a4a07d1d262febe959f6cb2508a2058deeb001aae2c1c1175fe1032`（**≠ artifact**）→ **`c6e771c` 非冻结对象**（= DEC-032 历史登记轮 commit）。
+- 扫描前 remote：`main...origin/main [ahead 19]`，`f4941ff` 未推送 → 需 push（Task 2 授权：只 push，不改内容）。
+
+**动作**：
+
+- Task 1 — 定义统一：`state.yaml`（workstream / FACT-050 澄清 / FACT-051 新增 / EB-009 / DEC-034 / agents.v3 → `f4941ff`）· `CURRENT.md`（状态行 / DEC-034 行 / FACT-050(d) / FACT-051 / EB-009 / Evidence Locations 拆分为 Freeze Artifact + Freeze Registration 两行 / Agents 表）· `log.md`（本条 + DEC-033 轮 Task 3 行加澄清标记）· GAP MAP（第十轮注记）。**契约文档本轮不动**——改之会变更其 sha256，重现多 commit 歧义；契约 §9.2 本就指向账本外部登记，账本现载显式 `f4941ff` 值。
+- Task 2 — push 至 origin/main（只推不改）。
+- Task 3 — 一致性扫描：无 multiple Freeze Object · 无 ambiguous frozen commit（`c6e771c` 显式排除）· READY/FROZEN 用词零混用。
+- Task 4 — 本报告。
+
+**状态**：Contract v0.2 = **Freeze Candidate Finalized / READY FOR FREEZE / NOT FROZEN**。**Freeze Artifact = `f4941ff`（唯一冻结对象）**；Freeze Registration = 本轮 commit（非冻结对象）。NOT IMPLEMENTED (V3 capability) 五项不变。
+
+**边界**：零业务代码 · 零 schema · 零数据 · 零 IR · 零契约文本改动 · 不扩展设计范围 · EB-008 不变。**Contract Freeze ≠ V3 Implementation；Requirement ≠ Existing Capability。**
+
+---
+
+*（历史轮次：DEC-033 Freeze Finalization Audit · DEC-032 Freeze 前最终登记 · DEC-031 Owner Final Decision v1 · DEC-030 Freeze Candidate Finalization · DEC-029 Freeze Candidate Review · DEC-027/028 Interface Finalization · DEC-023~026 FINALIZATION 四项 · DEC-020~022 B1/B2/B3 —— 详见 CURRENT.md 决策表与契约 §5.3。）*
