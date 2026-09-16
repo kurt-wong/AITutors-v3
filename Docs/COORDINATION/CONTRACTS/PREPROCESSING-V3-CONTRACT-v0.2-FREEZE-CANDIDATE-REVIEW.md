@@ -8,6 +8,8 @@
 > **证据纪律**：每条款标 `DECISION` / `OBSERVED` / `PROPOSAL` / `REQUIREMENT` / `UNKNOWN`。**DECISION ≠ IMPLEMENTATION**。命名方案标 `PROPOSAL`（待 Owner 采纳 + DSH 双边确认），不是既成裁决。
 >
 > **⚠️ 后续裁决（DEC-030，2026-09-16 Finalization）**：本报告 §1 的命名提案 **`source_content_sha256` 已被 Owner 采纳**（Decision 1），全文词面收口已在 Contract v0.2 DRAFT 执行；§2 bytes 能力冻结获 Decision 2 确认；§3 状态边界获 Decision 3 确认。本文件保留为 DEC-029 评审轮的历史记录，**其中 PROPOSAL 标注以本条为准转为 DECISION**。
+>
+> **⚠️ 事实状态更新（DEC-033，2026-09-16 Freeze Finalization Audit）**：本文件表格中的「Step 1 / Step 2 = not started」等执行状态描述为 **DEC-029 评审时点的历史记录**，现已过时——**DSH 已执行 Step 1/2 并验证通过**（DSH `DEC-026`，commit `e70807b`；Freeze Evidence = `aad2237` C1-C9 VERIFIED；Producer 确认 = `67f564c` ALL PASS）。现行事实状态以 Contract v0.2 DRAFT §8/§9 为准（**READY FOR FREEZE / NOT FROZEN**；五项 V3 能力仍 NOT IMPLEMENTED）。本文件不改写历史表格，仅加本注记。
 
 ---
 
