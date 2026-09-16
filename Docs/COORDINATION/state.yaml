@@ -4,21 +4,21 @@ workstream:
   id: EB-0.3B
   name: Evidence Resolution Boundary Discovery
   status: OPEN
-  note: "Interface Decision Finalization v1 registered (DEC-027 @ V3 = DEC-022 @ DSH, ODR v1.3 section 1quater): dual-layer roles formalized / Part 2 producer-consumer responsibility boundary (V3 six duties: verify manifest + recompute hash + decide accept; verify IR + Gate + reject) / Scope three prohibitions / 16 identity-only = Identity Available Semantic Unavailable normal state (CLOSES OQ-14) / UNKNOWN belongs to semantic layer, do NOT merge the two state systems (CLOSES OQ-5) / v0.2 freezes only three items (Identity/Scope/Semantic Boundary), six categories deferred. Contract v0.2 advanced to FROZEN CANDIDATE (DRAFT NOT FROZEN) with new section 0 freeze scope + 0.5 responsibility boundary. Consumer Alignment v2 delivered (supersedes v1). New gaps: source_version_id same-name-different-type hazard (preprocessing sha256hex vs V3 UUID FK, OQ-20), semantic-layer unknown value needs unfreeze BUG-V3-018 (OQ-20), unknown->PENDING_REVIEW unreachable (OQ-19), semantic availability presentation field (OQ-21). DECISION != IMPLEMENTATION - zero code change. V3 implementation (IR loader / identity binding / semantic unknown channel) still has NO slot in the five steps."
+  note: "Interface Finalization Revision v1 registered (DEC-028 @ V3 = DEC-023 @ DSH, ODR v1.4 section 1quinquies): source identity = SHA256(raw bytes) 64-lowercase-hex (format decided) + principle 'Source identity belongs to content hash, not storage location' + path is locator NOT identity (no doc may imply path participates in identity/version/hash judgment) / 16 identity-only files reclassified from Semantic Unavailable to Semantic Pending (recoverable; IR regeneration allowed under four constraints: bytes unchanged, id consistent, new IR binds id, re-verify) / semantic-layer FINAL vocabulary {ready,incomplete,unknown} (adds unknown, supersedes four-state merged notation) + decision layer {pending_review,approved,rejected}, do NOT merge / unknown semantic -> reviewable record -> pending_review workflow (routing decided). Contract v0.2 freeze scope expanded to FIVE frozen principles (Identity + Scope + Semantic Boundary + Path Non-Identity + Identity-only Recovery Rule). Consumer Alignment v3 delivered (supersedes v2). Closes OQ-8 format, OQ-12 identity-dim, OQ-19 routing, OQ-20 value-set. DECISION != IMPLEMENTATION - zero code change. V3 identity verification capability = not implemented (not started); V3 uses source_file as locator only (compliant with path-non-identity). Third cross-ledger DEC ID collision (DSH DEC-023 vs V3 DEC-023 Interface Scope)."
 
 agents:
   v3:
     agent: claude
     repository: kurt-wong/AITutors-v3
     branch: main
-    commit: 2127a04
-    status: consumer_alignment_v2_delivered_contract_frozen_candidate
+    commit: 0a90df0
+    status: consumer_alignment_v3_delivered_contract_five_principles
   preprocessing:
     agent: dsh
     repository: kurt-wong/Aitutors-preprocessing
     branch: main
-    commit: 22bf8b1
-    status: odr_v13_producer_alignment_v4_contract_drafting_deferred_to_claude
+    commit: 1657625
+    status: odr_v14_producer_alignment_v5_parallel_contract_drafting_claude
 
 facts:
   - id: FACT-001
@@ -253,6 +253,22 @@ facts:
     date: "2026-09-16"
     note: "Executable precondition = source bytes reachable by V3 (source_file is machine-local absolute path, OQ-12 / DSH G-4). None of the six duties has a slot in the five-step ordering (DEC-026)."
 
+  - id: FACT-044
+    statement: "path-non-identity compliance check (DEC-028 Part 1/2, Part 9 explicit): V3 uses source_file ONLY as a locator - Path(manifest.source_file) to load the source .md (runner.py:241, runner_b2.py:320, runner_b3.py:184) - and has ZERO code that uses path for file-uniqueness / source-identity / version / hash-identity judgment. Therefore V3 COMPLIES with the frozen principle 'Source identity belongs to content hash, not storage location' (it never treated path as identity). The cross-system dual-layer CURRENT linkage via source_file absolute-path string-equality is a NON-COMPLIANT status precisely because it violates this principle; upgrading to source_version_id linkage = not started."
+    source: v3
+    evidence: "backend/scripts/preprocessing_consumer/runner.py:241; runner_b2.py:320; runner_b3.py:184; manifest_reader.py:30,69; Grep source_file @ backend/**/*.py (all uses are Path() locator)"
+    status: observed
+    date: "2026-09-16"
+    note: "Reported in Consumer Alignment v3 section 2.2 and GAP-MAP G-13. Residual undecided = how source bytes are delivered to V3 for hash recompute (transport, not path form) - OQ-12' / DSH G-4 residual."
+
+  - id: FACT-045
+    statement: "semantic-layer final vocabulary + routing decided (DEC-028 Part 5/6): SEMANTIC_STATUS final = {ready, incomplete, unknown} (adds unknown, supersedes DEC-025 four-state merged notation); DECISION_STATUS = {pending_review, approved, rejected}; do NOT merge. unknown semantic unit MUST produce reviewable record and enter pending_review workflow (closes OQ-19 routing; previously 'PENDING_REVIEW or REJECTED by rule'). V3-side status: SEMANTIC_STATUS is frozen at {ready,incomplete} (compile/__init__.py:28-29, BUG-V3-018) so adding 'unknown' requires unfreeze - value set decided, implementation not started; and unknown->pending_review has no V3 execution surface because candidate is produced only from ready units (runner_b2.py:231-264) - rule decided, mechanism not started. reviewable-record carrier form = UNKNOWN."
+    source: both
+    evidence: "ODR v1.4 section 1quinquies Part 5/6; DSH Producer Alignment v5 (parallel); V3 Consumer Alignment v3 section 3.2/3.3; compile/__init__.py:28-29; runner_b2.py:231-264"
+    status: observed
+    date: "2026-09-16"
+    note: "Closes OQ-19 and OQ-20 value-set. Residual OQ-16' = pending_review->rejected criteria + reviewable-record carrier. V3 implementation (unfreeze + reviewable-record mechanism) = not started."
+
 
 open_questions:
   - id: EB-001
@@ -288,10 +304,10 @@ open_questions:
 
   - id: EB-009
     question: "Integration Contract v0.1 freeze readiness (Consumer Review v0.2 -> Contract v0.2 FROZEN CANDIDATE)"
-    status: v02_frozen_candidate_pending_freeze_prerequisites
+    status: v02_frozen_candidate_five_principles_pending_freeze_review
     owner: owner
-    blocked_by: "Freeze = Step 3 of five-step ordering (DEC-026), gated on Step 1 + Step 2. Freeze SCOPE narrowed to THREE items (DEC-027 Part 6): (1) Identity source_version_id=SHA256(raw bytes); (2) Scope Manifest 87 / IR 71 snapshot; (3) Semantic Boundary Unknown!=Ready, Unknown must not auto-enter question bank. Six categories DEFERRED (DB field design / UI / auto-completion / IR expansion / image recovery / daemon strategy) - not part of v0.2. PRE-FREEZE (data identity actions): (1) Step 1 interface snapshot frozen, carrier form + R50 lineage decided; (2) Step 2 source_version_id backfill over the 87, field name/format/md-vs-PDF decided (OQ-8) + R50 re-freeze paired (E2); (3) OQ-18 E1 residual conflict adjudicated. SAME-TIME WORDING: (4) Owner approves DRAFT as freeze candidate + confirms three-item scope; (5) DSH confirms producer interface change surface (OQ-8, OQ-12); (6) OQ-20 source_version_id same-name disambiguation; (7) OQ-16 PENDING_REVIEW->REJECTED routing rule text; (8) OQ-15 legacy 79 disclosure form; (9) OQ-21 semantic availability presentation field. NO LONGER blocking: OQ-5 (CLOSED by DEC-027 Part 5 = do not merge; refined to OQ-19/OQ-20), OQ-14 (CLOSED by DEC-027 Part 4 = 16 identity-only normal state), OQ-6 (CLOSED by DEC-024), OQ-11 current face (=71 by DEC-023; expansion decoupled + deferred), schedule ownership (DEC-026 for data actions)."
-    note: "Interface Decision Finalization v1 (V3 DEC-027 = DSH DEC-022, ODR v1.3 section 1quater) registered both ledgers. Contract v0.2 advanced to FROZEN CANDIDATE (DRAFT NOT FROZEN): new section 0 freeze scope (three items) + 0.5 responsibility boundary, section 1.3 source_version_id naming hazard, section 1.6 16-files normal state, section 3.2 UNKNOWN semantic layer + do-not-merge, DA table now DA-1..26, OQ register now OQ-1..21, freeze prerequisites rewritten for three-item scope. Consumer Alignment v2 delivered (supersedes v1). DECISION != IMPLEMENTATION - zero code change on either side. V3-side implementation (IR loader / identity binding / semantic-unknown channel / decision reachability) has NO slot in the five steps - V3 implementation schedule UNKNOWN, not granted by DEC-026 or DEC-027."
+    blocked_by: "Freeze = Step 3 of five-step ordering (DEC-026), gated on Step 1 + Step 2. Freeze SCOPE = FIVE frozen principles (DEC-027 Part 6 three items + DEC-028 Part 1-6 expansion): (1) Identity source_version_id=SHA256(raw bytes) 64-lowercase-hex; (2) Scope 87/71/16; (3) Semantic Boundary Unknown!=Ready + unknown->reviewable-record->pending_review + two-layer final vocab; (4) Path Non-Identity (locator not identity); (5) Identity-only Recovery Rule (16 files Semantic Pending, IR regen allowed under four constraints). PRE-FREEZE (data identity actions): (1) Step 1 interface snapshot frozen + R50 lineage; (2) Step 2 source_version_id backfill over 87 + R50 re-freeze paired (E2); (3) OQ-18 E1 residual conflict adjudicated. SAME-TIME WORDING: (4) Owner approves DRAFT + confirms five-principle scope; (5) DSH confirms producer interface change surface (OQ-8' naming, OQ-12' bytes delivery); (6) OQ-8' source_version_id naming disambiguation; (7) OQ-15 legacy 79 disclosure; (8) OQ-21 16-files presentation mechanism. NO LONGER blocking: OQ-8 format (DEC-028 Part 1 = 64hex), OQ-12 identity-dim (path non-identity), OQ-5 (do not merge), OQ-19 routing (unknown->pending_review), OQ-20 value-set ({ready,incomplete,unknown}), OQ-14 (Semantic Pending), OQ-6 (DEC-024), OQ-11 current face (=71), schedule ownership (DEC-026)."
+    note: "Interface Finalization Revision v1 (V3 DEC-028 = DSH DEC-023, ODR v1.4 section 1quinquies) registered both ledgers. Contract v0.2 freeze scope expanded to five frozen principles (section 0). Consumer Alignment v3 delivered (supersedes v2). V3 identity verification capability = not implemented (not started); V3 uses source_file as locator only (compliant with path-non-identity). DECISION != IMPLEMENTATION - zero code change on either side. V3-side implementation (IR loader / identity binding / semantic-unknown unfreeze / reviewable-record mechanism) has NO slot in the five steps - V3 implementation schedule UNKNOWN, not granted. THIRD cross-ledger DEC ID collision (DSH DEC-023 vs V3 DEC-023)."
     date: "2026-09-16"
 
 decisions:
@@ -391,6 +407,12 @@ decisions:
     status: decided
     source: "Owner instruction 2026-09-16 (PREPROCESSING / V3 Interface Decision Finalization v1); recorded DSH-side as DEC-022 in ODR v1.3 section 1quater"
     note: "ARCHITECTURE DECISION ONLY - not implemented. Cross-ledger ID mapping REQUIRED: this is DSH DEC-022 (NOTE: DSH DEC-022 collides with V3 DEC-022 = B3 semantic boundary; this is the SECOND DEC ID collision after DSH DEC-021 vs V3 DEC-021). CLOSES OQ-5 core (Part 5 = do not merge; refined to OQ-19 reachability + OQ-20 semantic-layer unknown value) and OQ-14 (Part 4 = 16 files normal state). NEW V3-side findings: source_version_id same-name-different-type hazard (OQ-20); V3 six consumer duties all unimplemented (FACT-043); semantic-layer unknown value needs unfreeze BUG-V3-018 (OQ-20); unknown->PENDING_REVIEW unreachable because candidate is gated on ready (OQ-19). Contract v0.2 advanced to FROZEN CANDIDATE (section 0 three-item freeze scope + 0.5 responsibility boundary). Consumer Alignment v2 delivered. DECISION != IMPLEMENTATION - zero code change. V3 implementation schedule still UNKNOWN (no slot in five steps)."
+
+  - id: DEC-028
+    statement: "Interface Finalization Revision v1 (Owner, Parts 1-6): (Part 1) DEC-SOURCE-IDENTITY - source_version_id = SHA256(original source bytes), format = 64-char lowercase hex string; identity uniquely determined by source_version_id, location by source_file/path/locator; STRONG PROHIBITION no document may imply source_file/path/absolute-path/directory participates in file-uniqueness / source-identity / version / hash-identity judgment; frozen principle = 'Source identity belongs to content hash, not storage location'. (Part 2) source_file retained but redefined = locator information NOT identity information; future path changes (Windows/NAS/Linux/Object-Storage/Cloud) must NOT change source_version_id. (Part 3) the 16 identity-only files reclassified from 'Semantic Unavailable' to 'Identity Available / Semantic Pending' (NOT permanent absence); IR regeneration ALLOWED under four constraints (source bytes unchanged / source_version_id consistent / new IR binds source_version_id / re-pass identity verification + semantic validation); forbidden: modify original source, re-OCR overwrite original, generate new identity, replace old hash with new hash. (Part 4) Interface Scope stays 87 (not 71); table 87=identity interface / 71=current IR semantic / 16=waiting semantic processing; forbidden to equate IR-available with Interface-available. (Part 5) two state systems stay separate, do NOT merge; Semantic Status FINAL vocabulary = {ready, incomplete, unknown}; Decision Status = {pending_review, approved, rejected}. (Part 6) any unknown semantic unit: forbidden silent skip/automatic conversion/silent fallback; MUST produce reviewable record, enter pending_review workflow."
+    status: decided
+    source: "Owner instruction 2026-09-16 (Interface Finalization Revision v1); recorded DSH-side as DEC-023 in ODR v1.4 section 1quinquies"
+    note: "ARCHITECTURE DECISION ONLY - not implemented. Cross-ledger ID mapping REQUIRED: this is DSH DEC-023 (NOTE: DSH DEC-023 collides with V3 DEC-023 = Interface Scope; THIRD collision after DEC-021 and DEC-022). CLOSES: OQ-8 format (64-lowercase-hex), OQ-12 identity dimension (path non-identity), OQ-14 (16 files = Semantic Pending, supersedes DEC-027 Part 4 'Unavailable'), OQ-19 routing (unknown -> reviewable record -> pending_review), OQ-20 value-set ({ready,incomplete,unknown}). RESIDUALS: OQ-8' naming disambiguation (contract sha vs V3 UUID same name), OQ-12' how source bytes delivered to V3 for recompute (transport, not path form), OQ-16' pending_review->rejected criteria + reviewable-record carrier form, OQ-21 16-files presentation mechanism. V3-side: identity verification capability = not implemented (not started); V3 uses source_file as locator only = COMPLIANT with path-non-identity; SEMANTIC_STATUS frozen at {ready,incomplete} needs unfreeze to add unknown (not started); unknown->pending_review has no V3 execution surface under candidate-gated-on-ready (not started). Contract v0.2 freeze scope expanded to five frozen principles. Consumer Alignment v3 delivered. DECISION != IMPLEMENTATION - zero code change."
 
 prohibitions:
   - "No Resolver enhancement"

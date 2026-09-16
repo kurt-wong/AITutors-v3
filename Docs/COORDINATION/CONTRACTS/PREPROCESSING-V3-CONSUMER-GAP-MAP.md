@@ -9,14 +9,16 @@
 >
 > **2026-09-16 第二轮更新（FINALIZATION v1 四项裁决后）**：Owner 追加裁决 Interface Scope（=87）/ Legacy v1（historical asset）/ 四状态机（READY·INCOMPLETE·PENDING_REVIEW·REJECTED）/ 五步执行序。V3 侧对齐报告 = `PREPROCESSING-V3-CONSUMER-DECISION-ALIGNMENT-v1.md`（同批）。本文件据此新增 §0 E-3 精度更正与 G-6~G-9 四项 Gap，并更新 §3 裁决事实输入。**DECISION ≠ IMPLEMENTATION 不变。**
 >
-> **2026-09-16 第三轮更新（Interface Decision Finalization v1 后，ODR v1.3 §1quater）**：Owner 追加 Part 1–6 + 最终原则（双层职责 / 生产消费责任边界 / Scope 三禁 / 16 份 Identity-only 正常态 / UNKNOWN 属语义层不合并 / v0.2 只冻结三件）。V3 侧对齐 = `PREPROCESSING-V3-CONSUMER-DECISION-ALIGNMENT-v2.md`（本批，取代 v1）。本文件据此**关闭 OQ-5（不合并）+ OQ-14（16 份正常态）**，新增 **G-10~G-12**（`source_version_id` 同名异义 / Part 2 V3 六义务 / 语义层 unknown 取值 + 决策可达性）。**DECISION ≠ IMPLEMENTATION 不变。**
+> **2026-09-16 第三轮更新（Interface Decision Finalization v1 后，ODR v1.3 §1quater）**：Owner 追加 Part 1–6 + 最终原则。V3 侧对齐 = `PREPROCESSING-V3-CONSUMER-DECISION-ALIGNMENT-v2.md`（取代 v1）。关闭 OQ-5（不合并）+ OQ-14（正常态），新增 G-10~G-12。**DECISION ≠ IMPLEMENTATION 不变。**
+>
+> **2026-09-16 第四轮更新（Interface Finalization Revision v1 后，ODR v1.4 §1quinquies）**：Owner 修正/固化——source identity 64 hex + **path 非身份原则**（belongs to content hash, not storage location）· 16 份改 **Semantic Pending（可恢复）**· 语义层终局词表加 **`unknown`**（`{ready,incomplete,unknown}`）· **unknown → reviewable record → pending_review**。V3 侧对齐 = `PREPROCESSING-V3-CONSUMER-DECISION-ALIGNMENT-v3.md`（取代 v2）。**关闭 OQ-8 格式 / OQ-12 身份维度 / OQ-19 路由 / OQ-20 值集**；16 份由 Unavailable 改 Pending。**DECISION ≠ IMPLEMENTATION 不变。**
 >
 > **证据基线**：
 > | 侧 | 基线 |
 > |---|---|
 > | V3 代码 | `b5ddbe3`（其后仅文档提交，代码未变） |
-> | preprocessing | `22bf8b1`（Interface Decision Finalization 四项入册）+ 未提交工作树（ODR **v1.3** §1quater / **Producer Alignment v4** / Interface Facts v2.1 / Readiness v3.2 / Gap List v1.2 / Dependency Map v2.2） |
-> | 被分析契约 | v0.1 @ `1fbaf5e`（未改）；v0.2 DRAFT 见 `PREPROCESSING-V3-CONTRACT-v0.2-DRAFT.md`（**Frozen Candidate**，DRAFT / NOT FROZEN，本轮已并入 Part 1–6） |
+> | preprocessing | `1657625`（Producer Alignment v4 入册）+ 未提交工作树（ODR **v1.4** §1quinquies / **Producer Alignment v5** / Interface Facts v2.1） |
+> | 被分析契约 | v0.1 @ `1fbaf5e`（未改）；v0.2 DRAFT 见 `PREPROCESSING-V3-CONTRACT-v0.2-DRAFT.md`（**Frozen Candidate**，DRAFT / NOT FROZEN，冻结范围 = 五项原则） |
 >
 > **本轮关键输入**：Owner Decision Record v1.2（§1 + §1bis DEC-B1 + §1ter 四项裁决）；DSH `PREPROCESSING-PRODUCER-DECISION-ALIGNMENT-v1.md`（并行产出）；DSH Readiness v3（三点交集定量、87/87 R50 成员资格）；V3 侧 Consumer Decision Alignment v1。前轮输入（IF-v2 / Reconciliation v0.2 / Owner B1-B3 裁决 / 暂停令 `746e35c`）继续有效。
 
@@ -199,7 +201,7 @@ producer 侧 C-IN-1 **已实现**（IR 生成拒收）；**V3 侧 `identity_vers
 
 接口面 87 中有 **16 份**（87−71）**无 IR 语义承载**。双层裁决把语义消费从 manifest（87+ 面）移到 IR（71）——这 16 份在身份面内但**失去语义可消费性**。V3 今天**能**通过 manifest 消费它们的语义；双层落地后不能，除非 ① IR 扩产（未裁未排期）② 明确声明其语义面外地位 ③ 其他（本文件不预设）。
 
-DSH 从生产侧记为 D.2；本文件从 V3 消费侧登记。~~**OQ-14**，须 v0.2 落字~~ → **已裁（DEC-027 Part 4）= Identity Available / Semantic Unavailable 正常态**，不再是未声明空档。V3 侧仍缺身份/语义分离消费能力（见 G-11）。
+DSH 从生产侧记为 D.2；本文件从 V3 消费侧登记。~~**OQ-14**~~ → 先裁（DEC-027 Part 4）正常态，**本轮改（DEC-028 Part 3）= Identity Available / Semantic Pending（可恢复）**，允许重生成 IR 四约束。V3 侧仍缺身份/语义分离消费能力 + pending 标记（见 G-11）。
 
 **G-10 · `source_version_id` 同名异义 Gap（本轮新登记，协调层）**
 
@@ -209,9 +211,13 @@ DSH 从生产侧记为 D.2；本文件从 V3 消费侧登记。~~**OQ-14**，须
 
 Owner（DEC-027 Part 2）固化：V3 = 验证 Manifest / 重算 hash / 判断接受 + 验证 IR / Gate / 拒收。**六项全部未实现**——无校验（`manifest_reader.py:52`）、不读 producer sha（自算 canonical_json 包裹非 raw bytes，`runner.py:71-73`）、无身份闸门（`identity_version` 0 命中）、零 IR 消费能力。对应 Consumer Alignment v2 的 **V3-G1 / V3-G2**。可执行前提 = source bytes 对 V3 可达（OQ-12 / DSH G-4）。
 
-**G-12 · 语义层 unknown 取值 + 决策可达性 Gap（本轮新登记，OQ-5 细化）**
+**G-12 · 语义层 unknown 取值 + 决策可达性 Gap（OQ-5 细化；本轮值集与路由已裁，实现 not started）**
 
-DEC-027 Part 5 裁「UNKNOWN 属语义层、不合并两状态体系」。V3 侧两项精确缺口：(a) `SEMANTIC_STATUS` 冻结 `{ready,incomplete}`（`compile/__init__.py:28-29`，BUG-V3-018）**无 `unknown` 取值**，须解冻加第三值 → **OQ-20**；(b) candidate 仅由 ready 产生（`runner_b2.py:231-264`），语义 `unknown`（非 ready）单元**永到不了 PENDING_REVIEW** → **OQ-19**（路由架构未裁）。
+DEC-027 Part 5 裁不合并 + UNKNOWN 属语义层；**DEC-028 Part 5 裁终局词表 `{ready,incomplete,unknown}`（OQ-20 值集关闭）+ Part 6 裁 unknown → reviewable record → pending_review（OQ-19 路由关闭）**。V3 侧两项实现缺口：(a) `SEMANTIC_STATUS` 冻结 `{ready,incomplete}`（`compile/__init__.py:28-29`，BUG-V3-018），加 `unknown` 须**解冻**——值集已裁，实现 not started；(b) candidate 仅由 ready 产生（`runner_b2.py:231-264`），语义 `unknown` 单元在现架构下进不了 pending_review——「产生 reviewable record 进 pending_review workflow」机制 not started。`reviewable record` 载体形态 = UNKNOWN（OQ-16′）。
+
+**G-13 · path 非身份原则核验（DEC-028 Part 1/2，本轮）**
+
+固化原则 **Source identity belongs to content hash, not storage location**；`source_file`/path = locator only，任何文档不得暗示 path 参与身份/版本/hash 判断。**V3 现状符合**——仅将 `source_file` 用作 `Path(manifest.source_file)` 加载源文件（`runner.py:241`；`runner_b2.py:320`；`runner_b3.py:184`），全仓无任何以 path 做身份/版本/hash 判断的代码。**跨系统双层当前靠 path 值相等关联 = 不合规现状**（正是本原则要消除的）；升级为 `source_version_id` 关联 = not started（G-1/G-11）。残余未裁 = source bytes 如何交付给 V3 重算 hash（OQ-12′，传输方式非 path 形态）。
 
 ---
 
@@ -222,6 +228,19 @@ DEC-027 Part 5 裁「UNKNOWN 属语义层、不合并两状态体系」。V3 侧
 > **状态更新（2026-09-16 第二轮）**：Owner 追加 FINALIZATION v1 四项裁决（DEC-023~026 ≡ DSH DEC-021-1~4）。V3 侧对齐全文见 `PREPROCESSING-V3-CONSUMER-DECISION-ALIGNMENT-v1.md`。新增 Gap G-6~G-9 见 §2.2。以下 B1/B2/B3 分项事实输入继续有效。
 >
 > **状态更新（2026-09-16 第三轮）**：Owner 追加 Interface Decision Finalization v1（V3 `DEC-027` ≡ DSH `DEC-022`，Part 1–6）。V3 侧对齐全文见 `PREPROCESSING-V3-CONSUMER-DECISION-ALIGNMENT-v2.md`（取代 v1）。新增 Gap G-10~G-12 见 §2.2；关闭 OQ-5 + OQ-14。
+>
+> **状态更新（2026-09-16 第四轮）**：Owner 追加 Interface Finalization Revision v1（V3 `DEC-028` ≡ DSH `DEC-023`，Part 1–6）。V3 侧对齐全文见 `PREPROCESSING-V3-CONSUMER-DECISION-ALIGNMENT-v3.md`（取代 v2）。新增 Gap G-13；关闭 OQ-8 格式 / OQ-12 身份维度 / OQ-19 路由 / OQ-20 值集；16 份 Unavailable→Pending。
+
+### Interface Finalization Revision v1 — V3 侧事实输入（一句话版，DEC-028 ≡ DSH DEC-023）
+
+| 裁决 | V3 侧核心事实 | Gap |
+|---|---|---|
+| **Part 1** source identity 64 hex + content-hash-not-location | producer 算法在库；V3 自算 canonical_json 非 raw bytes；零身份校验 | G-1/G-2 |
+| **Part 1/2** path = locator 非身份 | V3 仅用 path 作 locator（**符合**）；跨系统靠 path 关联（不合规） | G-13（OQ-12′ bytes 交付） |
+| **Part 3** 16 份 = Semantic Pending（可恢复） | 改前轮 Unavailable；允许重生成 IR 四约束；V3 无分离/标记能力 | G-9/G-11（OQ-21 呈现） |
+| **Part 4** Scope 保持 87（禁 IR=Interface） | V3 无法识别接口面、IR 零消费 | G-6 |
+| **Part 5** 语义层终局词表加 `unknown` | V3 `SEMANTIC_STATUS` 冻结 2 值，须解冻加值 | G-12（OQ-20 值集已裁） |
+| **Part 6** unknown → reviewable record → pending_review | V3 candidate-gated-on-ready，无执行面 | G-12（OQ-19 路由已裁） |
 
 ### Interface Decision Finalization v1 — V3 侧事实输入（一句话版，DEC-027 ≡ DSH DEC-022）
 
@@ -275,7 +294,7 @@ DEC-027 Part 5 裁「UNKNOWN 属语义层、不合并两状态体系」。V3 侧
 
 ## 4. 边界声明
 
-**本文件做了**：V3 消费管线五层现状（每层标 V3自有 / Contract声明）；字段来源逐个分类；**十二类 Gap 登记（G-1~G-12）**，其中 G-1/G-2/G-3 并入 B1/B2/B3 裁决、G-6~G-9 并入 FINALIZATION 四项、**G-10~G-12 并入 Interface Decision Finalization v1（DEC-027）**（均 `DECISION` 采纳、实现未开始或 `UNKNOWN`）；对既有 V3 文档**三处**更正（§0 E-1/E-2/E-3）；三项 blocker + 两轮裁决的 V3 侧事实输入；producer 侧新事实并入（identity 87/79、五输出面合取、hash 零产出、norm_sha256、噪声类级、暂停令、Readiness v3 三点交集 + 87/87 R50、**Producer Alignment v4 G-1~G-7**）。
+**本文件做了**：V3 消费管线五层现状（每层标 V3自有 / Contract声明）；字段来源逐个分类；**十三类 Gap 登记（G-1~G-13）**，其中 G-1/G-2/G-3 并入 B1/B2/B3、G-6~G-9 并入 FINALIZATION 四项、G-10~G-12 并入 Interface Decision Finalization v1、**G-13 并入 Interface Finalization Revision v1（DEC-028）**（均 `DECISION` 采纳、实现未开始或 `UNKNOWN`）；对既有 V3 文档**三处**更正（§0 E-1/E-2/E-3）；三项 blocker + 三轮裁决的 V3 侧事实输入；producer 侧新事实并入。
 
 **本文件没做（任务禁止项）**：未提出实现方案（G-4~G-9 仅登记，缺口仅列不预判形态）；**未把 DECISION 描述为已实现**（全部标 `IMPLEMENTATION: not started` 或 `UNKNOWN`）；**未修改 EB-008**（L4 仅描述现状，其状态不变）；未冻结 contract；未修改 V3/preprocessing 任何代码或数据；未执行任何数据动作。
 
@@ -285,4 +304,4 @@ DEC-027 Part 5 裁「UNKNOWN 属语义层、不合并两状态体系」。V3 侧
 
 ---
 
-*CONSUMER-GAP-MAP — 2026-09-16（第三轮：Interface Decision Finalization v1 / DEC-027 并入，关闭 OQ-5+OQ-14，新增 G-10~G-12），Claude（AITutors-v3 Consumer Owner）。V3 代码基线 `b5ddbe3` · preprocessing `22bf8b1`（+ DSH 并行未提交工作树：ODR v1.3 / Producer Alignment v4）· v0.1 契约 `1fbaf5e`（未改）· v0.2 DRAFT 另文（**Frozen Candidate**，DRAFT / NOT FROZEN）。非契约 / 非冻结 / 无实现方案。DECISION ≠ IMPLEMENTATION。*
+*CONSUMER-GAP-MAP — 2026-09-16（第四轮：Interface Finalization Revision v1 / DEC-028 并入，关闭 OQ-8 格式/OQ-12 身份维度/OQ-19 路由/OQ-20 值集，16 份改 Pending，新增 G-13 path 非身份核验），Claude（AITutors-v3 Consumer Owner）。V3 代码基线 `b5ddbe3` · preprocessing `1657625`（+ DSH 并行未提交工作树：ODR v1.4 / Producer Alignment v5）· v0.1 契约 `1fbaf5e`（未改）· v0.2 DRAFT 另文（**Frozen Candidate**，冻结范围 = 五项原则，DRAFT / NOT FROZEN）。非契约 / 非冻结 / 无实现方案。DECISION ≠ IMPLEMENTATION。*

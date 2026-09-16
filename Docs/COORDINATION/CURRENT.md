@@ -1,7 +1,7 @@
 # Cross-Agent Coordination — Current State
 
 **Workstream**: EB-0.3B Evidence Resolution Boundary Discovery
-**Status**: OPEN — Owner **Interface Decision Finalization v1 已入册**（DEC-027 ≡ DSH DEC-022，ODR v1.3 §1quater，Part 1–6 + 最终原则）· Contract v0.2 升 **Frozen Candidate**（DRAFT / NOT FROZEN；新增 §0 冻结范围三件 + §0.5 责任边界；DA 表 26 行；OQ 1~21；§8 按 Part 6 三件范围重写）· **Consumer Alignment v2 已交付**（取代 v1）· 关闭 OQ-5（不合并）+ OQ-14（16 份正常态）· 新增 OQ-19/20/21 · preprocessing @ `22bf8b1`（ODR v1.3 + Producer Alignment v4 并行产出，Contract 正文起草责任在 Claude 侧）
+**Status**: OPEN — Owner **Interface Finalization Revision v1 已入册**（DEC-028 ≡ DSH DEC-023，ODR v1.4 §1quinquies，Part 1–6）· Contract v0.2 冻结范围扩为 **五项冻结原则**（DRAFT / NOT FROZEN；§0 Identity+Scope+Semantic+Path 非身份+Identity-only 恢复规则；DA 表 31 行；OQ 1~21）· **Consumer Alignment v3 已交付**（取代 v2）· 关闭 OQ-8 格式 / OQ-12 身份维度 / OQ-19 路由 / OQ-20 值集 · 16 份改 Semantic Pending · 语义层加 `unknown` · path 非身份原则冻结 · preprocessing @ `1657625`（ODR v1.4 + Producer Alignment v5 并行，第三处撞号 DSH DEC-023）
 **Last Updated**: 2026-09-16
 **Canonical Ledger**: DSH repo (kurt-wong/Aitutors-preprocessing). This is V3 mirror.
 
@@ -16,15 +16,16 @@
 | DEC-022 | **B3 Semantic Boundary**: unit_type 必须闭集；unknown 值禁止自动转换 / 禁止 fallback / 禁止静默 skip / 不得进入 Question materialization。**词表部分已被 DEC-025 取代**（UNKNOWN/PENDING 泛称 → 四值）。⚠️ **与 DSH 侧 `DEC-022`（= Interface Decision Finalization v1）同号异文**，引用须双向标注 |
 | **DEC-023** | **Interface Scope**（≡ DSH DEC-021-1）: Interface Scope = **87**（v2 字段口径）；IR 当前冻结面 = **71 ADMITTED**。166 = 历史资产规模 ≠ 正式接口。回填范围 = 87 |
 | **DEC-024** | **Legacy v1 Handling**（≡ DSH DEC-021-2）: v1 legacy **79** = historical asset，**不入 v0.2 接口**。四禁：自动迁移 / 自动补齐 / 自动重新生成 IR / 自动加入 87。未来走独立 **Legacy Migration Plan**，不得混入当前 Contract。**关闭 OQ-6** |
-| **DEC-025** | **Semantic Boundary 四状态机**（≡ DSH DEC-021-3）: **READY / INCOMPLETE / PENDING_REVIEW / REJECTED**。三禁令（auto conversion / silent fallback / silent skip）。unknown semantic **必须进 PENDING_REVIEW 或 REJECTED**，由明确规则决定。**层归属已裁（DEC-027 Part 5，OQ-5 关闭 = 不合并）**；细化 OQ-19/20；路由规则文本未给（OQ-16） |
+| **DEC-025** | **Semantic Boundary 四状态机**（≡ DSH DEC-021-3）: **READY / INCOMPLETE / PENDING_REVIEW / REJECTED**。三禁令（auto conversion / silent fallback / silent skip）。**层归属已裁（DEC-027 Part 5，OQ-5 关闭 = 不合并）**；**词表与路由已终局（DEC-028 Part 5/6）**：语义层 `{ready,incomplete,unknown}` + 决策层 `{pending_review,approved,rejected}`，unknown→reviewable record→pending_review |
 | **DEC-026** | **Execution Ordering**（≡ DSH DEC-021-4）: 五步 **Step1 冻结接口快照 → Step2 回填 source_version_id → Step3 冻结 Contract v0.2 → Step4 数据治理 → Step5 图片恢复**。身份冻结优先。**契约冻结 = Step 3**，前置 = Step1+Step2。**五步零 V3 实现动作** → V3 实现排期 = UNKNOWN |
-| **DEC-027** | **Interface Decision Finalization v1**（≡ DSH DEC-022，ODR v1.3 §1quater）: Part1 双层职责正式采用+双禁 · **Part2 生产/消费责任边界（Preprocessing 解释 / V3 接受或拒绝；V3 六项消费义务）** · Part3 Scope 87/71 二者允许不同+三禁 · **Part4 16 份 Identity-only = Identity Available / Semantic Unavailable 正常态（关闭 OQ-14）** · **Part5 UNKNOWN 属语义层、不合并两状态体系（关闭 OQ-5）** · Part6 v0.2 只冻结三件（Identity/Scope/Semantic Boundary）+六类暂缓。⚠️ **与 V3 `DEC-022`(B3) 同号异文** |
+| **DEC-027** | **Interface Decision Finalization v1**（≡ DSH DEC-022，ODR v1.3 §1quater）: Part1 双层职责正式采用+双禁 · Part2 生产/消费责任边界（V3 六项消费义务） · Part3 Scope 87/71 三禁 · Part4 16 份正常态 · Part5 UNKNOWN 属语义层、不合并 · Part6 v0.2 只冻结三件。⚠️ **与 V3 `DEC-022`(B3) 同号异文** |
+| **DEC-028** | **Interface Finalization Revision v1**（≡ DSH DEC-023，ODR v1.4 §1quinquies）: **Part1 source identity = SHA256(raw bytes) 64 小写 hex + 「Source identity belongs to content hash, not storage location」+ path 非身份（禁暗示 path 参与身份/版本/hash 判断）** · Part2 `source_file` = locator 非 identity，路径变化不改 id · **Part3 16 份改 Identity Available / Semantic Pending（可恢复），IR 重生成允许+四约束** · Part4 Scope 保持 87（禁 IR=Interface） · **Part5 语义层终局词表加 `unknown`（`{ready,incomplete,unknown}`）+ 决策层 `{pending_review,approved,rejected}`，禁合并** · **Part6 unknown → reviewable record → pending_review workflow**。⚠️ **与 V3 `DEC-023`(Interface Scope) 同号异文（第三处撞号）** |
 
-**跨仓编号对照（引用任一侧必须双向标注）**：四项 FINALIZATION V3 = `DEC-023~026` / DSH = `DEC-021-1~4`；Interface Decision Finalization v1 = V3 `DEC-027` / DSH `DEC-022`。**撞号累积 2 处**：DSH `DEC-021` ≠ V3 `DEC-021`(B2)；DSH `DEC-022` ≠ V3 `DEC-022`(B3)。**另 `source_version_id` 同名异义**（preprocessing sha256 hex vs V3 内部 UUID FK，OQ-20）。
+**跨仓编号对照（引用任一侧必须双向标注）**：四项 V3 = `DEC-023~026` / DSH = `DEC-021-1~4`；Finalization v1 = V3 `DEC-027` / DSH `DEC-022`；Revision v1 = V3 `DEC-028` / DSH `DEC-023`。**撞号累积 3 处**：DSH `DEC-021`≠V3 `DEC-021`(B2)；DSH `DEC-022`≠V3 `DEC-022`(B3)；DSH `DEC-023`≠V3 `DEC-023`(Interface Scope)。**`source_version_id` 同名异义**（sha256 hex vs V3 UUID FK）。**建议 Owner 立即定跨仓编号约定**。
 
-**汇总表位置**：Decision Alignment Table = Contract v0.2 DRAFT §5.3（DA-1~26）；Implementation Status Table = 同文件 §5.4；五步序 = §5.5；冻结范围三件 = §0；责任边界 = §0.5。V3 消费侧对齐 = Consumer Alignment v2（取代 v1）。
+**汇总表位置**：Decision Alignment Table = Contract v0.2 DRAFT §5.3（DA-1~31）；Implementation Status Table = 同文件 §5.4；五步序 = §5.5；冻结范围五项 = §0；责任边界 = §0.5。V3 消费侧对齐 = Consumer Alignment v3（取代 v2）。
 
-**开放冻结前提**（v0.2 DRAFT §8，按 DEC-026 五步序 + DEC-027 Part 6 三件范围）——**冻结范围 = 三件**（Identity / Scope / Semantic Boundary），六类暂缓。**冻结前置**：Step 1 快照载体+R50 血统 · Step 2 回填完成（字段名/格式 OQ-8 须先裁）· OQ-18 E1 残留冲突。**同期落字**：Owner 批准三件范围 · DSH 确认接口变更面（OQ-8/OQ-12）· **OQ-20 `source_version_id` 同名消歧** · OQ-16 路由规则文本 · OQ-15 legacy 披露形态 · OQ-21 semantic availability 呈现字段。**已不再阻塞**：~~OQ-5~~（DEC-027 Part 5 关闭，细化 OQ-19/20）· ~~OQ-14~~（DEC-027 Part 4 关闭 = 16 份正常态）· ~~OQ-6~~（DEC-024 关闭）· ~~OQ-11 当前面~~（=71 已裁，扩产经 DEC-B1 解耦且属暂缓项）· ~~排期归属~~（DEC-026 已裁数据动作）。**V3 实现无五步对应步骤，排期 UNKNOWN**。
+**开放冻结前提**（v0.2 DRAFT §8，按 DEC-026 五步序 + DEC-028 五项冻结原则）——**冻结范围 = 五项**（Identity / Scope / Semantic Boundary / Path 非身份 / Identity-only 恢复规则）。**冻结前置**：Step 1 快照载体+R50 血统 · Step 2 回填完成 · OQ-18 E1 残留冲突。**同期落字**：Owner 批准五项范围 · DSH 确认接口变更面（OQ-8′ 命名 / OQ-12′ bytes 交付）· OQ-8′ 命名消歧 · OQ-15 legacy 披露 · OQ-21 16 份呈现机制。**已不再阻塞**：~~OQ-8 格式~~（DEC-028 裁 64 hex）· ~~OQ-12 身份维度~~（path 非身份）· ~~OQ-5/OQ-19/OQ-20 值集~~（不合并+终局词表+unknown→pending_review）· ~~OQ-14~~（Semantic Pending）· ~~OQ-6~~（DEC-024）· ~~OQ-11 当前面~~（=71）· ~~排期归属~~（DEC-026）。**V3 实现无五步对应步骤，排期 UNKNOWN**。
 
 ---
 
@@ -32,8 +33,8 @@
 
 | Agent | Repo | Commit | Status |
 |---|---|---|---|
-| Claude (V3) | AITutors-v3 | 2127a04 | consumer_alignment_v2_delivered_contract_frozen_candidate |
-| DSH (Preprocessing) | Aitutors-preprocessing | 22bf8b1 | odr_v13_producer_alignment_v4_contract_drafting_deferred_to_claude |
+| Claude (V3) | AITutors-v3 | 0a90df0 | consumer_alignment_v3_delivered_contract_five_principles |
+| DSH (Preprocessing) | Aitutors-preprocessing | 1657625 | odr_v14_producer_alignment_v5_parallel_contract_drafting_claude |
 
 ---
 
@@ -73,6 +74,8 @@
 | FACT-041 | **`source_version_id` 同名异义（跨边界新登记）**: 契约键 = sha256 hex（`SHA256(raw bytes)`）；V3 代码键 = `uuid.UUID` FK（`document_source_versions` 行主键，Seal 唯一锚 `(stage,LE-hash)`，`source.py:50` 明令禁 sha 唯一）。同名、异义、异类型；V3 另有第三概念 `Document.original_sha256`（现为 canonical_json 包裹 joined-text 非 raw bytes）。须 v0.2 消歧（OQ-20） | V3 | observed |
 | FACT-042 | **OQ-5 关闭 + OQ-14 关闭（DEC-027 Part 5/4）**: Part5 裁不合并两状态体系、UNKNOWN 属语义层 → 关闭 OQ-5（非单一状态机）；但打开两项更精确 V3 缺口——语义层缺 `unknown` 取值须解冻 BUG-V3-018（OQ-20）、candidate 仅由 ready 产致 unknown→PENDING_REVIEW 不可达（OQ-19）。Part4 裁 16 份正常态 → 关闭 OQ-14。**关闭一个开放项换来两个更精确实现前置** | Both | observed |
 | FACT-043 | **Part 2 V3 六项消费义务全未实现（DEC-027）**: V3 = 验证 Manifest + 重算 hash + 判断接受 + 验证 IR + Gate + 拒收。六项全无——无校验（`manifest_reader.py:52`）、不读 producer sha（自算 canonical_json 包裹，`runner.py:71-73`）、无身份闸门（`identity_version` 0 命中）、零 IR 消费。同算法对账生产侧 71/71 已实证可行。可执行前提 = source bytes 可达（OQ-12） | Both | observed |
+| FACT-044 | **path 非身份原则 V3 侧核验（DEC-028 Part 1/2）**: V3 仅将 `source_file` 用作 `Path(manifest.source_file)` 加载源文件（`runner.py:241`/`runner_b2.py:320`/`runner_b3.py:184`），全仓**无任何以 path 做身份/版本/hash 判断**的代码 → **符合**「Source identity belongs to content hash, not storage location」。跨系统双层当前靠 path 值相等关联 = 不合规现状；升级 `source_version_id` 关联 = not started。残余 = bytes 如何交付 V3 重算（OQ-12′） | V3 | observed |
+| FACT-045 | **语义层终局词表 + 路由已裁（DEC-028 Part 5/6）**: `SEMANTIC_STATUS` 终局 = `{ready,incomplete,unknown}`（加 unknown，取代四状态机合并记法）+ `DECISION_STATUS` = `{pending_review,approved,rejected}`，禁合并；unknown → reviewable record → pending_review（关闭 OQ-19 路由 + OQ-20 值集）。V3 现状：`SEMANTIC_STATUS` 冻结 `{ready,incomplete}` 须解冻加值（not started）；unknown→pending_review 在 candidate-gated-on-ready 架构下无执行面（not started）；reviewable record 载体 = UNKNOWN | Both | observed |
 
 ---
 
@@ -86,7 +89,7 @@
 | EB-004 | _locate_options() CONTRACT GAP | Open, confirmed |
 | EB-005 | Formula FP structural exclusion | Open, INFERRED |
 | EB-008 | Admission Evidence Authority enforcement | **Implementation completed, external adversarial verification pending** (P1 local: 88aeae8 + notes b5ddbe3; External verification evidence unavailable in current repository state; NOT VERIFIED / NOT DSH approved / step-6 NOT released) |
-| EB-009 | Integration Contract v0.2 freeze readiness | **Frozen Candidate / NOT FROZEN** — v0.2 升 Frozen Candidate（§0 冻结范围三件 + §0.5 责任边界）。冻结 = 五步序 Step 3，范围 = 三件（Identity/Scope/Semantic Boundary），六类暂缓。**冻结前置** = Step1 接口快照 + Step2 回填完成（OQ-8 须先裁）+ OQ-18 E1 残留冲突；**同期落字** = Owner 批准三件范围 · DSH 接口变更面（OQ-8/12）· OQ-20 同名消歧 · OQ-16 路由规则 · OQ-15 legacy 披露 · OQ-21 呈现字段。**已不再阻塞**：~~OQ-5~~（DEC-027 Part5 关闭，细化 OQ-19/20）· ~~OQ-14~~（Part4 关闭）· ~~OQ-6~~（DEC-024）· ~~OQ-11 当前面~~（=71 已裁）· ~~排期归属~~（DEC-026）。**V3 实现无五步对应步骤，排期 UNKNOWN** |
+| EB-009 | Integration Contract v0.2 freeze readiness | **Frozen Candidate / NOT FROZEN** — 冻结范围 = **五项冻结原则**（DEC-027 三件 + DEC-028 扩：Path 非身份 + Identity-only 恢复规则）。冻结 = 五步序 Step 3。**冻结前置** = Step1 接口快照 + Step2 回填 + OQ-18 E1 残留冲突；**同期落字** = Owner 批准五项范围 · DSH 接口变更面（OQ-8′/OQ-12′）· OQ-8′ 命名消歧 · OQ-15 legacy 披露 · OQ-21 呈现机制。**已不再阻塞**：~~OQ-8 格式~~（64 hex）· ~~OQ-12 身份维度~~（path 非身份）· ~~OQ-5/19/20 值集~~（不合并+终局词表+unknown→pending_review）· ~~OQ-14~~（Semantic Pending）· ~~OQ-6~~/~~OQ-11 当前面~~/~~排期归属~~。**V3 identity verification = not implemented（not started）；V3 用 path 作 locator 已符合 path 非身份；V3 实现无五步对应步骤，排期 UNKNOWN** |
 
 ---
 
@@ -131,6 +134,7 @@
 | **V3 Consumer Gap Map（V3 消费面事实 + 对 BLOCKER-ANALYSIS 两处更正 + DECISION 状态）** | `Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-CONSUMER-GAP-MAP.md` |
 | **Decision Alignment Report（B1/B2/B3 逐项；DECISION/IMPLEMENTATION/UNKNOWN 三态）** | `Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-DECISION-ALIGNMENT-REPORT.md` |
 | **Consumer Decision Alignment v1（FINALIZATION 四项裁决 V3 侧对齐；已被 v2 取代，保留审计）** | `Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-CONSUMER-DECISION-ALIGNMENT-v1.md` |
-| **Consumer Alignment v2（Interface Decision Finalization v1 V3 侧对齐；Part 7 交付物，取代 v1；OBSERVED/DECISION/IMPLEMENTATION GAP/UNKNOWN 四段 + Implementation Gap 表）** | `Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-CONSUMER-DECISION-ALIGNMENT-v2.md` |
-| **Contract v0.2 DRAFT（Frozen Candidate，DRAFT / NOT FROZEN；§0 冻结范围三件 + §0.5 责任边界）** | `Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-CONTRACT-v0.2-DRAFT.md` |
+| **Consumer Alignment v2（Interface Decision Finalization v1 V3 侧对齐；已被 v3 取代，保留审计）** | `Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-CONSUMER-DECISION-ALIGNMENT-v2.md` |
+| **Consumer Alignment v3（Interface Finalization Revision v1 V3 侧对齐；取代 v2；Part 10 格式 Decision Alignment Summary + Remaining UNKNOWN）** | `Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-CONSUMER-DECISION-ALIGNMENT-v3.md` |
+| **Contract v0.2 DRAFT（Frozen Candidate，DRAFT / NOT FROZEN；§0 冻结范围五项原则 + §0.5 责任边界）** | `Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-CONTRACT-v0.2-DRAFT.md` |
 | Handoff 007 (B1/B2/B3 → DSH confirm; 含勘误横幅) | `Docs/COORDINATION/HANDOFFS/2026-09-16-Claude-to-DSH-007.md` |
