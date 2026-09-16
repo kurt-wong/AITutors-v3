@@ -86,4 +86,22 @@
 
 ---
 
-*（历史轮次：DEC-034 Freeze Object Final Alignment · DEC-033 Freeze Finalization Audit · DEC-032 Freeze 前最终登记 · DEC-031 Owner Final Decision v1 · DEC-030 Freeze Candidate Finalization · DEC-029 Freeze Candidate Review · DEC-027/028 Interface Finalization · DEC-023~026 FINALIZATION 四项 · DEC-020~022 B1/B2/B3 —— 详见 CURRENT.md 决策表与契约 §5.3。）*
+## 2026-09-16 — Round: Owner Freeze 令 — Contract v0.2 `FROZEN`（V3 `DEC-036`）
+
+**Owner 指令**：执行 Owner Freeze 后的 Contract v0.2 Frozen 状态登记。目标 = 将 READY FOR FREEZE 转换为 **FROZEN**。严格限制：① 不修改冻结对象 `f4941ff` ② 不修改 Contract 正文 ③ 不修改 `source_content_sha256` / identity / bytes 条款 ④ **不进入 Consumer Implementation** ⑤ 不新增设计。执行 A 登记 Freeze Event（state.yaml / CURRENT.md / log.md，记录 Contract v0.2: FROZEN；冻结对象保持 commit `f4941ff` · document `PREPROCESSING-V3-CONTRACT-v0.2-DRAFT.md` · sha256 `9c6b9063…7528`）· B 状态转换 READY FOR FREEZE → FROZEN · C 保留边界声明（Contract Freeze ≠ Implementation / Requirement ≠ Existing Capability）· D 输出（Freeze Registration commit / Freeze Object reference / 状态确认）。**禁止：修改 Contract 文件。**
+
+**登记前复核**：`git show f4941ff:Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-CONTRACT-v0.2-DRAFT.md | sha256sum` = `9c6b9063e81fb2a66d85794b280c9d931f1b0074b39abf472033218149b17528` == 登记值 = **PASS**（Freeze Object 未变）。
+
+**动作**：
+
+- **A + B Freeze Event 登记 + 状态转换** —— `state.yaml`（workstream note → FROZEN 全证据 / agents.v3 → `contract_v0_2_frozen_owner_freeze_order_dec036_implementation_not_started` / FACT-053 新增 / EB-009 → status = `frozen` / DEC-036 新增 / DEC-035 note 加 SUPERSEDED 标记；YAML 校验通过）· `CURRENT.md`（状态行 / DEC-036 行 / 跨仓编号对照 / 冻结前提段 / Agents 表 / FACT-053 行 / EB-009 行 / Evidence Locations 拆行更新）· `log.md`（本条）。
+- **C 边界声明保留** —— 已写入各处：Contract Freeze ≠ Implementation；Requirement ≠ Existing Capability。
+- **契约文档与 GAP MAP 本轮未触** —— 修改 Contract 会变更其 sha256，破坏冻结对象，明令禁止。
+
+**状态**：**Contract v0.2 = `FROZEN`**（Owner Freeze 令 2026-09-16）。**Freeze Object = commit `f4941ff` · document `PREPROCESSING-V3-CONTRACT-v0.2-DRAFT.md` · sha256 `9c6b9063e81fb2a66d85794b280c9d931f1b0074b39abf472033218149b17528`（不变）**。Freeze Registration commit = 本轮账本 commit（**≠ `f4941ff`**，分离保持）。冻结范围 = 六项，未扩展。**NOT IMPLEMENTED (V3 capability)** 五项不变——下一阶段 V3 Consumer Identity Verification 实现阶段**须另获 Owner 实现令，冻结本身不构成实现授权**。
+
+**边界**：零 Contract 内容修改 · 零 Freeze Artifact 修改 · 零代码 / 零 schema · 零数据 · 零 IR · 零新增设计 · 未进入 Consumer Implementation。**Contract Freeze ≠ V3 Implementation；Requirement ≠ Existing Capability。DECISION ≠ IMPLEMENTATION。**
+
+---
+
+*（历史轮次：DEC-035 Freeze Artifact remote 可复现闭环 · DEC-034 Freeze Object Final Alignment · DEC-033 Freeze Finalization Audit · DEC-032 Freeze 前最终登记 · DEC-031 Owner Final Decision v1 · DEC-030 Freeze Candidate Finalization · DEC-029 Freeze Candidate Review · DEC-027/028 Interface Finalization · DEC-023~026 FINALIZATION 四项 · DEC-020~022 B1/B2/B3 —— 详见 CURRENT.md 决策表与契约 §5.3。）*
