@@ -1,7 +1,7 @@
 # Cross-Agent Coordination — Current State
 
 **Workstream**: EB-0.3B Evidence Resolution Boundary Discovery
-**Status**: OPEN — Owner **B1/B2/B3 架构已裁决**（DEC-020/021/022，`DECISION ≠ IMPLEMENTATION`，代码零改动）· Contract v0.2 DRAFT = 冻结候选 **NOT FROZEN** · preprocessing Owner 暂停令 @ `746e35c` 仍生效
+**Status**: OPEN — Owner **B1/B2/B3 架构已裁决**（DEC-020/021/022 ≡ DSH DEC-019）· **B1 双层保留**（2026-09-16 确认）· Contract v0.2 DRAFT 已并入 IF-v2/Readiness 事实，含两张汇总表 · **NOT FROZEN** · preprocessing @ `b39b6da`（IF-v2 + Readiness 交付）
 **Last Updated**: 2026-09-16
 **Canonical Ledger**: DSH repo (kurt-wong/Aitutors-preprocessing). This is V3 mirror.
 
@@ -11,11 +11,13 @@
 
 | ID | Decision |
 |---|---|
-| DEC-020 | **B1 Transport**: Manifest + IR 双层接口。Manifest = Source Identity Authority；IR = Semantic Consumption Authority；经 `source_version_id` 关联 |
-| DEC-021 | **B2 Identity**: 唯一 source identity = `SHA-256(raw bytes)`；canonical_json / body_hash / line_hash / integrity_hash 只能作内部校验，不得替代 source identity |
-| DEC-022 | **B3 Semantic Boundary**: unknown `unit_type` 不得自动转换 / 不得静默 fallback / 不得进入 Question materialization；处理方式 UNKNOWN/PENDING |
+| DEC-020 | **B1 Transport**: Manifest + IR 双层接口（**保留**，2026-09-16 确认）。Manifest = Source Identity Authority；IR = Semantic Consumption Authority；经 `source_version_id` 关联。**语义消费方向 = IR → V3** |
+| DEC-021 | **B2 Identity**: 唯一 source identity = `SHA-256(raw bytes)`；`source_version_id` = 该 sha 值本身；canonical_json / body_hash / line_hash / integrity_hash / norm_sha256 只能作内部校验，不得替代 source identity |
+| DEC-022 | **B3 Semantic Boundary**: unit_type 必须闭集；unknown 值 **禁止自动转换 / 禁止 fallback / 禁止静默 skip / 不得进入 Question materialization**；处理方式 UNKNOWN/PENDING_REVIEW |
 
-**开放冻结前提**（v0.2 DRAFT §8）：DSH 确认 producer 接口变更面（OQ-8）· UNKNOWN/PENDING 落层（OQ-5，涉冻结值域）· 实现排期归属 · 逐层 required 字段归属表（Q1-2）。
+**汇总表位置**：Decision Alignment Table = Contract v0.2 DRAFT §5.3；Implementation Status Table = 同文件 §5.4。
+
+**开放冻结前提**（v0.2 DRAFT §8）：Owner 批准冻结候选 · DSH 确认接口变更面（OQ-8 字段命名 / OQ-12 `source_file` 形态 / 接口面 87）· OQ-5 UNKNOWN/PENDING_REVIEW 落层（涉冻结值域）· 排期归属 · OQ-11 IR 面 71 vs 扩产 + OQ-6 v1 面 79 份。
 
 ---
 
@@ -23,8 +25,8 @@
 
 | Agent | Repo | Commit | Status |
 |---|---|---|---|
-| Claude (V3) | AITutors-v3 | 821c53b | decision_alignment_v02_draft |
-| DSH (Preprocessing) | Aitutors-preprocessing | 746e35c | owner_pause_order_pending_B1B2B3 |
+| Claude (V3) | AITutors-v3 | 1243a7f | v02_draft_updated_if_v2 |
+| DSH (Preprocessing) | Aitutors-preprocessing | b39b6da | if_v2_readiness_delivered_pending_contract_v02 |
 
 ---
 
@@ -57,6 +59,7 @@
 | FACT-034 | Figure: 70,838 refs, 27,240 dangling (unrecovered `imgs/`); V3 `SourceFigure` field-level non-interoperable | Both | observed, not a blocker |
 | FACT-035 | **B1 producer 合取约束**: 无单一输出面同时具备全语料覆盖+md sha 锚+持续产出；identity 面 87 v2 / 79 v1，覆盖面以 87 为上限 | Both | observed, **blocks freeze** |
 | FACT-036 | **B2 producer hash 穷举**: 输出面仅原始字节 SHA-256 单族；`body_hash`/`line_hash` producer 零产出；`norm_sha256` 算法在仓内定义但从未作接口发布 | Both | observed |
+| FACT-037 | **B1-B3 producer readiness (IF-v2)**: manifest 0/166 携 `source_version_id`；IR 71/71 sha 自洽但覆盖 43.4%；双层现有关联 = 绝对路径值相等；identity 面双口径 87/79 vs 88/78；B2 producer 侧已 READY 零动作；unit_type 双侧零守卫 | Both | observed |
 
 ---
 

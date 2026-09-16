@@ -4,15 +4,20 @@
 > **性质**：决策对齐记录。**非实现 · 非冻结 · 不替 DSH 决定生产侧实现。**
 > **三态纪律**：每条结论标 `DECISION`（Owner 架构选择）/ `OBSERVED`(有实测锚) / `UNKNOWN`（无证据，不推断）。**DECISION ≠ IMPLEMENTATION**——架构选择已下达，实现尚未发生。
 >
+> **2026-09-16 更新（并入 IF-v2 / Readiness）**：
+> - **B1 双层架构保留**。曾有一条指令将 transport 写作「IR → V3，manifest 不作 source identity authority」，与两仓已入册的 DEC-019 / DEC-020 相反；经 Owner 确认**按双层理解**——Manifest = Source Identity Authority（身份对账面），IR = Semantic Consumption Authority（语义消费面），**语义消费方向 = IR → V3**。本报告 §1 据此维持。
+> - **两张汇总表移入契约**：Decision Alignment Table = `PREPROCESSING-V3-CONTRACT-v0.2-DRAFT.md` §5.3；Implementation Status Table = 同文件 §5.4。本报告保留逐项细节与证据锚。
+> - producer 侧事实基线升级为 Interface Facts v2 + B1-B3 Readiness @ preprocessing `b39b6da`。
+>
 > **证据基线**：
 > | 侧 | 基线 |
 > |---|---|
 > | V3 代码 | `b5ddbe3`（其后仅文档提交，代码未变） |
-> | V3 文档 | `643ebd0`（Consumer Gap Map + 事实基线） |
-> | preprocessing | `746e35c`（Owner 暂停令；Interface Facts v1 @ `17c55d8`） |
-> | 被对齐契约 | v0.1 DRAFT @ `1fbaf5e`（未改） |
+> | V3 文档 | `1243a7f`（Decision Alignment + Contract v0.2 DRAFT 首版） |
+> | preprocessing | `b39b6da`（IF-v2 + B1-B3 Readiness + Closure Plan v2 + DEC-019） |
+> | 被对齐契约 | v0.1 @ `1fbaf5e`（未改）；v0.2 DRAFT 见同目录（NOT FROZEN） |
 >
-> **Owner 裁决来源**：用户 2026-09-16 指令（本报告 §0 逐字收录）。两仓均**无**独立 Decision Record 文档——裁决以该指令为源。
+> **Owner 裁决来源**：DEC-019 @ preprocessing `b39b6da`（DSH 自记，authority = 用户裁定 2026-09-16 聊天原文）= DEC-020/021/022 @ V3 `1243a7f`，两仓内容一致。
 
 ---
 

@@ -4,7 +4,7 @@ workstream:
   id: EB-0.3B
   name: Evidence Resolution Boundary Discovery
   status: OPEN
-  note: "Owner B1/B2/B3 architecture decisions taken (DEC-020/021/022) — DECISION != IMPLEMENTATION, no code changed. Integration Contract v0.2 DRAFT = freeze candidate, NOT FROZEN. Freeze prerequisites open: DSH producer-interface confirmation (OQ-8), UNKNOWN/PENDING landing layer (OQ-5), implementation-schedule ownership."
+  note: "Owner B1/B2/B3 architecture decisions in both ledgers (DEC-019 @ b39b6da = DEC-020/021/022 @ 1243a7f). B1 dual-layer retained (confirmed 2026-09-16). Contract v0.2 DRAFT updated with IF-v2 + Readiness facts and carries Decision Alignment Table (5.3) + Implementation Status Table (5.4). NOT FROZEN. DECISION != IMPLEMENTATION — zero code change. Freeze prerequisites open: Owner approval, DSH interface-surface confirmation (OQ-8/12), OQ-5 landing layer, schedule ownership, OQ-11/OQ-6 coverage rulings."
 
 agents:
   v3:
@@ -17,8 +17,8 @@ agents:
     agent: dsh
     repository: kurt-wong/Aitutors-preprocessing
     branch: main
-    commit: 746e35c
-    status: owner_pause_order_pending_B1B2B3
+    commit: b39b6da
+    status: if_v2_readiness_v1_delivered_pending_contract_v02
 
 facts:
   - id: FACT-001
@@ -197,6 +197,14 @@ facts:
     date: "2026-09-16"
     note: "Not a blocker; contract 2.4 should state asset-availability reality before freeze (wording is Owner/DSH's call)"
 
+  - id: FACT-037
+    statement: "B1-B3 producer-side readiness (Interface Facts v2 + Readiness @ b39b6da): (1) manifest 0/166 carries any sha/hash key AND 0/166 carries source_version_id — Source Identity Authority has zero identity fields today (missing field, not missing capability; algorithm in library resolver_reference.py:52-53); (2) IR 71/71 sha self-consistent (ir.source_sha256 == provenance.source_version == current disk md raw-bytes sha256, zero drift re-verified on decision day) but coverage = 88 records / 71 ADMITTED / 1,664 units = 43.4% of corpus 166, R52 one-shot frozen artifact, no continuous production; (3) current dual-layer link = source_file ABSOLUTE PATH string equality (local-machine path, not cross-machine resolvable), not source_version_id; (4) identity face dual count: field-count 87/79 vs directory-count 88/78, differ by 1 hybrid instance already REJECTED_V1 — interface face should anchor field-count 87; (5) B2 producer side READY zero-action (raw bytes SHA-256 single algorithm, dual corpus, single production point; body_hash/line_hash/integrity_hash zero output); (6) unit_type non-standard value re-verified exactly 1 case on both faces, producer chain zero guard, value enters ADMITTED IR as-is — B3 isolation semantics have no execution surface on either side today."
+    source: both
+    evidence: "preprocessing INTEGRATION/PREPROCESSING-PRODUCER-INTERFACE-FACTS-v2.md sections 1-5 @ b39b6da; INTEGRATION/PREPROCESSING-B1B3-READINESS.md sections 1-4 @ b39b6da; probe artifact data/producer_interface_probe_v2.json"
+    status: observed
+    date: "2026-09-16"
+    note: "Contract v0.2 DRAFT sections 1/2/3/5.3/5.4 incorporate these. Producer gaps G1-G6 all require Contract freeze + Owner order before execution."
+
 
 open_questions:
   - id: EB-001
@@ -232,10 +240,10 @@ open_questions:
 
   - id: EB-009
     question: "Integration Contract v0.1 freeze readiness (Consumer Review v0.2)"
-    status: architecture_decided_implementation_pending
+    status: v02_draft_ready_pending_freeze_prerequisites
     owner: owner
-    blocked_by: "All three blockers ARCHITECTURE-DECIDED (DEC-020/021/022) but IMPLEMENTATION not started on either side. Open freeze prerequisites (v0.2 DRAFT section 8): (1) DSH confirms producer interface change surface (Manifest source_version_id carrier, field naming = OQ-8); (2) OQ-5 UNKNOWN/PENDING landing layer undecided (touches frozen domains BUG-V3-018 semantic_status {ready,incomplete} and 10 section 5.2 decision_status); (3) implementation-schedule ownership (freeze-before-impl vs impl-before-freeze) undecided; (4) required-field ownership table per layer (Q1-2) open."
-    note: "7 PASS / 3 BLOCK at review time. Owner decisions 2026-09-16: B1 dual-layer interface (Manifest=Source Identity Authority, IR=Semantic Consumption Authority, linked by source_version_id); B2 sole source identity = SHA-256(raw bytes), other hashes internal-only; B3 unknown unit_type -> no auto-convert / no silent fallback / no materialization -> UNKNOWN/PENDING. DECISION != IMPLEMENTATION — no code changed, no producer interface changed. Contract v0.2 DRAFT (freeze candidate, NOT FROZEN): Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-CONTRACT-v0.2-DRAFT.md. Decision alignment: PREPROCESSING-V3-DECISION-ALIGNMENT-REPORT.md. Fact baseline: PREPROCESSING-V3-CONSUMER-GAP-MAP.md + PREPROCESSING-V3-CONTRACT-BLOCKER-ANALYSIS.md."
+    blocked_by: "Freeze prerequisites (v0.2 DRAFT section 8): (1) Owner approves v0.2 DRAFT as freeze candidate; (2) DSH confirms producer interface change surface (OQ-8 field naming, OQ-12 source_file form, interface-face 87); (3) OQ-5 UNKNOWN/PENDING_REVIEW landing layer undecided (touches frozen domains BUG-V3-018 semantic_status {ready,incomplete} and 10 section 5.2 decision_status); (4) implementation-schedule ownership undecided; (5) OQ-11 IR authority face 71 vs expand + OQ-6 v1-face 79 disposition undecided."
+    note: "Owner B1/B2/B3 architecture decisions registered both ledgers (DEC-019 @ preprocessing b39b6da = DEC-020/021/022 @ V3 1243a7f). B1 reading confirmed 2026-09-16: dual-layer RETAINED (Manifest=Source Identity Authority, IR=Semantic Consumption Authority, semantic consumption direction IR->V3); a contrary wording in a later instruction was clarified, not adopted as supersession. Contract v0.2 DRAFT updated with IF-v2 + Readiness facts: Decision Alignment Table section 5.3 (13 rows, DECISION/OBSERVED/UNKNOWN), Implementation Status Table section 5.4 (13 obligations, all not-started/deferred/UNKNOWN). DECISION != IMPLEMENTATION — zero code change on either side. Producer gaps G1-G6 all require Contract freeze + Owner order."
     date: "2026-09-16"
 
 decisions:
