@@ -104,4 +104,16 @@
 
 ---
 
-*（历史轮次：DEC-035 Freeze Artifact remote 可复现闭环 · DEC-034 Freeze Object Final Alignment · DEC-033 Freeze Finalization Audit · DEC-032 Freeze 前最终登记 · DEC-031 Owner Final Decision v1 · DEC-030 Freeze Candidate Finalization · DEC-029 Freeze Candidate Review · DEC-027/028 Interface Finalization · DEC-023~026 FINALIZATION 四项 · DEC-020~022 B1/B2/B3 —— 详见 CURRENT.md 决策表与契约 §5.3。）*
+## 2026-09-16 — Round: 会话引导文档建档（housekeeping，无 DEC）
+
+**背景**：Owner 要求更新本地项目文档以便新开对话快速恢复状态（上下文过长，准备 compact/新会话）。
+
+**动作**：新建项目根 **`CLAUDE.md`**（新会话入口）——启动协议（读三账本）+ DEC-036 后状态快照（Contract `FROZEN` / Freeze Object `f4941ff` + sha256 / 下一阶段须 Owner 实现令 / 开放项 / 已裁决项）+ 协作约定（双仓 / 声明协议 / 账本纪律 / untracked 文件 / GateGuard / DEC 撞号）+ 关键文档地图。`CURRENT.md` Evidence Locations 增行。
+
+**状态**：三账本与 `CLAUDE.md` 一致；Contract v0.2 = **`FROZEN`**（不变）。
+
+**边界**：零代码 · 零 schema · 零 Contract 修改 · 零新裁决（纯引导文档，不承载独立裁决）。
+
+---
+
+*（历史轮次：DEC-036 Owner Freeze 令 · DEC-035 Freeze Artifact remote 可复现闭环 · DEC-034 Freeze Object Final Alignment · DEC-033 Freeze Finalization Audit · DEC-032 Freeze 前最终登记 · DEC-031 Owner Final Decision v1 · DEC-030 Freeze Candidate Finalization · DEC-029 Freeze Candidate Review · DEC-027/028 Interface Finalization · DEC-023~026 FINALIZATION 四项 · DEC-020~022 B1/B2/B3 —— 详见 CURRENT.md 决策表与契约 §5.3。）*
