@@ -1,30 +1,30 @@
-# Preprocessing Integration Contract v0.2 — DRAFT（Frozen Candidate）
+# Preprocessing Integration Contract v0.2 — DRAFT（Freeze Candidate，已收口 / Finalized）
 
-> **状态**：**DRAFT（冻结候选 / Frozen Candidate）。NOT FROZEN。** 待 Owner 冻结令（五步序 Step 3，前置 = Step 1 接口快照 + Step 2 `source_content_sha256` 回填）。**v0.2 冻结范围 = 五项冻结原则 + source bytes 能力冻结**（见 §0），其余暂缓。**本轮 = Freeze Candidate Review（V3 `DEC-029`）**：Owner 六条原则入册，接口键命名方案 `source_content_sha256` 提案落字（待采纳），bytes 交付只冻能力、传输暂缓。
+> **状态**：**DRAFT（Freeze Candidate 已收口 / Finalized Candidate）。NOT FROZEN。** 待 Owner 冻结令（五步序 Step 3，前置 = Step 1 接口快照 + Step 2 `source_content_sha256` 回填）。**v0.2 冻结范围 = 六项冻结内容**（见 §0），其余暂缓。**本轮 = Freeze Candidate Finalization（V3 `DEC-030`）**：Owner Final Decision 四项入册——① 接口键命名 **`source_content_sha256` 已采纳**（全文词面收口完成，`source_version_id` 仅保留为 V3 内部 FK）② source bytes 能力冻结确认 ③ 双状态体系终局确认 ④ 文字收口（废止旧「Semantic Unavailable」表述 + 消除接口键歧义）。契约文本已收口，**仍 NOT FROZEN**，等待 Owner Freeze 令。
 > **定位**：AITutors-preprocessing（producer）→ AITutors-v3（consumer）的跨项目输出契约。**本版职责 = 冻结 V3 消费边界**。
-> **上游**：v0.1 DRAFT @ `1fbaf5e`；Owner B1/B2/B3（DEC-019/020~022）+ DEC-B1 细化（§1bis）+ CONTRACT-DECISION-FINALIZATION v1 四项（V3 `DEC-023`~`026` ≡ DSH `DEC-021-1`~`4`）+ Interface Decision Finalization v1（V3 `DEC-027` ≡ DSH `DEC-022`，Part 1–6）+ Interface Finalization Revision v1（ODR v1.4 §1quinquies；V3 `DEC-028` ≡ DSH `DEC-023`，Part 1–6）+ **Freeze Candidate Review v1（V3 `DEC-029`：命名方案 `source_content_sha256` 提案 + bytes 能力冻结 + 16 份四保证对齐）**；V3 侧事实基线 + Consumer Alignment v3 + **Freeze Candidate Review 报告**（同批）；producer 侧 = Interface Facts v2.1 + Producer Alignment v5 @ preprocessing `1657625`（含未提交工作树）。
+> **上游**：v0.1 DRAFT @ `1fbaf5e`；Owner B1/B2/B3（DEC-019/020~022）+ DEC-B1 细化（§1bis）+ CONTRACT-DECISION-FINALIZATION v1 四项（V3 `DEC-023`~`026` ≡ DSH `DEC-021-1`~`4`）+ Interface Decision Finalization v1（V3 `DEC-027` ≡ DSH `DEC-022`，Part 1–6）+ Interface Finalization Revision v1（ODR v1.4 §1quinquies；V3 `DEC-028` ≡ DSH `DEC-023`，Part 1–6）+ Freeze Candidate Review v1（V3 `DEC-029`：命名提案 + bytes 能力冻结 + 16 份四保证对齐）+ **Freeze Candidate Finalization v1（V3 `DEC-030`：命名采纳 + 文字收口，DSH 侧待登记）**；V3 侧事实基线 + Consumer Alignment v3 + Freeze Candidate Review 报告；producer 侧 = Interface Facts v2.1 + Producer Alignment v5 @ preprocessing `1657625`（含未提交工作树）。
 > **本契约不做什么**：不定义 V3 内部实现；不替 DSH 决定生产侧实现；不修改任何代码 / adapter / 数据库 schema。
 >
-> **证据纪律**：每条款标 `DECISION` / `OBSERVED` / `UNKNOWN` / `REQUIREMENT` / `PROPOSAL`。**DECISION ≠ 已实现**——实现状态见 §5.4。命名方案标 `PROPOSAL`（待采纳，非既成裁决）。
+> **证据纪律**：每条款标 `DECISION` / `OBSERVED` / `UNKNOWN` / `REQUIREMENT`。**DECISION ≠ 已实现**——实现状态见 §5.4。接口键命名已裁（DEC-030）；`PROPOSAL` 类型本轮起不再使用（原提案已转 DECISION）。
 >
-> **编号对照（跨仓，引用时必须双向标注）**：四项 V3 `DEC-023`~`026` / DSH `DEC-021-1`~`4`；Finalization v1 = V3 `DEC-027` / DSH `DEC-022`；Revision v1 = V3 `DEC-028` / DSH `DEC-023`；**Freeze Candidate Review = V3 `DEC-029`**（DSH 侧待 Producer Alignment v5 收口登记）。**撞号累积 3 处**：DSH `DEC-021`≠V3 `DEC-021`(B2)；DSH `DEC-022`≠V3 `DEC-022`(B3)；DSH `DEC-023`≠V3 `DEC-023`(Interface Scope)。见 Consumer Alignment v3 §1。**`source_version_id` 同名异义**（sha256 hex vs V3 UUID FK）——本轮提案接口键改名 `source_content_sha256` 消歧（§1.2a，待采纳）。
+> **编号对照（跨仓，引用时必须双向标注）**：四项 V3 `DEC-023`~`026` / DSH `DEC-021-1`~`4`；Finalization v1 = V3 `DEC-027` / DSH `DEC-022`；Revision v1 = V3 `DEC-028` / DSH `DEC-023`；Freeze Candidate Review = V3 `DEC-029`；**Freeze Candidate Finalization = V3 `DEC-030`**（DSH 侧待登记）。**撞号累积 3 处**：DSH `DEC-021`≠V3 `DEC-021`(B2)；DSH `DEC-022`≠V3 `DEC-022`(B3)；DSH `DEC-023`≠V3 `DEC-023`(Interface Scope)。见 Consumer Alignment v3 §1。**`source_version_id` 歧义已消除（DEC-030）**：跨系统接口键统一为 `source_content_sha256`（§1.2）；`source_version_id` 词面**专用化为 V3 内部 UUID FK**，不再表示跨系统身份键。
 
 ---
 
-## §0 v0.2 Frozen Candidate 冻结范围（`DECISION`，DEC-027 Part 6 + DEC-028 Part 1–6 + DEC-029）
+## §0 v0.2 Frozen Candidate 冻结范围（`DECISION`，DEC-027 Part 6 + DEC-028 Part 1–6 + DEC-029 + DEC-030）
 
-> v0.2 冻结范围由 DEC-027 Part 6 的三件，经 DEC-028（Revision v1）扩为五项冻结原则，再经 **DEC-029（Freeze Candidate Review）追加第⑥项 source bytes 能力冻结**（Owner 原则 6：只冻能力、不冻传输）。本节是冻结范围的权威界定——**冻结仅及于此六项**，其余均为暂缓或支撑材料。接口键命名（原则 5）以 `PROPOSAL` 落字（§1.2a），**待 Owner 采纳后方入冻结范围**。
+> v0.2 冻结范围由 DEC-027 Part 6 的三件，经 DEC-028（Revision v1）扩为五项冻结原则，再经 DEC-029（Freeze Candidate Review）追加第⑥项 source bytes 能力冻结（Owner 原则 6：只冻能力、不冻传输），**DEC-030（Finalization）确认接口键命名已采纳、正式纳入冻结范围**。本节是冻结范围的权威界定——**冻结仅及于此六项**，其余均为暂缓或支撑材料。
 
-### 0.1 冻结内容（六项，binding；命名另见 §1.2a 提案）
+### 0.1 冻结内容（六项，binding；接口键名 = `source_content_sha256`，DEC-030 已裁）
 
 | # | 冻结项 | 内容 | 来源 |
 |---|---|---|---|
-| **① Identity** | 跨系统身份键 = `SHA256(original source bytes)`，**64 字符小写 hex** | 身份键 = 源文件原始字节 SHA-256；id 即 sha 值；身份由其唯一决定（§1.2/§2.1）。**键名提案 = `source_content_sha256`（§1.2a，待采纳）** | DEC-027 Part 6 + DEC-028 Part 1 + DEC-029 |
+| **① Identity** | 跨系统身份键 = `SHA256(original source bytes)`，**64 字符小写 hex**；**键名 = `source_content_sha256`** | 身份键 = 源文件原始字节 SHA-256；id 即 sha 值；身份由其唯一决定（§1.2/§2.1）。`source_version_id` 词面专用化为 V3 内部 FK（§1.2a） | DEC-027 Part 6 + DEC-028 Part 1 + DEC-029 + **DEC-030 Decision 1** |
 | **② Scope** | Manifest **87** / IR **71** / **16 Semantic Pending** | Interface Scope = 87（不改 71）；71 = 当前 IR 语义消费；16 = 等待 semantic processing；禁「IR available = Interface available」（§1.6） | DEC-027 Part 6 + DEC-028 Part 4 |
-| **③ Semantic Boundary** | `Unknown ≠ Ready`；Unknown 不入正式题库；unknown → reviewable record → pending_review | 语义层终局词表 `{ready,incomplete,unknown}` + 决策层 `{pending_review,approved,rejected}`，禁合并；禁 silent skip/convert/fallback（§3.2/§4） | DEC-027 Part 6 + DEC-028 Part 5/6 |
-| **④ Path Non-Identity** | `source_file`/path = **locator**，非 identity | **Source identity belongs to content hash, not storage location.** 任何文档不得暗示 path 参与文件唯一/身份/版本/hash 判断；路径变化不得改身份键（§1.3） | DEC-028 Part 1/2 |
+| **③ Semantic Boundary** | `Unknown ≠ Ready`；Unknown 不入正式题库；unknown → reviewable record → pending_review | 语义层终局词表 `{ready,incomplete,unknown}` + 决策层 `{pending_review,approved,rejected}`，禁合并；禁 silent skip/convert/fallback（§3.2/§4） | DEC-027 Part 6 + DEC-028 Part 5/6 + **DEC-030 Decision 3 确认** |
+| **④ Path Non-Identity** | `source_file`/path = **locator**，非 identity | **Source identity belongs to content hash, not storage location.** 任何文档不得暗示 path 参与文件唯一/身份/版本/hash 判断；路径变化不得改身份键（§1.3） | DEC-028 Part 1/2 + DEC-030 Decision 1 确认 |
 | **⑤ Identity-only Recovery Rule** | 16 份 = Identity Available / **Semantic Pending**（可恢复） | 允许重生成 IR，四保证（bytes hash 不变 / identity 不变 / IR 版本可追踪 / 禁覆盖历史事实）；禁改原 source、禁新 identity、禁新 hash 替旧 hash（§1.6） | DEC-028 Part 3 + DEC-029 原则 3 对齐 |
-| **⑥ Source Bytes Capability**（本轮新增） | V3 **必须能获得 raw bytes 并重算身份键验证**（fail-closed）；**不冻结传输方案** | 能力 = binding（§2.3）：可得 bytes + 独立重算 SHA-256 比对 + 不一致即拒收 + 独立于 IR；传输 HOW（共享 FS/对象存储/IR 内嵌/相对路径）= 暂缓 | DEC-029 原则 6 |
+| **⑥ Source Bytes Capability** | V3 **必须能获得 raw bytes 并重算身份键验证**（fail-closed）；**不冻结传输方案** | 能力 = binding（§2.3）：可得 bytes + 独立重算 SHA-256 比对 + 不一致即拒收 + 独立于 IR；传输 HOW（共享 FS/对象存储/IR 内嵌/相对路径）= 暂缓 | DEC-029 原则 6 + **DEC-030 Decision 2 确认** |
 
 ### 0.2 暂缓冻结（明确不属于 v0.2 interface contract）
 
@@ -50,7 +50,7 @@
 
 | 靠 | Producer（DSH） | Consumer（V3） |
 |---|---|---|
-| **Manifest** | 生成 Manifest / 计算 `source_version_id` / 保证字段正确 | **验证 Manifest / 重新计算 hash / 判断是否接受** |
+| **Manifest** | 生成 Manifest / 计算 `source_content_sha256` / 保证字段正确 | **验证 Manifest / 重新计算 hash / 判断是否接受** |
 | **IR** | OCR 后结构化 / LLM 语义解析 / 生成 IR | **验证 IR 是否符合契约 / Gate 判断是否进入正式题库 / 拒绝不符合的数据** |
 
 **V3 侧义务现状（`OBSERVED`，全部未实现）**：验证 Manifest（无校验，`manifest_reader.py:52`）· 重算 hash（不读 producer sha，自算为 canonical_json 包裹非 raw bytes，`runner.py:71-73`）· 判断接受（无身份闸门，`identity_version` 0 命中）· 验证 IR / Gate / 拒收（零 IR 消费能力）。详见 Consumer Alignment v2 §2/§3。
@@ -70,74 +70,74 @@
 | **Manifest** | **Source Identity Authority** | 承载源身份与标注事实；身份对账以本层为准 |
 | **IR** | **Semantic Consumption Authority** | 承载结构解析 + provenance；语义消费以本层为准 |
 
-两层必须通过明确 **`source_version_id`** 关联（`DECISION`）。
+两层必须通过明确 **`source_content_sha256`** 关联（`DECISION`；DEC-B1 原文写作 `source_version_id`，DEC-030 词面收口后统一为新名）。
 
-**语义消费方向（澄清）**：语义单元的消费流向 = **IR → V3**。这不改变 Manifest 的 Source Identity Authority 地位——身份对账面在 Manifest，语义消费面在 IR，二者经同一 `source_version_id` 对齐。两仓 DEC-019 / DEC-020 记录一致（preprocessing `b39b6da`；V3 `1243a7f`）。
+**语义消费方向（澄清）**：语义单元的消费流向 = **IR → V3**。这不改变 Manifest 的 Source Identity Authority 地位——身份对账面在 Manifest，语义消费面在 IR，二者经同一 `source_content_sha256` 对齐。两仓 DEC-019 / DEC-020 记录一致（preprocessing `b39b6da`；V3 `1243a7f`）。
 
-**DEC-B1 细化（`DECISION`，ODR §1bis @ preprocessing `bbb5c70`）**：
+**DEC-B1 细化（`DECISION`，ODR §1bis @ preprocessing `bbb5c70`；引用词面已按 DEC-030 收口）**：
 
-> `source_version_id` 为双层**唯一关联键**；**V3 消费语义来自 IR，但 source 身份不依赖 IR 存在**。
+> `source_content_sha256` 为双层**唯一关联键**；**V3 消费语义来自 IR，但 source 身份不依赖 IR 存在**。
 
-生产侧保守义（DSH 解释，非裁决）：① manifest 的身份字段必须**自足**——任何一份入接口面的 manifest，其 `source_version_id` 可独立验证（当场重算 sha256(md 字节)），**不需要 IR 在场**；② IR 缺席（未扩产 / 拒收 / 未生成）**不使 manifest 身份失效**；③ 反向不成立：IR 的语义承载依赖 manifest 身份锚定。
+生产侧保守义（DSH 解释，非裁决）：① manifest 的身份字段必须**自足**——任何一份入接口面的 manifest，其 `source_content_sha256` 可独立验证（当场重算 sha256(md 字节)），**不需要 IR 在场**；② IR 缺席（未扩产 / 拒收 / 未生成）**不使 manifest 身份失效**；③ 反向不成立：IR 的语义承载依赖 manifest 身份锚定。
 
-**V3 消费侧后果（`REQUIREMENT`）**：V3 的身份对账路径**不得以 IR 存在为前提**；同时，V3 若要走 IR 语义消费，其前提仍是 manifest 侧先有 `source_version_id`。二者是**两条独立工作线**，不是先后依赖（当前两者均未开始，见 §5.4）。
+**V3 消费侧后果（`REQUIREMENT`）**：V3 的身份对账路径**不得以 IR 存在为前提**；同时，V3 若要走 IR 语义消费，其前提仍是 manifest 侧先有 `source_content_sha256`。二者是**两条独立工作线**，不是先后依赖（当前两者均未开始，见 §5.4）。
 
 **OBSERVED 现状（IF-v2 @ `b39b6da`，缺口登记，非本契约放宽）**：
 
-- Manifest 层 **0/166** 携带任何 sha/hash 键，**0/166** 携带 `source_version_id`（IF-v2 §2.2，工件 `producer_interface_probe_v2.json.p1b`）——Source Identity Authority 当前**零身份字段**，缺的是字段不是能力（算法在库：`resolver_reference.py:52-53`）。
-- IR 层有 `source_sha256`（源 md 原始字节 SHA-256），**71/71 自洽**（`ir.source_sha256` == 单元 `provenance.source_version` == 当前磁盘 md 原始字节 sha256，裁决当日复验零漂移，IF-v2 §3.2）；但无名为 `source_version_id` 的关联键。
+- Manifest 层 **0/166** 携带任何 sha/hash 键，**0/166** 携带 `source_content_sha256`（IF-v2 探针以旧名 `source_version_id` 检索，词面收口不改 0 命中事实；工件 `producer_interface_probe_v2.json.p1b`）——Source Identity Authority 当前**零身份字段**，缺的是字段不是能力（算法在库：`resolver_reference.py:52-53`）。
+- IR 层有 `source_sha256`（源 md 原始字节 SHA-256），**71/71 自洽**（`ir.source_sha256` == 单元 `provenance.source_version` == 当前磁盘 md 原始字节 sha256，裁决当日复验零漂移，IF-v2 §3.2）；与接口键 `source_content_sha256` **同值映射**，IR 侧无同名关联键。
 - **双层当前唯一关联值 = `source_file` 绝对路径字符串值相等**（IF-v2 §2.1/§3.4）——路径关联，非 id 关联；且该路径为本机绝对路径（`D:\Project\Papers\...`），跨机不可解析（IF-v2 §2.1）。
 - V3 当前只读 Manifest，IR 消费 = 0 命中（`Grep @ backend/`，V3 @ `b5ddbe3`）。
 - **实现状态**：双层接口的字段落点属 producer 接口变更 + V3 新增消费能力，**均未开始**（§6 Implementation Status Table）。
 
-### 1.2 source_version_id 定义（`DECISION`，DEC-028 Part 1 = DEC-SOURCE-IDENTITY）
+### 1.2 source_content_sha256 定义（`DECISION`，DEC-028 Part 1 = DEC-SOURCE-IDENTITY + DEC-030 命名）
 
-**`source_version_id` = `SHA-256(original source bytes)`**，即源 OCR markdown 文件**原始字节**的 SHA-256。**格式（本轮已裁）= 64 字符小写 hex 字符串**（与 producer `ir.source_sha256` 71 份实证形态完全一致，零格式迁移）。**id 的取值就是该 sha 本身**，不是另立的编号。身份由 `source_version_id` **唯一决定**。
+**`source_content_sha256` = `SHA-256(original source bytes)`**，即源 OCR markdown 文件**原始字节**的 SHA-256。**格式 = 64 字符小写 hex 字符串**（与 producer `ir.source_sha256` 71 份实证形态完全一致，零格式迁移）。**id 的取值就是该 sha 本身**，不是另立的编号。身份由 `source_content_sha256` **唯一决定**。
 
 > **固化原则（`DECISION`，DEC-028 Part 1）**：**Source identity belongs to content hash, not storage location.**（文件身份属于内容哈希，不属于存储位置。）
 
-- Manifest 与 IR 的同源记录必须携带**同一** `source_version_id` 值。
+- Manifest 与 IR 的同源记录必须携带**同一** `source_content_sha256` 值。
 - IR 现有 `source_sha256`（文件级，`resolver_reference.py:249`）与单元级 `provenance.source_version`（`:167`）**语义上就是这个值**，实证 71/71 与当前磁盘字节一致（IF-v2 §3.2）——IR 侧**无需改算法**，只需与 Manifest 侧对齐字段名/关联语义。
 - Manifest 侧当前 **0/166** 携带该字段（IF-v2 §2.2）；producer 表态可提供，但写入属数据变更，**须 Contract 冻结后按令执行**（Readiness §2.1 / IF-v2 §2.3）。
 - producer 承载字段的命名与位置：`UNKNOWN`（DSH 域，本契约不指定实现）。
-- **双语料注意（`OBSERVED`）**：OCR 清单的 `source_sha256` 钉的是 **PDF** 字节（IF-v2 §4.3，`r67_manifest_bootstrap.py:181`）——若 `source_version_id` 定义在 md 面，两者语义不同，**不可混用**。OCR 清单是否纳入本接口 = 开放项（§7 OQ-10）。
+- **双语料注意（`OBSERVED`）**：OCR 清单的 `source_sha256` 钉的是 **PDF** 字节（IF-v2 §4.3，`r67_manifest_bootstrap.py:181`）——若 `source_content_sha256` 定义在 md 面，两者语义不同，**不可混用**。OCR 清单是否纳入本接口 = 开放项（§6 OQ-10）。
 
-### 1.2a 接口键命名方案（`PROPOSAL`，DEC-029 原则 5，待 Owner 采纳 + DSH 双边确认）
+### 1.2a 接口键命名（`DECISION`，DEC-030 Decision 1，OQ-8′ 关闭）
 
-> 本节处置 **OQ-8′**（`source_version_id` 同名异义）。**这是提案，不是既成裁决**——Owner 采纳前，契约其余章节的接口键仍以 `source_version_id` 表述；采纳后做一次全文词面收口（接口义统一改 `source_content_sha256`，`source_version_id` 仅保留为「V3 内部 FK」）。
+> 本节由 DEC-029 的 `PROPOSAL` 经 **DEC-030 采纳转为 `DECISION`**。**全文词面收口已执行**：契约中跨系统身份键一律写 `source_content_sha256`；`source_version_id` 词面**专用化为 V3 内部 UUID FK**，不再表示跨系统身份键。
 
-**提案**：跨系统接口身份键改名 **`source_content_sha256`**（= `SHA256(source raw bytes)`，64 小写 hex）。V3 内部 UUID FK（`source_version_id`，指向 `document_source_versions` 行）**保持不变**——它是代码列名，本轮禁改代码/schema，故不动；改接口键（契约词）即可使二者**词面永不同名**，且零代码/零数据/零 schema。
+**裁决**：跨系统接口身份键名 = **`source_content_sha256`**（= `SHA256(source raw bytes)`，64 小写 hex）。V3 内部 UUID FK（`source_version_id`，指向 `document_source_versions` 行）**保持不变**——它是代码列名，本轮禁改代码/schema，故不动；接口键改名后二者**词面永不同名**，零代码/零数据/零 schema。
 
-| 概念 | 冲突态旧名 | 提议名 | 类型 | 跨接口？ |
+| 概念 | 旧名（冲突态） | **现名（已裁）** | 类型 | 跨接口？ |
 |---|---|---|---|---|
 | **跨系统身份键（接口键）** | `source_version_id`（接口义） | **`source_content_sha256`** | 64 小写 hex sha256 | **是** |
-| V3 内部 seal 版本 FK | `source_version_id`（V3 代码） | 不变 `source_version_id` | `uuid.UUID` | 否 |
+| V3 内部 seal 版本 FK | `source_version_id`（V3 代码） | 不变 `source_version_id`（**专用为 V3 内部词面**） | `uuid.UUID` | 否 |
 | V3 内部内容 hash 列 | `original_sha256` | 不变 `original_sha256` | `String(64)` UNIQUE | 否（将来装接口键值） |
 | producer IR 文件级 sha | `source_sha256` | 不变（producer 域） | sha256 hex | 映射（与接口键同值） |
 | producer IR 单元级 provenance | `provenance.source_version` | 不变（producer 域） | sha256 hex | 映射（与接口键同值） |
 
-**选 `source_content_sha256` 理由**：① 类型自证（带 `sha256`，不会被误读为 UUID FK）；② 语义自证（`content` 呼应「content hash, not storage location」）；③ 名实相符；④ 零数据/schema 改动；⑤ 与 producer 现有 `source_sha256`/`provenance.source_version` 干净映射（同值，producer 无需改名）。**备选**：`source_bytes_sha256`（等价）；`source_sha256`（不推荐，md/PDF 面易混，OQ-10）。
+**选 `source_content_sha256` 理由**：① 类型自证（带 `sha256`，不会被误读为 UUID FK）；② 语义自证（`content` 呼应「content hash, not storage location」）；③ 名实相符；④ 零数据/schema 改动；⑤ 与 producer 现有 `source_sha256`/`provenance.source_version` 干净映射（同值，producer 无需改名）。**落选备选**：`source_bytes_sha256`（等价）；`source_sha256`（不推荐，md/PDF 面易混，OQ-10）。
 
-**采纳后动作（本轮不执行）**：Owner 采纳 → 契约全文接口键词面替换 + DSH 双边确认键名。详见 Freeze Candidate Review 报告 §1。
+**后续动作**：DSH 双边确认键名（接口键为跨系统契约词，须两侧一致）——`待办`。Step 2 回填按本名执行（§5.5）。
 
-### 1.3 V3 侧对应关系（`REQUIREMENT`）——`source_version_id` 同名异义警告
+### 1.3 V3 侧对应关系（`REQUIREMENT`）——键名消歧后的对照
 
-**契约键与 V3 内部键同名、异义、异类型（`OBSERVED`，本轮升格登记，OQ-20）**：
+**背景（`OBSERVED`，历史）**：DEC-030 之前，契约 sha 键与 V3 内部 UUID FK 曾共用 `source_version_id` 词面——同名、异义、异类型（OQ-20/FACT-041）。**DEC-030 改名接口键后，词面冲突消除**；下表保留对照，防混用：
 
 | 概念 | 类型 | 语义 | 证据 |
 |---|---|---|---|
-| **契约 `source_version_id`**（本节/§2.1） | sha256 hex（64 小写） | `SHA256(raw bytes)` 跨系统身份键，id 即 sha 值 | §1.2；IR 侧 `ir.source_sha256` 71/71 同值 |
-| **V3 内部 `source_version_id`** | `uuid.UUID` | `document_source_versions` 行主键 FK；Seal 层唯一性锚 `(logical_execution_stage, logical_execution_hash)`，**明令禁用 sha 作唯一**（`source.py:50`） | `models/source.py:44-57`；`snapshot_repository.py:42-45`；`runner_b2.py:158` |
+| **接口键 `source_content_sha256`** | sha256 hex（64 小写） | `SHA256(raw bytes)` 跨系统身份键，id 即 sha 值 | §1.2；IR 侧 `ir.source_sha256` 71/71 同值 |
+| **V3 内部 `source_version_id`** | `uuid.UUID` | `document_source_versions` 行主键 FK；Seal 层唯一性锚 `(logical_execution_stage, logical_execution_hash)`，**明令禁用 sha 作唯一**（`source.py:50`）。**词面专用化为 V3 内部，不表示跨系统身份键** | `models/source.py:44-57`；`snapshot_repository.py:42-45`；`runner_b2.py:158` |
 | **V3 `Document.original_sha256`** | `String(64)` UNIQUE | BUG-V3-007 文档身份；概念对应「源内容 hash」 | `models/source.py:33,37` |
 
-- **禁止**将 V3 内部 UUID 与跨系统 `source_version_id` 混用——二者不可互认。当 manifest 未来补上 sha256-hex 形态的 `source_version_id`，V3 schema 已有同名 UUID 列，**命名/类型直接冲突**。**消歧方案见 §1.2a（`PROPOSAL` = 接口键改名 `source_content_sha256`，待 Owner 采纳）**——OQ-8′ 由此从开放项变为待采纳提案。
-- V3 必须以 §2.1 定义的 raw bytes sha 作为跨系统对账值；V3 内部 UUID ↔ 跨系统 sha 的绑定发生在 ingest，绑定关系可离线重建。
+- **禁止**将 V3 内部 UUID 与接口键 `source_content_sha256` 混用或互认——二者不可互认。词面冲突已由 DEC-030 消除；类型冲突仍在（UUID vs hex），消费代码须显式区分。
+- V3 必须以 §1.2 定义的 raw bytes sha 作为跨系统对账值；V3 内部 UUID ↔ 跨系统 sha 的绑定发生在 ingest，绑定关系可离线重建。
 
 **path 非身份（`DECISION` + `REQUIREMENT`，DEC-028 Part 1/2 = 冻结项 ④）**：
 
 - `source_file` / path / absolute path / directory = **locator information**（辅助定位 source），**不是** identity information。**任何文档不得暗示 path 参与**：文件唯一判断 / source identity 判断 / version 判断 / hash identity 判断。
-- 正确表述：「**`source_file` 用于辅助定位 source，`source_version_id` 用于跨系统唯一识别 source**」。
-- 未来 Windows / NAS / Linux / Object Storage / Cloud 路径变化：**不得导致 `source_version_id` 变化**（身份 = 内容 hash，与存储位置无关）。
+- 正确表述：「**`source_file` 用于辅助定位 source，`source_content_sha256` 用于跨系统唯一识别 source**」。
+- 未来 Windows / NAS / Linux / Object Storage / Cloud 路径变化：**不得导致 `source_content_sha256` 变化**（身份 = 内容 hash，与存储位置无关）。
 - **V3 现状（`OBSERVED`）**：V3 仅将 `source_file` 用作 `Path(manifest.source_file)` 加载源文件（`runner.py:241`；`runner_b2.py:320`；`runner_b3.py:184`），全仓**无任何以 path 做身份/版本/hash 判断**的代码——**符合**本原则。跨系统双层当前靠 path 值相等关联 = **不合规现状**（正是本原则要消除的）。
 - **OBSERVED 缺口**：consumer 路径写入 `documents.original_sha256` 的值是 canonical_json 包裹 joined-text（`runner.py:71-73` `file_sha = sha256_hex(body_text)`；`hashing.py:60-62`），**不是** raw bytes sha——该绑定当前不成立。`IMPLEMENTATION: not started`。
 
@@ -231,7 +231,7 @@ producer 当前不产出 version→version 关系指针。跨版本 lineage 属�
 
 ### 2.3 跨系统对账义务 + source bytes 能力冻结（`REQUIREMENT`，DEC-029 原则 6）
 
-**冻结的能力要求（binding，本轮入册）**：**V3 必须能够获得每份 source 的 raw bytes，并能重算身份键（`source_content_sha256`，§1.2a 提案）与声明值比对验证。** 具体四条：
+**冻结的能力要求（binding，DEC-029 入册 + DEC-030 Decision 2 确认）**：**V3 必须能够获得每份 source 的 raw bytes，并能重算身份键（`source_content_sha256`，§1.2）与声明值比对验证。** 具体四条：
 
 1. **可获得 raw bytes**——Interface Scope 内每份 source，V3 有办法取得其原始字节（不是 canonical_json 包裹、不是 splitlines 规范化文本）。
 2. **可重算并验证**——V3 用标准库对 raw bytes 独立重算 SHA-256，与 producer 声明值比对。
@@ -265,7 +265,7 @@ V3 内部 hash 家族（`body_hash`/`line_hash`/`integrity_hash`）的算法一�
 
 | 层 | 词表 | 说明 |
 |---|---|---|
-| **Semantic Status**（语义层） | `ready` / `incomplete` / `unknown` | READY→ready（语义完整、unit_type 合法、可消费）；INCOMPLETE→incomplete（输入不足）；**unknown（本轮新增）** = 语义不明/无法安全判断 |
+| **Semantic Status**（语义层） | `ready` / `incomplete` / `unknown` | READY→ready（语义完整、unit_type 合法、可消费）；INCOMPLETE→incomplete（输入不足）；unknown = 语义不明/无法安全判断（DEC-028 增补） |
 | **Decision Status**（决策层） | `pending_review` / `approved` / `rejected` | PENDING_REVIEW→pending_review（待人审）；approved（放行）；REJECTED→rejected（明确违反接口） |
 
 **引用语义边界时以此两层词表为准**（取代 DEC-022/DEC-019 的 UNKNOWN/PENDING 泛称与 DEC-025 的四状态机合并记法）。
@@ -304,7 +304,7 @@ V3 内部 hash 家族（`body_hash`/`line_hash`/`integrity_hash`）的算法一�
 
 **OBSERVED 现状（producer 侧，IF-v2 §5）**：全语料恰 1 例非标值（`andalone_question`，manifest 面与 IR 面同文件同单元 Q1）；**producer 链零守卫**——该值原样进入 ADMITTED IR（`resolver_reference.py:152` 逐字复制，无转换，但也无隔离）。producer 侧现状 = 「没有静默转换，但也没有进 PENDING_REVIEW」——裁决的隔离语义今天**双侧均无执行面**。
 
-**存量对账（`OBSERVED`，与 DSH §B.3 一致）**：该 1 例在 IR 中 `disposition = ADMITTED`。按本节四状态机口径，其 `unit_type` 非法，**不应是 READY**。其在本契约下的呈现态属存量处置面——**`UNKNOWN`**（OQ-17）。
+**存量对账（`OBSERVED`，与 DSH §B.3 一致）**：该 1 例在 IR 中 `disposition = ADMITTED`。按本节两层词表口径，其 `unit_type` 非法，**不应是 READY**。其在本契约下的呈现态属存量处置面——**`UNKNOWN`**（OQ-17）。
 
 **落点设计（`UNKNOWN`）**：层归属已裁（不合并，UNKNOWN 属语义层，OQ-5 关闭）。**仍未裁**：语义层 `unknown` 取值的引入（须解冻 BUG-V3-018，OQ-20）· unknown→PENDING_REVIEW 路由架构（OQ-19）· 两层状态载体字段名/落点（producer 侧 manifest vs IR vs 双侧，Readiness §6 / DSH C.4）。本契约不指定。
 
@@ -322,7 +322,7 @@ schema 噪声不只 unit_type 一处：恰 1 例 `andalone_question` + 恰 1 例
 
 > V3 仓内自有原则：**三层状态不复用**——E ResolvedStatus ≠ IR.semantic_status ≠ gate_decision（`compile/__init__.py:9`）。本节与之一致：三种失败处置**各自独立，禁止混淆**。
 
-### 4.1 四种处置（`DECISION` + `REQUIREMENT`，与 §3.2 四状态机对齐）
+### 4.1 四种处置（`DECISION` + `REQUIREMENT`，与 §3.2 两层词表对齐）
 
 | 处置 | Owner 定义 | 何时使用 | 终态性质 |
 |---|---|---|---|
@@ -331,7 +331,7 @@ schema 噪声不只 unit_type 一处：恰 1 例 `andalone_question` + 恰 1 例
 | **PENDING_REVIEW** | 系统无法安全判断 | **unknown `unit_type`（§3.2 DECISION）**；semantic ambiguity；schema 值域越界（v0.1 §3.3-7 basis 闭集） | 待裁决、显式隔离、可审计（V3 `decision_status = pending_review`，`gate/__init__.py:11`；**当前仅 ready 单元可达**——缺口） |
 | **REJECTED** | 明确违反接口要求 | producer `disposition ∈ REJECTED_*` / `qc_verdict = FAIL`；identity v1（C-IN-1，**仅 producer 侧已实现**，见 §1.7）；sha 不一致（§2.3） | terminal，无自动路径（V3 `decision_status = rejected`，`gate/__init__.py:11`） |
 
-> 本表承接 §3.2 的四状态机词表。V3 侧四值分属两个正交冻结层、且非 ready 单元不可达决策层——见 §3.2「V3 侧表达缺口」。
+> 本表承接 §3.2 的两层状态词表（语义层 ready/incomplete/unknown + 决策层 pending_review/approved/rejected；READY/INCOMPLETE/PENDING_REVIEW/REJECTED 为处置标签，分属两层，**禁合并**）。V3 侧两值分属两个正交冻结层、且非 ready 单元不可达决策层——见 §3.2「V3 侧表达缺口」。
 
 ### 4.2 禁止混用（`REQUIREMENT`）
 
@@ -386,7 +386,7 @@ schema 噪声不只 unit_type 一处：恰 1 例 `andalone_question` + 恰 1 例
 
 ### 5.2 V3 禁止（`REQUIREMENT`）
 
-1. 禁止将 V3 内部 UUID `source_version_id` 与跨系统 sha `source_version_id` 混用或互认（§1.3，同名异义，OQ-20）。
+1. 禁止将 V3 内部 UUID `source_version_id` 与接口键 `source_content_sha256` 混用或互认；禁止在任何文档/字段/代码中把 `source_version_id` 用作跨系统身份键（词面已专用化为 V3 内部 FK，DEC-030）。
 2. 禁止用 canonical_json / body_hash / line_hash / integrity_hash 替代 source identity（§2.2）。
 3. 禁止 unknown unit_type 的任何自动映射、静默 fallback 或静默 skip（§3.2/§4.2）。
 4. 禁止合并 `semantic_status` 与 `decision_status` 两个状态体系（DEC-027 Part 5，OQ-5 已裁不合并）。
@@ -395,16 +395,16 @@ schema 噪声不只 unit_type 一处：恰 1 例 `andalone_question` + 恰 1 例
 7. 禁止把 INCOMPLETE 报为 PENDING_REVIEW / REJECTED，或反向代用（§4.2-1/2）。
 8. 禁止 unresolved 答案槽位静默默认（继承 v0.1 §3.2 特别条款）。
 
-### 5.3 Decision Alignment Table（`DECISION` / `OBSERVED` / `UNKNOWN` 对照，DA-1~31）
+### 5.3 Decision Alignment Table（`DECISION` / `OBSERVED` / `UNKNOWN` 对照，DA-1~34）
 
-> 每行 = 一项裁决要求。DA-1~12 = B1/B2/B3；DA-13~20 = FINALIZATION v1（DEC-023~026）；DA-21~26 = Interface Decision Finalization v1（DEC-027）；DA-27~31 = Interface Finalization Revision v1（DEC-028）；**DA-32~33 = Freeze Candidate Review v1（DEC-029）**。
+> 每行 = 一项裁决要求。DA-1~12 = B1/B2/B3；DA-13~20 = FINALIZATION v1（DEC-023~026）；DA-21~26 = Interface Decision Finalization v1（DEC-027）；DA-27~31 = Interface Finalization Revision v1（DEC-028）；DA-32~33 = Freeze Candidate Review v1（DEC-029）；**DA-34 = Freeze Candidate Finalization v1（DEC-030）**。
 
 | # | 裁决要求（DECISION） | OBSERVED 现状 | UNKNOWN |
 |---|---|---|---|
-| DA-1 | Manifest = Source Identity Authority（双层之一） | manifest 0/166 携任何 sha/hash 键，0/166 携 `source_version_id`（IF-v2 §2.2）；缺字段非缺能力 | producer 承载字段命名/位置 |
+| DA-1 | Manifest = Source Identity Authority（双层之一） | manifest 0/166 携任何 sha/hash 键，0/166 携 `source_content_sha256`（IF-v2 探针旧名检索，0 命中事实不变）；缺字段非缺能力 | producer 承载字段命名/位置 |
 | DA-2 | IR = Semantic Consumption Authority（双层之一）；语义消费方向 IR → V3 | IR 71/71 sha 自洽零漂移；覆盖 88 记录/71 ADMITTED/1,664 单元；R52 一次性冻结工件无持续产出（IF-v2 §3）；V3 IR 消费 = 0 命中 | IR 是否扩产、是否建持续产出机制 |
-| DA-3 | 双层经 `source_version_id` 关联 | 当前唯一关联 = `source_file` 绝对路径字符串值相等（IF-v2 §3.4）；路径为本机绝对路径跨机不可解析 | `source_file` 是否改仓库相对路径 |
-| DA-4 | `source_version_id` = `SHA-256(original source bytes)`（id 即 sha 值） | IR 侧 `source_sha256`/`provenance.source_version` 语义已符合（71/71）；Manifest 侧 0/166 | 回填范围 87 vs 166（Readiness §6） |
+| DA-3 | 双层经 `source_content_sha256` 关联 | 当前唯一关联 = `source_file` 绝对路径字符串值相等（IF-v2 §3.4）；路径为本机绝对路径跨机不可解析 | `source_file` 是否改仓库相对路径 |
+| DA-4 | `source_content_sha256` = `SHA-256(original source bytes)`（id 即 sha 值） | IR 侧 `source_sha256`/`provenance.source_version` 语义已符合（71/71）；Manifest 侧 0/166 | 回填范围 87 vs 166（Readiness §6） |
 | DA-5 | `body_hash`/`line_hash`/`integrity_hash`/`norm_sha256` 禁作跨系统 identity | producer 零产出（前三者）/ 仅审计内部（norm_sha256）；B2 producer 侧已 READY 零动作（Readiness §4） | V3 内部 hash 家族治理（line_hash 双算法 / integrity_hash 退化）是否进行 |
 | DA-6 | unit_type 必须闭集 `{standalone_question, composite_question}` | v2 面 2,347 单元内恰 2 canonical 值 + 噪声 1 例；V3 `manifest_reader.py:52` 无闭集校验 | — |
 | DA-7 | unknown unit_type 禁止自动转换 | `annotation_adapter.py:42` 硬编码重写 → **违反** | — |
@@ -420,27 +420,28 @@ schema 噪声不只 unit_type 一处：恰 1 例 `andalone_question` + 恰 1 例
 | DA-17 | PENDING_REVIEW → REJECTED 路由「由明确规则决定」 | 规则文本**未给** | 规则内容（OQ-16） |
 | DA-18 | 五步执行序：快照冻结 → 回填 → 契约冻结 → 数据治理 → 图片恢复（DEC-026） | 与交集定量零冲突（DSH Dependency Map v2.2 §4）；**五步均为数据/契约动作，零 V3 实现动作** | Step 1 快照载体与 R50 血统；V3 实现排期无对应步骤 |
 | DA-19 | source identity 必须早于内容修改（身份冻结优先） | 87/87 接口面 manifest 均为 R50 成员 → 回填必致 R50 DRIFT，须配对再冻结（E2） | Step 1 快照如何承担配对角色 |
-| DA-20 | 接口面 87 中 16 份无 IR 语义承载 | 双层落地后这 16 份在身份面内、语义面外；V3 今天能通过 manifest 消费它们 | ~~语义面地位~~ **已裁 = Identity Available / Semantic Unavailable 正常态（OQ-14 关闭）**；接口面呈现字段未裁（OQ-21） |
+| DA-20 | 接口面 87 中 16 份无 IR 语义承载 | 双层落地后这 16 份在身份面内、语义面外；V3 今天能通过 manifest 消费它们 | ~~语义面地位~~ **已裁 = Identity Available / Semantic Pending（DEC-028 Part 3；DEC-027 Part 4 旧表述「Semantic Unavailable」已废止）**；接口面呈现字段未裁（OQ-21） |
 | DA-21 | **Part 1** 双层职责模型正式采用 + 双禁（Manifest 不代 IR 描述题目 / IR 不代 Manifest 证身份）（DEC-027） | V3 两个半边都不符——用身份层做语义消费、且无身份锚（FACT-038） | IR loader / 身份锚实现排期（五步序无对应步骤） |
 | DA-22 | **Part 2** V3 验证 Manifest / 重算 hash / 判断接受（DEC-027） | 三项全无：无校验（`manifest_reader.py:52`）、不读 producer sha、无身份闸门（`identity_version` 0 命中） | source bytes 交付形态（OQ-12 / DSH G-4） |
 | DA-23 | **Part 2** V3 验证 IR 符合契约 / Gate / 拒收；原则「Preprocessing 解释，V3 裁决」（DEC-027） | V3 零 IR 消费能力，语义消费全来自 manifest | IR loader 排期（五步序无此步骤） |
 | DA-24 | **Part 3** 87/71 二者允许不同 + 三禁（禁强制生成 IR / 禁删 identity 文件 / 禁改历史数据）（DEC-027） | V3 无法识别接口面；IR 零消费 | 接口面 87 承载物形态（DSH G-3） |
-| DA-25 | **Part 4** 16 份 Identity-only = 正常态（Identity Available / Semantic Unavailable）+ 三禁（DEC-027） | 这 16 份已在接口面，靠身份自足成立；V3 无身份/语义分离消费能力 | semantic availability 呈现字段（OQ-21 / DSH G-6） |
+| DA-25 | **Part 4** 16 份 Identity-only = 正常态 + 三禁（DEC-027；旧表述「Semantic Unavailable」已由 DEC-028 Part 3 改为 **Semantic Pending**，本表不再使用旧词） | 这 16 份已在接口面，靠身份自足成立；V3 无身份/语义分离消费能力 | semantic availability 呈现字段（OQ-21 / DSH G-6） |
 | DA-26 | **Part 5** 三禁令 + UNKNOWN 属语义层 + 不合并两状态体系（DEC-027） | V3 三禁全违反（洗白/fallback/静默 skip 一条链三切面）；`SEMANTIC_STATUS` 无 `unknown` 取值；非 ready 不可达决策层 | 语义层 unknown 取值引入（OQ-20）· 路由架构（OQ-19）· 载体字段名/落点 |
-| DA-27 | **Source identity = `SHA256(raw bytes)`，64 小写 hex**；身份由其唯一决定；**Source identity belongs to content hash, not storage location**（DEC-028 Part 1） | producer 算法在库 71/71；V3 自算 canonical_json 非 raw bytes；V3 零身份校验 | 格式已裁；命名消歧（OQ-8′） |
-| DA-28 | **path = locator only，非 identity**；任何文档不得暗示 path 参与身份/版本/hash 判断；路径变化不得改 `source_version_id`（DEC-028 Part 1/2） | V3 仅用 path 作 locator（**符合**）；跨系统双层当前靠 path 值相等关联（不合规现状） | bytes 交付方式（OQ-12′） |
+| DA-27 | **Source identity = `SHA256(raw bytes)`，64 小写 hex**；身份由其唯一决定；**Source identity belongs to content hash, not storage location**（DEC-028 Part 1） | producer 算法在库 71/71；V3 自算 canonical_json 非 raw bytes；V3 零身份校验 | 格式已裁；命名已裁 = `source_content_sha256`（DEC-030，OQ-8′ 关闭） |
+| DA-28 | **path = locator only，非 identity**；任何文档不得暗示 path 参与身份/版本/hash 判断；路径变化不得改 `source_content_sha256`（DEC-028 Part 1/2） | V3 仅用 path 作 locator（**符合**）；跨系统双层当前靠 path 值相等关联（不合规现状） | bytes 传输方案（OQ-12″，暂缓） |
 | DA-29 | **16 份 = Identity Available / Semantic Pending（可恢复）**；允许重生成 IR 四约束；禁改原 source/新 identity/新 hash（DEC-028 Part 3） | 前轮记「Semantic Unavailable 正常态」，本轮改 Pending；V3 无身份/语义分离 + 无 pending 标记 | 呈现机制（OQ-21） |
 | DA-30 | **语义层终局词表 `{ready,incomplete,unknown}` + 决策层 `{pending_review,approved,rejected}`，禁合并**（DEC-028 Part 5） | V3 `SEMANTIC_STATUS` 冻结 `{ready,incomplete}`（须解冻加 unknown）；`DECISION_STATUS` 已符合 | 解冻 BUG-V3-018 = not started |
 | DA-31 | **unknown semantic → reviewable record → pending_review workflow**；禁 silent skip/convert/fallback（DEC-028 Part 6） | V3 三禁全违反；unknown→pending_review 在 candidate-gated-on-ready 架构下无执行面 | reviewable record 载体（UNKNOWN）· pending→rejected 准则（OQ-16′） |
-| DA-32 | **接口键命名 = `source_content_sha256`**（`PROPOSAL`，DEC-029 原则 5，待采纳 + DSH 确认）；V3 内部 UUID FK 不变 | 契约 sha 键与 V3 UUID FK 同名异义（FACT-041）；提案改接口键名消歧，零代码/schema | Owner 采纳 + DSH 双边确认 + 全文词面收口 |
-| DA-33 | **source bytes 能力冻结**：V3 必须能获得 raw bytes + 重算验证（fail-closed）+ 独立于 IR；**不冻结传输**（DEC-029 原则 6） | V3 自算为 canonical_json 包裹非 raw bytes（`runner.py:71-73`）；零身份校验；`source_file` 本机绝对路径跨机不可解析 | bytes 具体传输方案（暂缓，OQ-12″）· V3 重算能力实现（not started） |
+| DA-32 | **接口键命名 = `source_content_sha256`**（DEC-029 提案 → **DEC-030 Decision 1 采纳**）；V3 内部 UUID FK 不变，词面专用化 | 契约 sha 键与 V3 UUID FK 曾同名异义（FACT-041）；改接口键名消歧，零代码/schema | ~~Owner 采纳~~ **已采纳**；DSH 双边确认键名 = 待办 |
+| DA-33 | **source bytes 能力冻结**：V3 必须能获得 raw bytes + 重算验证（fail-closed）+ 独立于 IR；**不冻结传输**（DEC-029 原则 6 + DEC-030 Decision 2 确认） | V3 自算为 canonical_json 包裹非 raw bytes（`runner.py:71-73`）；零身份校验；`source_file` 本机绝对路径跨机不可解析 | bytes 具体传输方案（暂缓，OQ-12″）· V3 重算能力实现（not started） |
+| DA-34 | **Freeze Candidate Finalization（DEC-030）**：① 命名 `source_content_sha256` 采纳 + 全文词面收口 ② bytes 能力冻结确认 ③ 双状态体系终局确认（ready/incomplete/unknown + pending_review/approved/rejected，禁合并；unknown→reviewable record→pending_review，禁 silent skip/convert/fallback）④ 废止「Semantic Unavailable」旧表述 + 消除接口键歧义 | 契约文本已收口（本轮）；V3/producer 实现面均未动（DECISION ≠ IMPLEMENTATION） | DSH 双边确认键名 · Step 1/2 数据前置 · Owner Freeze 令（Step 3） |
 
 ### 5.4 Implementation Status Table（`DECISION ≠ IMPLEMENTATION`）
 
 | 契约义务 | 侧 | IMPLEMENTATION STATUS | 缺口 ID / 依赖 |
 |---|---|---|---|
-| Manifest 携带 `source_version_id`（0/166 → 回填，范围 = 87） | producer | **not started**（五步序 **Step 2**；前置 = Step 1 快照 + 字段名/格式裁决 OQ-8；须配对 R50 再冻结 E2） | B1-G1 / G1 / D4-G2 |
-| 双层关联从路径升级为 `source_version_id` | producer | **not started**（同 G1） | B1-G2 / G2 |
+| Manifest 携带 `source_content_sha256`（0/166 → 回填，范围 = 87） | producer | **not started**（五步序 **Step 2**；键名已裁 DEC-030、格式已裁 64 hex DEC-028；md vs PDF 分层仍开放 OQ-10；须配对 R50 再冻结 E2 + Step 1 前置） | B1-G1 / G1 / D4-G2 |
+| 双层关联从路径升级为 `source_content_sha256` | producer | **not started**（同 G1） | B1-G2 / G2 |
 | `source_file` 绝对路径 → 仓库相对路径 | producer | **not started**（待 v0.2 裁决） | OQ-12 |
 | IR 覆盖扩产（71 → 更广） | producer | **not started**（须 Owner 令；扩产 = 新数据生成） | G3 / OQ-11 |
 | IR 持续产出机制 | producer | **not started**（须 Owner 令，是否要未定） | G4 |
@@ -457,14 +458,14 @@ schema 噪声不只 unit_type 一处：恰 1 例 `andalone_question` + 恰 1 例
 | V3 识别并只消费接口面内 manifest | V3 | **not started**（`identity_version` 代码 0 命中） | D1-G2 |
 | 16 份 Identity-only 处理 | V3 | **DECIDED = Identity Available / Semantic Pending（可恢复，DEC-028 Part 3）**；允许重生成 IR 四约束；V3 身份/语义分离 + pending 标记 = **not started** | OQ-21（呈现字段）/ Consumer Alignment v3 §3.1 |
 | Step 1 接口快照载体形态 + R50 血统关系 | producer | **not started**（需 Step 1 执行令） | D4-G1 / DSH D.6 |
-| `source_version_id` 字段名 / 格式 / md vs PDF 分层 | producer | **not started**（**未裁**，回填范围已裁 87） | D4-G2 / OQ-8 |
+| `source_content_sha256` 在 producer 侧的承载字段命名/位置 + md vs PDF 分层 | producer | **not started**（接口键名/格式已裁；producer 内部落点 = DSH 域；回填范围已裁 87） | D4-G2 / OQ-10 |
 | v1 面 79 份处置 | producer | **DECIDED = historical asset 隔离**（DEC-024）；四禁；迁移走独立 Legacy Migration Plan | §1.7 / ~~OQ-6~~ **已关闭** |
 | V3 消费侧 identity 版本闸门（与 producer C-IN-1 双边） | V3 | **UNKNOWN**（Owner 未下达 V3 实现设计） | D2-G1 |
 | **V3 验证 Manifest + 重算 hash + 判断接受**（Part 2 三义务） | V3 | **not started**（无校验 / 不读 producer sha / 无身份闸门） | V3-G1 / Consumer Alignment v2 §2.1 |
 | **V3 验证 IR 契约 + Gate + 拒收**（Part 2 三义务） | V3 | **not started**（零 IR 消费能力；语义消费仍来自 manifest） | V3-G2 / Consumer Alignment v2 §2.2 |
 | V3 消费身份但不消费语义（16 份 Identity-only 分离消费） | V3 | **not started**（V3 无身份/语义分离能力） | V3-G6 |
-| `source_version_id` 同名异义消歧（跨系统 sha vs V3 UUID） | 契约措辞 | **格式已裁 64 hex（DEC-028 Part 1）**；**命名提案 = `source_content_sha256`（DEC-029，`PROPOSAL` 待 Owner 采纳 + DSH 确认）**；全文词面收口 = 待采纳后执行 | OQ-8′ |
-| source bytes 能力（可得 raw bytes + 重算验证 fail-closed + 独立 IR） | 双侧 | **能力已冻结（DEC-029 原则 6）**；V3 重算能力 = **not started**（自算 canonical_json 非 raw bytes）；传输方案 = **暂缓** | OQ-12″（传输）/ B2-G1 |
+| 接口键命名消歧（跨系统 sha vs V3 UUID） | 契约措辞 | **已裁 = `source_content_sha256`（DEC-030）**；全文词面收口已执行（本轮）；`source_version_id` 专用化为 V3 内部 FK；DSH 双边确认键名 = **待办** | OQ-8′ 关闭 / DSH 确认 |
+| source bytes 能力（可得 raw bytes + 重算验证 fail-closed + 独立 IR） | 双侧 | **能力已冻结（DEC-029 原则 6 + DEC-030 Decision 2 确认）**；V3 重算能力 = **not started**（自算 canonical_json 非 raw bytes）；传输方案 = **暂缓** | OQ-12″（传输）/ B2-G1 |
 | **V3 identity verification capability**（Part 9 明确登记） | V3 | **not implemented = not started**；未来消费必须依赖 `source_content_sha256`（身份键），不得依赖 path | Consumer Alignment v3 §4 |
 
 ### 5.5 Execution Ordering（`DECISION`，DEC-026 ≡ DSH DEC-021-4）
@@ -474,7 +475,7 @@ schema 噪声不只 unit_type 一处：恰 1 例 `andalone_question` + 恰 1 例
 ```
 Step 1  Freeze interface snapshot
    ↓
-Step 2  Generate / backfill source_version_id
+Step 2  Generate / backfill source_content_sha256
    ↓
 Step 3  Freeze Contract v0.2
    ↓
@@ -483,11 +484,11 @@ Step 4  Execute data hygiene
 Step 5  Execute image recovery / historical cleanup
 ```
 
-**裁决理由（原文）**：source identity 必须早于内容修改。任何图片恢复 / OCR 修复 / markdown 修改都可能导致 content change → hash change → `source_version_id` invalid。**身份冻结优先。**
+**裁决理由（原文）**：source identity 必须早于内容修改。任何图片恢复 / OCR 修复 / markdown 修改都可能导致 content change → hash change → `source_content_sha256` invalid。**身份冻结优先。**
 
 **与交集定量的兼容性（`OBSERVED`，DSH Dependency Map v2.2 §4）**：五步序与实测交集零冲突——Step 2 回填的 87 份全部为 R50 基线成员（E2 硬约束，由 Step 1 快照承担配对角色，其与 R50 的血统关系 = 执行令细化）；Step 5 图片恢复在排除模式下（排除 2 份三重成员）与接口面零交集（1,394 份）。
 
-**残留不一致（`OBSERVED`，须 Owner 裁，Consumer Alignment §5.2）**：DSH Dependency Map 边表 **E1** 仍写「`v0.2 冻结 → G1b 回填`（字段未定义不得回填，硬治理）」——**方向与本节相反**。可能的调和：`source_version_id` 的**算法语义**已由 DEC-021/B2 裁定（= `SHA-256(raw bytes)`，id 即 sha 值），不依赖契约文档冻结；E1 的残留效力只在字段**名 / 格式**上（DSH C.2，未裁）。若 Step 2 以临时名/格式回填而 Step 3 契约后来改名，会产生二次回填。→ **须 Owner 在 Step 1 执行令或 v0.2 起草令中一并裁**（OQ-18）。
+**残留不一致（`OBSERVED`，DEC-030 后已收窄，仍须 DSH/Owner 对齐，Consumer Alignment §5.2）**：DSH Dependency Map 边表 **E1** 仍写「`v0.2 冻结 → G1b 回填`（字段未定义不得回填，硬治理）」——**方向与五步序（回填 → 冻结）相反**。DEC-030 采纳接口键名后，E1 原关切之一「字段未定义」已消除（键名/算法/格式均已裁：`source_content_sha256` / `SHA256(raw bytes)` / 64 小写 hex）；**残留仅为次序之争**——五步序已由 DEC-026 裁定为回填先于冻结，E1 须由 DSH 侧文档更新或 Owner 显式确认五步序优先（OQ-18）。
 
 **V3 侧边界（`OBSERVED` + `UNKNOWN`，本轮明确登记）**：**五步序全部是数据 / 契约动作，不含任何 V3 实现动作。** V3 的 IR 消费能力（V3-I1）、身份绑定（V3-I2/I3）、四状态机通道（V3-S1）**在五步序中没有对应步骤**——**V3 侧实现排期 = UNKNOWN，且不因本裁决而获得排期**。本契约不提案为其插入步骤。
 
@@ -504,7 +505,7 @@ Step 5  Execute image recovery / historical cleanup
 | OQ-5 | 四状态机在 V3 的层归属：(a) 跨两层逻辑词表 vs (b) 并成单一状态机 + producer 侧落点 | ~~未裁决~~ **核心已关闭（DEC-027 Part 5）= 不合并两状态体系**；由此细化为 OQ-19（可达性）+ OQ-20（语义层 unknown 取值） |
 | OQ-6 | v1 面 79 份处置 | ~~未裁决~~ **已关闭（DEC-024 / §1.7）= historical asset 隔离，四禁，迁移走独立 Legacy Migration Plan** |
 | OQ-7 | V3 内部 hash 家族治理（line_hash 双算法 / integrity_hash 退化） | 未裁决（G-4；DECISION 只限定不作跨系统 identity） |
-| OQ-8 | producer 侧身份键承载字段命名 / 格式 / md vs PDF 分层 | **格式已裁（DEC-028 Part 1）= 64 字符小写 hex**。**命名消歧 OQ-8′ 本轮提案（DEC-029）= 接口键改名 `source_content_sha256`（`PROPOSAL`，待 Owner 采纳 + DSH 双边确认，§1.2a）**；md vs PDF 分层（OQ-10 承接）仍开放 |
+| OQ-8 | producer 侧身份键承载字段命名 / 格式 / md vs PDF 分层 | **格式已裁（DEC-028 Part 1）= 64 字符小写 hex**；**命名 OQ-8′ 已关闭（DEC-030 Decision 1）= 接口键 `source_content_sha256`**（§1.2a；DSH 双边确认键名 = 待办）。producer 内部承载字段命名/位置 = DSH 域；md vs PDF 分层（OQ-10 承接）仍开放 |
 | OQ-9 | 全语料 IR 是否/何时重新产出 + 是否建持续产出机制 | 须 Owner 显式令（G3/G4；暂停令 `746e35c` 生效中） |
 | OQ-10 | OCR 清单（钉 PDF 字节）是否纳入双层接口 | 未裁决（IF-v2 §4.3；语义与 md 面不同，不可混用） |
 | OQ-11 | IR 权威面承诺 | **部分已裁（DEC-023）**：当前冻结面 = 71 ADMITTED。**扩产机制仍未裁**（DEC-B1 已使其与身份面解耦，不阻塞冻结） |
@@ -514,9 +515,9 @@ Step 5  Execute image recovery / historical cleanup
 | OQ-15 | legacy 79 的披露形态（v0.2 文字层：仅规模 vs 路径清单） | 未裁决（起草面） |
 | OQ-16 | unknown semantic 的路由 + pending_review → rejected 判定 | **路由已裁（DEC-028 Part 6）= unknown → reviewable record → pending_review**。**残余 OQ-16′**：pending_review → rejected 的判定准则（若独立于人审 workflow）；`reviewable record` 载体形态未裁 |
 | OQ-17 | 存量 1 例 `andalone_question` 在两层词表下的呈现态与处置原子性 | 未裁决（涉 R50 成员 manifest + IR 冻结工件；DSH D.3 同源） |
-| OQ-18 | **E1 残留冲突**：DSH Dependency Map 边表 E1（契约冻结 → 回填）与 Decision 4 五步序（回填 → 契约冻结）方向相反 | **未裁决**（本轮 Interface Finalization Revision v1 未触及；仍须 Owner 在 Step 1 执行令或 v0.2 起草令中一并裁） |
+| OQ-18 | **E1 残留冲突**：DSH Dependency Map 边表 E1（契约冻结 → 回填）与 Decision 4 五步序（回填 → 契约冻结）方向相反 | **已收窄（DEC-030）**：键名/算法/格式均已裁，E1「字段未定义」关切消除；残留 = 纯次序之争——须 DSH 更新 E1 或 Owner 确认五步序优先（§5.5） |
 | OQ-19 | 语义 UNKNOWN → 决策 PENDING_REVIEW 可达性 | **路由规则已裁（DEC-028 Part 6）= unknown → pending_review workflow**；V3 现架构 candidate-gated-on-ready 下**机制 not started**（实现缺口，非开放裁决） |
-| OQ-20 | `source_version_id` 同名异义消歧 + 语义层 `unknown` 取值 | **值集已裁（DEC-028 Part 5）= `{ready,incomplete,unknown}`**（解冻 BUG-V3-018 加值 = not started）。**残余 OQ-8′**：跨系统 sha vs V3 UUID 命名消歧（须 v0.2 落字） |
+| OQ-20 | `source_version_id` 同名异义消歧 + 语义层 `unknown` 取值 | **值集已裁（DEC-028 Part 5）= `{ready,incomplete,unknown}`**（解冻 BUG-V3-018 加值 = not started）。**命名消歧 OQ-8′ 已关闭（DEC-030）= 接口键 `source_content_sha256`，词面冲突消除** |
 | OQ-21 | 接口面是否设 semantic availability / pending 呈现字段 | **未裁决**（状态已裁 = Semantic Pending；呈现载体 = manifest 字段 vs V3 靠 IR 面有无推断，两侧横跨，DSH 同） |
 
 ---
@@ -527,7 +528,7 @@ Step 5  Execute image recovery / historical cleanup
 |---|---|---|
 | 消费载体 | 「V3 消费以 IR 为准」（`:33`） | **取代**：双层各有权威面 + 语义消费方向 IR → V3（§1.1/§3.1） |
 | source identity | 隐含 sha = raw bytes，未禁其他 hash | **收紧**：显式唯一定义 + 禁止清单含 norm_sha256/corpus_sha256（§2.1/§2.2） |
-| `source_version_id` | §4.2 声称「一一对应」但无载体 | **升格**：id = sha 值本身 + 双层同值 REQUIREMENT + 0/166 缺口登记（§1.2） |
+| `source_content_sha256`（接口键） | §4.2 声称「一一对应」但无载体 | **升格**：id = sha 值本身 + 双层同值 REQUIREMENT + 0/166 缺口登记（§1.2）；DEC-030 定名 `source_content_sha256`（§1.2a） |
 | unknown unit_type | §3.3-6「隔离（PENDING 通道）」 | **收紧**：闭集强制 + 四条禁令（含禁静默 skip）+ 落点 UNKNOWN（§3.2/§4.1） |
 | Failure Boundary | 分散于 §3.3 各项 | **集中**：三处置定义 + 五条禁止混用（§4） |
 | 接口面口径 | 未定 | **升格为 DECISION**：Interface Scope = 87（字段口径）/ IR 当前冻结面 = 71 ADMITTED（§1.6，DEC-023） |
@@ -535,38 +536,42 @@ Step 5  Execute image recovery / historical cleanup
 | semantic 状态词表 | 「PENDING 通道」泛称 | **升格**：四值 READY/INCOMPLETE/PENDING_REVIEW/REJECTED + 三禁令 + 强制路由（§3.2/§4.1，DEC-025） |
 | 执行序 | 无 | **新增**：五步序（身份冻结优先）+ V3 侧无对应步骤声明（§5.5，DEC-026） |
 | 身份自足性 | 无 | **新增**：source 身份不依赖 IR 存在（§1.1 DEC-B1 细化） |
-| 语义覆盖悬崖 | 无 | ~~新增~~ **已裁**：16 份 = Identity Available / Semantic Unavailable 正常态（§1.6 / OQ-14 关闭，DEC-027 Part 4） |
+| 语义覆盖悬崖 | 无 | **已裁**：16 份 = Identity Available / Semantic Pending（可恢复）（§1.6 / OQ-14 关闭，DEC-028 Part 3 取代 DEC-027 Part 4 旧表述） |
 | **责任边界** | 无 | **新增 §0.5**：Preprocessing 解释 / V3 接受或拒绝 + V3 六项消费义务（DEC-027 Part 2） |
 | **冻结范围** | 无明确范围 | **新增 §0**：v0.2 只冻结三件（Identity / Scope / Semantic Boundary）+ 六类暂缓（DEC-027 Part 6） |
 | UNKNOWN 语义层 | 无 | **新增**：UNKNOWN 属语义层、不合并两状态体系（§3.2，DEC-027 Part 5；OQ-5 关闭，OQ-19/20 新登记） |
-| `source_version_id` 命名 | 仅「禁混用」 | **升格**：同名异义消歧警告 + 类型对照表（§1.3，OQ-20） |
+| 接口键命名 | 仅「禁混用」 | **升格并消歧**：同名异义对照表（§1.3）→ DEC-030 采纳 `source_content_sha256`，词面收口（§1.2a），OQ-8′ 关闭 |
 | hash 行号 | — | 按 E-2 勘误（splitlines @ `source_loader.py:27`） |
 
 ---
 
-## §8 冻结前提（本版不满足即不冻结）
+## §8 冻结前提 / Freeze 前执行步骤清单（本版不满足即不冻结）
 
-> **结构变更（本轮，由 DEC-026 决定）**：Decision 4 把 **Contract v0.2 冻结放在五步序的 Step 3**，其前置 = Step 1（接口快照冻结）+ Step 2（`source_version_id` 回填）。因此冻结前提不再是「先冻结、实现后补」，而是**数据身份动作先行、契约冻结收口**。原「排期归属未裁」开放项**已由 DEC-026 关闭**（数据动作排期已裁）；V3 侧实现排期仍无对应步骤（§5.5）。
+> **结构**：Decision 4 把 **Contract v0.2 冻结放在五步序的 Step 3**，其前置 = Step 1（接口快照冻结）+ Step 2（`source_content_sha256` 回填）。**DEC-030 后，契约文本侧已收口**；剩余全部是数据前置 + 横跨裁项 + Owner 冻结令。
 
-**冻结前置（Step 1 / Step 2 必须先完成）**：
+**已完成（DEC-030，契约文本侧）**：
 
-1. **Step 1 接口快照冻结完成**——快照载体形态与 R50 血统关系有执行令（OQ / D4-G1；DSH D.6）。
-2. **Step 2 身份键回填完成**——范围 = 87（已裁）；**键名 = 待 Owner 采纳命名提案 `source_content_sha256`（§1.2a）后按新名回填**；格式 = 64 小写 hex（已裁）；md 面 vs PDF 面分层须先裁（OQ-10 / D4-G2）；回填与 R50 再冻结配对原子执行（E2）。
-3. **OQ-18（E1 残留冲突）有裁决**——两侧文档不得长期并存两个相反方向的「硬约束」。
+- ✅ 接口键命名 `source_content_sha256` 采纳 + 全文词面收口（OQ-8′ 关闭）。
+- ✅ source bytes 能力冻结确认（§2.3；传输 OQ-12″ 暂缓）。
+- ✅ 双状态体系终局确认（§3.2/§0.3；DEC-030 Decision 3）。
+- ✅ 废止旧「Semantic Unavailable」表述（DA-20/25、§7）；`source_version_id` 接口键歧义消除。
 
-**冻结同期须落字（v0.2 正文内容）**：
+**Freeze 前执行步骤清单（按序，全部未完成）**：
 
-4. Owner 批准本 DRAFT 作为冻结候选；冻结**范围 = §0 六项（五项原则 + source bytes 能力冻结）**，暂缓项明确排除。
-5. **Owner 采纳接口键命名提案 `source_content_sha256`（§1.2a，OQ-8′）** + DSH 双边确认键名 + 契约全文词面收口——**这是当前离冻结最近的一步，且是唯一待 Owner 采纳的实质决策**。
-6. **OQ-15**（legacy 79 披露形态）落字。
-7. **OQ-21**（16 份 Semantic Pending 的呈现机制）有裁决——与 DSH 同题，横跨两侧。
+1. **Step 1 接口快照冻结执行**——快照载体形态与 R50 血统关系有执行令（D4-G1；DSH D.6）。`producer / not started`
+2. **Step 2 身份键回填执行**——范围 = 87（已裁）；**键名 = `source_content_sha256`（已裁，DEC-030）**；格式 = 64 小写 hex（已裁）；**md 面 vs PDF 面分层须先裁（OQ-10 / D4-G2）**；回填与 R50 再冻结配对原子执行（E2）。`producer / not started`
+3. **OQ-18 对齐**——DSH 更新 E1 或 Owner 确认五步序优先（§5.5；DEC-030 后已收窄为纯次序之争）。`待 DSH / Owner`
+4. **DSH 双边确认接口键名 `source_content_sha256`**——跨系统契约词，须两侧一致（§1.2a）。`待 DSH`
+5. **OQ-15 落字**——legacy 79 披露形态（仅规模 vs 路径清单）。`待 Owner`
+6. **OQ-21 有裁决**——16 份 Semantic Pending 的呈现机制（与 DSH 同题，横跨两侧）。`待 Owner + DSH`
+7. **Owner Freeze 令（五步序 Step 3）**——批准本 Finalized Candidate 冻结为 Contract v0.2。`待 Owner`
 
 **不构成 v0.2 冻结前提（已关闭或不在范围）**：
 
-- ~~OQ-8 格式~~ —— **已裁（DEC-028 Part 1）= 64 小写 hex**；命名消歧 = 本轮提案（item 5，待采纳）。
+- ~~OQ-8 命名~~ —— **已裁（DEC-030）= `source_content_sha256`**；~~OQ-8 格式~~ —— **已裁（DEC-028 Part 1）= 64 小写 hex**。
 - ~~OQ-12 身份维度~~ —— **已裁（DEC-028 Part 1/2）= path 非身份**。
-- ~~OQ-12′ bytes 能力~~ —— **能力已冻结（DEC-029 原则 6，§2.3）**；传输维度**暂缓（OQ-12″）**，不阻塞冻结。
-- ~~OQ-5 / OQ-19 / OQ-20 值集~~ —— **已裁（DEC-027 Part 5 + DEC-028 Part 5/6）**：不合并 + 终局词表 + unknown→pending_review。V3 实现（解冻 + reviewable record 机制）= not started，不阻塞契约冻结。
+- ~~OQ-12′ bytes 能力~~ —— **能力已冻结（DEC-029 原则 6 + DEC-030 确认，§2.3）**；传输维度**暂缓（OQ-12″）**，不阻塞冻结。
+- ~~OQ-5 / OQ-19 / OQ-20 值集~~ —— **已裁（DEC-027 Part 5 + DEC-028 Part 5/6 + DEC-030 确认）**：不合并 + 终局词表 + unknown→pending_review。V3 实现（解冻 + reviewable record 机制）= not started，不阻塞契约冻结。
 - ~~OQ-14~~ —— **已裁（DEC-028 Part 3）= Semantic Pending**（可恢复）。
 - ~~OQ-6~~ —— **已由 DEC-024 关闭**（historical asset 隔离）。
 - ~~OQ-11 当前面~~ —— **已裁 = 71 ADMITTED**；扩产经 DEC-B1 解耦且属暂缓项。
@@ -577,12 +582,12 @@ Step 5  Execute image recovery / historical cleanup
 
 ## 边界声明
 
-**本文件做了**：Owner B1/B2/B3 裁决的契约化（§1-4）+ DEC-B1 细化（§1.1）+ FINALIZATION v1 四项（§1.6/§1.7/§3.2+§4.1/§5.5）+ Interface Decision Finalization v1（DEC-027）+ Interface Finalization Revision v1（DEC-028：source identity 64hex + path 非身份 + 16 份 Semantic Pending + 语义层终局词表加 unknown + unknown→pending_review）+ **Freeze Candidate Review v1（DEC-029）**：新增 **§1.2a 接口键命名方案 `source_content_sha256`（PROPOSAL，待采纳）**、**§2.3 source bytes 能力冻结（不冻传输）**、§1.6 16 份四保证对齐、§0 冻结范围扩为**六项**（+bytes 能力）；V3 消费边界义务面（§5.1-5.2）；**Decision Alignment Table（§5.3，DA-1~33）** 与 **Implementation Status Table（§5.4）**；v0.1 差异对照（§7）；开放项 OQ-1~21 与冻结前提按 DEC-026 五步序 + 六项冻结范围重写（§6/§8）。每条款标 DECISION/OBSERVED/UNKNOWN/REQUIREMENT/PROPOSAL。
+**本文件做了**：Owner B1/B2/B3 裁决的契约化（§1-4）+ DEC-B1 细化（§1.1）+ FINALIZATION v1 四项（§1.6/§1.7/§3.2+§4.1/§5.5）+ Interface Decision Finalization v1（DEC-027）+ Interface Finalization Revision v1（DEC-028：source identity 64hex + path 非身份 + 16 份 Semantic Pending + 语义层终局词表加 unknown + unknown→pending_review）+ Freeze Candidate Review v1（DEC-029：命名提案 + bytes 能力冻结 + 16 份四保证）+ **Freeze Candidate Finalization v1（DEC-030）**：**接口键命名 `source_content_sha256` 采纳并全文词面收口（§1.2a 转 DECISION）**、bytes 能力冻结确认（§2.3）、双状态体系终局确认（§0.3/§3.2）、废止「Semantic Unavailable」旧表述（DA-20/25/§7）、§8 重写为 Freeze 前执行步骤清单；V3 消费边界义务面（§5.1-5.2）；**Decision Alignment Table（§5.3，DA-1~34）** 与 **Implementation Status Table（§5.4）**；v0.1 差异对照（§7）；开放项 OQ-1~21 与冻结前提按 DEC-026 五步序 + 六项冻结范围更新（§6/§8）。每条款标 DECISION/OBSERVED/UNKNOWN/REQUIREMENT。
 
-**本文件没做**：未把 DECISION 描述为已实现（§5.4 全表 `not started` / `deferred` / `UNKNOWN`）；**未把命名提案 `source_content_sha256` 描述为已裁决（标 PROPOSAL，待 Owner 采纳 + DSH 确认）**；未替 DSH 决定生产侧实现；未修改 V3 代码 / adapter / 数据库 schema / EB-008 / admission 逻辑；未修改 preprocessing；未执行任何数据动作（Step 1~5 均未启动）；**未冻结本契约（DRAFT / NOT FROZEN）**。
+**本文件没做**：未把 DECISION 描述为已实现（§5.4 全表 `not started` / `deferred` / `UNKNOWN`）；未把契约描述为已冻结（DRAFT / NOT FROZEN，待 Owner Freeze 令）；未替 DSH 决定生产侧实现、未代替 DSH 确认键名（双边确认 = 待办）；未修改 V3 代码 / adapter / 数据库 schema / EB-008 / admission 逻辑；未修改 preprocessing；未执行任何数据动作（Step 1~5 均未启动）。
 
 **EB-008 状态**：不因本文件变动。AuthorityIdentity 三元绑定（`evidence.py:28-29`）为既有冻结设计，本契约仅引用不改。
 
 ---
 
-*v0.2 DRAFT（Frozen Candidate）— 2026-09-16，Claude（AITutors-v3 Consumer Owner）。本轮 = Freeze Candidate Review（V3 `DEC-029`）：Owner 六条原则入册，接口键命名 `source_content_sha256` 提案（§1.2a，待采纳）+ bytes 能力冻结（§2.3）+ 16 份四保证对齐（§1.6）。V3 代码 `b5ddbe3`（其后仅文档提交，代码未变）· preprocessing `1657625`（+ DSH 并行未提交工作树：ODR v1.4 / Producer Alignment v5 / Interface Facts v2.1）· v0.1 `1fbaf5e`（未改）。**冻结范围 = §0 六项（五原则 + bytes 能力）；状态 DRAFT / NOT FROZEN**。命名 = PROPOSAL 待采纳。DECISION ≠ IMPLEMENTATION。*
+*v0.2 DRAFT（Freeze Candidate Finalized）— 2026-09-16，Claude（AITutors-v3 Consumer Owner）。本轮 = Freeze Candidate Finalization（V3 `DEC-030`）：接口键命名 `source_content_sha256` **已采纳**（§1.2a DECISION，词面收口完成，OQ-8′ 关闭）+ bytes 能力冻结确认（§2.3）+ 双状态体系终局确认 + 废止「Semantic Unavailable」旧表述 + §8 Freeze 前执行步骤清单。V3 代码 `b5ddbe3`（其后仅文档提交，代码未变）· preprocessing `1657625`（+ DSH 并行未提交工作树：ODR v1.4 / Producer Alignment v5 / Interface Facts v2.1）· v0.1 `1fbaf5e`（未改）。**冻结范围 = §0 六项；状态 DRAFT / NOT FROZEN，待 Owner Freeze 令（五步序 Step 3）**。DECISION ≠ IMPLEMENTATION。*

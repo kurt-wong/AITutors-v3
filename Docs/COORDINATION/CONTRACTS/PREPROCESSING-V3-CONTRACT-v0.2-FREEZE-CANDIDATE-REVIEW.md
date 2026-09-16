@@ -6,6 +6,8 @@
 > **本轮登记**：V3 `DEC-029`（Freeze Candidate Review）。**跨仓**：本轮为 Owner 直接下达的评审令，DSH 侧对应登记待其 Producer Alignment v5 收口。
 >
 > **证据纪律**：每条款标 `DECISION` / `OBSERVED` / `PROPOSAL` / `REQUIREMENT` / `UNKNOWN`。**DECISION ≠ IMPLEMENTATION**。命名方案标 `PROPOSAL`（待 Owner 采纳 + DSH 双边确认），不是既成裁决。
+>
+> **⚠️ 后续裁决（DEC-030，2026-09-16 Finalization）**：本报告 §1 的命名提案 **`source_content_sha256` 已被 Owner 采纳**（Decision 1），全文词面收口已在 Contract v0.2 DRAFT 执行；§2 bytes 能力冻结获 Decision 2 确认；§3 状态边界获 Decision 3 确认。本文件保留为 DEC-029 评审轮的历史记录，**其中 PROPOSAL 标注以本条为准转为 DECISION**。
 
 ---
 
