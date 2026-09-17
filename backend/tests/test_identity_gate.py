@@ -147,7 +147,7 @@ class TestPureFunction:
             assert decision.gate in (GATE_PASS, GATE_BLOCK)
 
     def test_version_constant(self):
-        assert IDENTITY_GATE_VERSION == "1.1.0"
+        assert IDENTITY_GATE_VERSION == "1.2.0"
 
     def test_gate_constants(self):
         assert GATE_PASS == "PASS"

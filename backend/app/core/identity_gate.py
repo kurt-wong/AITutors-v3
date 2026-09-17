@@ -21,11 +21,12 @@ Truth Table（Owner 指令，超越 Design v1.1 §4.6）：
 - 零 IO、零副作用、不抛异常。
 - 对非法输入（None / 缺失属性 / 错误类型）fail-closed 返回 BLOCK。
 - 值域白名单：identity ∈ {VERIFIED, FAILED}；semantic ∈ {AVAILABLE, PENDING}。
+- str subclass 防御：所有 str 值先规范化为 plain str，再做白名单比对。
 """
 
 from dataclasses import dataclass, field
 
-IDENTITY_GATE_VERSION = "1.1.0"
+IDENTITY_GATE_VERSION = "1.2.0"
 
 GATE_PASS = "PASS"
 GATE_BLOCK = "BLOCK"
@@ -41,6 +42,18 @@ REASON_MALFORMED_INPUT = "malformed_input"
 # ─── 值域白名单（冻结）───
 _VALID_IDENTITY_VALUES = ("VERIFIED", "FAILED")
 _VALID_SEMANTIC_VALUES = ("AVAILABLE", "PENDING")
+
+
+def _normalize_str(val) -> str | None:
+    """将 str 或 str subclass 规范化为 plain str。
+
+    防御 str subclass 自定义 __eq__ 绕过白名单检查。
+    非 str 类型返回 None。
+    """
+    if not isinstance(val, str):
+        return None
+    # str(x) 对 plain str 返回自身；对 subclass 返回 plain str 副本
+    return str(val)
 
 
 @dataclass(frozen=True)
@@ -80,8 +93,8 @@ def evaluate_identity_gate(verification) -> IdentityGateDecision:
             GATE_BLOCK, "INVALID", None, REASON_MALFORMED_INPUT, ()
         )
 
-    identity_value = getattr(identity, "value", None)
-    if not isinstance(identity_value, str):
+    identity_value = _normalize_str(getattr(identity, "value", None))
+    if identity_value is None:
         return IdentityGateDecision(
             GATE_BLOCK, "INVALID", None, REASON_MALFORMED_INPUT, ()
         )
@@ -117,8 +130,8 @@ def evaluate_identity_gate(verification) -> IdentityGateDecision:
             GATE_BLOCK, "VERIFIED", None, REASON_SEMANTIC_ABSENT, mismatches
         )
 
-    semantic_value = getattr(semantic, "value", None)
-    if not isinstance(semantic_value, str):
+    semantic_value = _normalize_str(getattr(semantic, "value", None))
+    if semantic_value is None:
         return IdentityGateDecision(
             GATE_BLOCK, "VERIFIED", "INVALID", REASON_INVALID_STATE, mismatches
         )

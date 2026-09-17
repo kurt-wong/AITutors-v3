@@ -321,17 +321,36 @@ class TestRealPipelineIdentityBoundary:
         assert result["semantic_state"] == "PENDING"
 
     def test_batch_ir_no_matching_entry(self, tmp_path):
-        """Batch resolver IR 中无匹配条目 → PENDING → BLOCK。"""
+        """Batch resolver IR 中无匹配条目（SHA 与 path 均不匹配）→ PENDING → BLOCK。"""
         source = _write_source(tmp_path, b"content A")
         manifest = _write_manifest(tmp_path, SHA_A)
         batch_ir = _write_batch_ir(tmp_path, [
-            {"file": "other_file.md", "ir": {"source_sha256": SHA_A},
+            {"file": "other_file.md", "ir": {"source_sha256": SHA_B},
              "disposition": "ADMITTED", "qc_verdict": "PASS"},
         ])
 
         result = _verify_identity_boundary(manifest, source, batch_ir)
         assert result["gate"] == GATE_BLOCK
         assert result["semantic_state"] == "PENDING"
+
+    def test_batch_ir_sha_match_different_path(self, tmp_path):
+        """Phase 2.5: SHA 匹配到 entry 但 path 不同 → 仍能提取 ir_sha → PASS。
+
+        验证 locator closure：source_sha 优先匹配 ir.source_sha256，
+        不依赖 path 字符串一致性。
+        """
+        source = _write_source(tmp_path, b"content A")
+        manifest = _write_manifest(tmp_path, SHA_A)
+        batch_ir = _write_batch_ir(tmp_path, [
+            {"file": "D:\\other\\absolute\\path\\file.md",
+             "ir": {"source_sha256": SHA_A},
+             "disposition": "ADMITTED", "qc_verdict": "PASS"},
+        ])
+
+        result = _verify_identity_boundary(manifest, source, batch_ir)
+        assert result["gate"] == GATE_PASS
+        assert result["identity_state"] == "VERIFIED"
+        assert result["semantic_state"] == "AVAILABLE"
 
     def test_batch_ir_rejected_entry_no_ir(self, tmp_path):
         """Batch IR 中 REJECTED 条目（ir=None）→ PENDING → BLOCK。"""

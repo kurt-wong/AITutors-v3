@@ -87,11 +87,16 @@ def _verify_identity_boundary(
 
     # M3: IR identity（IR 可缺失 — Semantic Pending 正常态）
     # IR 读取失败不影响 Identity 判定（正交性原则），仅记录错误。
+    # Phase 2.5: 传递 computed_sha 用于 batch IR 的确定性内容关联定位。
     ir_sha = None
     ir_error: str | None = None
     if resolver_ir_path is not None:
         try:
-            ir_id = read_ir_identity(resolver_ir_path, source_file=str(source_path))
+            ir_id = read_ir_identity(
+                resolver_ir_path,
+                source_file=str(source_path),
+                source_sha=computed_sha,
+            )
             ir_sha = ir_id.source_content_sha256
         except IRReadError as e:
             ir_error = str(e)

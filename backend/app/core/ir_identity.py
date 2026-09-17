@@ -17,7 +17,12 @@
 
 batch resolver IR 格式（实际生产数据）：
 - 顶层: {ir_version, files: [{file, ir: {source_sha256,...}, disposition, qc_verdict}]}
-- source_file 参数用于在 batch 中定位目标文档条目
+- 条目定位规则（Phase 2.5 locator closure）：
+  1. source_sha 优先：若提供 source_sha，按 ir.source_sha256 精确匹配（唯一命中）
+  2. path fallback：source_sha 缺失或无匹配时，按 file 路径字符串匹配
+  3. 均未命中 → None（fail-closed for semantic）
+- path 仅用于定位，不参与 identity 判定
+- source_content_sha256 仍是跨系统内容身份唯一权威
 - 单文档 IR 格式: {source_content_sha256: ...} 或 {source_sha256: ...}
 
 禁止（防回归）：
@@ -31,7 +36,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-IR_IDENTITY_VERSION = "1.1.0"
+IR_IDENTITY_VERSION = "1.2.0"
 _SHA256_LOWER_HEX_RE = re.compile(r"\A[0-9a-f]{64}\Z")
 
 
@@ -55,23 +60,64 @@ def _extract_sha(value) -> str | None:
     return value
 
 
-def _read_batch_entry(raw: dict, source_file: str | None) -> IRIdentity:
-    """从 batch resolver IR 中提取指定文档的 source sha。"""
+def _read_batch_entry(
+    raw: dict,
+    source_file: str | None,
+    source_sha: str | None = None,
+) -> IRIdentity:
+    """从 batch resolver IR 中提取指定文档的 source sha。
+
+    定位规则（Phase 2.5 locator closure）：
+    1. source_sha 优先：按 ir.source_sha256 精确匹配（确定性内容关联）
+    2. path fallback：按 file 路径字符串匹配
+    3. 均未命中 → None
+
+    path 仅用于定位，不参与 identity 判定。
+    """
     files = raw.get("files")
     if not isinstance(files, list):
         return IRIdentity(source_content_sha256=None)
 
-    for entry in files:
-        if not isinstance(entry, dict):
-            continue
-        entry_file = entry.get("file", "")
-        if source_file is not None and entry_file != source_file:
-            continue
-        ir_data = entry.get("ir")
-        if not isinstance(ir_data, dict):
-            continue
-        sha = _extract_sha(ir_data.get("source_sha256"))
-        return IRIdentity(source_content_sha256=sha)
+    # 策略 1：按 source_sha 匹配 ir.source_sha256（确定性内容关联）
+    if source_sha is not None:
+        sha_matches = []
+        for entry in files:
+            if not isinstance(entry, dict):
+                continue
+            ir_data = entry.get("ir")
+            if not isinstance(ir_data, dict):
+                continue
+            if ir_data.get("source_sha256") == source_sha:
+                sha_matches.append(entry)
+        if len(sha_matches) == 1:
+            sha = _extract_sha(sha_matches[0]["ir"].get("source_sha256"))
+            return IRIdentity(source_content_sha256=sha)
+        # 0 匹配 → fall through to path；>1 匹配 → fall through（fail-closed）
+
+    # 策略 2：按 source_file 路径匹配（fallback）
+    if source_file is not None:
+        for entry in files:
+            if not isinstance(entry, dict):
+                continue
+            entry_file = entry.get("file", "")
+            if entry_file != source_file:
+                continue
+            ir_data = entry.get("ir")
+            if not isinstance(ir_data, dict):
+                continue
+            sha = _extract_sha(ir_data.get("source_sha256"))
+            return IRIdentity(source_content_sha256=sha)
+
+    # 策略 3：无 source_file / source_sha 参数时的 positional fallback
+    if source_file is None and source_sha is None:
+        for entry in files:
+            if not isinstance(entry, dict):
+                continue
+            ir_data = entry.get("ir")
+            if not isinstance(ir_data, dict):
+                continue
+            sha = _extract_sha(ir_data.get("source_sha256"))
+            return IRIdentity(source_content_sha256=sha)
 
     return IRIdentity(source_content_sha256=None)
 
@@ -85,7 +131,9 @@ def _read_single_doc(raw: dict) -> IRIdentity:
 
 
 def read_ir_identity(
-    ir_path: Path, source_file: str | None = None
+    ir_path: Path,
+    source_file: str | None = None,
+    source_sha: str | None = None,
 ) -> IRIdentity:
     """从 IR 文件中读取声明的 source_content_sha256。
 
@@ -93,8 +141,9 @@ def read_ir_identity(
 
     Args:
         ir_path: IR JSON 文件路径（单文档 IR 或 batch resolver IR）。
-        source_file: 目标文档的 source_file 路径。batch 格式时必传，
-            用于在 files[] 中定位对应条目。
+        source_file: 目标文档的 source_file 路径。batch 格式时用于 path fallback。
+        source_sha: 目标文档的 computed SHA256（来自 M2）。batch 格式时
+            优先用于按 ir.source_sha256 匹配（确定性内容关联）。
 
     Returns:
         IRIdentity(source_content_sha256=...)。IR 不存在 → None。
@@ -116,7 +165,7 @@ def read_ir_identity(
 
     # batch resolver IR 格式检测
     if "files" in raw:
-        return _read_batch_entry(raw, source_file)
+        return _read_batch_entry(raw, source_file, source_sha)
 
     # 单文档 IR 格式
     return _read_single_doc(raw)
