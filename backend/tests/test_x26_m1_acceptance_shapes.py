@@ -193,23 +193,54 @@ class TestF05A_MappingEventIdentity:
             assert entry.source_value == source_value
 
     def test_pending_owner_rows_do_not_activate(self):
-        """CLASS A: PENDING_OWNER rows must resolve to None (unknown), not canonical."""
+        """CLASS A: After OD-2, standalone/composite are AUTHORIZED with event IDs.
+
+        D10 provenance:
+            previous: PENDING_OWNER rows must resolve to None
+            why: OD-2 registered 2026-09-20 — Owner authorized two canonical mappings
+            new: AUTHORIZED rows have proper event IDs; resolve_canonical returns target
+            provenance: X2.6-OD-2-MAPPING-AUTHORIZATION
+            note: Owner authorization != production enforcement; scaffold only
+        """
         from app.domains.compile.mapping_registry import (
             MappingStatus,
             lookup_mapping,
             resolve_canonical,
         )
 
-        for source_value in ("standalone_question", "composite_question"):
+        expected = {
+            "standalone_question": (
+                "standalone_unit",
+                "X2.6-OD-2-MAP-STANDALONE-01",
+            ),
+            "composite_question": (
+                "composite_unit",
+                "X2.6-OD-2-MAP-COMPOSITE-01",
+            ),
+        }
+        for source_value, (target, event_id) in expected.items():
             entry = lookup_mapping(source_value)
             assert entry is not None
-            assert entry.status == MappingStatus.PENDING_OWNER
+            assert entry.status == MappingStatus.AUTHORIZED, (
+                f"{source_value} must be AUTHORIZED after OD-2"
+            )
+            assert entry.mapping_basis == event_id, (
+                f"{source_value} mapping_basis must be {event_id}"
+            )
             canonical, provenance = resolve_canonical(source_value)
-            assert canonical is None, f"{source_value} must not activate while pending"
-            assert "pending_owner" in provenance
+            assert canonical == target, (
+                f"{source_value} must resolve to {target} after OD-2"
+            )
+            assert event_id in provenance, (
+                f"provenance must reference {event_id}"
+            )
 
     def test_prohibited_row_resolves_to_unknown(self):
-        """CLASS A: andalone_question must resolve to None (unknown), never canonical."""
+        """CLASS A: andalone_question must resolve to None (unknown), never canonical.
+
+        After OD-1: Owner disposition = migrate-as-UNKNOWN.
+        PROHIBITED status unchanged; mapping_basis references OD-1 event.
+        """
         from app.domains.compile.mapping_registry import resolve_canonical
 
         canonical, provenance = resolve_canonical("andalone_question")

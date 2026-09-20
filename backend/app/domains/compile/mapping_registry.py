@@ -1,20 +1,26 @@
 """X2.6 Mapping Registry — Legacy → Canonical Unit-Type mapping table structure.
 
 OD-MAP-01 + OD-CL21-01 implementation scaffold (M.1-A).
-Structure defined; ALL values = PENDING_OWNER until Owner provides decision event ids.
+OD-2 registration (2026-09-20): Owner authorized two canonical mappings.
+OD-1 registration (2026-09-20): Owner decided DI-01 = migrate-as-UNKNOWN.
+
+IMPORTANT: Owner authorization != production enforcement.
+This module is a GOVERNANCE SCAFFOLD. No production code imports it.
+Production mapping enforcement = NOT IMPLEMENTED (P1-P13 all OPEN).
 
 Authority chain (Owner OD-CL21-01, F-03 corrected):
     IR Semantic Resolution + Owner-authorized mapping table = normalization authority
 
-Rules (Owner OD-MAP-01):
-- mapping_basis MUST reference a real Owner decision event id before activation
-- PENDING_OWNER rows MUST NOT be applied as effective mapping
-- andalone_question = PROHIBITED (D8: NON-CANONICAL LEGACY OBSERVATION)
+Rules (Owner OD-MAP-01 + OD-2):
+- mapping_basis MUST reference a real Owner decision event id
+- AUTHORIZED rows carry Owner decision event ids (OD-2)
+- Production enforcement requires M.2-M.6 implementation (NOT done)
+- andalone_question = PROHIBITED (D8 + OD-1: migrate-as-UNKNOWN)
 - missing/null/invalid/conflicting -> unknown (never default standalone)
 - legacy value is evidence, not canonical authority (D7)
 
 F-05-A acceptance: mapping event identity must be independently cross-validated
-against AITutor-X governance documents. Fake/reused/wrong event ids must be detectable.
+against AITutor-X governance documents. Semantic binding = IMPLEMENTATION GAP.
 """
 
 from __future__ import annotations
@@ -24,11 +30,16 @@ from enum import Enum
 
 
 class MappingStatus(Enum):
-    """Mapping row lifecycle status."""
+    """Mapping row lifecycle status.
 
-    PENDING_OWNER = "pending_owner"  # structure defined; Owner has not provided event id
-    AUTHORIZED = "authorized"  # Owner decision event id present and cross-validated
-    PROHIBITED = "prohibited"  # D8: must never map to canonical; -> unknown + isolate
+    After OD-2 registration (2026-09-20):
+      AUTHORIZED = Owner has provided per-value authorization event id
+      Production enforcement is a SEPARATE concern (NOT IMPLEMENTED)
+    """
+
+    PENDING_OWNER = "pending_owner"  # Owner has not provided event id
+    AUTHORIZED = "authorized"  # Owner decision event id present (OD-2)
+    PROHIBITED = "prohibited"  # D8 + OD-1: -> unknown + isolate; never canonical
 
 
 @dataclass(frozen=True)
@@ -47,29 +58,42 @@ class MappingEntry:
     condition: str
 
 
-# Current mapping table (Resolution Package §3.4; Owner OD-MAP-01 APPROVED framework).
-# Values remain PENDING_OWNER until Owner provides decision event ids.
+# Mapping table after OD-1 + OD-2 Owner Decision Registration (2026-09-20).
+# Owner authorization = APPROVED for standalone_question and composite_question.
+# Production mapping enforcement = NOT IMPLEMENTED (no production code imports this module).
 LEGACY_TO_CANONICAL_MAP: dict[str, MappingEntry] = {
     "standalone_question": MappingEntry(
         source_value="standalone_question",
-        canonical_target="standalone_unit",  # direction only; not activated
-        status=MappingStatus.PENDING_OWNER,
-        mapping_basis="",  # Owner event id required
-        condition="Owner authorizes; evidence chain must be present; provenance recorded",
+        canonical_target="standalone_unit",
+        status=MappingStatus.AUTHORIZED,  # OD-2: Owner authorized
+        mapping_basis="X2.6-OD-2-MAP-STANDALONE-01",  # OD-2 per-value event id
+        condition=(
+            "OD-2: Owner authorized standalone_question -> standalone_unit; "
+            "production enforcement NOT implemented; "
+            "evidence chain must be present at application time"
+        ),
     ),
     "composite_question": MappingEntry(
         source_value="composite_question",
-        canonical_target="composite_unit",  # direction only; not activated
-        status=MappingStatus.PENDING_OWNER,
-        mapping_basis="",  # Owner event id required
-        condition="Owner authorizes; D2 Condition A or B evidence present; provenance recorded",
+        canonical_target="composite_unit",
+        status=MappingStatus.AUTHORIZED,  # OD-2: Owner authorized
+        mapping_basis="X2.6-OD-2-MAP-COMPOSITE-01",  # OD-2 per-value event id
+        condition=(
+            "OD-2: Owner authorized composite_question -> composite_unit; "
+            "production enforcement NOT implemented; "
+            "D2 Condition A or B evidence required at application time"
+        ),
     ),
     "andalone_question": MappingEntry(
         source_value="andalone_question",
         canonical_target=None,  # PROHIBITED: must never map to canonical
-        status=MappingStatus.PROHIBITED,
-        mapping_basis="OD-DI01-01",  # D8 permanent role APPROVED
-        condition="D8: NON-CANONICAL LEGACY OBSERVATION; -> unknown + isolate",
+        status=MappingStatus.PROHIBITED,  # D8 + OD-DI01-01 permanent role
+        mapping_basis="X2.6-OD-1-DI01-MIGRATE-AS-UNKNOWN",  # OD-1: final disposition
+        condition=(
+            "OD-DI01-01: NON-CANONICAL LEGACY OBSERVATION (Preserve+Isolate+Observe); "
+            "OD-1: Owner disposition = migrate-as-UNKNOWN; "
+            "UNKNOWN migration NOT implemented"
+        ),
     ),
 }
 
@@ -144,15 +168,14 @@ def validate_mapping_event_identity(
 def get_current_authorized_event_ids() -> set[str]:
     """Return the set of currently known Owner decision event ids.
 
-    As of M.1, the following governance events are registered:
-    - D1-D10: FINALIZED (X2.6-UQ-01)
-    - OD-MAP-01 through OD-REPO-01: APPROVED (X2.6-OD-FINAL-01)
-    - F-01 batching: SAME-BATCH (X2.6-OD-F01-01)
-    - Implementation Authorization: AUTHORIZED (X2.6-IMPL-AUTH-01)
+    After OD-1 + OD-2 registration (2026-09-20):
+    - Framework-level governance events (D1-D10, OD-* approvals)
+    - Per-value mapping authorization events (OD-2)
+    - DI-01 disposition event (OD-1)
 
-    NOTE: None of these constitute per-value mapping event ids.
-    OD-MAP-01 approved the FRAMEWORK; specific value activation
-    requires Owner to provide dedicated event ids per mapping row.
+    NOTE: Framework-level IDs are NOT per-value mapping authorization IDs.
+    OD-2 provides per-value event IDs for the two authorized mappings.
+    F-05-A semantic binding enforcement = IMPLEMENTATION GAP.
     """
     return {
         "D1-D10-FINALIZED",
@@ -166,4 +189,9 @@ def get_current_authorized_event_ids() -> set[str]:
         "OD-REPO-01-APPROVED",
         "F-01-SAME-BATCH",
         "IMPL-AUTH-01-AUTHORIZED",
+        # OD-1: DI-01 final disposition (2026-09-20)
+        "X2.6-OD-1-DI01-MIGRATE-AS-UNKNOWN",
+        # OD-2: Per-value mapping authorization (2026-09-20)
+        "X2.6-OD-2-MAP-STANDALONE-01",
+        "X2.6-OD-2-MAP-COMPOSITE-01",
     }
