@@ -420,15 +420,28 @@ class TestUNKNOWN_WashMatrix:
             "P2: hardcode still present. Eliminated? Update tracking matrix."
         )
 
-    def test_p3_ir_default_exists_currently(self):
-        """CLASS B: P3 CURRENT — ir.py default standalone_question still present."""
+    def test_p3_ir_default_is_canonical_after_m3(self):
+        """CLASS A: P3 CORRECTED — ir.py now uses canonical Unit Type vocabulary.
+
+        M.3 Boundary Correction (2026-09-20): Owner D1 confirmed
+        standalone_question/composite_question are NOT legal Unit Types.
+        IR now outputs canonical vocabulary: {standalone_unit, composite_unit}.
+
+        D10 provenance:
+            previous: assert "standalone_question" in source (P3 characterization)
+            why: M.3 corrects IR to use canonical vocabulary per Owner D1
+            new: assert "standalone_unit" in source; assert "standalone_question" not in source
+        """
         import inspect
 
         from app.domains.compile.ir import IRBuilder
 
         source = inspect.getsource(IRBuilder._node)
-        assert "standalone_question" in source, (
-            "P3: IR default standalone still present. Eliminated? Update tracking matrix."
+        assert "standalone_unit" in source, (
+            "P3: IR should use canonical Unit Type 'standalone_unit' after M.3 correction."
+        )
+        assert "standalone_question" not in source, (
+            "P3: IR should NOT use legacy vocabulary 'standalone_question' after M.3 correction."
         )
 
     def test_p5_ir_binary_status_still_present_after_m2(self):

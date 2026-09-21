@@ -157,11 +157,11 @@ kind 表：
 
 ### 4.5 Semantic Unit（standalone / composite）
 
-**standalone_question**：
+**standalone_unit**：
 
 ```json
 {
-  "unit_id": "Q1", "unit_type": "standalone_question", "question_number": "1",
+  "unit_id": "Q1", "unit_type": "standalone_unit", "question_number": "1",
   "section_id": "SEC-1", "original_question_type": "single_choice",
   "content": {
     "stem":       {"role": "stem", "question_label": "1"},
@@ -172,6 +172,11 @@ kind 表：
   "confidence": 0.98
 }
 ```
+
+> 注：`standalone_question` 为 Producer legacy vocabulary（见 README §2.2 术语裁决）。
+> V3 canonical Unit-Type 为 `standalone_unit`。Owner D1 明确禁止
+> `standalone_question` / `composite_question` 作为 canonical vocabulary。
+> Question Type 与 Unit Type 是正交维度，不得混用。
 
 **composite_unit**：`unit_id`（如 `U11-13`）+ `unit_type=composite_unit` +
 `question_number_range` + `shared_components{material/word_bank/shared_option_pool/
@@ -352,11 +357,11 @@ resolved target span。
 }
 ```
 
-**standalone unit**：
+**standalone_unit**：
 
 ```json
 {
-  "unit_id": "Q1", "unit_type": "standalone_question", "question_number": "1",
+  "unit_id": "Q1", "unit_type": "standalone_unit", "question_number": "1",
   "content_roles": {"stem": "required", "options": "required_for_choice", "answer": "required", "explanation": "optional"},
   "content": {
     "stem":    {"source_span": {"span_id": "sp-Q1-stem"}, "status": "resolved"},

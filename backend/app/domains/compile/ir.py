@@ -109,7 +109,7 @@ class IRBuilder:
     @staticmethod
     def _node(unit: dict, resolved: dict, inherited_type: str | None = None) -> IRNode:
         uid = unit.get("unit_id") or str(unit.get("question_label")) or "?"
-        u_type = unit.get("unit_type", "standalone_question")
+        u_type = unit.get("unit_type", "standalone_unit")
         # M.2: read declared semantic_status from annotation payload.
         # Only "unknown" is preserved as-is; other declared values fall through
         # to normal validation. Old IR without this field → "incomplete" default.
@@ -143,7 +143,7 @@ class IRBuilder:
                 semantic_status=initial_status,
             )
         return IRNode(
-            unit_id=uid, unit_type="standalone_question",
+            unit_id=uid, unit_type="standalone_unit",
             question_number=str(unit.get("question_number") or unit.get("question_label") or ""),
             question_number_range=None,
             original_question_type=original_type,
