@@ -68,9 +68,9 @@ _ANNOTATION_PROMPT_PREFIX = """你是题目语义标注助手。把文档文本�
 {"subject": <学科字符串或 null>, "grade": <年级字符串或 null>, "year": <年份字符串或 null>, "school": <学校字符串或 null>}
 subject/grade 能判断就填（如 "数学"/"三年级"），判断不出填 null。
 
-【semantic_units 元素】standalone_question 完整结构：
+【semantic_units 元素】standalone_unit 完整结构：
 {
-  "unit_id": "Q1", "unit_type": "standalone_question", "question_number": "1",
+  "unit_id": "Q1", "unit_type": "standalone_unit", "question_number": "1",
   "section_id": "SEC-1", "original_question_type": "single_choice",
   "content": {
     "stem": {"role": "stem", "question_label": "1"},
@@ -83,7 +83,7 @@ subject/grade 能判断就填（如 "数学"/"三年级"），判断不出填 nu
 若模型仍输出 confidence 亦合法——identity 层已隔离，BUG-V3-039。）
 
 【字段约束】
-- unit_type ∈ {"standalone_question", "composite_unit"}
+- unit_type ∈ {"standalone_unit", "composite_unit"}
 - original_question_type ∈ {"single_choice", "multiple_choice", "true_false", "fill_in", "short_answer", "essay", "cloze", "reading", "grammar_fill", "vocabulary_fill", "seven_to_five", "reading_expression"}
 - role ∈ {"stem", "option", "answer", "explanation"}
 - answer_zone ∈ {"answer_table", "inline_answer"}；explanation_zone ∈ {"inline_explanation"}

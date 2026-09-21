@@ -493,15 +493,28 @@ class TestUNKNOWN_WashMatrix:
             "P7: runner ternary pattern changed. Update tracking matrix."
         )
 
-    def test_p9_gate_passthrough_exists_currently(self):
-        """CLASS B: P9 CURRENT — gate/service.py passthrough on miss still present."""
+    def test_p9_gate_fail_closed_after_m3(self):
+        """HISTORICAL FIXTURE + CURRENT STATE: P9 — Gate fail-closed on non-canonical Unit Type.
+
+        D10 provenance:
+            previous: assert ".get(" in source (passthrough characterization)
+            why: P9 documented M.1 state (silent passthrough on miss); M.3 removes it
+            new: assert ValueError raise present; assert ".get(" not in source
+            provenance: X2.6 M.3 Vocabulary Boundary Enforcement Correction
+        """
         import inspect
 
         from app.domains.gate.service import _candidate_unit_type
 
         source = inspect.getsource(_candidate_unit_type)
-        assert ".get(" in source, (
-            "P9: gate passthrough pattern changed. Update tracking matrix."
+        assert "ValueError" in source, (
+            "P9/M.3: _candidate_unit_type must raise ValueError on non-canonical Unit Type."
+        )
+        assert "UNIT_TYPES" in source, (
+            "P9/M.3: _candidate_unit_type must validate against UNIT_TYPES."
+        )
+        assert ".get(" not in source, (
+            "P9/M.3: silent passthrough pattern must be removed after M.3 correction."
         )
 
     def test_p13_semantic_status_unknown_present_after_m2(self):

@@ -27,7 +27,7 @@ from app.domains.compile import COMPILER_VERSION, IR_SCHEMA_VERSION
 from app.domains.compile.compiler import Compiler
 from app.domains.compile.ir import IRBuilder
 from app.domains.evidence import EvidencePromotionService, ProposerIdentity
-from app.domains.gate import GATE_POLICY_VERSION
+from app.domains.gate import GATE_POLICY_VERSION, UNIT_TYPES
 from app.domains.gate.admission import AdmissionService
 from app.domains.gate.binding import validate_annotation_binding
 from app.domains.gate.payload import build as build_payload
@@ -41,10 +41,6 @@ from app.repositories.snapshot_repository import SnapshotRepository
 from app.repositories.source_repository import SourceRepository
 
 _STAGE = "compile"
-_IR_TO_CANDIDATE_UNIT_TYPE = {
-    "standalone_question": "standalone_unit",
-    "composite_unit": "composite_unit",
-}
 
 
 def _annotation_identity_projection(payload: object) -> object:
@@ -332,7 +328,18 @@ class GateService:
 
 
 def _candidate_unit_type(ir_unit_type: str) -> str:
-    return _IR_TO_CANDIDATE_UNIT_TYPE.get(ir_unit_type, ir_unit_type)
+    """M.3 Vocabulary Boundary Enforcement: canonical Unit Type fail-closed.
+
+    Canonical = {standalone_unit, composite_unit} (Owner D1 / 10 §5.2).
+    Non-canonical / unknown → ValueError (fail-closed; no Candidate created).
+    IR is expected to output canonical vocabulary; this is defense-in-depth.
+    """
+    if ir_unit_type not in UNIT_TYPES:
+        raise ValueError(
+            f"non-canonical unit_type {ir_unit_type!r} at Gate boundary; "
+            f"legal Unit Types = {sorted(UNIT_TYPES)}"
+        )
+    return ir_unit_type
 
 
 def _extract_unit_span_ids(root, compiled) -> tuple[str, ...]:

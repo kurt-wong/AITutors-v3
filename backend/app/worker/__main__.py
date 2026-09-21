@@ -33,7 +33,7 @@ _MOCK_ANNOTATION = json.dumps(
         "semantic_units": [
             {
                 "unit_id": f"Q{i}",
-                "unit_type": "standalone_question",
+                "unit_type": "standalone_unit",
                 "question_number": str(i),
                 "section_id": "SEC-1",
                 "original_question_type": "single_choice",
