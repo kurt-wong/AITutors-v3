@@ -41,7 +41,8 @@ def _single_lines():
 
 def _single_payload():
     return {"semantic_units": [
-        {"unit_id": "Q1", "original_question_type": "single_choice",
+        {"unit_id": "Q1", "unit_type": "standalone_unit",
+         "original_question_type": "single_choice",
          "content": {"stem": {"question_label": "1"}, "options": [{"label": l} for l in "ABCD"],
                      "answer": {"answer_zone": "answer_table", "question_label": "1"}}}]}
 
@@ -97,11 +98,13 @@ def _composite():
              "end_marker": {"kind": "instruction_marker", "granularity": "multi_line_pair",
                             "text": "材料结束"}}},
          "sub_questions": [
-             {"unit_id": "Q1", "question_label": "1", "original_question_type": "single_choice",
+             {"unit_id": "Q1", "unit_type": "standalone_unit", "question_label": "1",
+              "original_question_type": "single_choice",
               "content": {"stem": {"question_label": "1"},
                           "options": [{"label": l} for l in "ABC"],
                           "answer": {"answer_zone": "answer_table", "question_label": "1"}}},
-             {"unit_id": "Q2", "question_label": "2", "original_question_type": "single_choice",
+             {"unit_id": "Q2", "unit_type": "standalone_unit", "question_label": "2",
+              "original_question_type": "single_choice",
               "content": {"stem": {"question_label": "2"},
                           "options": [{"label": l} for l in "ABC"],
                           "answer": {"answer_zone": "answer_table", "question_label": "2"}}}]}]}

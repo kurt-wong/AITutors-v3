@@ -52,8 +52,8 @@ def _single_choice_payload(qn="1", original="single_choice", options=("A", "B", 
         "options": [{"label": l} for l in options],
         "answer": {"answer_zone": "answer_table", "question_label": qn},
     }
-    return {"semantic_units": [{"unit_id": f"Q{qn}", "original_question_type": original,
-             "content": content}]}
+    return {"semantic_units": [{"unit_id": f"Q{qn}", "unit_type": "standalone_unit",
+             "original_question_type": original, "content": content}]}
 
 
 def _ready_lines():
@@ -304,7 +304,8 @@ class TestM2_CaseE_Compatibility:
 
     async def test_old_missing_answer_fixture_unchanged(self):
         """CLASS A: missing answer still produces incomplete (no regression)."""
-        payload = {"semantic_units": [{"unit_id": "Q1", "original_question_type": "single_choice",
+        payload = {"semantic_units": [{"unit_id": "Q1", "unit_type": "standalone_unit",
+            "original_question_type": "single_choice",
             "content": {"stem": {"question_label": "1"},
                         "options": [{"label": l} for l in "ABCD"]}}]}
         lines = mk("1. 下列哪个是水果", "A. 苹果", "B. 香蕉", "C. 汽车", "D. 桌子")

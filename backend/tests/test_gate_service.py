@@ -38,7 +38,8 @@ COMPOSITE_LINES = ("材料开始", "材料中间内容段落", "材料结束",
 
 def _single_units():
     return [
-        {"unit_id": "Q1", "original_question_type": "single_choice",
+        {"unit_id": "Q1", "unit_type": "standalone_unit",
+         "original_question_type": "single_choice",
          "content": {"stem": {"question_label": "1"},
                      "options": [{"label": l} for l in "ABCD"],
                      "answer": {"answer_zone": "answer_table", "question_label": "1"}}}
@@ -47,7 +48,8 @@ def _single_units():
 
 def _fillin_units():
     return [
-        {"unit_id": "Q1", "original_question_type": "fill_in",
+        {"unit_id": "Q1", "unit_type": "standalone_unit",
+         "original_question_type": "fill_in",
          "content": {"stem": {"question_label": "1"},
                      "answer": {"answer_zone": "answer_table", "question_label": "1"}}}
     ]
@@ -55,7 +57,7 @@ def _fillin_units():
 
 def _composite_units():
     def sub(uid, qlabel, qn):
-        return {"unit_id": uid, "question_label": qlabel,
+        return {"unit_id": uid, "unit_type": "standalone_unit", "question_label": qlabel,
                 "original_question_type": "single_choice",
                 "content": {"stem": {"question_label": qlabel},
                             "options": [{"label": l} for l in "ABC"],
@@ -74,7 +76,8 @@ def _composite_units():
 
 def _foo_units():
     return [
-        {"unit_id": "Q1", "original_question_type": "foo",
+        {"unit_id": "Q1", "unit_type": "standalone_unit",
+         "original_question_type": "foo",
          "content": {"stem": {"question_label": "1"},
                      "options": [{"label": l} for l in "ABCD"],
                      "answer": {"answer_zone": "answer_table", "question_label": "1"}}}

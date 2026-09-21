@@ -16,7 +16,12 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass, field
 
-from app.domains.compile import SEMANTIC_STATUS, content_roles_for, map_canonical_type
+from app.domains.compile import (
+    SEMANTIC_STATUS,
+    UNIT_TYPES,
+    content_roles_for,
+    map_canonical_type,
+)
 from app.domains.resolver.span import ResolvedRun
 
 # span_id 命名与段 E reference.py target_id 保持一致（防跨段漂移）。
@@ -109,7 +114,18 @@ class IRBuilder:
     @staticmethod
     def _node(unit: dict, resolved: dict, inherited_type: str | None = None) -> IRNode:
         uid = unit.get("unit_id") or str(unit.get("question_label")) or "?"
-        u_type = unit.get("unit_type", "standalone_unit")
+        # F-M3-04: canonical Unit Type closed-set enforcement at IR construction.
+        # Owner D1 / 10 §5.2: Unit Type ∈ {standalone_unit, composite_unit}.
+        # Unknown / illegal / missing → explicit ValueError (no silent default).
+        # Same fail-closed mechanism as gate.service._candidate_unit_type (M.3).
+        # Boundary normalization of Producer legacy vocabulary is NOT this layer's job
+        # (OD-2 CLOSED: legacy → boundary normalization → canonical, before IR).
+        u_type = unit.get("unit_type")
+        if u_type not in UNIT_TYPES:
+            raise ValueError(
+                f"non-canonical unit_type {u_type!r} at IR construction; "
+                f"legal Unit Types = {sorted(UNIT_TYPES)}"
+            )
         # M.2: read declared semantic_status from annotation payload.
         # Only "unknown" is preserved as-is; other declared values fall through
         # to normal validation. Old IR without this field → "incomplete" default.

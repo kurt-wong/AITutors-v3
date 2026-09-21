@@ -27,7 +27,8 @@ def _standalone_lines(answer_letter="A"):
 
 
 def _standalone_payload():
-    return {"semantic_units": [{"unit_id": "Q1", "original_question_type": "single_choice",
+    return {"semantic_units": [{"unit_id": "Q1", "unit_type": "standalone_unit",
+        "original_question_type": "single_choice",
         "content": {"stem": {"question_label": "1"},
                     "options": [{"label": l} for l in "ABCD"],
                     "answer": {"answer_zone": "answer_table", "question_label": "1"}}}]}
@@ -64,10 +65,12 @@ async def test_occurrence_and_dedup_differ_fp3():
     lines = mk("1. 第一题", "A. 甲", "B. 乙", "2. 第二题", "A. 丙", "B. 丁",
                "【答案】", "1. A", "2. A")
     payload = {"semantic_units": [
-        {"unit_id": "Q1", "original_question_type": "single_choice",
+        {"unit_id": "Q1", "unit_type": "standalone_unit",
+         "original_question_type": "single_choice",
          "content": {"stem": {"question_label": "1"}, "options": [{"label": "A"}, {"label": "B"}],
                      "answer": {"answer_zone": "answer_table", "question_label": "1"}}},
-        {"unit_id": "Q2", "original_question_type": "single_choice",
+        {"unit_id": "Q2", "unit_type": "standalone_unit",
+         "original_question_type": "single_choice",
          "content": {"stem": {"question_label": "2"}, "options": [{"label": "A"}, {"label": "B"}],
                      "answer": {"answer_zone": "answer_table", "question_label": "2"}}},
     ]}
@@ -114,7 +117,8 @@ async def test_shared_material_compiled_once_fp2():
                     }
                 },
                 "sub_questions": [
-                    {"unit_id": "Q1", "question_label": "1", "content": {
+                    {"unit_id": "Q1", "unit_type": "standalone_unit", "question_label": "1",
+                     "content": {
                         "stem": {"question_label": "1"},
                         "options": [{"label": "A"}, {"label": "B"}],
                         "answer": {"answer_zone": "answer_table", "question_label": "1"}}}

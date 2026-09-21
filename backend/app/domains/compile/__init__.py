@@ -25,6 +25,11 @@ CANONICAL_TYPES = frozenset(
     }
 )
 
+# Owner D1 / 10 §5.2 canonical Unit Type closed set.
+# Question Type ⟂ Unit Type（正交；无 canonical QT→UT mapping）。
+# IR construction + Gate boundary 共用此值域（F-M3-04 / M.3）。
+UNIT_TYPES = frozenset({"standalone_unit", "composite_unit"})
+
 # 20 §6.2 IR.semantic_status 值域（BUG-V3-018 终裁 → X2.6 M.2 解冻）。
 # M.2 (X2.6-OD-D9-01 + IMPL-AUTH-01): 增加 "unknown" — semantic state / IR expression，
 # 不等于 UNKNOWN migration。旧 IR 无 unknown 值时 ready/incomplete 逻辑不变。

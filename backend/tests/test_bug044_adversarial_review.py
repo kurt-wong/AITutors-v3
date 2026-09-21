@@ -46,6 +46,7 @@ def _payload(ctype="single_choice"):
         "semantic_units": [
             {
                 "unit_id": "Q1",
+                "unit_type": "standalone_unit",
                 "original_question_type": ctype,
                 "content": {
                     "stem": {"question_label": "1"},

@@ -27,8 +27,8 @@ def _single_choice_payload(qn="1", original="single_choice", options=("A", "B", 
     }
     if with_answer:
         content["answer"] = {"answer_zone": "answer_table", "question_label": qn}
-    return {"semantic_units": [{"unit_id": f"Q{qn}", "original_question_type": original,
-             "content": content}]}
+    return {"semantic_units": [{"unit_id": f"Q{qn}", "unit_type": "standalone_unit",
+             "original_question_type": original, "content": content}]}
 
 
 def _ready_lines():
@@ -111,7 +111,8 @@ async def test_stem_unresolved_incomplete():
 
 
 async def test_choice_options_missing_incomplete():
-    payload = {"semantic_units": [{"unit_id": "Q1", "original_question_type": "single_choice",
+    payload = {"semantic_units": [{"unit_id": "Q1", "unit_type": "standalone_unit",
+        "original_question_type": "single_choice",
         "content": {"stem": {"question_label": "1"},
                     "answer": {"answer_zone": "answer_table", "question_label": "1"}}}]}
     ir = IRBuilder.build(_run(_ready_lines(), payload), payload, SVID, ANN_ID)
@@ -138,10 +139,12 @@ async def test_composite_child_unresolved_not_ready():
                 "end_marker": {"kind": "instruction_marker", "granularity": "multi_line_pair",
                                "text": "根据材料回答第1～2题"}}},
             "sub_questions": [
-                {"unit_id": "Q1", "question_label": "1", "content": {
+                {"unit_id": "Q1", "unit_type": "standalone_unit", "question_label": "1",
+                 "content": {
                     "stem": {"question_label": "1"}, "options": [{"label": "A"}, {"label": "B"}],
                     "answer": {"answer_zone": "answer_table", "question_label": "1"}}},
-                {"unit_id": "Q2", "question_label": "2", "content": {
+                {"unit_id": "Q2", "unit_type": "standalone_unit", "question_label": "2",
+                 "content": {
                     "stem": {"question_label": "9"},  # 题号 9 不存在
                     "options": [{"label": "A"}, {"label": "B"}],
                     "answer": {"answer_zone": "answer_table", "question_label": "2"}}},
@@ -168,10 +171,12 @@ async def test_composite_all_ready():
                 "end_marker": {"kind": "instruction_marker", "granularity": "multi_line_pair",
                                "text": "根据材料回答第1～2题"}}},
             "sub_questions": [
-                {"unit_id": "Q1", "question_label": "1", "content": {
+                {"unit_id": "Q1", "unit_type": "standalone_unit", "question_label": "1",
+                 "content": {
                     "stem": {"question_label": "1"}, "options": [{"label": "A"}, {"label": "B"}],
                     "answer": {"answer_zone": "answer_table", "question_label": "1"}}},
-                {"unit_id": "Q2", "question_label": "2", "content": {
+                {"unit_id": "Q2", "unit_type": "standalone_unit", "question_label": "2",
+                 "content": {
                     "stem": {"question_label": "2"}, "options": [{"label": "A"}, {"label": "B"}],
                     "answer": {"answer_zone": "answer_table", "question_label": "2"}}},
             ],
@@ -195,7 +200,8 @@ async def test_ir_input_not_mutated():
 
 async def test_answer_required_missing_incomplete():
     """F-R1：content_roles answer=required；缺 answer → incomplete（不得 ready）。"""
-    payload = {"semantic_units": [{"unit_id": "Q1", "original_question_type": "single_choice",
+    payload = {"semantic_units": [{"unit_id": "Q1", "unit_type": "standalone_unit",
+        "original_question_type": "single_choice",
         "content": {"stem": {"question_label": "1"},
                     "options": [{"label": l} for l in "ABCD"]}}]}  # 无 answer
     lines = mk("1. 下列哪个是水果", "A. 苹果", "B. 香蕉", "C. 汽车", "D. 桌子")
@@ -215,7 +221,7 @@ async def test_material_dependency_unresolved_composite_incomplete():
              "end_marker": {"kind": "instruction_marker", "granularity": "multi_line_pair",
                             "text": "材料结束"}}},
          "sub_questions": [
-             {"unit_id": "Q1", "question_label": "1",
+             {"unit_id": "Q1", "unit_type": "standalone_unit", "question_label": "1",
               "depends_on": [{"type": "material_dependency", "target": "material"}],
               "content": {"stem": {"question_label": "1"},
                           "options": [{"label": "A"}, {"label": "B"}],
@@ -238,11 +244,11 @@ async def test_composite_child_missing_answer_propagates_incomplete():
              "end_marker": {"kind": "instruction_marker", "granularity": "multi_line_pair",
                             "text": "根据材料回答第1～2题"}}},
          "sub_questions": [
-             {"unit_id": "Q1", "question_label": "1",
+             {"unit_id": "Q1", "unit_type": "standalone_unit", "question_label": "1",
               "content": {"stem": {"question_label": "1"},
                           "options": [{"label": "A"}, {"label": "B"}],
                           "answer": {"answer_zone": "answer_table", "question_label": "1"}}},
-             {"unit_id": "Q2", "question_label": "2",
+             {"unit_id": "Q2", "unit_type": "standalone_unit", "question_label": "2",
               "content": {"stem": {"question_label": "2"},
                           "options": [{"label": "A"}, {"label": "B"}]}}]}]}  # Q2 无 answer
     ir = IRBuilder.build(_run(lines, payload), payload, SVID, ANN_ID)
@@ -252,7 +258,8 @@ async def test_composite_child_missing_answer_propagates_incomplete():
 async def test_declared_image_fail_loud_incomplete():
     """F-R3：annotation 声明 image（F 尚无合法 figure_refs）→ incomplete，不得静默丢弃。"""
     lines = mk("1. 看图片回答", "A. 甲", "B. 乙", "【答案】", "1. A")
-    payload = {"semantic_units": [{"unit_id": "Q1", "original_question_type": "single_choice",
+    payload = {"semantic_units": [{"unit_id": "Q1", "unit_type": "standalone_unit",
+        "original_question_type": "single_choice",
         "content": {"stem": {"question_label": "1"},
                     "options": [{"label": "A"}, {"label": "B"}],
                     "answer": {"answer_zone": "answer_table", "question_label": "1"},
@@ -397,3 +404,137 @@ async def test_m2_ready_still_produces_leaves():
     )
     snapshot = compiler.compile(ir)
     assert len(snapshot.leaves) == 1, "ready node must still produce a leaf after M.2"
+
+
+# ================================================================ F-M3-04 Runtime Correction
+# X2.6 F-M3-04: IRBuilder must reject non-canonical unit_type (no silent default).
+# Owner decision: unknown/illegal unit_type → explicit rejection, NOT standalone_unit.
+# Mechanism reused: ValueError + UNIT_TYPES closed set (same as gate._candidate_unit_type).
+# OD-2 CLOSED: legacy vocabulary boundary normalization is NOT IR construction's job.
+
+
+async def test_f_m3_04_case_a_valid_standalone_accepted():
+    """F-M3-04 Test A: unit_type=standalone_unit → accepted by IRBuilder."""
+    payload = _single_choice_payload()
+    assert payload["semantic_units"][0]["unit_type"] == "standalone_unit"
+    ir = IRBuilder.build(_run(_ready_lines(), payload), payload, SVID, ANN_ID)
+    assert ir.units[0].unit_type == "standalone_unit"
+    assert ir.units[0].semantic_status == "ready"
+
+
+async def test_f_m3_04_case_b_valid_composite_accepted():
+    """F-M3-04 Test B: unit_type=composite_unit → accepted by IRBuilder."""
+    lines = mk("阅读材料", "材料正文内容", "根据材料回答第1～2题",
+               "1. 第一问", "A. 甲", "B. 乙",
+               "2. 第二问", "A. 丙", "B. 丁", "【答案】", "1. A", "2. A")
+    payload = {
+        "semantic_units": [{
+            "unit_id": "U1-2", "unit_type": "composite_unit",
+            "original_question_type": "single_choice",
+            "shared_components": {"material": {
+                "start_marker": {"kind": "instruction_marker", "granularity": "multi_line_pair",
+                                 "text": "阅读材料"},
+                "end_marker": {"kind": "instruction_marker", "granularity": "multi_line_pair",
+                               "text": "根据材料回答第1～2题"}}},
+            "sub_questions": [
+                {"unit_id": "Q1", "unit_type": "standalone_unit", "question_label": "1",
+                 "content": {
+                    "stem": {"question_label": "1"}, "options": [{"label": "A"}, {"label": "B"}],
+                    "answer": {"answer_zone": "answer_table", "question_label": "1"}}},
+                {"unit_id": "Q2", "unit_type": "standalone_unit", "question_label": "2",
+                 "content": {
+                    "stem": {"question_label": "2"}, "options": [{"label": "A"}, {"label": "B"}],
+                    "answer": {"answer_zone": "answer_table", "question_label": "2"}}},
+            ],
+        }]
+    }
+    ir = IRBuilder.build(_run(lines, payload), payload, SVID, ANN_ID)
+    assert ir.units[0].unit_type == "composite_unit"
+    assert ir.units[0].semantic_status == "ready"
+
+
+async def test_f_m3_04_case_c_unknown_value_explicit_failure():
+    """F-M3-04 Test C: unit_type=unknown_unit → explicit failure, NOT standalone_unit."""
+    import pytest
+    payload = _single_choice_payload()
+    payload["semantic_units"][0]["unit_type"] = "unknown_unit"
+    with pytest.raises(ValueError, match="non-canonical unit_type"):
+        IRBuilder.build(_run(_ready_lines(), payload), payload, SVID, ANN_ID)
+
+
+async def test_f_m3_04_case_d_legacy_vocabulary_not_silently_accepted():
+    """F-M3-04 Test D: legacy Producer vocabulary must not be silently accepted as Unit Type.
+
+    standalone_question / composite_question are legacy Producer vocabulary (OD-2 CLOSED).
+    Canonical runtime validation (IRBuilder) must reject them explicitly.
+    This is NOT OD-2 re-implementation — it proves canonical runtime does not treat
+    legacy vocabulary as canonical Unit Type.
+    """
+    import pytest
+    for legacy in ("standalone_question", "composite_question"):
+        payload = _single_choice_payload()
+        payload["semantic_units"][0]["unit_type"] = legacy
+        with pytest.raises(ValueError, match="non-canonical unit_type"):
+            IRBuilder.build(_run(_ready_lines(), payload), payload, SVID, ANN_ID)
+
+
+async def test_f_m3_04_case_e_missing_value_not_silent_default():
+    """F-M3-04 Test E: missing unit_type → explicit failure, NOT silent default.
+
+    Evidence that upstream schema does NOT guarantee presence at this boundary:
+    historical test fixtures omitted unit_type and relied on the silent default
+    (ir.py:112 unit.get("unit_type", "standalone_unit")). Therefore Test E is required.
+    """
+    import pytest
+    payload = _single_choice_payload()
+    del payload["semantic_units"][0]["unit_type"]
+    with pytest.raises(ValueError, match="non-canonical unit_type"):
+        IRBuilder.build(_run(_ready_lines(), payload), payload, SVID, ANN_ID)
+
+
+async def test_f_m3_04_sub_question_missing_unit_type_rejected():
+    """F-M3-04: composite sub_question missing unit_type → explicit failure (no silent default)."""
+    import pytest
+    lines = mk("阅读材料", "材料正文", "根据材料回答第1～2题",
+               "1. 第一问", "A. 甲", "B. 乙", "【答案】", "1. A")
+    payload = {"semantic_units": [
+        {"unit_id": "U1-2", "unit_type": "composite_unit",
+         "original_question_type": "single_choice",
+         "shared_components": {"material": {
+             "start_marker": {"kind": "instruction_marker", "granularity": "multi_line_pair",
+                              "text": "阅读材料"},
+             "end_marker": {"kind": "instruction_marker", "granularity": "multi_line_pair",
+                            "text": "根据材料回答第1～2题"}}},
+         "sub_questions": [
+             {"unit_id": "Q1", "question_label": "1",
+              "content": {"stem": {"question_label": "1"},
+                          "options": [{"label": "A"}, {"label": "B"}],
+                          "answer": {"answer_zone": "answer_table", "question_label": "1"}}}]}]}
+    with pytest.raises(ValueError, match="non-canonical unit_type"):
+        IRBuilder.build(_run(lines, payload), payload, SVID, ANN_ID)
+
+
+def test_f_m3_04_no_silent_default_pattern_in_source():
+    """F-M3-04: IRBuilder._node must not contain the silent-default pattern."""
+    import inspect
+    from app.domains.compile.ir import IRBuilder
+    source = inspect.getsource(IRBuilder._node)
+    assert 'get("unit_type", "standalone_unit")' not in source, (
+        "IRBuilder._node must not silent-default missing unit_type to standalone_unit"
+    )
+    assert "UNIT_TYPES" in source, (
+        "IRBuilder._node must validate against UNIT_TYPES closed set"
+    )
+    assert "standalone_question" not in source, (
+        "IRBuilder._node must not reference legacy vocabulary as canonical Unit Type"
+    )
+
+
+def test_f_m3_04_unit_types_closed_set_unchanged():
+    """F-M3-04: canonical Unit Type closed set remains {standalone_unit, composite_unit}."""
+    from app.domains.compile import UNIT_TYPES
+    from app.domains.gate import UNIT_TYPES as GATE_UNIT_TYPES
+    assert UNIT_TYPES == frozenset({"standalone_unit", "composite_unit"})
+    assert GATE_UNIT_TYPES is UNIT_TYPES, (
+        "gate must re-export compile UNIT_TYPES (single source of truth)"
+    )

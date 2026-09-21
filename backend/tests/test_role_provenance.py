@@ -49,7 +49,7 @@ def _single_lines(answer_text="A"):
 
 def _single_payload(ctype="single_choice"):
     return {"semantic_units": [
-        {"unit_id": "Q1", "original_question_type": ctype,
+        {"unit_id": "Q1", "unit_type": "standalone_unit", "original_question_type": ctype,
          "content": {"stem": {"question_label": "1"},
                      "options": [{"label": l} for l in "ABCD"],
                      "answer": {"answer_zone": "answer_table", "question_label": "1"}}}]}

@@ -1,9 +1,11 @@
-"""Gate + Candidate + Admission 域（段 G，20 §8 / 10 §5.2-5.4）。
+"""Gate + Candidate + Admission domain constants.
 
-gate 判定只产 pass/fail + reasons（gate_decision），不修改 content、不做语义猜测；
-decision_status 只经 approve()/reject() 唯一入口（P0-G-001，application-level
-enforcement，不加 ORM event / DB trigger/RLS）。
+UNIT_TYPES is the canonical Unit Type closed set (Owner D1 / 10 §5.2).
+Single source of truth lives in compile (IR construction layer); gate re-exports
+it so Gate boundary validation and IR construction cannot drift (F-M3-04 / M.3).
 """
+
+from app.domains.compile import UNIT_TYPES
 
 GATE_POLICY_VERSION = "admission-gate/v1"
 
@@ -14,5 +16,9 @@ DECISION_STATUS = frozenset({"pending_review", "approved", "rejected"})
 # fill_in/short_answer/essay/共享选项池（seven_to_five/vocabulary_fill 等）不开放。
 STRICT_AUTO_TYPES = frozenset({"single_choice", "multiple_choice", "true_false"})
 
-# unit_type 值域（10 §5.2）。
-UNIT_TYPES = frozenset({"standalone_unit", "composite_unit"})
+__all__ = [
+    "UNIT_TYPES",
+    "GATE_POLICY_VERSION",
+    "DECISION_STATUS",
+    "STRICT_AUTO_TYPES",
+]
