@@ -61,10 +61,31 @@ async def test_alias_type_not_resolved_incomplete():
         assert ir.units[0].semantic_status == "incomplete"
 
 
-def test_semantic_status_domain_frozen():
-    """BUG-V3-018：IR.semantic_status 值域冻结为 {ready, incomplete}，禁第三状态漂移。"""
+def test_semantic_status_domain_m2():
+    """X2.6 M.2: SEMANTIC_STATUS 值域 = {ready, incomplete, unknown}。
+
+    D10 provenance:
+        previous: SEMANTIC_STATUS == frozenset({"ready", "incomplete"})
+        why: BUG-V3-018 froze domain at two values; X2.6 M.2 unfreezes
+        new: SEMANTIC_STATUS == frozenset({"ready", "incomplete", "unknown"})
+        provenance: X2.6-OD-D9-01 (OD-FINAL-01) + X2.6-IMPL-AUTH-01 + M.2
+        note: unknown = semantic expression, NOT migration; old IR unchanged
+    """
     from app.domains.compile import SEMANTIC_STATUS
-    assert SEMANTIC_STATUS == frozenset({"ready", "incomplete"})
+    assert SEMANTIC_STATUS == frozenset({"ready", "incomplete", "unknown"})
+
+
+def test_semantic_status_domain_historical_fixture():
+    """HISTORICAL FIXTURE (D10): pre-M.2 domain was {ready, incomplete} (BUG-V3-018).
+
+    Preserves original constraint for provenance. M.2 expanded to 3 values;
+    ready/incomplete behavior unchanged (compatibility).
+    """
+    from app.domains.compile import SEMANTIC_STATUS
+    historical_domain = frozenset({"ready", "incomplete"})
+    assert historical_domain.issubset(SEMANTIC_STATUS), (
+        "ready and incomplete must remain in SEMANTIC_STATUS after M.2"
+    )
 
 
 def test_content_roles_m1_contract_frozen():
@@ -238,3 +259,141 @@ async def test_declared_image_fail_loud_incomplete():
                     "image": {"image_ref": {"figure_id": "fig1"}}}}]}
     ir = IRBuilder.build(_run(lines, payload), payload, SVID, ANN_ID)
     assert ir.units[0].semantic_status == "incomplete"  # fail-loud，非 ready + 丢图
+
+
+# ================================================================ M.2 Acceptance Tests
+# X2.6 M.2: SEMANTIC_STATUS unfreeze + UNKNOWN expression
+# Cases: A(ready compat) B(incomplete compat) C(unknown IR) D(unknown compiler safety)
+#        E(old fixture compat) — see test_x26_m2_semantic_status.py for Case F
+
+
+async def test_m2_case_c_unknown_expressible_in_ir():
+    """M.2 Case C: annotation payload with semantic_status="unknown" → IR preserves unknown."""
+    payload = _single_choice_payload()
+    payload["semantic_units"][0]["semantic_status"] = "unknown"
+    ir = IRBuilder.build(_run(_ready_lines(), payload), payload, SVID, ANN_ID)
+    assert ir.units[0].semantic_status == "unknown"
+
+
+async def test_m2_case_c_unknown_direct_construction():
+    """M.2 Case C: IRNode directly constructed with semantic_status="unknown" is valid."""
+    from app.domains.compile.ir import IR, IRNode, validate_ir
+    node = IRNode(
+        unit_id="U1", unit_type="standalone_question",
+        question_number="1", question_number_range=None,
+        original_question_type="single_choice",
+        semantic_status="unknown",
+    )
+    ir = IR(
+        ir_schema="semantic-question-ir/v0.3",
+        source_version_id=SVID, annotation_id=ANN_ID, units=(node,),
+    )
+    validated = validate_ir(ir)
+    assert validated.units[0].semantic_status == "unknown"
+
+
+async def test_m2_case_d_unknown_no_compiler_leaves():
+    """M.2 Case D: unknown IR node → compiler produces ZERO leaves (compiler safety boundary)."""
+    from app.domains.compile.compiler import Compiler
+    from app.domains.compile.ir import IR, IRContent, IRNode
+    node = IRNode(
+        unit_id="U1", unit_type="standalone_question",
+        question_number="1", question_number_range=None,
+        original_question_type="single_choice",
+        content=(
+            IRContent(role="stem", span_id="sp-U1.stem"),
+            IRContent(role="answer", span_id="sp-U1.answer"),
+        ),
+        semantic_status="unknown",
+    )
+    ir = IR(
+        ir_schema="semantic-question-ir/v0.3",
+        source_version_id=SVID, annotation_id=ANN_ID, units=(node,),
+    )
+    compiler = Compiler(span_by_id={}, line_by_ref={})
+    snapshot = compiler.compile(ir)
+    assert len(snapshot.leaves) == 0, "unknown must not produce compiler leaves"
+    assert len(snapshot.materials) == 0
+
+
+async def test_m2_case_d_unknown_composite_no_compiler_leaves():
+    """M.2 Case D: composite with unknown status → compiler produces ZERO leaves/materials."""
+    from app.domains.compile.compiler import Compiler
+    from app.domains.compile.ir import IR, IRContent, IRNode
+    comp = IRNode(
+        unit_id="U1-2", unit_type="composite_unit",
+        question_number=None, question_number_range="1-2",
+        original_question_type="single_choice",
+        shared_components=(IRContent(role="material", span_id="sp-U1-2.material"),),
+        sub_questions=(
+            IRNode(
+                unit_id="Q1", unit_type="standalone_question",
+                question_number="1", question_number_range=None,
+                original_question_type="single_choice",
+                semantic_status="ready",
+            ),
+        ),
+        semantic_status="unknown",
+    )
+    ir = IR(
+        ir_schema="semantic-question-ir/v0.3",
+        source_version_id=SVID, annotation_id=ANN_ID, units=(comp,),
+    )
+    compiler = Compiler(span_by_id={}, line_by_ref={})
+    snapshot = compiler.compile(ir)
+    assert len(snapshot.leaves) == 0, "unknown composite must not produce leaves"
+    assert len(snapshot.materials) == 0, "unknown composite must not produce materials"
+
+
+async def test_m2_case_e_compatibility_ready_still_works():
+    """M.2 Case E: existing ready fixture produces correct IR after M.2 (no regression)."""
+    payload = _single_choice_payload()
+    ir = IRBuilder.build(_run(_ready_lines(), payload), payload, SVID, ANN_ID)
+    assert ir.units[0].semantic_status == "ready"
+    assert ir.units[0].original_question_type == "single_choice"
+
+
+async def test_m2_case_e_compatibility_incomplete_still_works():
+    """M.2 Case E: existing incomplete fixture produces incomplete after M.2 (no regression)."""
+    payload = _single_choice_payload(original="foo")
+    ir = IRBuilder.build(_run(_ready_lines(), payload), payload, SVID, ANN_ID)
+    assert ir.units[0].semantic_status == "incomplete"
+
+
+async def test_m2_ready_still_produces_leaves():
+    """M.2 Case A: ready node still produces leaves after M.2 (compiler unchanged for ready)."""
+    import uuid as _uuid
+    from app.domains.compile.compiler import Compiler
+    from app.domains.compile.ir import IR, IRContent, IRNode
+    svid = _uuid.UUID("00000000-0000-0000-0000-00000000000f")
+    annid = _uuid.UUID("00000000-0000-0000-0000-0000000000f0")
+
+    class _FakeSpan:
+        granularity = "multi_line"
+        start_offset = None
+        end_offset = None
+        line_refs = ("P1L001",)
+
+    class _FakeLine:
+        text = "test content"
+
+    node = IRNode(
+        unit_id="U1", unit_type="standalone_question",
+        question_number="1", question_number_range=None,
+        original_question_type="single_choice",
+        content=(
+            IRContent(role="stem", span_id="sp-U1.stem"),
+            IRContent(role="answer", span_id="sp-U1.answer"),
+        ),
+        semantic_status="ready",
+    )
+    ir = IR(
+        ir_schema="semantic-question-ir/v0.3",
+        source_version_id=svid, annotation_id=annid, units=(node,),
+    )
+    compiler = Compiler(
+        span_by_id={"sp-U1.stem": _FakeSpan(), "sp-U1.answer": _FakeSpan()},
+        line_by_ref={"P1L001": _FakeLine()},
+    )
+    snapshot = compiler.compile(ir)
+    assert len(snapshot.leaves) == 1, "ready node must still produce a leaf after M.2"

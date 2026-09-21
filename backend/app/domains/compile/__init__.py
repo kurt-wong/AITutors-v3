@@ -25,8 +25,11 @@ CANONICAL_TYPES = frozenset(
     }
 )
 
-# 20 §6.2 IR.semantic_status 冻结值域（BUG-V3-018 终裁；仅 {ready, incomplete}，不搬 E ResolvedStatus）。
-SEMANTIC_STATUS = frozenset({"ready", "incomplete"})
+# 20 §6.2 IR.semantic_status 值域（BUG-V3-018 终裁 → X2.6 M.2 解冻）。
+# M.2 (X2.6-OD-D9-01 + IMPL-AUTH-01): 增加 "unknown" — semantic state / IR expression，
+# 不等于 UNKNOWN migration。旧 IR 无 unknown 值时 ready/incomplete 逻辑不变。
+# unknown 不进 compiler leaves；unknown 不进 production mapping / migration。
+SEMANTIC_STATUS = frozenset({"ready", "incomplete", "unknown"})
 
 # content role 必需性值域（20 §6.1 示例 + DISPLAY_CONTRACT §0.2；per-type 未集中冻结
 # → BUG-V3-016 保守映射）。

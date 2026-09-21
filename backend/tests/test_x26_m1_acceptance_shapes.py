@@ -9,11 +9,12 @@ Evidence classification (M.1 Correction, C-03):
     CLASS C — Documentation assertion: proves document/constant exists
     CLASS D — Self-referential/tautological: NOT independent implementation evidence
 
-F-05-A evidence status (M.1 Correction, C-01):
+F-05-A evidence status (M.1 Correction, C-01 + OD-2 Registration):
     Event-ID existence validation = EXISTS (module-local, Class A)
-    Mapping ↔ event semantic binding = DOES NOT EXIST
-    Per-value Owner event IDs = OWNER DECISION REQUIRED
+    Mapping ↔ event semantic binding = DOES NOT EXIST (IMPLEMENTATION GAP)
+    Per-value Owner event IDs = RECORDED (OD-2: X2.6-OD-2-MAP-STANDALONE-01 / COMPOSITE-01)
     Complete semantic binding enforcement = IMPLEMENTATION GAP
+    Production mapping enforcement = NOT IMPLEMENTED (Owner authorization ≠ enforcement)
 
 D10 provenance: This is a NEW test file. No existing test is modified.
 M.1 Correction: Classification docstrings added; real DI-01 hash test added.
@@ -154,11 +155,12 @@ class TestF06B_DI01_FixtureIdentity:
 class TestF05A_MappingEventIdentity:
     """F-05-A: Mapping event id cross-validation — MODULE-LOCAL ENFORCEMENT ONLY.
 
-    Evidence status (M.1 Correction, C-01):
+    Evidence status (M.1 Correction C-01 + OD-2 Registration):
         Event-ID existence validation = EXISTS (Class A: module-local)
-        Mapping ↔ event semantic binding = DOES NOT EXIST
-        Per-value Owner event IDs = OWNER DECISION REQUIRED
+        Mapping ↔ event semantic binding = DOES NOT EXIST (IMPLEMENTATION GAP)
+        Per-value Owner event IDs = RECORDED (OD-2: X2.6-OD-2-MAP-STANDALONE-01 / COMPOSITE-01)
         Complete semantic binding enforcement = IMPLEMENTATION GAP
+        Production mapping enforcement = NOT IMPLEMENTED
 
     What these tests CAN prove:
         - Pending mappings do not activate
@@ -301,12 +303,13 @@ class TestF05A_MappingEventIdentity:
         assert validate_mapping_event_identity("OD-MAP-01-APPROVED", authorized) is True
 
     def test_no_mapping_activated_without_event_id(self):
-        """CLASS D (EMPTY LOOP): No mapping row may be AUTHORIZED without mapping_basis.
+        """CLASS A: No mapping row may be AUTHORIZED without mapping_basis.
 
-        C-01 CORRECTION: Currently ALL rows are PENDING_OWNER or PROHIBITED.
-        No AUTHORIZED rows exist. The loop body never executes. This test
-        passes vacuously — it provides NO independent evidence that the
-        enforcement mechanism works against AUTHORIZED rows with missing basis.
+        D10 provenance:
+            previous: "Currently ALL rows are PENDING_OWNER or PROHIBITED"
+            why: OD-2 registered 2026-09-20 — 2 rows now AUTHORIZED with event IDs
+            new: test verifies AUTHORIZED rows have non-empty mapping_basis
+            provenance: X2.6-OD-2-MAPPING-AUTHORIZATION
         """
         from app.domains.compile.mapping_registry import (
             LEGACY_TO_CANONICAL_MAP,
@@ -320,8 +323,8 @@ class TestF05A_MappingEventIdentity:
                 assert entry.mapping_basis, (
                     f"{source_value} is AUTHORIZED but mapping_basis is empty"
                 )
-        # Currently 0 AUTHORIZED rows — test passes vacuously
-        # This is expected: no Owner event IDs have been provided yet
+        # After OD-2: 2 AUTHORIZED rows (standalone_question, composite_question)
+        # Both must have event IDs from OD-2 registration
 
 
 # ================================================================ F-05-B: Compiler Wash-Path
@@ -341,23 +344,33 @@ class TestF05B_CompilerWashPath:
         source = inspect.getsource(Compiler._compile_node)
         assert "semantic_status" in source and "ready" in source
 
-    def test_semantic_status_current_domain_is_two_values(self):
-        """CLASS B: CURRENT STATE — SEMANTIC_STATUS = {ready, incomplete} (P13 OPEN).
+    def test_semantic_status_domain_after_m2(self):
+        """HISTORICAL FIXTURE + CURRENT STATE: SEMANTIC_STATUS = {ready, incomplete, unknown}.
 
-        TARGET STATE (M.2): SEMANTIC_STATUS = {ready, incomplete, unknown}
-        This test documents current state; it will need provenance update after M.2.
+        D10 provenance:
+            previous: SEMANTIC_STATUS == frozenset({"ready", "incomplete"})
+            why: X2.6 M.2 unfreezes domain (OD-D9-01 + IMPL-AUTH-01)
+            new: SEMANTIC_STATUS == frozenset({"ready", "incomplete", "unknown"})
+            provenance: X2.6-OD-D9-01, X2.6-IMPL-AUTH-01, M.2
+            note: ready/incomplete behavior unchanged; unknown = IR expression only
         """
         from app.domains.compile import SEMANTIC_STATUS
 
-        assert SEMANTIC_STATUS == frozenset({"ready", "incomplete"}), (
-            "M.1 baseline: SEMANTIC_STATUS is two-valued. "
-            "If this fails, the domain has changed — update tracking matrix."
+        assert SEMANTIC_STATUS == frozenset({"ready", "incomplete", "unknown"}), (
+            "M.2 target: SEMANTIC_STATUS must be three-valued. "
+            "If this fails, M.2 implementation is incomplete."
         )
+        # Historical constraint (pre-M.2): {ready, incomplete} subset still holds
+        assert frozenset({"ready", "incomplete"}).issubset(SEMANTIC_STATUS)
 
-    def test_ir_binary_status_documented(self):
-        """CLASS B: CURRENT STATE — ir.py:244 uses binary incomplete/ready (P5 OPEN).
+    def test_ir_binary_status_still_present(self):
+        """CLASS B: ir.py still uses incomplete/ready logic; M.2 adds unknown but preserves binary path.
 
-        Documents that unknown is not yet distinguishable from incomplete.
+        D10 provenance:
+            previous: assert "incomplete" in source and "ready" in source
+            why: M.1 documented binary status (P5); M.2 adds unknown but ready/incomplete logic unchanged
+            new: same assertion still holds; unknown is additional, not replacement
+            provenance: X2.6 M.2
         """
         import inspect
 
@@ -365,7 +378,7 @@ class TestF05B_CompilerWashPath:
 
         source = inspect.getsource(_validate_node)
         assert "incomplete" in source and "ready" in source, (
-            "M.1 baseline: IR status is binary. If this fails, implementation has started."
+            "M.2 compatibility: ready/incomplete logic must remain in _validate_node."
         )
 
 
@@ -418,15 +431,23 @@ class TestUNKNOWN_WashMatrix:
             "P3: IR default standalone still present. Eliminated? Update tracking matrix."
         )
 
-    def test_p5_ir_binary_status_exists_currently(self):
-        """CLASS B: P5 CURRENT — ir.py binary incomplete/ready still present."""
+    def test_p5_ir_binary_status_still_present_after_m2(self):
+        """CLASS B: P5 — ir.py binary incomplete/ready logic still present after M.2.
+
+        D10 provenance:
+            previous: assert "incomplete" in source and "ready" in source (P5 characterization)
+            why: M.2 adds unknown but preserves ready/incomplete logic; P5 not auto-closed
+            new: same assertion still holds; unknown is additive
+            provenance: X2.6 M.2 — P5 NOT auto-closed by M.2
+        """
         import inspect
 
         from app.domains.compile.ir import _validate_node
 
         source = inspect.getsource(_validate_node)
         assert "incomplete" in source and "ready" in source, (
-            "P5: binary status still present. Eliminated? Update tracking matrix."
+            "P5/M.2: binary ready/incomplete logic must remain; "
+            "M.2 does NOT auto-close P5."
         )
 
     def test_p6_runner_skip_exists_currently(self):
@@ -470,13 +491,19 @@ class TestUNKNOWN_WashMatrix:
             "P9: gate passthrough pattern changed. Update tracking matrix."
         )
 
-    def test_p13_semantic_status_no_unknown_currently(self):
-        """CLASS B: P13 CURRENT — SEMANTIC_STATUS has no 'unknown' value."""
+    def test_p13_semantic_status_unknown_present_after_m2(self):
+        """HISTORICAL FIXTURE + CURRENT STATE: P13 — SEMANTIC_STATUS includes 'unknown' after M.2.
+
+        D10 provenance:
+            previous: assert "unknown" not in SEMANTIC_STATUS
+            why: P13 documented M.1 state (2-value domain); M.2 unfreezes domain
+            new: assert "unknown" in SEMANTIC_STATUS (M.2 target state)
+            provenance: X2.6-OD-D9-01, M.2
+        """
         from app.domains.compile import SEMANTIC_STATUS
 
-        assert "unknown" not in SEMANTIC_STATUS, (
-            "P13: unknown appeared in SEMANTIC_STATUS. Implementation started? "
-            "Update tracking matrix and test provenance."
+        assert "unknown" in SEMANTIC_STATUS, (
+            "P13/M.2: unknown must be in SEMANTIC_STATUS after M.2 implementation."
         )
 
     def test_unknown_wash_matrix_target_paths_documented(self):

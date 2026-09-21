@@ -1,10 +1,14 @@
 """Semantic Question IR（段 F，F1-F2，20 §6）。transient；span 只存 id，不复制正文。
 
 IRBuilder 把 E ResolvedRun + annotation 装配成 IR；validate_ir 校验 20 §6.2 不变量 1-8，
-产出每 unit 的 semantic_status（{ready, incomplete}，BUG-V3-018 最小值域）。
+产出每 unit 的 semantic_status（{ready, incomplete, unknown}，M.2 解冻）。
 
 F 只装配不补语义：content 只含 annotation 已声明的 role；role 无对应 resolved span
 （span_id 缺失）→ 该 unit 非 ready（incomplete），F 不从正文补猜。
+
+M.2 (X2.6): IR 可表达 unknown。unknown 不进 compiler leaves（compiler 侧 != "ready" 全 block）。
+unknown = semantic state / IR expression，不等于 UNKNOWN migration / production mapping。
+旧 IR 无 unknown 值时 ready/incomplete 逻辑不变。
 """
 
 from __future__ import annotations
@@ -106,6 +110,14 @@ class IRBuilder:
     def _node(unit: dict, resolved: dict, inherited_type: str | None = None) -> IRNode:
         uid = unit.get("unit_id") or str(unit.get("question_label")) or "?"
         u_type = unit.get("unit_type", "standalone_question")
+        # M.2: read declared semantic_status from annotation payload.
+        # Only "unknown" is preserved as-is; other declared values fall through
+        # to normal validation. Old IR without this field → "incomplete" default.
+        declared_status = unit.get("semantic_status")
+        if declared_status == "unknown":
+            initial_status = "unknown"
+        else:
+            initial_status = "incomplete"  # default; validator will recompute
         sub_units = unit.get("sub_questions") or []
         shared = unit.get("shared_components") or {}
         content = unit.get("content") or {}
@@ -128,6 +140,7 @@ class IRBuilder:
                 shared_components=tuple(shared_items),
                 sub_questions=subs,
                 relations=_declared_relations(uid, unit),
+                semantic_status=initial_status,
             )
         return IRNode(
             unit_id=uid, unit_type="standalone_question",
@@ -135,6 +148,7 @@ class IRBuilder:
             question_number_range=None,
             original_question_type=original_type,
             content=_content_items(uid, content, resolved),
+            semantic_status=initial_status,
         )
 
 
@@ -189,6 +203,17 @@ def _validate_node(node: IRNode, seen: set[str]) -> IRNode:
     if node.unit_id in seen:
         problems.append("duplicate unit_id")  # invariant 5
     seen.add(node.unit_id)
+
+    # M.2: unknown 已声明则保留，不覆盖为 ready/incomplete。
+    # unknown = semantic state expression; does NOT trigger normal validation.
+    if node.semantic_status == "unknown":
+        validated_subs = tuple(_validate_node(s, seen) for s in node.sub_questions)
+        return IRNode(
+            node.unit_id, node.unit_type, node.question_number,
+            node.question_number_range, node.original_question_type,
+            node.content, node.shared_components, validated_subs,
+            node.relations, "unknown",
+        )
 
     canonical = None
     if node.original_question_type is not None:
