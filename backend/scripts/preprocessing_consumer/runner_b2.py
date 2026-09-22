@@ -100,7 +100,9 @@ def _verify_identity_boundary(
 
     Returns:
         dict with keys: gate, identity_state, semantic_state, reason, mismatches,
-        interface_scope
+        interface_scope。其中 `interface_scope` 在 M1 成功读取 manifest 后恒存在；
+        M1/M2 早期返回（manifest_read_error / source_bytes_error）仅含前五键，
+        且已 `gate=BLOCK`——失败同样发生在边界，下游不执行。
     """
     try:
         # M1: Manifest identity
