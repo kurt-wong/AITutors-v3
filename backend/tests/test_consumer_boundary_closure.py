@@ -45,10 +45,21 @@ def _write_source(tmp_path: Path, content: bytes, name: str = "source.md") -> Pa
 
 
 def _write_manifest(tmp_path: Path, source_sha: str | None,
-                    source_file: str | None = None) -> Path:
+                    source_file: str | None = None,
+                    identity_version: object = 2) -> Path:
+    """写一个 manifest fixture。
+
+    `identity_version` 默认 2（Frozen Contract v0.2 Interface Scope 字段口径）。
+    本文件验证的是 M1–M5 **身份真实性**轴；F-INT-08 之后 Interface Scope
+    （`identity_version == 2`）是与之 **AND** 的第二轴，故「合法 identity」的
+    fixture 必须同时声明版本 2，否则会被集成边界正确拒绝——那属 F-INT-08 自身
+    用例，见 `test_x26_fint08_interface_scope.py`。传 `None` 构造「未声明版本」输入。
+    """
     m: dict = {"source_file": source_file or "", "units": []}
     if source_sha is not None:
         m["source_content_sha256"] = source_sha
+    if identity_version is not None:
+        m["identity_version"] = identity_version
     p = tmp_path / "test.manifest.json"
     p.write_text(json.dumps(m, ensure_ascii=False), encoding="utf-8")
     return p

@@ -29,7 +29,7 @@ os.environ.setdefault(
 )
 
 from app.core.hashing import sha256_hex
-from app.core.identity_gate import evaluate_identity_gate
+from app.core.identity_gate import GATE_BLOCK, evaluate_identity_gate
 from app.core.identity_verifier import verify_identity
 from app.core.ir_identity import IRReadError, read_ir_identity
 from app.core.manifest_identity import ManifestReadError, read_manifest_identity
@@ -49,10 +49,31 @@ from .annotation_adapter import manifest_to_annotation_payload
 from .boundary import (
     CODE_BROKEN_LINE_REFERENCE,
     CODE_BROKEN_MATERIAL_REFERENCE,
+    enforce_interface_scope,
     normalize_unit_type,
 )
 from .manifest_reader import Manifest, ManifestUnit, find_manifests, load_manifest
 from .source_loader import SourceLine, compute_body_hash, load_source_lines
+
+
+def _declared_identity_version(manifest_path: Path) -> object:
+    """窄读 Producer manifest 声明的 `identity_version`（verbatim，不解释、不默认）。
+
+    M1 `read_manifest_identity` 按其**冻结设计**只暴露 `source_content_sha256`，
+    不读取 Interface Scope 版本字段；此处只取该声明字段本身。**判定权 100% 在
+    `boundary.enforce_interface_scope`**——本函数不判定、不归一化、不给默认值，
+    因此不构成第二套 identity validation 系统（X2.6 task §4 / F-INT-01）。
+
+    字段缺失 / JSON null → `None`（= 未声明），交由边界判定为
+    `MISSING_IDENTITY_VERSION` 拒绝，**绝不默认为 2**。
+
+    前置条件：M1 已成功解析该 JSON（`ManifestReadError` 已在此前短路），
+    故本函数不会因 JSON 不可解析而上抛。
+    """
+    raw = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if not isinstance(raw, dict):
+        return None
+    return raw.get("identity_version")
 
 
 def _verify_identity_boundary(
@@ -60,13 +81,26 @@ def _verify_identity_boundary(
     source_path: Path,
     resolver_ir_path: Path | None = None,
 ) -> dict:
-    """Consumer Identity Verification — M1→M2→M3→M4→M5 完整边界验证。
+    """Consumer Identity Verification — Interface Scope + M1→M2→M3→M4→M5 完整边界验证。
 
-    在任何 semantic consumption（IR/Compiler/Gate/Admission）之前执行。
-    M5 BLOCK → 下游完全不执行。
+    在任何 semantic consumption（annotation payload / ResolvedRun / IR / Compiler /
+    Gate / Admission）之前执行。任一轴拒绝 → 下游完全不执行。
+
+    两轴**正交**，必须同时通过（AND 语义）：
+
+    1. **Interface Scope**（F-INT-08）：输入属 Frozen Contract v0.2 Interface Scope，
+       即 `identity_version == 2`。由唯一权威接入点
+       `boundary.enforce_interface_scope` → `normalize_interface_identity` 判定。
+    2. **Identity authenticity**（M1–M5，冻结设计，未改动）：manifest 声明 SHA
+       与 raw bytes 实算 SHA 一致。
+
+    判定顺序与 runtime invariant 一致：先证明 identity 有效，再确认 Interface Scope
+    成员资格。M5 已拒绝时保留 M1–M5 的原始 reason code（既有行为与断言不变）；
+    仅当 M5 放行而 Interface Scope 拒绝时，以边界错误码阻断。
 
     Returns:
-        dict with keys: gate, identity_state, semantic_state, reason, mismatches
+        dict with keys: gate, identity_state, semantic_state, reason, mismatches,
+        interface_scope
     """
     try:
         # M1: Manifest identity
@@ -114,15 +148,43 @@ def _verify_identity_boundary(
     # M5: Identity Gate
     decision = evaluate_identity_gate(verification)
 
+    # ── Interface Scope gate（F-INT-08 / F-INT-01）─────────────────────────
+    # Frozen Contract v0.2 Interface Scope 字段口径：identity_version == 2。
+    # 判定由唯一权威接入点 enforce_interface_scope 承担（→ normalize_interface_identity），
+    # 此处不复制规则、不建第二套校验体系。执行位置在集成边界，先于一切
+    # semantic consumption，故 `identity_version != 2` 在进入 IRBuilder / Compiler /
+    # Gate 之前即被拒绝——这是 Interface Boundary Enforcement，不是 V3 内部补救。
+    declared_identity_version = _declared_identity_version(manifest_path)
+    scope = enforce_interface_scope(manifest_sha, declared_identity_version)
+
     result = {
         "gate": decision.gate,
         "identity_state": decision.identity_state,
         "semantic_state": decision.semantic_state,
         "reason": decision.reason,
         "mismatches": list(decision.mismatches),
+        # Producer 声明值 verbatim 保留（provenance：原始 identity 是什么），
+        # 不解释、不改写、不作为放行依据。
+        "interface_scope": {
+            "accepted": scope.accepted,
+            "code": scope.code,
+            "declared_identity_version": declared_identity_version,
+            "reason": scope.reason,
+        },
     }
     if ir_error is not None:
         result["ir_error"] = ir_error
+
+    # AND 语义：两轴任一拒绝即阻断。M5 已拒绝 → 原样返回（既有 reason code 不变）。
+    if decision.gate == GATE_BLOCK:
+        return result
+
+    # M5 放行但不属于 Interface Scope → 以稳定边界错误码显式阻断。
+    # 不存在 `version != 2 → 当成 v2`，也不存在 `version != 2 → fallback → 继续运行`。
+    if not scope.accepted:
+        result["gate"] = GATE_BLOCK
+        result["reason"] = scope.reason
+        result["mismatches"] = list(decision.mismatches) + [scope.code]
     return result
 
 

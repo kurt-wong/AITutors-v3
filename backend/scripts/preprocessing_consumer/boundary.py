@@ -233,6 +233,69 @@ def normalize_interface_identity(
 
 
 @dataclass(frozen=True)
+class InterfaceScopeDecision:
+    """Interface Scope 判定的统一决策形状（所有 runtime runner 一致执行/记录）。
+
+    `code` 为稳定边界错误码（拒绝时）或 None（接受时）；`identity` 为归一化后的
+    身份事实（接受时），拒绝时为 None。**不改写** Producer 声明值。
+    """
+
+    accepted: bool
+    code: str | None
+    reason: str
+    identity: NormalizedIdentity | None
+
+
+def enforce_interface_scope(
+    source_content_sha256: object,
+    identity_version: object,
+) -> InterfaceScopeDecision:
+    """Interface Boundary 的**唯一 runtime 接入点**（F-INT-01 / F-INT-08）。
+
+    所有 preprocessing → V3 的 runtime runner 入口，必须在把输入交给任何 V3
+    semantic consumption（annotation payload / ResolvedRun / IRBuilder / Compiler /
+    Gate / Admission）**之前**调用本函数。这解决了 F-INT-01：
+
+        helper 已实现  ≠  helper 已接入实际 runtime path
+
+    判定逻辑 **100% 委托** `normalize_interface_identity`（唯一权威）。本函数
+    **不复制**判定规则、**不建立**第二套平行 identity validation 系统、**不抛**异常，
+    只把 fail-loud 权威判定收敛为统一决策形状，使多个 runner 以同一方式执行与留痕。
+
+    不变量（F-INT-08）::
+
+        identity_version == 2              → accepted
+        identity_version == 1 / 3 / 其它   → rejected  OUT_OF_SCOPE_IDENTITY_VERSION
+        identity_version 缺失 / null        → rejected  MISSING_IDENTITY_VERSION
+        identity 缺失                       → rejected  MISSING_IDENTITY
+        identity 格式非法                   → rejected  MALFORMED_IDENTITY
+
+    明确禁止（X2.6 task §13 No Silent Repair）::
+
+        version != 2  →  默认当成 v2          禁止
+        version != 2  →  fallback → 继续运行   禁止
+
+    这是 **Interface Boundary Enforcement**，不是 V3 内部补救：判定发生在集成边界，
+    不在 `compile/ir.py` / `gate/`（F-M3-04 / M.3 已 CLOSED，不重复实现、不触碰）。
+    """
+    try:
+        identity = normalize_interface_identity(source_content_sha256, identity_version)
+    except BoundaryViolation as exc:
+        return InterfaceScopeDecision(
+            accepted=False,
+            code=exc.code,
+            reason=f"interface_scope_rejected: {exc.code}: {exc.message}",
+            identity=None,
+        )
+    return InterfaceScopeDecision(
+        accepted=True,
+        code=None,
+        reason="interface_scope_accepted: identity_version==2",
+        identity=identity,
+    )
+
+
+@dataclass(frozen=True)
 class ReferenceCheck:
     """一次引用完整性检查的结果（material / figure / 行区间）。"""
 
@@ -325,10 +388,12 @@ __all__ = [
     "CODE_OUT_OF_SCOPE_IDENTITY_VERSION",
     "CODE_UNKNOWN_UNIT_TYPE",
     "NORMALIZATION_EVENT_IDS",
+    "InterfaceScopeDecision",
     "NormalizedIdentity",
     "NormalizedUnitType",
     "PRODUCER_UNIT_TYPE_TO_CANONICAL",
     "ReferenceCheck",
+    "enforce_interface_scope",
     "normalize_interface_identity",
     "normalize_unit_type",
     "scan_figure_references",

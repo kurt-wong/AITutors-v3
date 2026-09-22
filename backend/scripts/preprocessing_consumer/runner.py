@@ -43,6 +43,7 @@ from app.models.snapshot import AdmissionCandidate, SemanticAnnotation
 from app.models.source import Document, DocumentSourceLine, DocumentSourceVersion, SourceFigure
 
 from .annotation_adapter import manifest_to_annotation_payload
+from .boundary import enforce_interface_scope
 from .manifest_reader import Manifest, find_manifests, load_manifest
 from .resolved_span_adapter import manifest_to_resolved_spans
 from .source_loader import SourceLine, compute_body_hash, load_source_lines
@@ -222,6 +223,7 @@ async def run_corpus(corpus_root: Path, output_path: Path):
         "version": "phase0-v0.1",
         "total_manifests": len(manifests),
         "total_units": 0,
+        "interface_scope_blocked": 0,
         "track_a": {"completed": 0, "error": 0, "gate_pass_total": 0, "candidates_total": 0},
         "track_b": {"completed": 0, "error": 0, "spans_total": 0, "unresolved_total": 0},
         "papers": [],
@@ -250,6 +252,33 @@ async def run_corpus(corpus_root: Path, output_path: Path):
             continue
 
         report["total_units"] += len(manifest.units)
+
+        # ── Interface Scope gate（F-INT-08 / F-INT-01）────────────────────        # Track A 直接进入 V3 生产 GateService（`gate.service.GateService.run`），
+        # Track B 产出 V3 ResolvedSpan；两者都是 preprocessing → V3 的实际消费入口。
+        # 此前本 runner **无任何** interface identity 检查，构成
+        # `identity_version == 2` 的 bypass。现与 runner_b2 共用同一权威接入点
+        # `boundary.enforce_interface_scope`（不复制规则、不建第二套校验体系）。
+        # 拒绝 → 显式失败并跳过 Track A/B，任何 V3 semantic consumption 不执行。
+        scope = enforce_interface_scope(
+            manifest.source_content_sha256, manifest.identity_version
+        )
+        if not scope.accepted:
+            report["interface_scope_blocked"] += 1
+            report["papers"].append({
+                "paper": paper_id,
+                "units": len(manifest.units),
+                "prompt_version": manifest.prompt_version,
+                "interface_scope_rejected": {
+                    "accepted": False,
+                    "code": scope.code,
+                    # Producer 声明值 verbatim 保留（provenance），不解释、不改写。
+                    "declared_identity_version": manifest.identity_version,
+                    "reason": scope.reason,
+                    "downstream_executed": False,
+                },
+            })
+            continue
+
         paper_result: dict = {
             "paper": paper_id,
             "source": str(source_path),
@@ -304,6 +333,7 @@ async def run_corpus(corpus_root: Path, output_path: Path):
 
     output_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"\nReport: {output_path}")
+    print(f"Interface Scope blocked: {report['interface_scope_blocked']}")
     print(f"Track A: {report['track_a']['completed']}/{len(manifests)} ok, {report['track_a']['error']} errors")
     print(f"Track B: {report['track_b']['completed']}/{len(manifests)} ok, {report['track_b']['error']} errors")
     print(f"Contract gaps: {len(report['contract_gaps'])}")
