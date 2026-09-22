@@ -46,6 +46,11 @@ from app.repositories.snapshot_repository import SnapshotRepository
 from app.repositories.source_repository import SourceRepository
 
 from .annotation_adapter import manifest_to_annotation_payload
+from .boundary import (
+    CODE_BROKEN_LINE_REFERENCE,
+    CODE_BROKEN_MATERIAL_REFERENCE,
+    normalize_unit_type,
+)
 from .manifest_reader import Manifest, ManifestUnit, find_manifests, load_manifest
 from .source_loader import SourceLine, compute_body_hash, load_source_lines
 
@@ -177,6 +182,21 @@ def _build_resolved_run(
         s = _make_resolved_span(unit_id, role, lines, span[0], span[1], sv_id, label)
         if s is not None:
             spans.append(s)
+        else:
+            # broken reference（行号越界 / 反转区间）：显式留痕，绝不静默丢弃。
+            # Frozen Contract §4.2-5「任何处置不得静默丢弃」；X2.6 task §13 No Silent Repair。
+            # 错误码按 role 区分：material 断链与一般行区间断链是不同事实。
+            unresolved.append({
+                "reference_id": f"ref-{unit_id}.{role}" + (f".{label}" if label else ""),
+                "role": role,
+                "resolution_status": "missing",
+                "evidence": (f"lines {span} out of range 1..{len(lines)}",),
+                "code": (
+                    CODE_BROKEN_MATERIAL_REFERENCE
+                    if role == "material"
+                    else CODE_BROKEN_LINE_REFERENCE
+                ),
+            })
 
     def _try_options_region(unit: ManifestUnit):
         """options_lines → 单个 options_region span（不制造 per-label A/B/C/D）。"""
@@ -190,7 +210,10 @@ def _build_resolved_run(
         return unit.answer_lines or unit.answer_evidence_lines
 
     for unit in manifest.units:
-        if unit.unit_type == "standalone_question":
+        # 边界归一化（Class A，OD-2 授权映射）：Producer legacy → canonical。
+        # 失败即显式上抛；不再 `else → composite` 静默 fallback（X2.6 task §13）。
+        norm = normalize_unit_type(unit.unit_type)
+        if norm.canonical_unit_type == "standalone_unit":
             _try(unit.unit_id, "stem", unit.stem_lines, sv_id)
             _try(unit.unit_id, "answer", _answer_span(unit), sv_id)
             _try(unit.unit_id, "explanation", unit.explanation_lines, sv_id)
@@ -325,6 +348,11 @@ async def _run_full_chain(
                     "unit_id": root.unit_id,
                     "status": "skipped",
                     "reason": "not_ready",
+                    # 显式携带真实语义态，避免 incomplete/unknown 被「not_ready」
+                    # 一词掩盖真实原因（Frozen Contract §4.2-1；X2.6 task §13）。
+                    # 处置路由**不变**（unknown → pending_review 机制属 OQ-16′/OQ-19
+                    # 未裁项，须 Owner 单独授权，本层不实施）。
+                    "semantic_status": root.semantic_status,
                 })
                 continue
 
@@ -339,7 +367,13 @@ async def _run_full_chain(
                 "reasons": gate.get("reasons", []),
             })
 
-            unit_type = "standalone_unit" if root.unit_type == "standalone_question" else "composite_unit"
+            # Candidate unit_type = canonical IR value 直通。
+            # 原二元三目（判 legacy standalone 字面量则取 standalone_unit，否则取
+            # composite_unit）是 silent fallback（X2.5.2 Class D）：F-M3-04 之后 IR
+            # 输出域已是 {standalone_unit, composite_unit}，该三目会把**每个**
+            # standalone_unit 误判为 composite_unit。词表归一化已在集成边界完成（OD-2），
+            # 此处只需直通；Gate 侧 `_candidate_unit_type` 仍做 fail-closed 防御（M.3）。
+            unit_type = root.unit_type
             le_hash = sha256_hex(f"compile:track-b2:{sv_id}:{ann.id}:{root.unit_id}")
             candidate = await snap_repo.create_admission_candidate(
                 unit_type=unit_type,

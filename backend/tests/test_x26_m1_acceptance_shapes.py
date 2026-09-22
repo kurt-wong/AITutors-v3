@@ -387,37 +387,70 @@ class TestUNKNOWN_WashMatrix:
     """UNKNOWN wash matrix — CHARACTERIZATION + DOCUMENTATION tests.
 
     Evidence class:
-        P-path existence tests (p1-p9, p13) = CLASS B (characterization)
+        P-path existence tests (p3, p5, p6, p13) = CLASS B (characterization)
+        Corrected tests (p1, p2, p7, p9) = CLASS A (behavioural, D10 provenance)
         Target paths documentation test = CLASS C (documentation assertion)
 
-    These tests assert CURRENT state (wash paths exist) and document TARGET
-    state (wash paths must be eliminated). They serve as the acceptance
-    checklist for M.3-M.5 implementation.
+    P1 / P2 / P7 were CHARACTERIZATION of wash paths that the X2.6
+    preprocessing<->V3/X integration boundary normalization eliminates
+    (Owner OD-2 legacy -> canonical). They are now CLASS A behavioural tests;
+    see each docstring's D10 provenance block. P5 / P6 remain characterization
+    (disposition routing is NOT changed by this work — OQ-16'/OQ-19 unadjudicated).
     """
 
-    def test_p1_adapter_else_wash_exists_currently(self):
-        """CLASS B: P1 CURRENT — adapter else-wash to standalone still present."""
+    def test_p1_adapter_else_wash_eliminated_after_boundary_normalization(self):
+        """CLASS A: P1 CORRECTED — adapter else-wash to standalone is eliminated.
+
+        D10 provenance:
+            previous: assert "else" in source and "_build_standalone" in source
+                       (P1 characterization of the silent wash
+ `if unit.unit_type == "composite_question": ... else: _build_standalone`)
+            why: the else branch silently re-typed **any** unrecognized Producer
+                 unit_type as standalone — violating Frozen Contract §3.2 ban 2
+                 (禁止 silent fallback) and X2.6 task §13 (No Silent Repair).
+                 X2.6 integration boundary normalization replaces it with
+                 normalize_unit_type(), which raises BoundaryViolation on any value
+                 outside the OD-2 authorized set.
+            new: assert normalize_unit_type dispatch present; assert silent wash absent
+            provenance: X2.6 preprocessing<->V3/X Integration — boundary normalization (OD-2)
+        """
         import inspect
 
-        from scripts.preprocessing_consumer.annotation_adapter import (
-            manifest_to_annotation_payload,
+        from scripts.preprocessing_consumer import annotation_adapter
+
+        source = inspect.getsource(annotation_adapter.manifest_to_annotation_payload)
+        assert "normalize_unit_type" in source, (
+            "P1/X2.6: manifest_to_annotation_payload must dispatch through "
+            "boundary.normalize_unit_type (OD-2 authorized legacy -> canonical)."
+        )
+        assert 'unit.unit_type == "composite_question"' not in source, (
+            "P1/X2.6: direct legacy-vocabulary branch must be removed; dispatch on the "
+            "normalized canonical Unit Type instead."
         )
 
-        source = inspect.getsource(manifest_to_annotation_payload)
-        assert "else" in source
-        assert "_build_standalone" in source, (
-            "P1: adapter else-wash still present. Eliminated? Update tracking matrix."
-        )
+    def test_p2_adapter_hardcode_eliminated_after_boundary_normalization(self):
+        """CLASS A: P2 CORRECTED — adapter no longer hardcodes legacy vocabulary.
 
-    def test_p2_adapter_hardcode_exists_currently(self):
-        """CLASS B: P2 CURRENT — adapter hardcode 'standalone_question' still present."""
+        D10 provenance:
+            previous: assert "standalone_question" in source (_build_standalone)
+            why: hardcoded Producer legacy vocabulary as the emitted `unit_type`,
+                 which F-M3-04 now rejects at IR construction (ValueError). The
+                 emitted value must be the canonical Unit Type from boundary
+                 normalization (Owner D1: Unit Type = {standalone_unit, composite_unit}).
+            new: assert canonical value emitted; assert legacy literal absent
+            provenance: X2.6 preprocessing<->V3/X Integration — boundary normalization (OD-2)
+        """
         import inspect
 
         from scripts.preprocessing_consumer.annotation_adapter import _build_standalone
 
         source = inspect.getsource(_build_standalone)
-        assert "standalone_question" in source, (
-            "P2: hardcode still present. Eliminated? Update tracking matrix."
+        assert "norm.canonical_unit_type" in source, (
+            "P2/X2.6: _build_standalone must emit the canonical Unit Type "
+            "produced by boundary normalization."
+        )
+        assert "standalone_question" not in source, (
+            "P2/X2.6: legacy Producer vocabulary must not be hardcoded as emitted unit_type."
         )
 
     def test_p3_ir_default_is_canonical_after_m3(self):
@@ -478,8 +511,22 @@ class TestUNKNOWN_WashMatrix:
             "semantic_status != 'ready'" in source
         ), "P6: runner skip pattern changed. Update tracking matrix."
 
-    def test_p7_runner_ternary_exists_currently(self):
-        """CLASS B: P7 CURRENT — runner_b2.py binary ternary still present."""
+    def test_p7_runner_ternary_eliminated_after_boundary_normalization(self):
+        """CLASS A: P7 CORRECTED — runner_b2 binary ternary fallback eliminated.
+
+        D10 provenance:
+            previous: assert "standalone_unit" in source and "composite_unit" in source
+                       (P7 characterization of
+ `unit_type = "standalone_unit" if root.unit_type == "standalone_question"
+                         else "composite_unit"`)
+            why: after F-M3-04 the IR node is already canonical
+                 ({standalone_unit, composite_unit}); that ternary therefore mis-typed
+                 **every** standalone_unit as composite_unit — a silent binary fallback
+                 (X2.5.2 behaviour class D). Candidate unit_type must pass the canonical
+                 IR value through; Gate `_candidate_unit_type` keeps fail-closed (M.3).
+            new: assert canonical passthrough present; assert ternary fallback absent
+            provenance: X2.6 preprocessing<->V3/X Integration — boundary normalization (OD-2)
+        """
         runner_path = (
             Path(__file__).parent.parent
             / "scripts"
@@ -489,8 +536,11 @@ class TestUNKNOWN_WashMatrix:
         if not runner_path.exists():
             pytest.skip("runner_b2.py not found at expected path")
         source = runner_path.read_text(encoding="utf-8")
-        assert "standalone_unit" in source and "composite_unit" in source, (
-            "P7: runner ternary pattern changed. Update tracking matrix."
+        assert "unit_type = root.unit_type" in source, (
+            "P7/X2.6: candidate unit_type must pass the canonical IR value through."
+        )
+        assert 'root.unit_type == "standalone_question"' not in source, (
+            "P7/X2.6: binary ternary fallback on legacy vocabulary must be removed."
         )
 
     def test_p9_gate_fail_closed_after_m3(self):

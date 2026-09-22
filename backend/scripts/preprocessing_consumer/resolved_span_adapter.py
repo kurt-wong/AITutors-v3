@@ -7,6 +7,11 @@
 import hashlib
 import uuid
 
+from .boundary import (
+    CODE_BROKEN_LINE_REFERENCE,
+    CODE_BROKEN_MATERIAL_REFERENCE,
+    normalize_unit_type,
+)
 from .manifest_reader import Manifest, ManifestUnit
 from .source_loader import SourceLine, line_ref_for
 
@@ -60,33 +65,47 @@ def manifest_to_resolved_spans(
     resolved: list[dict] = []
     unresolved: list[dict] = []
 
-    def _try(unit: ManifestUnit, role: str, span: tuple[int, int] | None):
+    def _try(target_id: str, role: str, span: tuple[int, int] | None):
         if span is None:
             return
-        s = _make_span(unit.unit_id, role, lines, span[0], span[1], source_version_id)
+        s = _make_span(target_id, role, lines, span[0], span[1], source_version_id)
         if s is not None:
             resolved.append(s)
         else:
             unresolved.append({
-                "reference_id": f"ref-{unit.unit_id}.{role}",
+                "reference_id": f"ref-{target_id}.{role}",
                 "role": role,
                 "resolution_status": "missing",
                 "evidence": (f"lines {span} out of range 1..{len(lines)}",),
+                "code": (
+                    CODE_BROKEN_MATERIAL_REFERENCE
+                    if role == "material"
+                    else CODE_BROKEN_LINE_REFERENCE
+                ),
             })
 
     for unit in manifest.units:
-        if unit.unit_type == "standalone_question":
-            _try(unit, "stem", unit.stem_lines)
-            _try(unit, "answer", unit.answer_lines)
-            _try(unit, "explanation", unit.explanation_lines)
-            _try(unit, "extra", unit.extra_lines)
+        # 边界归一化（Class A，OD-2 授权映射）：Producer legacy → canonical。
+        # 归一化失败即显式上抛（含 legacy 噪声），不再 `else → composite` 静默 fallback。
+        norm = normalize_unit_type(unit.unit_type)
+        if norm.canonical_unit_type == "standalone_unit":
+            _try(unit.unit_id, "stem", unit.stem_lines)
+            _try(unit.unit_id, "answer", unit.answer_lines)
+            _try(unit.unit_id, "explanation", unit.explanation_lines)
+            _try(unit.unit_id, "extra", unit.extra_lines)
             # options: preprocessing 只给区间，V3 option 是逐选项。
             # Track B 先把整个 options 区间作为一个 span。
-            _try(unit, "option", unit.options_lines)
+            _try(unit.unit_id, "option", unit.options_lines)
         else:
-            _try(unit, "material", unit.material_lines)
-            _try(unit, "questions", unit.questions_lines)
-            _try(unit, "answer", unit.answer_lines)
-            _try(unit, "explanation", unit.explanation_lines)
+            # span_id 命名与 IRBuilder._content_span_id 对齐（防跨路径漂移）：
+            #   shared material → sp-<uid>.material
+            #   子题 role      → sp-<uid>.sub.<role>
+            # 此前 Track B 产出 sp-<uid>.questions / sp-<uid>.answer，在 IRBuilder
+            # 中无法解析（IRBuilder 查 sp-<uid>.sub.stem）——已修正为同一约定。
+            _try(unit.unit_id, "material", unit.material_lines)
+            sub_id = f"{unit.unit_id}.sub"
+            _try(sub_id, "stem", unit.questions_lines)
+            _try(sub_id, "answer", unit.answer_lines)
+            _try(sub_id, "explanation", unit.explanation_lines)
 
     return resolved, unresolved
