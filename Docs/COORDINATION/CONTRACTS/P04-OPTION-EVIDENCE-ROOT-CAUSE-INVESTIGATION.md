@@ -10,9 +10,10 @@
 ## 0. Git / Change Manifest（结论前置，便于核对）
 
 ```text
-Commit:            docs(investigation): investigate P04 option-level evidence root cause
-Branch:            main（AITutors-v3）
-Changed files:     Docs/COORDINATION/CONTRACTS/P04-OPTION-EVIDENCE-ROOT-CAUSE-INVESTIGATION.md（本文件，新增）
+Commit:            e3a59e2 — docs(investigation): investigate P04 option-level evidence root cause
+                   （本报告主提交；其后一次 docs 提交回填本行 SHA，仍只改本文件）
+Branch:            main（AITutors-v3，已推送 origin/main）
+Changed files:     Docs/COORDINATION/CONTRACTS/P04-OPTION-EVIDENCE-ROOT-CAUSE-INVESTIGATION.md（本文件，新增，1212 行）
 Production code changed:  NO
 Schema changed:           NO
 Frozen Spec changed:      NO
