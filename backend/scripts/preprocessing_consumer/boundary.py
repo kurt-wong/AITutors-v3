@@ -75,6 +75,23 @@ _SHA256_LOWER_HEX = re.compile(r"^[0-9a-f]{64}$")
 # 二者表达同一事实，均接受；其余取值一律显式拒绝（含 v1 legacy）。
 _INTERFACE_IDENTITY_VERSIONS = {2, "2"}
 
+# 允许进入 Interface Scope 成员判定的 `identity_version` 输入形态（JSON 标量）。
+# 必须**显式列举类型**：`x in {...}` 的成员判定要调 `hash(x)`，遇到 unhashable
+# 类型（list / dict / set / bytearray）抛的是 `TypeError` 而**不是**返回 False。
+# 该异常不是 `BoundaryViolation`，会穿透 `enforce_interface_scope` 的决策层并中止
+# 整个 corpus runner（F-RBC-01）。类型闸门把这类输入转成确定性的 `BoundaryViolation`，
+# 而不是用 `except TypeError` 掩盖真正的程序错误（F-RBC-01 §4.2）。
+#
+# 白名单与修改前**逐值等价**（本任务不得借机改 Interface Scope 语义，§3）：
+#   bool  → 放行到成员判定。`True == 1 != 2` 故仍被 OUT_OF_SCOPE_IDENTITY_VERSION
+#           拒绝，不会因 bool/int 继承关系被误接受。
+#   float → 放行到成员判定，以**原样保留既有行为**：`2.0 == 2` 使 `2.0` 在修改前
+#           就被接受（F-RBC-05：`2.0` 的语义是独立 Contract / Owner Decision，
+#           本任务不得自行收紧为 BLOCK）。
+#   int / str → 语义承载类型（int `2` / str `"2"`）。
+# 其余类型（list / dict / set / tuple / complex / 自定义对象）→ MALFORMED_IDENTITY_VERSION。
+_IDENTITY_VERSION_ACCEPTED_TYPES: tuple[type, ...] = (bool, int, float, str)
+
 
 # ── 显式错误（确定性错误报告，X2.6 task §12/§13）─────────────────────────────
 
@@ -96,6 +113,7 @@ CODE_MISSING_UNIT_TYPE = "MISSING_UNIT_TYPE"
 CODE_UNKNOWN_UNIT_TYPE = "UNKNOWN_UNIT_TYPE"
 CODE_MISSING_IDENTITY = "MISSING_IDENTITY"
 CODE_MALFORMED_IDENTITY = "MALFORMED_IDENTITY"
+CODE_MALFORMED_IDENTITY_VERSION = "MALFORMED_IDENTITY_VERSION"
 CODE_MISSING_IDENTITY_VERSION = "MISSING_IDENTITY_VERSION"
 CODE_OUT_OF_SCOPE_IDENTITY_VERSION = "OUT_OF_SCOPE_IDENTITY_VERSION"
 CODE_BROKEN_LINE_REFERENCE = "BROKEN_LINE_REFERENCE"
@@ -194,7 +212,13 @@ def normalize_interface_identity(
     - `identity_version` 必须落在 Interface Scope 字段口径（== 2）。
       v1 legacy（79 份）不属 v0.2 接口（§1.7 C-IN-1 consumer 侧闸门）。
 
-    缺失 / 格式非法 / 越界 → `BoundaryViolation`。不猜、不补、不默认。
+    输入形态闸门（F-RBC-01）：`identity_version` 先按**显式类型白名单**判定形态，
+    再做成员判定。这样 list / dict / set 等 JSON 合法但不可 hash 的取值会得到确定性
+    的 `BoundaryViolation`，而**不是** `TypeError`（`x in {...}` 对 unhashable 抛异常，
+    不返回 False），更不会穿透决策层中止 corpus runner。
+
+    缺失 / 形态非法 / 格式非法 / 越界 → `BoundaryViolation`。不猜、不补、不默认、
+    不隐式转换（`[]` 绝不变成 `"[]"` 或 `2`）。
     """
     if source_content_sha256 is None:
         raise BoundaryViolation(
@@ -216,6 +240,16 @@ def normalize_interface_identity(
             CODE_MISSING_IDENTITY_VERSION,
             "Manifest does not declare identity_version; Interface Scope membership "
             "cannot be established (Frozen Contract §1.6).",
+        )
+    # 形态闸门先于成员判定（F-RBC-01）：`in` 对 unhashable 输入抛 TypeError，
+    # 故必须先确定性地拒绝非法形态，避免异常穿透 boundary decision layer。
+    if not isinstance(identity_version, _IDENTITY_VERSION_ACCEPTED_TYPES):
+        raise BoundaryViolation(
+            CODE_MALFORMED_IDENTITY_VERSION,
+            f"identity_version must be a JSON scalar (bool/int/float/str), got "
+            f"{type(identity_version).__name__} value {identity_version!r}; no "
+            f"coercion is permitted (list/dict/set are rejected as malformed — "
+            f"never stringified, never defaulted to 2).",
         )
     if identity_version not in _INTERFACE_IDENTITY_VERSIONS:
         raise BoundaryViolation(
@@ -262,11 +296,13 @@ def enforce_interface_scope(
     **不复制**判定规则、**不建立**第二套平行 identity validation 系统、**不抛**异常，
     只把 fail-loud 权威判定收敛为统一决策形状，使多个 runner 以同一方式执行与留痕。
 
-    不变量（F-INT-08）::
+    不变量（F-INT-08 + F-RBC-01）::
 
         identity_version == 2              → accepted
         identity_version == 1 / 3 / 其它   → rejected  OUT_OF_SCOPE_IDENTITY_VERSION
         identity_version 缺失 / null        → rejected  MISSING_IDENTITY_VERSION
+        identity_version 形态非法           → rejected  MALFORMED_IDENTITY_VERSION
+            （list / dict / set / tuple / complex / 自定义对象）
         identity 缺失                       → rejected  MISSING_IDENTITY
         identity 格式非法                   → rejected  MALFORMED_IDENTITY
 
@@ -274,9 +310,15 @@ def enforce_interface_scope(
 
         version != 2  →  默认当成 v2          禁止
         version != 2  →  fallback → 继续运行   禁止
+        [] / {}       →  str() / 默认值        禁止
+        任意输入      →  TypeError 上抛中止 runner  禁止
 
     这是 **Interface Boundary Enforcement**，不是 V3 内部补救：判定发生在集成边界，
     不在 `compile/ir.py` / `gate/`（F-M3-04 / M.3 已 CLOSED，不重复实现、不触碰）。
+
+    本函数**只**捕获 `BoundaryViolation`：非法输入形态必须由权威做确定性类型校验
+    并转成 `BoundaryViolation`（F-RBC-01 §4.2），**不**用宽泛 `except TypeError`
+    掩盖真正的程序错误。
     """
     try:
         identity = normalize_interface_identity(source_content_sha256, identity_version)
@@ -382,6 +424,7 @@ __all__ = [
     "CODE_BROKEN_LINE_REFERENCE",
     "CODE_BROKEN_MATERIAL_REFERENCE",
     "CODE_MALFORMED_IDENTITY",
+    "CODE_MALFORMED_IDENTITY_VERSION",
     "CODE_MISSING_IDENTITY",
     "CODE_MISSING_IDENTITY_VERSION",
     "CODE_MISSING_UNIT_TYPE",
