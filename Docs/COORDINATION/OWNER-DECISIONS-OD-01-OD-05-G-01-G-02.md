@@ -1,4 +1,4 @@
-﻿# OWNER-DECISIONS-OD-01-OD-05-G-01-G-02
+# OWNER-DECISIONS-OD-01-OD-05-G-01-G-02
 
 ```text
 STATUS: RECORDED
@@ -312,7 +312,10 @@ EFFECT: 指导 OD-01 Proposal v3 + CR-002 治理化；不修改 Frozen Spec / Co
 | **OD-01R-09** | 缺正式 Owner Decision / Finding Disposition 记录 | **ACCEPTED** | 在本文件正式登记 R-01～R-10 为 Owner Decision（本节） | **VERIFIED** |
 | **OD-01R-10** | `options_unresolved` 坐标错误；`sp-M1` 章节错误 | **ACCEPTED** | 给出准确 L0 coordinate；`sp-M1` = `20 §5.5`（非 `20 §6.1`）；全文检索同类错误 | **VERIFIED** |
 
-### OD-01R-01 — 正式 L1 落位判定（Owner 接受的 Gap 路径）
+### OD-01R-01 — 正式 L1 落位判定（注册条件未满足；保留 Future registration path）
+
+> **未归层声明（90:47）：** `Docs/COORDINATION/` 不在 `90 §1.2` 目录模型内，属 **未归层**；未归层文档不得引用为权威。CR-002 / 本文件均不得充当 L0/L1/L2 权威来源。
+> **单向表述：** 不是「没有 L1 落点」。注册条件未满足；保留 Future registration path；禁止第二 registry。
 
 按 `90` / `91` 只读核对结果：
 
@@ -402,13 +405,13 @@ EFFECT ON L0: NOT EFFECTIVE（PENDING EFFECTIVE FREEZE）
 ### OD-01-J 流程
 
 ```text
-Proposal v4
-    → DSH 复核
+Proposal v4R
+    → DSH 外部验证
     → Owner 批准
     → 正式 re-freeze
 ```
 
-本轮 **不执行** re-freeze。
+本轮 **不执行** re-freeze。Self Review ≠ DSH 外部验证；OD-01-J 只接受 DSH Review。
 
 ### 有效范围
 
@@ -426,19 +429,29 @@ Proposal v4
 
 ---
 
-## OD-01V4R-15…29 — Finding Disposition（Decision Authority）
+## OD-01V4R-15…29 — Finding Disposition
 
 ```text
+Document ID: OD-01-V4R-15-29-DISPOSITION
+Title: OD-01V4R-15…29 Finding Disposition
 Document Type: Decision Record
-Status: PENDING EFFECTIVE FREEZE
+Status: PENDING
+Authority Level: L2
 Purpose: 登记 F-OD01V4R-15…29 的 Owner 裁决与落实位置
-Authority Level: Decision Authority
-Registration Level: NOT REGISTERED
-Derives From: F-OD01V4R-15…29 · 90/91 §3.1 · Proposal v4R
-May Change: Status 列（VERIFIED / PENDING）
+Normative: NO
+Derives From: F-OD01V4R-15…29 · 90/91 §3.1 · Proposal v4R · Docs/COORDINATION/FROZEN-SPEC-CHANGE-PROPOSAL-OD-01-OPTION-PROVENANCE.md
+May Change: Finding Disposition 列（非 Status 字段）
 Must Not Change: L0 · Frozen Contract · Schema · Code · Corpus
-Related Records: Proposal v4R · CR-002 · Docs/REPORTS/OD-01-PROPOSAL-V4-TARGETED-ADVERSARIAL-REVIEW.md
+Related Records: Proposal v4R · CR-002 · Docs/REPORTS/OD-01-PROPOSAL-V4-TARGETED-ADVERSARIAL-REVIEW.md · Docs/REPORTS/OD-01V4R-FINAL-REMEDIATION-REPORT.md
+Supersedes: —
+Superseded By: —
+Gate State Authority: NO
+Registration Level: NOT REGISTERED
 ```
+
+> Status: PENDING（等待 effective freeze）。原「PENDING EFFECTIVE FREEZE」为描述短语，不是 Status 枚举值。  
+> Authority Level: L2（冻结枚举）。不使用自创层级名。  
+> 附录位于 `Docs/COORDINATION/` = **未归层**（90:47）。
 
 完整映射以 **Proposal v4R §0** 为准（含 F-OD01V4R-01…29 全表）。本附录仅登记本轮 15–29 裁决。
 
@@ -459,6 +472,52 @@ Related Records: Proposal v4R · CR-002 · Docs/REPORTS/OD-01-PROPOSAL-V4-TARGET
 | F-OD01V4R-27 | OD-01F-60 | APPROVED — 统一 Derives From | VERIFIED |
 | F-OD01V4R-28 | OD-01F-61 | APPROVED — v4R 唯一 Current Version | VERIFIED |
 | F-OD01V4R-29 | OD-01F-62 | APPROVED — Future 词 = Planning Category only | VERIFIED |
+
+---
+
+## OD-01V4R-30…48 — Finding Disposition
+
+```text
+Document ID: OD-01-V4R-30-48-DISPOSITION
+Title: OD-01V4R-30…48 Finding Disposition
+Document Type: Decision Record
+Status: PENDING
+Authority Level: L2
+Purpose: 登记 F-OD01V4R-30…48 的 Owner 裁决与落实位置
+Normative: NO
+Derives From: F-OD01V4R-30…48 · 90/91 §3.1 · Proposal v4R · Docs/REPORTS/OD-01V4R-FINAL-REMEDIATION-REPORT.md
+May Change: Finding Disposition 列（非 Status 字段）
+Must Not Change: L0 · Frozen Contract · Schema · Code · Corpus
+Related Records: Proposal v4R · CR-002 · Docs/REPORTS/OD-01V4R-FINAL-REMEDIATION-REPORT.md
+Supersedes: —
+Superseded By: —
+Gate State Authority: NO
+Registration Level: NOT REGISTERED
+```
+
+完整修复证据见 `Docs/REPORTS/OD-01V4R-FINAL-REMEDIATION-REPORT.md`。本附录登记裁决。
+
+| Finding ID | Final ID | Owner Decision | Finding Disposition |
+|------------|----------|----------------|---------------------|
+| F-OD01V4R-30 | OD-01F-63 | APPROVED — 映射表按 DSH 基线重建；-14 跨仓复制单独登记 | TEXT-CORRECTED |
+| F-OD01V4R-31 | OD-01F-64 | APPROVED — -08/-09/-10 Problem 按基线恢复 | TEXT-CORRECTED |
+| F-OD01V4R-32 | OD-01F-65 | APPROVED — 09/10 填入 V3-11/12；无空号 | TEXT-CORRECTED |
+| F-OD01V4R-33 | OD-01F-66 | APPROVED — README §2 列 Future Required Change target | REMEDIATED |
+| F-OD01V4R-34 | OD-01F-67 | APPROVED — form/granularity 维度定义；禁称正交 | REMEDIATED |
+| F-OD01V4R-35 | OD-01F-68 | APPROVED — locator 按 form 分型 | REMEDIATED |
+| F-OD01V4R-36 | OD-01F-69 | APPROVED — table_cell identity 方案 B | REMEDIATED |
+| F-OD01V4R-37 | OD-01F-70 | APPROVED — 20 §5.5 合并全文 | REMEDIATED |
+| F-OD01V4R-38 | OD-01F-71 | APPROVED — 示例 span_resolution | REMEDIATED |
+| F-OD01V4R-39 | OD-01F-72 | APPROVED — CR-002 Status=NOT RELEASED | TEXT-CORRECTED |
+| F-OD01V4R-40 | OD-01F-73 | APPROVED — Authority Level 用冻结枚举 | TEXT-CORRECTED |
+| F-OD01V4R-41 | OD-01F-74 | APPROVED — 状态词分层真陈述 | TEXT-CORRECTED |
+| F-OD01V4R-42 | OD-01F-75 | APPROVED — D1 附录出生证明齐备 | TEXT-CORRECTED |
+| F-OD01V4R-43 | OD-01F-76 | APPROVED — Self Review HISTORICAL + 字段齐备 | TEXT-CORRECTED |
+| F-OD01V4R-44 | OD-01F-77 | APPROVED — 历史正文全文恢复 | BODY-RESTORED |
+| F-OD01V4R-45 | OD-01F-78 | APPROVED — 移除 Gap 路径标题；登记未归层 | TEXT-CORRECTED |
+| F-OD01V4R-46 | OD-01F-79 | APPROVED — Supersedes=—；非规范字段移出 Header | TEXT-CORRECTED |
+| F-OD01V4R-47 | OD-01F-80 | APPROVED — V3 Problem 按基线恢复 | TEXT-CORRECTED |
+| F-OD01V4R-48 | OD-01F-81 | APPROVED — OD-01-J 统一 v4R → DSH 外部验证 | TEXT-CORRECTED |
 
 ---
 
