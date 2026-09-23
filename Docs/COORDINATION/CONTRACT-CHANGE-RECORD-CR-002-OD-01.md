@@ -2,176 +2,134 @@
 
 ```text
 Document ID:           CR-002
-Title:                 Change Proposal Record — OD-01 Option Provenance / Unified Provenance Model
-Document Type:         Contract Change Record（候选）
-Authority:             Owner Decision / Proposal Record
-Registration Level:    Pending L1 Registration
+Title:                 Change Proposal Record — OD-01 Option Provenance
+Document Type:         Contract Change Record（Candidate）
 Status:                NOT RELEASED
+Authority Level:       CR — registration / change tracking authority
+Registration Level:    Pending L1 Registration
 Normative:             NO
-Purpose:               OD-01 的 Change Proposal Record（Candidate）；登记 CHANGE-3/4/5、Gate、注册条件与授权边界
-Derives From:          OD-01 · OD-01-A…J · OD-01R-01…10 · Proposal v4 · P04 · L0 00/10/20/50（只读）· 90/91 · 69 §5
-May Change:            本 Candidate 文本；与 Proposal v4 引用一致性；Gate evidence/status（仅有证据时）
-Must Not Change:       L0 00–50 · 90/91 · Frozen Contract / P01–P25 · Gate/Admission/Question Core · Production · Preprocessing · Schema · Corpus
+Derived From:          OD-01 · OD-01-A…J · Proposal v4R · P04 · L0 00/10/20/50（只读）· 90/91 · 69 §5
+May Change:            本 Candidate 文本；与 Proposal v4R 引用一致性；Gate 行（仅有证据时用 VERIFIED/PENDING）
+Must Not Change:       L0 00–50 · 90/91 · Frozen Contract · Gate/Admission/Question Core · Production · Preprocessing · Schema · Corpus · Migration
+Related Records:       FROZEN-SPEC-CHANGE-PROPOSAL-OD-01-OPTION-PROVENANCE.md · OWNER-DECISIONS-OD-01-OD-05-G-01-G-02.md
 Supersedes:            CR-002 v2
 Superseded By:         —
 Gate State Authority:  NO
 Change Record ID:      CR-002
-Audit ID (planned):    CA-002（仅在 Frozen Spec commit 后按 90 §11 登记）
+Audit ID (planned):    CA-002（Future Required Change；绑定 Frozen Spec commit）
 Date:                  2026-09-23
 ```
 
-> **CR-002 = Change Proposal Record**
-> **NOT EFFECTIVE**
-> **NOT REGISTERED AS L1**
-> **WAITING FOR FOUR-GATE APPROVAL**
-> **LOCATION: `Docs/COORDINATION/`**（OD-01-C：不进入 Frozen Spec）
->
-> 不得将本文件表述为「已是正式 L1」「已注册 L1」「已生效」「可据此修改 L0」。
+> **CR-002 = Change Proposal Record**  
+> **Effective: NOT EFFECTIVE**  
+> **L1: NOT REGISTERED**  
+> **WAITING FOR FOUR-GATE APPROVAL**  
+> **Location: `Docs/COORDINATION/`**（OD-01-C）  
+> Authority Level ≠ Registration Level。
 
 ---
 
-## 0. 定位声明（R-03 / R-10 / OD-01-C）
+## 0. 定位（F-OD01V4R-06 / R-03 / R-05）
 
-| 项 | 表述 |
-|----|------|
-| 文件性质 | **Change Proposal Record**（Candidate） |
-| Authority | **Owner Decision / Proposal Record**（非「Authority Level: L1」） |
-| Registration Level | **Pending L1 Registration** |
-| Effect | **NOT EFFECTIVE** |
-| L1 注册 | **NOT REGISTERED AS L1** |
-| 流程位置 | **WAITING FOR FOUR-GATE APPROVAL** |
-| 落点 | 保持 **COORDINATION**；**不**写入 `Docs/V3_SPEC/**` |
+| 字段 | 值 | 含义 |
+|------|-----|------|
+| Authority Level | CR — registration / change tracking authority | 变更跟踪 |
+| Registration Level | Pending L1 Registration | 仅 L1 进度跟踪 |
+| Effective | NOT EFFECTIVE | 未生效 |
+| L1 | NOT REGISTERED | 未注册 |
 
 **Formal L1 registration requires:**
 
-1. **Owner approval**
-2. **Gate completion**（四道门，`69 §5`）
-3. **Frozen Spec commit**
-4. **90/91 governance registration**
+1. Owner approval  
+2. Gate completion  
+3. Frozen Spec commit  
+4. 90/91 governance registration  
 
 ```text
 Current status: Candidate only.
 Registration is intentionally deferred until:
-  Owner approval +
-  Gate completion +
-  Frozen Spec update.
-CR-002 has a valid future registration path.
+  Owner approval + Gate completion + Frozen Spec update.
+Valid future registration path.
 ```
 
-（修正 v3「Governance Gap / 无合法落点」表述：**不是**没有落点，而是 **当前不注册**，因 Frozen Spec 尚未修改且四道门未完成。）
+---
+
+## 1. Owner Decision 依据
+
+OD-01-A…J = OWNER APPROVED RECORD / PENDING EFFECTIVE FREEZE。  
+核心方向不变：Artifact-first · Artifact-authoritative · Single provenance authority · No V3 rediscovery · Fail closed。
 
 ---
 
-## 1. Why
+## 2. Change Set
 
-1. P04 要求 Choice Question per-option structured evidence。
-2. L0 缺 polymorphic option provenance form；`00 §5` / `10 §4` / `20 §5.5` 延后 table_cell/fragment。
-3. OD-01 扩展统一 provenance 模型；OD-01-A…J 为 OWNER APPROVED RECORD / PENDING EFFECTIVE FREEZE。
-4. OD-01V3 findings 要求恢复完整 diff、修正 CR-002 定位、状态词与路径说明。
-
-**不改变** Gate / Admission / Question Core 等其他冻结语义。
-
----
-
-## 2. Owner Decision 依据（PENDING EFFECTIVE FREEZE）
-
-| ID | Decision | Action |
-|----|----------|--------|
-| OD-01-A | APPROVED | 恢复逐条 Frozen Text 级 diff |
-| OD-01-B | APPROVED | 保留缺口基线（现有/真缺口/延后/非目标） |
-| OD-01-C | APPROVED | CR-002 保持 COORDINATION；NOT EFFECTIVE / Candidate |
-| OD-01-D | APPROVED | CHANGE-3/4/5 全部承认；四道门 |
-| OD-01-E | APPROVED | Native / Adapter / Artifact 统一 provenance 模型 |
-| OD-01-F | APPROVED | **暂不新增 degraded**；不完整 → unresolved / review |
-| OD-01-G | APPROVED | 拆分 resolution 命名，避免 option / answer 同名冲突 |
-| OD-01-H | APPROVED | 删除 `DONE` 状态词 |
-| OD-01-I | APPROVED | OWNER APPROVED RECORD / PENDING EFFECTIVE FREEZE |
-| OD-01-J | APPROVED | 当前不 re-freeze；v4 → DSH 复核 → Owner 批准 → re-freeze |
-
----
-
-## 3. Change Set 范围
-
-权威文本 = **Proposal v4 §4 CI-1…CI-12 + §5 Explicit Diff Appendix**。
+权威文本 = Proposal v4R **§7 CI-1…CI-12 + §8 Appendix**。
 
 | Target | CHANGE | Gate |
 |--------|--------|------|
-| `00 §5` table/fragment 非目标 | **CHANGE-4** | 四道门 |
-| `10 §4` `_cells` 裁剪注 | **CHANGE-4** | 四道门 |
-| `20 §5.3` option 边界规则 | **CHANGE-5** | **四道门** |
-| `20 §5.5` form / 延后 | **CHANGE-4 + CHANGE-2** | 四道门 |
-| `20 §6.1` / `§6.2` / `§7.2` | CHANGE-2/3 | 回归 |
-| `20 §7.3` dedup | CHANGE-1 | 回归 |
-| `10 §6.3` / `§8` | CHANGE-1/2 | 回归 / 联动 |
-| `50` bbox 能力行（`50_Migration_Assets.md`） | CHANGE-2/3 | 回归 |
+| `00 §5` | **CHANGE-4** | 四道门 |
+| `10 §4` | **CHANGE-4** | 四道门 |
+| `20 §5.3` | **CHANGE-5** | **四道门** |
+| `20 §5.5` | **CHANGE-4+2** | **四道门** |
+| `20 §6.1` `§6.2` `§7.2` | CHANGE-2/3 | PENDING |
+| `20 §7.3` | CHANGE-1 | PENDING |
+| `10 §6.3` `§8` | CHANGE-1/2 | PENDING |
+| `50` bbox 行 | CHANGE-2/3 | PENDING |
 
-**UNCHANGED：** Gate 语义 · Admission · Question Core · 词汇 · dedup 组合 · P01–P25 · OD-02…G-02 · fragment 延后 · **degraded** · Schema · 代码 · Corpus · Preprocessing。
+**命名统一（F-OD01V4R-05）：** 解析字段唯一 = **`span_resolution`**（与 `option_evidence_status` / `answer_status` 分离）。  
+**定位（F-OD01V4R-04）：** line→line_ref 必需；line_character→line_ref+offset 必需；table_cell→table identity 必需、line_ref 可选；multiple_source_spans→多 entry 必需；other→显式描述必需。  
+**offset（F-OD01V4R-10）：** Unicode code point；0-based；start inclusive；end exclusive。  
+**table_cell（F-OD01V4R-09）：** `(source_version_id, table_id, row_index, col_index)`，1-based row/col。
+
+**UNCHANGED：** Gate/Admission/Question Core/词汇/dedup 组合/P01–P25/fragment 延后/**降级态不引入**/Schema/代码/Corpus/Preprocessing。
 
 ---
 
-## 4. CHANGE-3 / CHANGE-4 / CHANGE-5（OD-01-D）
+## 3. CHANGE-3 / CHANGE-4 / CHANGE-5（不降级）
 
 ```text
-CHANGE-3: ACKNOWLEDGED — Compiler 提取、状态分层、path-aware 行为等
-CHANGE-4: ACKNOWLEDGED — 00 §5 / 10 §4 / 20 §5.5 约束放宽 — four-gate required
-CHANGE-5: ACKNOWLEDGED — 20 §5.3 无条件 V3 option 边界规则删除/替换 — four-gate required
+CHANGE-3: ACKNOWLEDGED
+CHANGE-4: ACKNOWLEDGED — four-gate required
+CHANGE-5: ACKNOWLEDGED — four-gate required
 ```
 
-| 项 | 原 | 新 | 实际变化 | CHANGE |
-|----|----|----|----------|--------|
-| `00 §5` | table/fragment 非目标 | option table_cell 子集解除 | **放宽** | **CHANGE-4** |
-| `10 §4` | `_cells` 等不建 | option table_cell 定位允许 | **放宽** | **CHANGE-4** |
-| `20 §5.3` | V3 无条件发现 option 边界 | Artifact=Producer；Native=首次解析；禁第二 authority | **删除/替换** | **CHANGE-5** |
-| `20 §5.5` | table_cell/fragment 延后 | option 子集解除 + form | **放宽 + 新增** | **CHANGE-4**（+2） |
-
-**禁止**「不是 CHANGE-4/5 所以免四道门」。
+| 项 | 实际变化 | CHANGE |
+|----|----------|--------|
+| `00 §5` / `10 §4` | 约束放宽 | **CHANGE-4** |
+| `20 §5.3` | 规则删除/替换 | **CHANGE-5** |
+| `20 §5.5` | 延后放宽 + form | **CHANGE-4**（+2） |
 
 ---
 
-## 5. 三路径（OD-01-E）
+## 4. 三路径
 
-```text
-Native  + Adapter  + Artifact
-        ↓
-Unified Provenance Model
-        ↓
-Canonical V3 IR → Gate / Admission
-```
-
-- Artifact provenance **不替代** Native path authority。
-- V3 consumption layer **不得**建立第二 semantic authority。
-- 三路径必须产出 **语义等价** 的统一 provenance 表示。
+Native + Adapter + Artifact → Unified Provenance Model → Canonical V3 IR。  
+Artifact provenance 不替代 Native authority；消费层禁止第二 semantic authority。
 
 ---
 
-## 6. Fail-closed / 状态（OD-01-F/G）
+## 5. Gate
 
-| 命名 | 用途 |
-|------|------|
-| `span_resolution`（ResolvedStatus） | provenance/span 解析 |
-| `option_evidence_status` | option 证据可用性 `{resolved, unresolved, incomplete}` |
-| `answer_status` | 答案结论三字段 |
-| `semantic_status` | IR 完备性 |
+| Gate | Status |
+|------|--------|
+| A | PENDING |
+| B | PENDING |
+| C | PENDING |
+| D | PENDING |
 
-- **不新增 degraded**（OD-01-F）。
-- 不完整 → `unresolved` / `incomplete` / review；禁止静默通过；禁止 `options_unresolved` 并行位。
-
----
-
-## 7. Gate（四道门）— PENDING
-
-| Gate | Requirement | Status |
-|------|-------------|--------|
-| A Identity Closure | identity 闭合 | **PENDING** |
-| B Legacy / Path 对比 | corpus 对比 | **PENDING** |
-| C Safety Invariant | C1–C6 | **PENDING** |
-| D Adapter Boundary | 非第二 Resolver | **PENDING** |
-
-**WAITING FOR FOUR-GATE APPROVAL。** 不得以 Proposal 完成或 DESIGN APPROVED 替代 Gate PASS。
+**WAITING FOR FOUR-GATE APPROVAL。**
 
 ---
 
-## 8. 未授权事项
+## 6. 审查边界（F-OD01V4R-01）
+
+Self Review = 内部检查。  
+DSH Review = 外部验证。  
+OD-01-J 证据链仅接受 **DSH Review**；不得引用 Self Review 报告作为 DSH 证据。
+
+---
+
+## 7. 边界
 
 ```text
 Frozen Spec:     UNCHANGED
@@ -183,24 +141,20 @@ Corpus:          UNCHANGED
 Migration:       NOT AUTHORIZED
 Phase 1:         NOT ENTERED
 Re-freeze:       NOT EXECUTED
-Push (L0):       NOT EXECUTED
-CR-002:          NOT EFFECTIVE / NOT REGISTERED AS L1
+CR-002:          NOT EFFECTIVE / NOT REGISTERED
 ```
 
-**显式不主张：** 已注册 L1 · 已生效 · 四道门已通过 · 可改 L0 · 可 Phase 1 · CA-002 已登记。
+**Future Required Change：** 正式 L1 落位 `Docs/V3_SPEC/`；CA-002 登记 — 均在 Owner approval + Gates + Frozen Spec commit 之后。
 
 ---
 
-## 9. Document control
+## 8. Document control
 
 | Field | Value |
 |-------|-------|
 | Path | `Docs/COORDINATION/CONTRACT-CHANGE-RECORD-CR-002-OD-01.md` |
-| Kind | Change Proposal Record |
-| Authority | Owner Decision / Proposal Record |
+| Authority Level | CR — registration / change tracking authority |
 | Registration Level | Pending L1 Registration |
 | Status | NOT RELEASED |
-| Change Class | **CHANGE-3 + CHANGE-4 + CHANGE-5**（并含 1/2） |
-| Source | Proposal **v4** |
-| Effective | **NOT EFFECTIVE** |
-| Location | COORDINATION（OD-01-C） |
+| Change Class | CHANGE-3 + CHANGE-4 + CHANGE-5 |
+| Effective | NOT EFFECTIVE |

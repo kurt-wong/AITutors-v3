@@ -1,7 +1,28 @@
-# OD-01 Proposal v4 — 定向对抗性审查
+﻿# OD-01 Proposal v4 — Self Review（内部检查）
+
+`	ext
+Document Type: Report
+Status: HISTORICAL
+Authority Level: L3 — evidence only
+Derived From: Proposal v4 自查
+May Change: -
+Must Not Change: L0 / Frozen Contract / Schema / Code / Corpus
+Related Records: Proposal v4R / CR-002
+Gate State Authority: NO
+`
+
+> **F-OD01V4R-01：Self Review = 内部检查；DSH Review = 外部验证。**
+> **本文件不是 DSH Review。OD-01-J 不得引用本文件作为 DSH 证据。**
+> 历史正文保留（不删除）。
+
+---
+
+## 历史正文（Self Review only）
+
+# OD-01 Proposal v4 — 定向对抗性审查（原文）
 
 ```text
-STATUS: TARGETED ADVERSARIAL REVIEW — COMPLETE
+STATUS: SELF REVIEW — HISTORICAL
 SCOPE: OD-01 Proposal v4 + CR-002 Candidate（文档治理 / 条款 diff / 路径 / 状态词）
 SUBJECT: AITutors-v3 Docs/COORDINATION/FROZEN-SPEC-CHANGE-PROPOSAL-OD-01-OPTION-PROVENANCE.md（v4）
          AITutors-v3 Docs/COORDINATION/CONTRACT-CHANGE-RECORD-CR-002-OD-01.md
@@ -26,7 +47,7 @@ RECOMMENDATION: READY FOR OWNER REVIEW（下列 F-OD01V4-xx 为非阻断项）
 | Q2 | 是否恢复缺口基线（现有/真缺口/延后/非目标）？ | **是**（§1） |
 | Q3 | Proposed Frozen Text 是否可直接采纳（无 TODO/讨论/未决）？ | **基本可采纳**（见 F-OD01V4-01：编码单位仍属 Owner 钉死项，已隔离在正文外） |
 | Q4 | CR-002 是否避免「已注册 L1」误解？ | **是**（Change Proposal Record / NOT REGISTERED AS L1 / Pending L1 Registration） |
-| Q5 | Status 词是否含 `DONE`？ | **仅出现在「禁用/替换」说明**；状态列无 `DONE` |
+| Q5 | Status 词是否使用模糊完成态？ | **仅出现在「禁用/替换」说明**；状态列未用模糊完成态 |
 | Q6 | Governance Gap 是否改为 deferred registration path？ | **是**（valid future registration path） |
 | Q7 | degraded 是否被夹带进 change set？ | **否**（OD-01-F：不纳入；不完整→unresolved/incomplete/review） |
 | Q8 | resolution 命名是否拆分？ | **是**（span_resolution / option_evidence_status / answer_status / semantic_status） |
@@ -56,7 +77,7 @@ RECOMMENDATION: READY FOR OWNER REVIEW（下列 F-OD01V4-xx 为非阻断项）
 | Frozen Spec UNCHANGED | `git rev-parse HEAD:Docs/V3_SPEC` = `b3eeb3e9…`；`git diff -- Docs/V3_SPEC` 空 |
 | 仅 COORDINATION 三文件 | commit `86da69c` stat |
 | 无 `standalone_question` | 全文检索 0 |
-| 无状态列 `DONE` | 仅禁用说明命中 |
+| 状态列未用模糊完成态 | 仅禁用说明命中 |
 | 无「已注册 L1」肯定表述 | 仅否定/禁止句 |
 | OD-01-A…J 已登记 | OWNER-DECISIONS 附录 |
 | degraded 未入 change set | OD-01-F + CI 明示 |
@@ -72,7 +93,7 @@ Frozen Spec           = UNCHANGED
 Production / Schema / Corpus = UNCHANGED
 Phase 1               = NOT ENTERED
 Re-freeze             = NOT EXECUTED
-Next                  = Owner Review（OD-01-J：DSH 复核若 Owner 另令则先 DSH）
+PENDING                  = Owner Review（OD-01-J：DSH 复核若 Owner 另令则先 DSH）
 ```
 
 ---
@@ -82,6 +103,6 @@ Next                  = Owner Review（OD-01-J：DSH 复核若 Owner 另令则�
 | Field | Value |
 |-------|-------|
 | Path | `Docs/60_REPORTS/OD-01-PROPOSAL-V4-TARGETED-ADVERSARIAL-REVIEW.md` |
-| Status | COMPLETE — TARGETED ADVERSARIAL REVIEW |
+| Status | HISTORICAL — SELF REVIEW |
 | Verdict | VERIFIED WITH FINDINGS |
 | Subject HEAD | AITutors-v3 `86da69c` |
