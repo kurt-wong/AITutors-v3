@@ -301,16 +301,16 @@ EFFECT: 指导 OD-01 Proposal v3 + CR-002 治理化；不修改 Frozen Spec / Co
 
 | ID | Finding（DSH） | Owner Decision | Required Action | Status |
 |----|-----------------|----------------|-----------------|--------|
-| **OD-01R-01** | CR-002 位于 `Docs/COORDINATION/`，不能仅凭自称成为正式 L1 | **ACCEPTED** | 按 `90/91` 完成正式 L1 登记；不得自创 L1 目录/层级/状态；不得改治理规则迁就 CR-002；若无法合法登记 → 记 Governance Gap，**不得声称已为正式 L1** | **DONE — GOVERNANCE GAP RECORDED**（见下方 R-01 判定） |
-| **OD-01R-02** | Proposal / CR-002 治理格式不合规（含自创 `L1-proposal`） | **ACCEPTED** | 使用 `90 §4` + `91 §5` 出生证明字段（含 Derives From / May Change / Must Not Change）；合法 Status / 层级 / 引用；废止 `L1-proposal` | **DONE — ADDRESSED IN v3 / CR-002** |
-| **OD-01R-03** | OD-01 对 Frozen Spec 影响分类不实（非「普通新增」） | **ACCEPTED** | 逐条重判 CHANGE-3/4/5；`00 §5` 非目标解除 = 约束放宽；`20 §5.3` V3 option 边界规则 = 删除/替换；如实登记，禁止压低级别 | **DONE — CHANGE-4 + CHANGE-5 RECORDED** |
-| **OD-01R-04** | 只写 Artifact Path，未覆盖 Native Path | **ACCEPTED** | 同时表达 Path A（Native）与 Path B（Artifact/Adapter）；禁止两套语义标准；汇聚 Canonical V3 IR；覆盖 Native / Adapter / ResolvedRun / Canonical IR | **DONE — ADDRESSED IN v3 §Dual-Path** |
-| **OD-01R-05** | explicit diff 影响面不全 | **ACCEPTED** | 补 `10 §4:107-108`、`20 §6.2`、`50:51`；全树检索其余真实 affected clauses；完整影响面，不为凑数加无关章节 | **DONE — ADDRESSED IN v3 §Diff** |
-| **OD-01R-06** | 不得要求一切 provenance 都有 `line_ref` | **ACCEPTED** | 按 form 定义 locator；禁止给 table_cell / image_region / 多来源编造 `line_ref` 或假连续行区间 | **DONE — ADDRESSED IN v3 §Locator** |
-| **OD-01R-07** | 两个 `resolution_status` 语义冲突 | **ACCEPTED** | 拆开 Provenance Resolution vs Option/Evidence Resolution；用现有 Frozen vocabulary 命名；不擅自改生产 Schema；若需新 Schema 字段 → STOP → 走本 CR | **DONE — ADDRESSED IN v3 §Status** |
-| **OD-01R-08** | `degraded` 与 fail-closed 关系不清 | **ACCEPTED** | `degraded` 不是后门；无法可靠验证 → fail closed；禁止 `degraded → 正常 Admission` 隐式行为 | **DONE — ADDRESSED IN v3 §FailClosed** |
-| **OD-01R-09** | 缺正式 Owner Decision / Finding Disposition 记录 | **ACCEPTED** | 在本文件正式登记 R-01～R-10 为 Owner Decision（本节） | **DONE — THIS SECTION** |
-| **OD-01R-10** | `options_unresolved` 坐标错误；`sp-M1` 章节错误 | **ACCEPTED** | 给出准确 L0 coordinate；`sp-M1` = `20 §5.5`（非 `20 §6.1`）；全文检索同类错误 | **DONE — ADDRESSED IN v3 §Refs** |
+| **OD-01R-01** | CR-002 位于 `Docs/COORDINATION/`，不能仅凭自称成为正式 L1 | **ACCEPTED** | 按 `90/91` 完成正式 L1 登记；不得自创 L1 目录/层级/状态；不得改治理规则迁就 CR-002；若无法合法登记 → 记 Governance Gap，**不得声称已为正式 L1** | **ADDRESSED — REGISTRATION DEFERRED**（见下方 R-01 判定） |
+| **OD-01R-02** | Proposal / CR-002 治理格式不合规（含自创 `L1-proposal`） | **ACCEPTED** | 使用 `90 §4` + `91 §5` 出生证明字段（含 Derives From / May Change / Must Not Change）；合法 Status / 层级 / 引用；废止 `L1-proposal` | **ADDRESSED IN v4 / CR-002** |
+| **OD-01R-03** | OD-01 对 Frozen Spec 影响分类不实（非「普通新增」） | **ACCEPTED** | 逐条重判 CHANGE-3/4/5；`00 §5` 非目标解除 = 约束放宽；`20 §5.3` V3 option 边界规则 = 删除/替换；如实登记，禁止压低级别 | **ADDRESSED — CHANGE-3/4/5 ACKNOWLEDGED** |
+| **OD-01R-04** | 只写 Artifact Path，未覆盖 Native Path | **ACCEPTED** | 同时表达 Path A（Native）与 Path B（Artifact/Adapter）；禁止两套语义标准；汇聚 Canonical V3 IR；覆盖 Native / Adapter / ResolvedRun / Canonical IR | **ADDRESSED IN v4 §Three-Path** |
+| **OD-01R-05** | explicit diff 影响面不全 | **ACCEPTED** | 补 `10 §4:107-108`、`20 §6.2`、`50:51`；全树检索其余真实 affected clauses；完整影响面，不为凑数加无关章节 | **ADDRESSED IN v4 §Change-Items** |
+| **OD-01R-06** | 不得要求一切 provenance 都有 `line_ref` | **ACCEPTED** | 按 form 定义 locator；禁止给 table_cell / image_region / 多来源编造 `line_ref` 或假连续行区间 | **ADDRESSED IN v4 §Locator** |
+| **OD-01R-07** | 两个 `resolution_status` 语义冲突 | **ACCEPTED** | 拆开 Provenance Resolution vs Option/Evidence Resolution；用现有 Frozen vocabulary 命名；不擅自改生产 Schema；若需新 Schema 字段 → STOP → 走本 CR | **ADDRESSED IN v4 §Status** |
+| **OD-01R-08** | `degraded` 与 fail-closed 关系不清 | **ACCEPTED** | `degraded` 不是后门；无法可靠验证 → fail closed；禁止 `degraded → 正常 Admission` 隐式行为 | **ADDRESSED IN v4 §FailClosed** |
+| **OD-01R-09** | 缺正式 Owner Decision / Finding Disposition 记录 | **ACCEPTED** | 在本文件正式登记 R-01～R-10 为 Owner Decision（本节） | **ADDRESSED — THIS SECTION** |
+| **OD-01R-10** | `options_unresolved` 坐标错误；`sp-M1` 章节错误 | **ACCEPTED** | 给出准确 L0 coordinate；`sp-M1` = `20 §5.5`（非 `20 §6.1`）；全文检索同类错误 | **ADDRESSED IN v4 §Refs** |
 
 ### OD-01R-01 — 正式 L1 落位判定（Owner 接受的 Gap 路径）
 
@@ -340,7 +340,7 @@ EFFECT: 指导 OD-01 Proposal v3 + CR-002 治理化；不修改 Frozen Spec / Co
 ```text
 按照 Frozen Document Governance，CR-002 当前【不是】已经正式注册的 L1 Change Record。
 CR-002 = L1 candidate / NOT RELEASED（对齐 67 先例）
-GOVERNANCE GAP = 已登记（正式 L1 注册与「Frozen Spec tree hash 不得变」本轮约束互斥）
+REGISTRATION PATH = 有效未来路径；当前 Candidate only；intentionally deferred
 禁止声称：CR-002 已是正式注册 L1 / 已生效 / 已授权改 L0
 ```
 
@@ -365,6 +365,59 @@ GOVERNANCE GAP = 已登记（正式 L1 注册与「Frozen Spec tree hash 不得�
 | OD-01 design | 仍为 APPROVED DESIGN / **PENDING FROZEN SPEC INCORPORATION** |
 | Frozen Spec 00–50 | **UNCHANGED / NOT AUTHORIZED TO MODIFY** |
 | Production / Schema / Corpus / Phase 1 / X3 | **UNCHANGED / NOT ENTERED** |
+
+---
+
+
+---
+
+## OD-01-A…J — Owner Decision（OWNER APPROVED RECORD / PENDING EFFECTIVE FREEZE）
+
+```text
+RECORD-TYPE: OWNER DECISION
+STATUS: OWNER APPROVED RECORD / PENDING EFFECTIVE FREEZE
+AUTHORITY: Owner Decision（非 MIMO 建议 / 非 DSH 建议 / 非 Proposal 自述）
+DATE: 2026-09-23
+BINDING FOR EXECUTION: YES
+EFFECT ON L0: NOT EFFECTIVE（PENDING EFFECTIVE FREEZE）
+```
+
+> 本节是 **Owner Decision**。**不使用「已生效」含义。**
+> 证据链：Finding → Owner Decision（本节）→ Implementation Instruction（Proposal v4 / CR-002）。
+> 不改变既有 OD-01～OD-05 / G-01 / G-02 / OD-01R-01…10 语义。
+
+| ID | Decision | Required Action | Status |
+|----|----------|-----------------|--------|
+| **OD-01-A** | APPROVED | 恢复逐条 Frozen Text 级 Current → Proposed diff | ADDRESSED IN v4 |
+| **OD-01-B** | APPROVED | 保留「现有能力 / 真缺口 / 延后 / 非目标」缺口基线 | ADDRESSED IN v4 |
+| **OD-01-C** | APPROVED | CR-002 保持 COORDINATION；NOT EFFECTIVE / Candidate | ADDRESSED IN CR-002 |
+| **OD-01-D** | APPROVED | CHANGE-3 / CHANGE-4 / CHANGE-5 全部承认；按四道门处理 | ADDRESSED IN v4 / CR-002 |
+| **OD-01-E** | APPROVED | Native / Adapter / Artifact 统一 provenance 模型 | ADDRESSED IN v4 |
+| **OD-01-F** | APPROVED | **暂不新增 degraded**；不完整 → unresolved / review | ADDRESSED IN v4 |
+| **OD-01-G** | APPROVED | 拆分 resolution 命名；避免 option 与 answer 同名冲突 | ADDRESSED IN v4 |
+| **OD-01-H** | APPROVED | 删除 `DONE` 状态词；用 ADDRESSED / VERIFIED / COMPLETED 等 | ADDRESSED IN RECORDS |
+| **OD-01-I** | APPROVED | OWNER APPROVED RECORD / PENDING EFFECTIVE FREEZE | ADDRESSED IN RECORDS |
+| **OD-01-J** | APPROVED | 当前不 re-freeze；v4 → DSH 复核 → Owner 批准 → re-freeze | PENDING NEXT ROUND |
+
+### OD-01-J 流程
+
+```text
+Proposal v4
+    → DSH 复核
+    → Owner 批准
+    → 正式 re-freeze
+```
+
+本轮 **不执行** re-freeze。
+
+### 有效范围
+
+| Item | Effect |
+|------|--------|
+| OD-01-A…J | OWNER APPROVED RECORD；指导 Proposal v4 / CR-002 |
+| OD-01 design incorporation | PENDING EFFECTIVE FREEZE |
+| Frozen Spec / Contract / Code / Schema / Corpus | UNCHANGED |
+| Phase 1 / Migration / Re-freeze | NOT ENTERED / NOT AUTHORIZED / NOT EXECUTED |
 
 ---
 
