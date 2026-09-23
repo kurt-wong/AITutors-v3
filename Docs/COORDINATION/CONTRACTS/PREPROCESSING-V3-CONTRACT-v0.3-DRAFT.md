@@ -5,6 +5,8 @@
 >
 > **本轮状态变更**：Owner Decisions **P01–P25 全部完成并已落版**（§1b）。其中 **P04 / P07 / P08 = CLOSED**。本文件由 `DRAFT` 升为 **CONTRACT FREEZE CANDIDATE**，供后续一致性检查与 Owner 冻结令使用。
 >
+> **边界澄清轮（`DECISION` 语义澄清，非新 OD）**：明确 **Question Core / Source-derived Metadata / LLM-derived Metadata** 与 **Admission / Post-Admission Enrichment** 的关系（§1d、§6、§8）。**P01–P25 决策状态不变**；P15 按 Explanation 专属规则重新解释，**不**把 Post-Admission Enrichment 收窄为“只补 explanation”。
+>
 > **权威顺序（binding）**：`Frozen Spec` > `Frozen Contract` > `Owner Decisions` > `v0.3 Contract` > `Implementation`。本文件**不得**覆盖 Frozen Spec / Frozen Contract（**P25**）。
 >
 > **定位**：AITutors-preprocessing → AITutors-v3 Consumer Boundary → Canonical V3 IR → V3 Semantic Enrichment → Gate → Admission → Persistence → Post-Admission Async Enrichment 的**架构合同**。
@@ -402,9 +404,18 @@ AITutors-preprocessing → AITutors-v3 → Gate → Admission
 
 Preprocessing flags **不自动**改变 AITutors-v3 Gate。必须存在明确的 Contract / Owner rule。
 
-### P15 — Post-Admission Enrichment 只生成缺失的 detailed explanation
+### P15 — Detailed Explanation 的生成与覆盖规则（Explanation 专属）〔CLOSED〕
 
-AITutors-v3 Admission 后：**只允许生成 Original Question 中缺失的 detailed explanation。** 已有 explanation **不生成、不覆盖**；缺失 explanation **允许异步生成**。
+**重新解释（binding，边界澄清）**：P15 **专门规定 Detailed Explanation 的生成与覆盖规则**，**不是** Post-Admission Enrichment 的唯一任务定义。
+
+```text
+已有 Original detailed explanation  → 不生成、不覆盖
+缺失 detailed explanation           → 允许 Admission 后异步生成
+生成的 explanation                  → AITutors-v3 Derived Enrichment（P16）
+enrichment 失败                     → 不 rollback Admission（P18）
+```
+
+**不得**把本条扩大解释为：「difficulty / knowledge_nodes / skills 等 Derived Metadata 不得 Post-Admission 生成」或「Post-Admission Enrichment 只能补 explanation」。该类范围错误见 **§1d / §8**；Derived Metadata Enrichment 见 **§8.1 A**。
 
 ### P16 — Generated explanation 是 AITutors-v3 Derived Enrichment
 
@@ -496,6 +507,83 @@ manual AITutors-v3 DB mutation 后视为重新准入
 ```
 
 > 本原则是 **P01 / P02 / P04.5 / P07 / P13** 的统一上位表述，不新增独立义务，**也不授权任何历史重跑**（重跑执行须 Owner 另行下令）。
+
+---
+
+## 1d. Question Core / Metadata / Admission 边界（binding，`DECISION` 边界澄清）
+
+> **架构原则（Owner 已确认）**：**Question 是主体，Metadata 是附属。**  
+> **Admission 只判断 Question 本体是否完整、结构是否合法、来源是否可验证，以及 Frozen Spec 所要求的准入条件是否满足；附属 Metadata 不应成为 Question 入库的阻碍。**
+
+### 1d.1 Question Core
+
+Question Core 是决定 Question 能否进入 Admission 的**主体内容**。
+
+> **只要 Question 本身完整，并满足 Frozen Spec 规定的结构、身份、证据和 Gate/Admission 条件，就不应因附属 Metadata 尚未生成而阻止入库。**
+
+Question Core 具体边界**继续服从 Frozen Spec**；本节**不**创造新的 Question schema。至少保持以下概念：
+
+- stem / question content
+- options（适用于选择类题型）
+- answer
+- explanation / detailed explanation
+- composite 所需完整结构、材料、sub-question 关系等
+
+**不得**把 `metadata` 词扩大到足以削弱 Question Core。下列内容若 Frozen Spec 将其作为 Question 规范结构或 Admission 前置条件，**仍必须满足**：
+
+- Question Type
+- Unit Type
+- Question 内部结构
+- 必要的来源证据
+- Frozen Spec 明确要求的准入信息
+
+### 1d.2 Source-derived Metadata
+
+能够从原始 Source Document **直接、可靠提取**的信息，例如：year / grade / semester / exam phase / midterm·final / examination name / region / school / subject / original question number / source document identity / source location / page·section 等。
+
+> **若 Preprocessing 已可靠识别：应随 Question 一并进入 AITutors-v3。**  
+> 它们**不**因某个 LLM enrichment 尚未完成而阻塞 Question Admission。
+
+Authority 原则不变：
+
+- Source / Preprocessing 提供原始来源事实
+- AITutors-v3 Consumer Boundary 验证其身份、范围与合法性
+- **不得**把未经证明的信息伪装成 Source fact
+
+### 1d.3 LLM-derived Metadata（Derived Metadata）
+
+例如：difficulty · knowledge_nodes · skills · cognitive level · tested concepts · prerequisite knowledge · misconception type · solution strategy · recommendation attributes · future knowledge-graph / analytical attributes。
+
+> **不是**原始文档直接给出的事实，而是基于已入库 Question Core / Source evidence 分析、判断或推导得到。
+
+因此：
+
+- **这些数据不应成为 Question Admission 的阻碍。**
+- **缺少 difficulty / knowledge_nodes / skills 等 Derived Metadata，不代表 Question 不完整，也不代表 Question 不能 Admission。**
+- 可在 Admission 后经异步 Enrichment 生成（见 **§8**）。
+
+### 1d.4 Admission 与 Metadata 的关系（binding）
+
+Admission 判断的是：
+
+```text
+Question Core
++ Frozen Spec required conditions
++ Identity / Evidence / Gate requirements
+        ↓
+Admission
+```
+
+**不是**：
+
+```text
+Question Core + all metadata + all LLM enrichment → Admission
+```
+
+> **普通附属 Metadata 不阻碍 Admission**；**Frozen Spec 明确规定的规范结构 / 准入条件仍然必须满足**。  
+> 未来知识图谱、统计分析、推荐等所需派生 Metadata，**不得**反向成为 Question Admission 前置条件，**除非 Frozen Spec 明确规定某项数据本身就是 Admission 所必需的规范字段**。
+
+**禁止**绝对化写成：「任何 Metadata 永远不能影响 Admission」——那会误伤 Frozen 规范字段。
 
 ---
 
@@ -623,11 +711,16 @@ reading_expression
 
 ---
 
-## 6. V3 Semantic Enrichment 与 Authority 边界
+## 6. Metadata 分类、Semantic Enrichment 与 Authority 边界
 
-### 6.1 划分（`PROPOSED`）
+### 6.1 Metadata 两类（`DECISION` 边界澄清）
 
-Preprocessing **不必**承担全部 Question Semantic Metadata；它提供 document facts / structural facts。V3 可在可靠事实之上派生：
+| 类别 | 含义 | 与 Admission | 典型字段 |
+|---|---|---|---|
+| **Source-derived Metadata** | 原始文档可直接、可靠提取 | **可随 Question 一并入库**；不因 LLM 未完成而阻塞 | year, grade, semester, exam phase, examination name, region, school, subject, 原题号, source identity/location |
+| **LLM-derived / Derived Metadata** | 非原文直接事实；基于 Question Core / Source evidence 推导 | **不应阻碍 Admission**；可 **Post-Admission 异步**生成 | difficulty, knowledge_nodes, skills, cognitive level, … |
+
+Preprocessing **不必**承担全部 Question Semantic Metadata；它提供 document facts / structural facts。AITutors-v3 可在可靠事实之上派生：
 
 - difficulty
 - knowledge nodes
@@ -635,17 +728,20 @@ Preprocessing **不必**承担全部 Question Semantic Metadata；它提供 docu
 - concept relationships
 - 其他 V3-owned semantic metadata
 
-### 6.2 示例（`PROPOSED`）
+**时点（澄清）**：Derived Metadata **允许**在 Admission 前已具备，**也允许**在 Admission 后异步生成（§8）。两种时点都**不得**把「附属 Metadata 尚未生成」写成 Admission 失败理由（除非 Frozen 明确要求该字段为规范准入项）。
+
+### 6.2 示例（`DECISION` 边界澄清）
 
 ```text
 Preprocessing:
   original_question_type = single_choice     → Preprocessing Authority（可 canonicalize）
+  year / school / subject / exam_phase       → Source-derived Metadata（可靠时随 Question 入库）
 
 V3:
   question_type = single_choice              → Canonical V3 Authority（canonicalized Preprocessing fact）
-  difficulty = medium                        → V3 Derived Authority
-  knowledge_nodes = [...]                    → V3 Derived Authority
-  skills = [...]                             → V3 Derived Authority
+  difficulty = medium                        → V3 Derived Authority（可 post-admission）
+  knowledge_nodes = [...]                    → V3 Derived Authority（可 post-admission）
+  skills = [...]                             → V3 Derived Authority（可 post-admission）
 ```
 
 **禁止**：把 V3-derived 反写成 Preprocessing authority。  
@@ -687,32 +783,69 @@ V3:
 
 ---
 
-## 8. Post-Admission Semantic Enrichment（`DECISION` **P15 / P16 / P17 / P18 / P19**）
+## 8. Post-Admission Semantic Enrichment（`DECISION` **P15 / P16 / P17 / P18 / P19** + 边界澄清）
 
-> 本节四小节的规范内容已由 Owner Decisions **P15–P19** 正式裁决（§1b）。原文 `PROPOSED` 表述**升级为 `DECISION`**；实现状态仍为 **NOT AUTHORIZED**（§20）。
+> 本节由 Owner Decisions **P15–P19** 正式裁决，并经本轮 **Question Core / Metadata 边界澄清** 重定义。实现状态仍为 **NOT AUTHORIZED**（§20）。
 
-### 8.1 目标（`DECISION` **P15**）
+### 8.1 定义（`DECISION` 边界澄清）
 
-Question **入库之后**，对**允许缺失**的语义内容进行异步后台补全。
+> **Post-Admission Enrichment = Question 入库后的异步派生信息生成机制。**
 
-当前明确用例：**缺失 explanation 的选择题**（及其它 Gate/Admission 允许缺失的字段）。
+**不是**「只负责补缺失的详细解析」。
+
+至少承载两类任务：
+
+#### A. Derived Metadata Enrichment
+
+- difficulty
+- knowledge_nodes
+- skills
+- 其他后续分析 / 知识图谱所需的 LLM-derived metadata
+
+**缺少这些字段 ≠ Question 不完整 ≠ 不能 Admission。**
+
+#### B. Missing Detailed Explanation Enrichment（**P15 专属规则**）
+
+- 原始来源**没有**详细解析 → 可在 Admission 后异步生成
+- 原始来源**已有**可靠详细解析 → **不得**因 enrichment 覆盖原解析
+
+> 「已有 explanation 不覆盖、缺失 explanation 才补充」是 **Explanation 专属的数据保护规则**，**不得**扩大成「所有 Metadata 只能针对缺失字段生成」或「Post-Admission 只能生成 explanation」。
 
 ```text
-Question
-├── stem           present
-├── options        present
-├── answer         present
-├── question_type  present
-├── difficulty     present / optional
-├── knowledge      present / optional
-└── explanation    missing
+Question Core complete
+        ↓
+Gate
+        ↓
+Admission          ← 不等待普通附属 Metadata / LLM enrichment 完成
+        ↓
+Question persisted
+        ↓
+Async LLM Enrichment
+        ├── Derived Metadata（difficulty / knowledge_nodes / skills / …）
+        └── Missing detailed explanation（P15：已有则不覆盖）
 ```
 
-不得仅因 explanation 缺失阻止核心 Question 入库——**前提是** Gate/Admission Contract 允许该字段缺失。
+**Admission 入口（binding）**：
 
-**`DECISION` P15 明确限定**：只允许生成 Original Question 中**缺失的 detailed explanation**。已有 explanation **不生成、不覆盖**。
+```text
+Question Core + Frozen Spec required conditions + Identity / Evidence / Gate
+        ↓
+Admission
+```
 
-### 8.2 生命周期（`DECISION` **P17 + P19**）
+**不是** `Question Core + all metadata + all LLM enrichment → Admission`。
+
+### 8.2 与 P15 的关系（不推翻 P15）
+
+| 点 | 含义 |
+|---|---|
+| P15 | **保留**：只规范 Detailed Explanation 的生成与覆盖（已有不覆盖；缺失可异步生成） |
+| Derived Metadata | **不受**「只能补缺失 explanation」限制；可按 §8.1 A Post-Admission 生成 |
+| Generated explanation | 仍 = AITutors-v3 Derived Enrichment（**P16**），非 Source / Preprocessing Authority |
+| Enrichment failure | 不 rollback Admission（**P18**） |
+| Retry | 最多一次；第二次 validation failure → `suspended`（**P19**） |
+
+### 8.3 生命周期（`DECISION` **P17 + P19**）
 
 ```text
 Core Question → Admission → Persistence
@@ -722,14 +855,14 @@ Core Question → Admission → Persistence
         （最多一次 retry；第二次 validation failure → suspended）
 ```
 
-**`DECISION` P16**：Generated explanation = **AITutors-v3 Derived Enrichment**，**不是** Source Authority，**不是** Preprocessing Authority。
+**`DECISION` P16**：Generated explanation（及其它 LLM-derived enrichment）= **AITutors-v3 Derived Enrichment**，**不是** Source Authority，**不是** Preprocessing Authority。
 
-### 8.3 与 Admission 解耦（`DECISION` **P18**）
+### 8.4 与 Admission 解耦（`DECISION` **P18** + §1d）
 
-禁止设计成（除非未来 Frozen Contract 明确 explanation 为 hard requirement）：
+禁止设计成（除非 Frozen 明确将该字段升为 hard requirement）：
 
 ```text
-no explanation → Gate fail → Question cannot enter DB
+no ordinary metadata / no enrichment → Gate fail → Question cannot enter DB
 ```
 
 应允许：
@@ -738,7 +871,7 @@ no explanation → Gate fail → Question cannot enter DB
 Core Question → Admission → Persistence → Async enrichment
 ```
 
-使 **Question identity / core factual integrity** 与 **optional semantic enrichment** 解耦。
+使 **Question Core / identity / core factual integrity** 与 **optional附属 Metadata enrichment** 解耦。
 
 细节见 `V3-POST-ADMISSION-ENRICHMENT-CONTRACT-v0.3-DRAFT.md`。
 
@@ -882,7 +1015,7 @@ evidence closure
 | ⑤ 16 件 Identity-only recovery | **继承**；历史非标数据统一重跑见 **P02 / §1c** |
 | ⑥ Source bytes capability | **继承**（并由 **P21 / P22** 固化提供与独立验证义务） |
 
-v0.3 **新增**：术语规范（§0）、核心原则 P1–P5、**Owner Decisions P01–P25 落版（§1b）**、**Historical Source Reprocessing Principle（§1c）**、Information Preservation、Semantic Authority、Post-Admission Enrichment（P15–P19）、QT contract、mapping 双权威、Runner 对齐缺口、真实不完整性披露、Artifact package 草案。
+v0.3 **新增**：术语规范（§0）、核心原则 P1–P5、**Owner Decisions P01–P25 落版（§1b）**、**Historical Source Reprocessing Principle（§1c）**、**Question Core / Metadata / Admission 边界（§1d）**、Information Preservation、Semantic Authority、Post-Admission Enrichment（P15–P19 + §8 重定义）、QT contract、mapping 双权威、Runner 对齐缺口、真实不完整性披露、Artifact package 草案。
 
 v0.3 **不**扩大 v0.2 冻结范围，**不**宣布冻结（冻结令属 Owner）。
 
@@ -964,10 +1097,10 @@ Generated explanation 属于 **AITutors-v3 Derived Enrichment**，**不是** Sou
 |---|---|
 | Frozen Spec（`Docs/V3_SPEC/**`）vs v0.3 Contract | **NO CONFLICT** — Frozen Spec 未被本任务改动（`git diff` 为空）；v0.3 未改写任何 Frozen 条款 |
 | Frozen Contract（`PREPROCESSING-V3-CONTRACT-v0.2-DRAFT.md` 冻结六项）vs v0.3 | **NO CONFLICT** — §15 逐项「继承，不改写」 |
-| Owner Decisions P01–P25 vs v0.3 Contract | **ALIGNED** — §1b 25/25 落版；P04 / P07 / P08 = CLOSED |
+| Owner Decisions P01–P25 vs v0.3 Contract | **ALIGNED** — §1b 25/25 落版；**状态不变**；P04 / P07 / P08 = CLOSED；P15–P19 = CLOSED（P15 按 §1b/§8 解释为 Explanation 专属规则，**非**新增 OD） |
 | Owner Decisions P01–P25 vs Information Preservation Matrix | **ALIGNED** — §16 同步点已入表 |
 | Owner Decisions P01–P25 vs Semantic Authority Matrix | **ALIGNED** — §17 同步点已入表 |
-| Owner Decisions P15–P19 vs Post-Admission Enrichment Contract | **ALIGNED** — 已同步；并按 **P15 收窄**范围（排除 difficulty / knowledge_nodes / skills） |
+| Owner Decisions P15–P19 vs Post-Admission Enrichment Contract | **ALIGNED** — 已同步；P15 解释为 **Explanation 专属规则**；Post-Admission 范围含 **Derived Metadata（A）+ Missing Explanation（B）**（§1d / §8 边界澄清） |
 | Owner Decisions vs Open Decisions 登记 | **ALIGNED** — `OWNER DECISION STATUS: COMPLETE`；17 项 `OPEN` 明确标为 implementation question |
 
 **未触发 STOP**：本轮未发现 `v0.3 Contract ≠ Frozen Spec` 类冲突，因此无需 record conflict / 等待 Owner authorization。若后续发现此类冲突，严格执行 **P25**。

@@ -1,12 +1,13 @@
 # AITutors-v3 Post-Admission Semantic Enrichment Contract v0.3
 
-> **状态**：`CONTRACT FREEZE CANDIDATE` 配套 / **已同步 Owner Decisions P15–P19** / **NOT IMPLEMENTED** / **NOT AN IMPLEMENTATION AUTHORIZATION**
-> **配套**：`PREPROCESSING-V3-CONTRACT-v0.3-DRAFT.md` §8 / **§1b P15–P19**；`PREPROCESSING-V3-SEMANTIC-AUTHORITY-MATRIX-v0.3-DRAFT.md` §4
+> **状态**：`CONTRACT FREEZE CANDIDATE` 配套 / **已同步 Owner Decisions P15–P19 + Question/Metadata 边界澄清** / **NOT IMPLEMENTED** / **NOT AN IMPLEMENTATION AUTHORIZATION**
+> **配套**：`PREPROCESSING-V3-CONTRACT-v0.3-DRAFT.md` §1d / §6 / §8 / **§1b P15–P19**；`PREPROCESSING-V3-SEMANTIC-AUTHORITY-MATRIX-v0.3-DRAFT.md` §4
 > **术语**：`Preprocessing` = `kurt-wong/Aitutors-preprocessing`；`AITutors-v3` = 当前 V3 系统；`Producer` **仅**作抽象架构角色（Contract §0）
-> **证据标签**：`DECISION`（P15–P19 落版）/ `OBSERVED`（对照现状）/ `OPEN`
+> **证据标签**：`DECISION`（P15–P19 + 边界澄清落版）/ `OBSERVED`（对照现状）/ `OPEN`
 >
-> **本轮同步（`DECISION`）**：**P15** 只允许生成缺失 detailed explanation · **P16** Generated explanation = AITutors-v3 Derived Enrichment · **P17** MIMO generate → DeepSeek validate · **P18** Enrichment failure 不回滚 Admission · **P19** 最多一次 retry，第二次 validation failure → `suspended`。
-> **范围收窄**：P15 **排除**了原 §2 表中 `difficulty` / `knowledge_nodes` / `skills` 的 Post-Admission 补全——该三项属 **V3 Semantic Enrichment（Admission 前）**，见 Contract §6.1。
+> **本轮同步（`DECISION`）**：**P15** = Detailed Explanation **生成与覆盖**专属规则（已有不覆盖；缺失可异步生成）· **P16** Generated explanation = AITutors-v3 Derived Enrichment · **P17** MIMO generate → DeepSeek validate · **P18** Enrichment failure 不回滚 Admission · **P19** 最多一次 retry，第二次 validation failure → `suspended`。
+> **边界澄清**：Post-Admission Enrichment = **Question 入库后的异步派生信息生成机制**，至少含 **（A）Derived Metadata Enrichment**（difficulty / knowledge_nodes / skills / …）+ **（B）Missing Detailed Explanation Enrichment**（P15 专属保护）。**禁止**再写「只补 explanation」或「difficulty 等禁止 Post-Admission」。见 Contract §1d / §8。
+> **Admission**：Question Core + Frozen 必需条件即可入库；**普通附属 Metadata 缺失不阻塞 Admission**。
 
 **Security（逐字）**：Never hardcode API Keys/Passwords/Tokens/Secrets; Always use .env for configuration.
 
@@ -14,18 +15,27 @@
 
 ## 1. 目标与边界
 
-### 1.1 目标（`DECISION` **P15**）
+### 1.1 目标（`DECISION` 边界澄清 + **P15/P16–P19**）
 
-在 Question **完成 Admission 并持久化之后**，对 **Gate/Admission 允许缺失** 的语义内容进行异步补全。
+在 Question **完成 Admission 并持久化之后**，异步生成派生信息。
 
-**`DECISION` P15 明确限定（binding）**：
+**定义（binding）**：
 
-> **只允许生成 Original Question 中缺失的 detailed explanation。**
-> 已有 explanation：**不生成、不覆盖**。缺失 explanation：**允许异步生成**。
+> **Post-Admission Enrichment 是 Question 入库后的异步派生信息生成机制。**
 
-首要且**唯一**用例：**缺失 explanation 的题目**（含选择题详解）。
+至少承载：
 
-> **范围收窄说明**：P15 **不包含** `difficulty` / `knowledge_nodes` / `skills` 的 Post-Admission 补全。该三项属 **V3 Semantic Enrichment（Admission 前，Contract §6.1）**，不在本契约的 Post-Admission 范围内。
+#### A. Derived Metadata Enrichment
+
+`difficulty` · `knowledge_nodes` · `skills` · 其它 LLM-derived metadata  
+→ **可** Post-Admission 生成；**缺少不阻碍 Admission**。
+
+#### B. Missing Detailed Explanation Enrichment（**P15 专属**）
+
+> **已有 Original detailed explanation：不生成、不覆盖。**  
+> **缺失 detailed explanation：允许异步生成。**（P15）
+
+**不得**把 B 的覆盖规则扩大成「Post-Admission 只能做 B」或「所有 Metadata 只能补缺失字段」。
 
 ### 1.2 非目标
 
@@ -33,21 +43,34 @@
 - 不回滚/删除已 Admission 的 Question（**P18**）
 - 不在本 Contract 内实现复杂 worker / 队列产品化
 - 不修改 Frozen Spec / DB schema（schema 变更 = `OPEN` / implementation question，非本任务授权）
+- **不**重新设计 difficulty / knowledge_nodes / skills 的具体 schema / prompt（后续 Implementation）
 
 ---
 
-## 2. 允许缺失的字段（Allowed Missing）
+## 2. 字段与 Admission / Enrichment 关系
 
-| 字段 | Admission 时可缺？ | **Post-Admission** Enrichment 可补？ | 说明 |
+| 字段 / 类 | Admission 时可缺？ | **Post-Admission** 可生成？ | 说明 |
 |---|---|---|---|
-| `explanation` | **是**（`DECISION` P15） | **是** | **P15 唯一允许项**；已有则不生成不覆盖 |
-| `difficulty` | 是 | **否**（P15 排除） | 属 **V3 Semantic Enrichment**（Admission 前，Contract §6.1） |
-| `knowledge_nodes` | 是 | **否**（P15 排除） | 同上 |
-| `skills` | 是 | **否**（P15 排除） | 同上 |
-| stem / options / answer / question_type（核心） | **否**（核心完整性） | 不适用 | 缺则不应走“可缺字段 enrichment”路径 |
+| `explanation`（missing only） | **是** | **是** | **P15**：仅补缺失；已有**不覆盖** |
+| `difficulty` | **是** | **是**（Derived Metadata A） | LLM-derived；**不阻塞** Admission |
+| `knowledge_nodes` | **是** | **是**（Derived Metadata A） | 同上 |
+| `skills` | **是** | **是**（Derived Metadata A） | 同上 |
+| Source-derived Metadata（year/school/…） | 可随 Question 入库 | 通常由 Preprocessing 提供 | 可靠时 **随 Question 一并进入**；不依赖 LLM |
+| stem / options / answer / question_type（Question Core） | **否**（核心完整性；Frozen 规范字段） | 不适用 | 缺则不走 enrichment 洗白路径 |
+| Frozen Spec 明确的其它 Admission 必需项 | **否** | 不适用 | **Frozen > Contract**（P25） |
 | identity / provenance | **否** | 不适用 | M1–M5 失败不得靠 enrichment 洗白 |
 
-> 若未来 Frozen Contract 将 explanation 升为 hard requirement，本表作废并以 Frozen 为准（`OPEN`，对齐 OD-V3-21）。
+> 若未来 Frozen 将 explanation 升为 hard requirement，以 Frozen 为准（`OPEN`，对齐 OD-V3-21）。
+
+**Admission 公式（binding，Contract §1d）**：
+
+```text
+Question Core + Frozen Spec required conditions + Identity / Evidence / Gate
+        → Admission
+        →（可选）Async Enrichment：Derived Metadata + Missing Explanation
+```
+
+**不是** `Question Core + all metadata + all enrichment → Admission`。
 
 ---
 
@@ -77,15 +100,18 @@ no explanation → Gate fail → Question cannot enter DB
 
 ```text
 Core Question → Admission → Persistence → Async enrichment
+        （Derived Metadata A + Missing Explanation B）
 ```
 
-目的：**Question identity / core factual integrity** 与 **optional semantic enrichment** 解耦。
+目的：**Question Core / identity / core factual integrity** 与 **附属 Metadata enrichment** 解耦。
 
 **`DECISION` P18（binding）**：
 
 ```text
 Enrichment failure → 不 rollback AITutors-v3 Admission
 ```
+
+**禁止**（边界澄清）：`difficulty/knowledge/skills 缺失 → 拒绝入库`（除非 Frozen 明确该字段为 Admission 规范必需）。
 
 ### 3.2 状态机（含 **P19** `suspended`）
 
@@ -208,29 +234,35 @@ Enrichment failure → 不 rollback AITutors-v3 Admission
 
 ---
 
-## 8. Persistence Semantics（`DECISION` **P15 / P16**）
+## 8. Persistence Semantics（`DECISION` **P15 / P16** + 边界澄清）
 
 逻辑槽（**不指定物理 schema**；schema 变更 = `OPEN` / OD-V3-25，非本任务授权）：
 
 ```text
 Question
   core: stem, options, answer, question_type, identity, provenance, ...
+  source_metadata:   # Source-derived — Preprocessing 可靠提供时随 Question 入库
+    year, school, subject, exam_phase, ...
   slots:
     explanation_preprocessing  : optional, PRD/SRC   ← Original Question 自带
     explanation_generated      : optional, AITutors-v3 Derived Enrichment
                                  + generation provenance + validation_state + retry_count
+    difficulty_generated       : optional, V3D        ← Derived Metadata A
+    knowledge_generated        : optional, V3D        ← Derived Metadata A
+    skills_generated           : optional, V3D        ← Derived Metadata A
   enrichment_jobs[]            : append-only 可审计
 ```
 
-**`DECISION` P15 范围收窄**：Post-Admission **仅** `explanation_*` 双槽。
-~~`difficulty_generated` / `knowledge_generated` / `skills_generated`~~ **不在 Post-Admission 范围**——该三项属 V3 Semantic Enrichment（Admission 前，Contract §6.1）。
+**P15 边界（不推翻）**：对 **`explanation_*`** —— 已有不覆盖、缺失才补。  
+**Derived Metadata（A）**：difficulty / knowledge_nodes / skills 等 **可** Post-Admission 生成，**不受** P15 覆盖规则限制；Authority 仍为 V3D（**P16** 同类：非 Source/Preprocessing）。
 
 原则：
 
-1. 不覆盖 PRD 槽（**P15**：已有 explanation 不生成不覆盖）。
-2. jobs 可追溯（**P17**：MIMO generate → DeepSeek validate 链路可追踪）。
+1. 不覆盖 PRD explanation 槽（**P15**）。
+2. jobs 可追溯（**P17**）。
 3. 当前展示哪一槽 = `OPEN`（OD-V3-22）。
-4. 与 Question dedup / identity **正交**：enrichment 不得改变 question identity hash 的语义成分（若 identity hash 排除 generated 字段，须显式记录——`OPEN` / OD-V3-26）。
+4. 与 Question dedup / identity **正交**：enrichment 不得改变 question identity hash 的语义成分（`OPEN` / OD-V3-26）。
+5. **具体字段 DDL / 枚举 / prompt = 非本任务**（后续 Implementation / Frozen）。
 
 ---
 
@@ -257,7 +289,8 @@ Question
 6. 用 enrichment 洗白 identity/provenance 失败
 7. **生成已有 explanation / 覆盖 `explanation_preprocessing`**（**P15**）
 8. **超过 1 次 retry 或无限重试**（**P19**）
-9. **Post-Admission 补 `difficulty` / `knowledge_nodes` / `skills`**（**P15** 范围外；属 Admission 前 V3 Semantic Enrichment）
+9. ~~**Post-Admission 补 difficulty / knowledge_nodes / skills**~~ — **已撤销该禁止**：Derived Metadata **允许** Post-Admission 异步生成（边界澄清）；**仍禁止**把「附属 Metadata 缺失」写成 Admission 失败，**仍禁止**伪造 Source/Preprocessing Authority
+10. **把 P15 解释成「Post-Admission 只能生成 explanation」**（边界澄清禁止）
 
 ---
 

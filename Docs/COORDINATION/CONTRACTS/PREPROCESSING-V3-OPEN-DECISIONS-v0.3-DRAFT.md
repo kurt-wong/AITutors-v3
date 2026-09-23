@@ -65,7 +65,7 @@
 
 | ID | 项 | 现状 | 状态 | 裁决 / 备注 |
 |---|---|---|---|---|
-| OD-V3-21 | explanation 是否永远 optional | `OBSERVED` | `OPEN` | **依赖未来 Frozen**。P15 已限定生成范围（只生成**缺失**的 detailed explanation；已有不生成不覆盖），但 optional 与否属 Frozen 层 |
+| OD-V3-21 | explanation 是否永远 optional | `OBSERVED` | `OPEN` | **依赖未来 Frozen**。P15 = **Explanation 生成与覆盖专属规则**（只补**缺失** detailed explanation；已有不生成不覆盖），**不**定义 Post-Admission 全部范围；Derived Metadata 可另走 §8.1 A。optional 与否属 Frozen 层 |
 | OD-V3-22 | Preprocessing vs generated 展示优先级 | `OBSERVED` | `OPEN` | **implementation / display policy**。P16 已裁 authority 归属（generated = AITutors-v3 Derived Enrichment，非 Source/Preprocessing Authority），展示优先级未裁定 |
 | OD-V3-23 | validation 自动规则清单 | `OBSERVED` | `OPEN` | **implementation question**。P17 已裁链路（MIMO generate → DeepSeek validate），规则清单未裁定 |
 | OD-V3-24 | retry / budget / backoff | `OBSERVED` | **`OWNER DECISION COMPLETE (P19)`** + `OPEN`(残项) | P19 已裁：**最多一次 retry；第二次 validation failure → `suspended`；禁止无限 retry**。budget / backoff = `OPEN`（implementation） |

@@ -7,6 +7,7 @@
 > **证据标签**：`OBSERVED`（字段存在/取值）/ `DERIVED`（归类）/ `DECISION`（P01–P25 落版）/ `OPEN`
 >
 > **本轮同步（Contract §16）**：新增 `options[]` / `option.label` / `option.text` / `option.provenance`；`options_lines` → **preserved**；`answer_table_unresolved` → **retained_as_uncertainty**；`flags` → **preserved / retained_as_uncertainty**（**P04 / P07 / P08**）。
+> **边界澄清（Contract §1d / §6 / §8）**：**Source-derived Metadata** → Preprocessing 提取 → Boundary 保留 → **随 Question 入库**；**LLM-derived Metadata** → Derived / Enrichment，**不属 Source Authority**，**不阻塞 Admission**，可 Post-Admission 异步生成；**Explanation** → 已有保留原内容，缺失允许 Post-Admission 补充。**禁止**出现「Metadata 缺失 → Question 不得 Admission」（Frozen 规范字段除外）。
 
 ## 列定义（12 问）
 
@@ -67,7 +68,7 @@ P1 归类缩写：`pres` preserved · `canon` canonicalized · `ev` →evidence 
 | `option.provenance` | Preprocessing evidence / provenance（`DECISION` P04.3） | 是 | representation | **多态**：`line_range` / `char_span_in_line` / `table_cell` / `multiple source spans` / other verifiable source provenance | 本身 | 本身 | 否 | 不可回溯 → fail closed | 否 | — | **禁止**硬编码"一 option 一行" | — | **不得猜 provenance**（P04.4）；须可被 AITutors-v3 验证 | **`ev`** + **`prov`** |
 | `extra_lines` | Preprocessing | 是 | representation | 同上 | 是 | 是 | 可缺 | 通常不单独 gate | 否 | — | 弱语义 | 允许 | — | `prov` |
 | `answer_lines` | Preprocessing | 是 | representation | 同上 | 是 | 是 | 可缺 | 缺 answer 视 QT 策略 | 答案表解析可派生 | V3 Derived（若再解析） | 答案表题号映射弱（502 unresolved） | 允许：flag 保留 | 不得猜答案内容覆盖 | `prov`+`unc` |
-| `explanation_lines` | Preprocessing | 是 | representation | 同上 | 是 | 是 | **是**（允许缺失） | **不**因缺 explanation 拒核心入库（`PROPOSED` §8） | 可 Post-Admission 生成 | **V3 Derived**（generated） | 覆盖率 474/1664 | 允许：非 hard requirement | 生成物不得冒充 Preprocessing explanation | `prov` / `v3d` |
+| `explanation_lines` | Preprocessing | 是 | representation | 同上 | 是 | 是 | **是**（允许缺失） | **不**因缺 explanation 拒核心入库（Contract §1d/§8） | 可 Post-Admission 生成（**仅缺失**；P15） | **V3 Derived**（generated） | 覆盖率 474/1664 | 允许：非 hard requirement | 生成物不得冒充 Preprocessing explanation；**已有不覆盖** | `prov` / `v3d` |
 | `material_lines` | Preprocessing | 是 | representation | 同上 | 是 | 是 | 可缺 | composite 无 material 视规则 | 否 | — | 41 处与 questions 同区间 | 允许：flag/known fold；禁 silent 合并语义 | 原区间保留 | `prov` |
 | `questions_lines` | Preprocessing | 是 | representation | 同上 | 是 | 是 | 可缺 | composite 需要 | 子题分解可派生 | V3 Derived | 同上 + multi-q 缺印刷号 54/148 | 同上 | 不得重切冒充原区间 | `prov` |
 | `material_ref` | Preprocessing | 是 | 否 | → `materials` 键 | 是 | 是 | dangling→fail/incomplete | BLOCK 或 incomplete | 否 | — | 无（278/278 可解析） | — | 禁止改 ref 指向他物 | `pres` |
@@ -80,7 +81,9 @@ P1 归类缩写：`pres` preserved · `canon` canonicalized · `ev` →evidence 
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | `unit_type` | Preprocessing legacy 主张 | original 保留 | **是（仅 OD-2 两条）** | 见 Contract §2.3 | 是（mapping event） | 是 | 非法值 | **UNKNOWN_UNIT_TYPE fail closed** | 否 | — | 无（必须双值可追溯） | — | 禁 QT→UT；禁 andalone→standalone | `canon`+`pres`(legacy) |
 | `original_question_type` | Preprocessing 分类主张 | 是（verbatim） | 闭集内可映射 | 仅 Owner 授权 per-value | 建议 | 是 | 是 | UNKNOWN/incomplete；禁默认题型 | canonical QT 可派生 | Canonical V3 | `listening` 等未入闭集 | 允许：unsup/rej 显式 | 禁止“合理猜测”改题型 | `pres`/`canon`/`unc` |
-| （其它 Preprocessing 语义标签） | Preprocessing | 视字段 | 仅授权映射 | — | 视情况 | 是 | 是 | fail closed | 可 | V3 Derived | — | — | 不得混 authority | `pres`/`v3d` |
+| **Source-derived Metadata**（year / school / subject / exam_phase / …） | **Preprocessing**（原始文档可靠提取） | **是 — 随 Question 一并入库** | 视字段 | 边界只验证身份/范围 | 建议 | 是 | 是（缺则不伪造） | **不因 LLM enrichment 未完成而 BLOCK** | 否 | — | Preprocessing 未识别则无 | 允许：诚实缺失 | 禁止未证明冒充 Source fact | **`pres`** |
+| **LLM-derived Metadata**（difficulty / knowledge_nodes / skills / …） | **否（非 Preprocessing）** | 可选，可空 | 否（本任务不定 schema） | — | 生成后可验证 | 生成 job | **是（可缺）** | **不阻塞 Admission**（Contract §1d） | **是** | **AITutors-v3 Derived Enrichment** | 缺时允许 Post-Admission 补 | 允许：非 hard requirement | 禁止标成 Source/Preprocessing Authority | **`v3d`** |
+| （其它 Preprocessing 语义标签） | Preprocessing | 视字段 | 仅授权映射 | — | 视情况 | 是 | 是 | fail closed | 可 | V3 Derived | — | — | 不得混 authority | `pres`/`v3d`/`unc` |
 
 ---
 

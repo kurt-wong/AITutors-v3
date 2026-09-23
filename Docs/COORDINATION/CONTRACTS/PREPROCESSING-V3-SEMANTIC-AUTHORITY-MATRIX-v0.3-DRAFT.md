@@ -6,6 +6,7 @@
 > **证据标签**：`OBSERVED` / `DERIVED` / `DECISION`（P01–P25 落版）/ `OPEN`
 >
 > **本轮同步（Contract §16/§17）**：`option label` / `option text` / `option provenance` / `answer-table mapping` = **Preprocessing-discovered structural & evidence facts**；Generated explanation = **AITutors-v3 Derived Enrichment**（**P04 / P07 / P16**）。
+> **边界澄清（Contract §1d/§8）**：Source-derived Metadata = PRD 随 Question 入库；LLM-derived difficulty/knowledge/skills = V3D，可 Post-Admission，**不阻塞 Admission**；P15 = Explanation 覆盖规则专属。
 
 ## 1. Authority 类别
 
@@ -46,12 +47,13 @@
 | `printed_number` | 印刷 | ● | | | ● `printed_provenance` | `unknown` | |
 | `unit_type` legacy | | ● | ● 仅 OD-2 两条 | | ● mapping event | 非法值 | 禁 QT→UT |
 | `original_question_type` | | ● 主张 | ● 闭集内映射 | canonical QT | | unsupported/missing | QT ⊥ UT |
-| difficulty | | | | ● | | 可缺 | V3D |
-| knowledge_nodes | | | | ● | | 可缺 | V3D |
-| skills / abilities | | | | ● | | 可缺 | V3D |
-| Preprocessing `explanation_lines` 内容 | ● | ● | | | | 可缺 | source explanation |
-| generated explanation | | | | ● | ● 验证后 | pending/failed / suspended | **`DECISION` P16：AITutors-v3 Derived Enrichment**，**不得**标成 Source / Preprocessing Authority |
-| generated 其它 enrichment | | | | ● | ● | pending/failed | |
+| difficulty | | | | ● | | 可缺 | V3D；可 **Post-Admission** 生成；**不阻塞 Admission** |
+| knowledge_nodes | | | | ● | | 可缺 | V3D；可 **Post-Admission** 生成；**不阻塞 Admission** |
+| skills / abilities | | | | ● | | 可缺 | V3D；可 **Post-Admission** 生成；**不阻塞 Admission** |
+| Source-derived Metadata（year/school/subject/exam_phase/…） | ● 文档事实 | ● 提取主张 | ● 若 canonicalize | | ● 可验证 | 可缺 | **随 Question 入库**；非 LLM enrichment |
+| Preprocessing `explanation_lines` 内容 | ● | ● | | | | 可缺 | source explanation；已有 **不覆盖**（P15） |
+| generated explanation | | | | ● | ● 验证后 | pending/failed / suspended | **`DECISION` P16：AITutors-v3 Derived Enrichment**，**不得**标成 Source / Preprocessing Authority；仅补 **缺失**（P15） |
+| generated 其它 enrichment（difficulty/knowledge/skills/…） | | | | ● | ● | pending/failed | **V3D Post-Admission Derived Metadata**；**不阻塞** Admission；**非** Source/Preprocessing Authority |
 | `basis` / `basis_evidence` / `printed_provenance` | | ● | | | ● 可验证 L 行 | `unverified`/`unknown` | |
 | `flags` / QC / disposition | | ● | | | ● 可复核 | flags 即 UNC | **ADMITTED ≠ V3 APPROVED** |
 | `answer` 最终正确性 | | ● 声明 | | ● 可再判 | ● 人工/验证 | unresolved | 禁猜填 |
@@ -76,30 +78,29 @@
 
 ---
 
-## 4. Post-Admission 生成物 Authority（`DECISION` **P15 / P16 / P17 / P18 / P19**）
+## 4. Post-Admission 生成物 Authority（`DECISION` **P15 / P16 / P17 / P18 / P19** + 边界澄清）
 
 ```text
 Question (persisted)
-  ├── explanation_preprocessing  [PRD/SRC]  可空  ← Original Question 自带（Preprocessing 传递）
-  ├── explanation_generated      [V3D]      可空  ← AITutors-v3 Derived Enrichment
-  │     ├── generation_job_id
-  │     ├── generation_method = LLM
-  │     ├── generator = MIMO
+  ├── source_metadata[]           [PRD/SRC]  可选  ← Source-derived，可靠时随 Question 入库
+  ├── explanation_preprocessing   [PRD/SRC]  可空  ← Original Question 自带
+  ├── explanation_generated       [V3D]      可空  ← AITutors-v3 Derived Enrichment（仅缺失时；P15）
+  │     ├── generation_job_id / method / model
   │     ├── validator = DeepSeek（P17）
-  │     ├── model / config hash
   │     ├── validation_state ∈ {generated, validated, accepted, rejected, suspended}
-  │     ├── retry_count（max 1；第二次 validation failure → suspended，P19）
-  │     └── provenance
+  │     └── retry_count（max 1；二次失败 suspended，P19）
+  ├── difficulty / knowledge / skills  [V3D] 可空 ← Derived Metadata Enrichment（可 Post-Admission）
   └── explanation_display_policy [OPEN]  ← 展示优先级未裁（OD-V3-22）
 ```
 
 （字段名按 Contract §0 术语规范化：原 `explanation_producer` → `explanation_preprocessing`。）
 
-**`DECISION` P15**：只允许生成 Original Question 中**缺失**的 detailed explanation；**已有 explanation 不生成、不覆盖**。
-**`DECISION` P16**：Generated explanation = **AITutors-v3 Derived Enrichment**——**不是** Source Authority，**不是** Preprocessing Authority。
+**`DECISION` P15（重新解释）**：**Detailed Explanation 专属**——只生成 **缺失** 的 detailed explanation；**已有 explanation 不生成、不覆盖**。**不是**「Post-Admission 仅能生成 explanation」的总禁令。  
+**`DECISION` P16**：Generated explanation **及其它 LLM-derived enrichment** = **AITutors-v3 Derived Enrichment**——**不是** Source Authority，**不是** Preprocessing Authority。  
 **`DECISION` P18**：Enrichment failure **不 rollback** AITutors-v3 Admission。
 
-**禁止**：`explanation_generated` 覆盖或伪装 `explanation_preprocessing`。
+**禁止**：`explanation_generated` 覆盖或伪装 `explanation_preprocessing`。  
+**禁止**：把附属 Metadata 缺失写成 Admission 失败（Frozen 规范字段除外，Contract §1d）。
 
 ---
 
