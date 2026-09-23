@@ -1,13 +1,22 @@
 # Preprocessing → Canonical V3 Consumer Contract v0.3
 
-> **状态**：`CONTRACT FREEZE CANDIDATE` / **NOT FROZEN** / `AWAITING OWNER FREEZE ORDER`
+> **状态**：**`FROZEN`** / **Owner Approval = APPROVED** / **Contract Freeze ≠ Implementation Authorization**
 > **NOT A MIGRATION AUTHORIZATION** / **NOT AN X3 ENTRY DECISION** / **NOT AN IMPLEMENTATION AUTHORIZATION**
 >
-> **本轮状态变更**：Owner Decisions **P01–P25 全部完成并已落版**（§1b）。其中 **P04 / P07 / P08 = CLOSED**。本文件由 `DRAFT` 升为 **CONTRACT FREEZE CANDIDATE**，供后续一致性检查与 Owner 冻结令使用。
+> **Freeze Record（binding）**：
+> - Contract version = **v0.3**
+> - **Frozen Commit（批准版本 / Frozen Baseline）** = **`b743c5daf0806ea00c84afb1b92ca2a3b5dbfc98`**
+> - Baseline（边界澄清前）= `836f3f1`
+> - Owner Approval = **APPROVED — FREEZE**
+> - Frozen at = 见 `Docs/COORDINATION/state.yaml` / `CURRENT.md` 同步登记时间
+> - 冻结范围 = 本文件 + 配套四件（Enrichment / IPM / SAM / Open Decisions）及已纳入的 P01–P25、Historical Source Reprocessing Principle、Question Core / Metadata 边界、Source-derived / LLM-derived Metadata 边界、Post-Admission Enrichment 边界、P15 Explanation 专属规则、P16–P19
+> - **后续 Contract 变更必须重新经过 Owner 授权**
 >
-> **边界澄清轮（`DECISION` 语义澄清，非新 OD）**：明确 **Question Core / Source-derived Metadata / LLM-derived Metadata** 与 **Admission / Post-Admission Enrichment** 的关系（§1d、§6、§8）。**P01–P25 决策状态不变**；P15 按 Explanation 专属规则重新解释，**不**把 Post-Admission Enrichment 收窄为“只补 explanation”。
+> **本轮状态变更**：Owner Freeze Order — **`NOT FROZEN` → `FROZEN`**。Owner Decisions **P01–P25 = COMPLETE**（§1b）；**P04 / P07 / P08 / P15–P19 = CLOSED**。
 >
-> **权威顺序（binding）**：`Frozen Spec` > `Frozen Contract` > `Owner Decisions` > `v0.3 Contract` > `Implementation`。本文件**不得**覆盖 Frozen Spec / Frozen Contract（**P25**）。
+> **边界澄清轮（已纳入冻结语义）**：**Question Core / Source-derived Metadata / LLM-derived Metadata** 与 **Admission / Post-Admission Enrichment**（§1d、§6、§8）。**P01–P25 决策状态不变**；P15 = Explanation 专属生成/覆盖规则，**不是**「Post-Admission 只能补 explanation」。
+>
+> **权威顺序（binding）**：`Frozen Spec` > `Frozen Contract` > `Owner Decisions` > `v0.3 Contract` > `Implementation`。本文件**不得**覆盖 Frozen Spec / Frozen Contract（**P25**）。发现真实冲突 → STOP → Conflict Report → Owner。
 >
 > **定位**：AITutors-preprocessing → AITutors-v3 Consumer Boundary → Canonical V3 IR → V3 Semantic Enrichment → Gate → Admission → Persistence → Post-Admission Async Enrichment 的**架构合同**。
 >
@@ -23,7 +32,7 @@
 > **证据标签**：`OBSERVED` / `DERIVED` / `PROPOSED` / `OPEN` / `OWNER DECISION REQUIRED`
 > **纪律**：`PROPOSED` ≠ 已实现；`DECISION` 在本文件中仅当引用上游已裁定项时使用。新设计一律标 `PROPOSED`。
 >
-> **本文件不做**：不修改 Frozen Spec / Frozen Contract / Canonical Ontology / DB schema / production code / corpus / migration / X3 状态。
+> **本文件不做**：不修改 Frozen Spec / Frozen Contract / Canonical Ontology / DB schema / production code / corpus / migration / X3 状态。**Freeze ≠ Implementation Authorization。**
 
 **Security（逐字）**：Never hardcode API Keys/Passwords/Tokens/Secrets; Always use .env for configuration.
 
@@ -1025,7 +1034,7 @@ v0.3 **不**扩大 v0.2 冻结范围，**不**宣布冻结（冻结令属 Owner�
 
 | 交付物 | 文件 | 本轮状态 |
 |---|---|---|
-| A. Consumer Contract（本文件） | `PREPROCESSING-V3-CONTRACT-v0.3-DRAFT.md` | **`CONTRACT FREEZE CANDIDATE`** |
+| A. Consumer Contract（本文件） | `PREPROCESSING-V3-CONTRACT-v0.3-DRAFT.md` | **`FROZEN`**（Frozen Baseline = `b743c5d`） |
 | B. Information Preservation Matrix | `PREPROCESSING-V3-INFORMATION-PRESERVATION-MATRIX-v0.3-DRAFT.md` | **已同步 P04 / P07 / P08** |
 | C. Semantic Authority Matrix | `PREPROCESSING-V3-SEMANTIC-AUTHORITY-MATRIX-v0.3-DRAFT.md` | **已同步 P16 / §17** |
 | D. Post-Admission Enrichment Contract | `V3-POST-ADMISSION-ENRICHMENT-CONTRACT-v0.3-DRAFT.md` | **已同步 P15–P19** |
@@ -1105,4 +1114,4 @@ Generated explanation 属于 **AITutors-v3 Derived Enrichment**，**不是** Sou
 
 **未触发 STOP**：本轮未发现 `v0.3 Contract ≠ Frozen Spec` 类冲突，因此无需 record conflict / 等待 Owner authorization。若后续发现此类冲突，严格执行 **P25**。
 
-*End of Preprocessing → Canonical V3 Consumer Contract v0.3 — CONTRACT FREEZE CANDIDATE.*
+*End of Preprocessing → Canonical V3 Consumer Contract v0.3 — **`FROZEN`**（Owner APPROVED；Frozen Baseline = `b743c5daf0806ea00c84afb1b92ca2a3b5dbfc98`）。Freeze ≠ Implementation Authorization.*

@@ -1,6 +1,6 @@
 # Open Decisions / Gaps v0.3
 
-> **状态**：`OWNER DECISION STATUS: COMPLETE` / 配套 `PREPROCESSING-V3-CONTRACT-v0.3-DRAFT.md` = `CONTRACT FREEZE CANDIDATE`
+> **状态**：`OWNER DECISION STATUS: COMPLETE` / 配套 `PREPROCESSING-V3-CONTRACT-v0.3-DRAFT.md` = **`FROZEN`**（Owner Freeze Order；Frozen Baseline = `b743c5d`）
 > **术语**：`Preprocessing` = `kurt-wong/Aitutors-preprocessing`；`AITutors-v3` = 当前 V3 系统；`Legacy Preprocessing Artifact (V1 format)` = 历史产物格式；`Producer` **仅**作抽象架构角色（详见 Contract §0）
 > **证据标签**：`OBSERVED` / `DECISION` / `OPEN`
 >
@@ -78,7 +78,7 @@
 
 | ID | 项 | 现状 | 状态 | 裁决 / 备注 |
 |---|---|---|---|---|
-| OD-V3-27 | v0.3 是否进入 Freeze Candidate | `DECISION` | **`OWNER DECISION COMPLETE`** | 本轮已形成 **CONTRACT FREEZE CANDIDATE**；**冻结令仍属 Owner**，本文件不宣布冻结 |
+| OD-V3-27 | v0.3 是否进入 Freeze Candidate | `DECISION` | **`OWNER DECISION COMPLETE`** | Freeze Candidate 已形成；**Owner Freeze Order 已下达：Contract v0.3 = `FROZEN`**（Frozen Baseline = `b743c5d`）。**本文件不授权 Implementation** |
 | OD-V3-28 | 与 X2.x / Migration Gate / X3 关系 | — | **`OWNER DECISION COMPLETE (P25)`** | v0.3 **非迁移授权**、**非 X3 入场**；v0.3 ≠ Frozen Spec 时 → STOP + 记录 conflict + 等 Owner |
 | OD-V3-29 | 跨仓 Decision 编号统一 | `OBSERVED` 累积撞号 | `OPEN` | **治理流程题**，未被 P01–P25 裁定（v0.2 已记 3 处；另有本文件 P1–P5 vs P01–P25 消歧见 Contract §0） |
 | OD-V3-30 | F-05-A mapping event 跨库交叉验证 | `OBSERVED` 实现缺口 | `OPEN` | **implementation question**（mapping_registry 自述） |

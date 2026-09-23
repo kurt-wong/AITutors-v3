@@ -4,15 +4,14 @@ workstream:
   id: EB-0.3B
   name: Evidence Resolution Boundary Discovery
   status: OPEN
-  note: "CONTRACT V0.2 = FROZEN (DEC-036, Owner Freeze order 2026-09-16). Status transition: READY FOR FREEZE -> FROZEN. Freeze Object UNCHANGED: commit f4941ff, document Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-CONTRACT-v0.2-DRAFT.md, sha256 9c6b9063e81fb2a66d85794b280c9d931f1b0074b39abf472033218149b17528 (re-verified this round: git show f4941ff:<path> | sha256sum == registered value = PASS). Registration-only round: state.yaml / CURRENT.md / log.md. Contract document NOT modified (would change its sha256 and break the frozen object). Freeze Registration commit stays separate from Freeze Artifact (this DEC-036 ledger commit != f4941ff). Pre-freeze evidence chain stands: Step1 DONE / Step2 DONE / Verification PASS (DSH DEC-026/027/028) + B-1 CLOSED / REMOTE VERIFIED (DEC-035). BOUNDARIES KEPT: Contract Freeze != Implementation; Requirement != Existing Capability. NOT IMPLEMENTED (V3 capability) five items unchanged (contract 5.6.1) - next phase, requires separate Owner implementation order. Zero code, zero schema, zero data, zero IR, zero new design, zero Consumer Implementation entry."
-
+  note: "CONTRACT V0.3 = FROZEN (Owner Freeze Order 2026-09-23). Frozen Commit / Frozen Baseline = b743c5daf0806ea00c84afb1b92ca2a3b5dbfc98 (approved content after Question Core / Metadata / Post-Admission Enrichment boundary clarification). Baseline before clarification = 836f3f1. Companion frozen set: PREPROCESSING-V3-CONTRACT-v0.3-DRAFT.md + V3-POST-ADMISSION-ENRICHMENT-CONTRACT-v0.3-DRAFT.md + PREPROCESSING-V3-INFORMATION-PRESERVATION-MATRIX-v0.3-DRAFT.md + PREPROCESSING-V3-SEMANTIC-AUTHORITY-MATRIX-v0.3-DRAFT.md + PREPROCESSING-V3-OPEN-DECISIONS-v0.3-DRAFT.md. P01-P25 COMPLETE; P04/P07/P08/P15-P19 CLOSED. Owner Approval = APPROVED. Frozen at = 2026-09-23T08:55:17+08:00. BOUNDARIES: Freeze != Implementation Authorization; Frozen Spec > Contract > Implementation; Migration NOT AUTHORIZED; X3 NOT ENTERED; production code / corpus / historical rerun UNCHANGED. Contract v0.2 freeze (f4941ff) remains separately FROZEN."
 agents:
   v3:
     agent: claude
     repository: kurt-wong/AITutors-v3
     branch: main
-    commit: f4941ff
-    status: contract_v0_2_frozen_owner_freeze_order_dec036_implementation_not_started
+    commit: b743c5daf0806ea00c84afb1b92ca2a3b5dbfc98
+    status: contract_v0_3_frozen_owner_freeze_order_implementation_not_authorized
   preprocessing:
     agent: dsh
     repository: kurt-wong/Aitutors-preprocessing

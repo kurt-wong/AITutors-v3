@@ -1,6 +1,6 @@
 # Semantic Authority Matrix v0.3
 
-> **状态**：`CONTRACT FREEZE CANDIDATE` 配套 / **已同步 Owner Decisions P01–P25**
+> **状态**：**`FROZEN` 配套**（Owner Freeze Order；Frozen Baseline = `b743c5d`）/ **已同步 P01–P25**
 > **配套**：`PREPROCESSING-V3-CONTRACT-v0.3-DRAFT.md` §6 / **§17**
 > **术语**：`Preprocessing` = `kurt-wong/Aitutors-preprocessing`；`AITutors-v3` = 当前 V3 系统；`Producer` **仅**作抽象架构角色（Contract §0）
 > **证据标签**：`OBSERVED` / `DERIVED` / `DECISION`（P01–P25 落版）/ `OPEN`
@@ -111,4 +111,4 @@ Question (persisted)
 
 `OPEN`（**implementation / schema question**，非 Owner Decision 欠账；对齐 OD-V3-25）：若 ValidationEvent 模型需扩展字段以覆盖 generation provenance，属 schema / governance 变更，**不在本次落版授权范围**（DB schema 明令禁改）。
 
-*End of Semantic Authority Matrix v0.3 — CONTRACT FREEZE CANDIDATE 配套（Owner Decisions P01–P25 已同步）.*
+*End of Semantic Authority Matrix v0.3 — **`FROZEN` 配套**（Owner APPROVED；Frozen Baseline = `b743c5d`）.*

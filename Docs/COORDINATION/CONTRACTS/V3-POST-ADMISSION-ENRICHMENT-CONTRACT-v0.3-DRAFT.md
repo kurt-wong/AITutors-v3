@@ -1,6 +1,6 @@
 # AITutors-v3 Post-Admission Semantic Enrichment Contract v0.3
 
-> **状态**：`CONTRACT FREEZE CANDIDATE` 配套 / **已同步 Owner Decisions P15–P19 + Question/Metadata 边界澄清** / **NOT IMPLEMENTED** / **NOT AN IMPLEMENTATION AUTHORIZATION**
+> **状态**：**`FROZEN` 配套**（Owner Freeze Order；Frozen Baseline = `b743c5d`）/ **已同步 P15–P19 + Question/Metadata 边界** / **NOT IMPLEMENTED** / **NOT AN IMPLEMENTATION AUTHORIZATION**
 > **配套**：`PREPROCESSING-V3-CONTRACT-v0.3-DRAFT.md` §1d / §6 / §8 / **§1b P15–P19**；`PREPROCESSING-V3-SEMANTIC-AUTHORITY-MATRIX-v0.3-DRAFT.md` §4
 > **术语**：`Preprocessing` = `kurt-wong/Aitutors-preprocessing`；`AITutors-v3` = 当前 V3 系统；`Producer` **仅**作抽象架构角色（Contract §0）
 > **证据标签**：`DECISION`（P15–P19 + 边界澄清落版）/ `OBSERVED`（对照现状）/ `OPEN`
@@ -307,4 +307,4 @@ Question
 | schema 扩展（jobs 表等） | `OPEN`（DB schema 明令本任务禁改） | OD-V3-25 |
 | identity hash 是否排除 generated | `OPEN`（对齐现有 identity projection） | OD-V3-26 |
 
-*End of AITutors-v3 Post-Admission Semantic Enrichment Contract v0.3 — CONTRACT FREEZE CANDIDATE 配套（Owner Decisions P15–P19 已同步）.*
+*End of AITutors-v3 Post-Admission Semantic Enrichment Contract v0.3 — **`FROZEN` 配套**（Owner APPROVED；Frozen Baseline = `b743c5d`）.*

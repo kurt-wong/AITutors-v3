@@ -1,8 +1,8 @@
 # Cross-Agent Coordination — Current State
 
 **Workstream**: EB-0.3B Evidence Resolution Boundary Discovery
-**Status**: OPEN — **Contract v0.2 = `FROZEN`**（DEC-036，Owner Freeze 令 2026-09-16；READY FOR FREEZE → **FROZEN**）· **Freeze Object（不变）= commit `f4941ff`** · document `PREPROCESSING-V3-CONTRACT-v0.2-DRAFT.md` · sha256 `9c6b9063e81fb2a66d85794b280c9d931f1b0074b39abf472033218149b17528`（登记前复核 PASS）· **Freeze Registration 与 Freeze Artifact 继续分离**（本轮账本 commit ≠ `f4941ff`）· 冻结时证据链 = **Step 1 DONE · Step 2 DONE · Verification PASS**（DSH `DEC-026`/`027`/`028`）+ **B-1 CLOSED / REMOTE VERIFIED**（DEC-035）· **边界保持：Contract Freeze ≠ Implementation；Requirement ≠ Existing Capability** · **NOT IMPLEMENTED (V3 capability)** 五项不变（下一阶段，须另获 Owner 实现令）· 本轮仅账本登记（零 Contract 内容修改）· preprocessing @ `67f564c`
-**Last Updated**: 2026-09-16
+**Status**: OPEN — **Contract v0.3 = `FROZEN`**（Owner Freeze Order 2026-09-23；`CONTRACT FREEZE CANDIDATE` → **`FROZEN`**）· **Frozen Baseline / Frozen Commit = `b743c5daf0806ea00c84afb1b92ca2a3b5dbfc98`** · Baseline（边界澄清前）= `836f3f1` · **Owner Approval = APPROVED** · **Frozen at = 2026-09-23T08:55:17+08:00** · 冻结范围 = 五件套（主 Contract + Enrichment + IPM + SAM + Open Decisions）+ P01–P25 + Historical Source Reprocessing + Question Core/Metadata/Enrichment 边界 + P15 Explanation 规则 + P16–P19 · **P04/P07/P08/P15–P19 = CLOSED** · **边界：Freeze ≠ Implementation Authorization；Frozen Spec > Contract > Implementation** · Migration **NOT AUTHORIZED** · X3 **NOT ENTERED** · production code / corpus **UNCHANGED** · **Contract v0.2 仍独立 `FROZEN`（`f4941ff`）** · 下一阶段 = Implementation Planning（须另获 Owner Implementation Order）
+**Last Updated**: 2026-09-23
 **Canonical Ledger**: DSH repo (kurt-wong/Aitutors-preprocessing). This is V3 mirror.
 
 ---

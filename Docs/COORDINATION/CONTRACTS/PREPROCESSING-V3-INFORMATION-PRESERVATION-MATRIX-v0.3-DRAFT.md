@@ -1,6 +1,6 @@
 # Information Preservation Matrix v0.3
 
-> **状态**：`CONTRACT FREEZE CANDIDATE` 配套 / **已同步 Owner Decisions P01–P25**
+> **状态**：**`FROZEN` 配套**（Owner Freeze Order；Frozen Baseline = `b743c5d`）/ **已同步 P01–P25**
 > **配套**：`PREPROCESSING-V3-CONTRACT-v0.3-DRAFT.md` §P1 / §3 / §7 / **§16**
 > **术语**：`Preprocessing` = `kurt-wong/Aitutors-preprocessing`；`AITutors-v3` = 当前 V3 系统；`Producer` **仅**作抽象架构角色（Contract §0）
 > **字段来源**：live `*.manifest.json` + `resolver_ir.json` 实际键（非文档想象）
@@ -154,4 +154,4 @@ P1 归类缩写：`pres` preserved · `canon` canonicalized · `ev` →evidence 
 5. answer：source answer 与 derived answer 分 authority。
 6. Preservation Matrix 的 P1 归类与实现日志一致（未来 acceptance）。
 
-*End of Information Preservation Matrix v0.3 — CONTRACT FREEZE CANDIDATE 配套（Owner Decisions P01–P25 已同步）.*
+*End of Information Preservation Matrix v0.3 — **`FROZEN` 配套**（Owner APPROVED；Frozen Baseline = `b743c5d`）.*
