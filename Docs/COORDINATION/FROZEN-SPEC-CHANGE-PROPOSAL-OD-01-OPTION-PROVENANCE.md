@@ -1,4 +1,4 @@
-# FROZEN-SPEC-CHANGE-PROPOSAL-OD-01-OPTION-PROVENANCE
+﻿# FROZEN-SPEC-CHANGE-PROPOSAL-OD-01-OPTION-PROVENANCE
 
 ```text
 Document ID:           OD-01-PROPOSAL-v3
@@ -6,7 +6,7 @@ Title:                 OD-01 Frozen Spec Change Proposal — Option Provenance /
 Document Type:         Decision Record（Frozen Spec Change Proposal 载体；非 Contract Change Record）
 Authority Level:       L2
 Status:                DRAFT
-Normative:             NO（对 L0 尚未生效；不得被引用为 Frozen Spec）
+Normative:             NO
 Purpose:               承载 OD-01 option provenance 的条款级 explicit diff 与语义边界，供 CR-002 与 Owner Authorization 使用
 Derives From:          OD-01（OWNER-DECISIONS）· OD-01R-01…10（同文件附录）· P04（Frozen Contract）· 00/10/20/50（L0，只读引用）· 90/91（L0-META）· 69 §5（四道门）
 May Change:            本 Proposal 自身文本；配套 CR-002 候选文本的引用一致性
