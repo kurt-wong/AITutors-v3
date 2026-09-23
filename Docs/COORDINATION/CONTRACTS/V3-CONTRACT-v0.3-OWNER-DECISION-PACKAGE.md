@@ -6,7 +6,25 @@
 > **NO MIGRATION AUTHORIZATION**
 > **NO X3 ENTRY AUTHORIZATION**
 >
-> **状态**：`PACKAGE` / `NOT FROZEN` / `AWAITING OWNER RULING`
+> **状态**：`PACKAGE` / `NOT FROZEN` / ~~`AWAITING OWNER RULING`~~ → **`OWNER DECISIONS P01-P25: COMPLETE`**
+>
+> ---
+>
+> ## 本轮状态说明（治理历史证据；**不得删除历史记录**）
+>
+> ```text
+> OWNER DECISIONS P01-P25: COMPLETE
+> IMPLEMENTATION: NOT AUTHORIZED BY THIS DOCUMENT ALONE
+> ```
+>
+> - 本文件保留为**治理历史证据**：OD-P01–OD-P25 的原始 Question / Observed Facts / Options / Decision Required 栏**全部原样保留**，不回填、不改写、不删除。
+> - **正式裁决落版**见 `PREPROCESSING-V3-CONTRACT-v0.3-DRAFT.md` **§1b（Owner Decisions P01–P25）**；该文件现为 `CONTRACT FREEZE CANDIDATE`。
+> - **P04 = CLOSED**（Choice Question per-option structured evidence）· **P07 = CLOSED**（`answer_table_unresolved` 最终处置）· **P08 = CLOSED**（Evidence / Flags 保留）。
+> - **本文件本身不授权任何实现**：无 production code / schema / migration / corpus rerun / artifact rewrite 授权。
+> - 术语按 Contract §0 规范：`Preprocessing` = `kurt-wong/Aitutors-preprocessing`；`AITutors-v3` = 当前 V3 系统；`Legacy Preprocessing Artifact (V1 format)` = 历史产物格式；`Producer` **仅**作抽象架构角色。
+>
+> ---
+>
 >
 > **用途**：将已完成的 Contract + Feasibility Analysis 转换为可逐项裁决的架构决策包。本文件**不替 Owner 做任何架构选择**，**不推荐 Option**，**不修改** production code / tests / schema / Frozen Spec / Frozen Contract / v0.3 Contract / preprocessing / corpus / X3 状态。
 >
