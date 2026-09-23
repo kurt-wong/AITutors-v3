@@ -1,4 +1,4 @@
-# OWNER-DECISIONS-OD-01-OD-05-G-01-G-02
+﻿# OWNER-DECISIONS-OD-01-OD-05-G-01-G-02
 
 ```text
 STATUS: RECORDED
@@ -282,6 +282,92 @@ Historical only（禁止作为当前 V3 concept）:
 | Phase 1 implementation | **NOT STARTED** by this record |
 
 ---
+
+---
+
+## OD-01R — DSH F-OD01R-01～10 Owner Finding Disposition（正式 Owner Decision）
+
+```text
+RECORD-TYPE: OWNER DECISION / FINDING DISPOSITION
+AUTHORITY: OWNER DECISION（非 MIMO 建议 / 非 DSH 建议 / 非 Proposal 自述）
+SOURCE: DSH targeted review F-OD01R-01…F-OD01R-10
+DATE: 2026-09-23
+BINDING: YES
+EFFECT: 指导 OD-01 Proposal v3 + CR-002 治理化；不修改 Frozen Spec / Contract / 代码
+```
+
+> 本节是 **Owner Decision**。证据链：`DSH Finding → Owner Decision（本节）→ Implementation Instruction（Proposal v3 / CR-002）`。
+> 不改变既有 OD-01～OD-05 / G-01 / G-02 语义；仅追加 R-01～R-10 处置。
+
+| ID | Finding（DSH） | Owner Decision | Required Action | Status |
+|----|-----------------|----------------|-----------------|--------|
+| **OD-01R-01** | CR-002 位于 `Docs/COORDINATION/`，不能仅凭自称成为正式 L1 | **ACCEPTED** | 按 `90/91` 完成正式 L1 登记；不得自创 L1 目录/层级/状态；不得改治理规则迁就 CR-002；若无法合法登记 → 记 Governance Gap，**不得声称已为正式 L1** | **DONE — GOVERNANCE GAP RECORDED**（见下方 R-01 判定） |
+| **OD-01R-02** | Proposal / CR-002 治理格式不合规（含自创 `L1-proposal`） | **ACCEPTED** | 使用 `90 §4` + `91 §5` 出生证明字段（含 Derives From / May Change / Must Not Change）；合法 Status / 层级 / 引用；废止 `L1-proposal` | **DONE — ADDRESSED IN v3 / CR-002** |
+| **OD-01R-03** | OD-01 对 Frozen Spec 影响分类不实（非「普通新增」） | **ACCEPTED** | 逐条重判 CHANGE-3/4/5；`00 §5` 非目标解除 = 约束放宽；`20 §5.3` V3 option 边界规则 = 删除/替换；如实登记，禁止压低级别 | **DONE — CHANGE-4 + CHANGE-5 RECORDED** |
+| **OD-01R-04** | 只写 Artifact Path，未覆盖 Native Path | **ACCEPTED** | 同时表达 Path A（Native）与 Path B（Artifact/Adapter）；禁止两套语义标准；汇聚 Canonical V3 IR；覆盖 Native / Adapter / ResolvedRun / Canonical IR | **DONE — ADDRESSED IN v3 §Dual-Path** |
+| **OD-01R-05** | explicit diff 影响面不全 | **ACCEPTED** | 补 `10 §4:107-108`、`20 §6.2`、`50:51`；全树检索其余真实 affected clauses；完整影响面，不为凑数加无关章节 | **DONE — ADDRESSED IN v3 §Diff** |
+| **OD-01R-06** | 不得要求一切 provenance 都有 `line_ref` | **ACCEPTED** | 按 form 定义 locator；禁止给 table_cell / image_region / 多来源编造 `line_ref` 或假连续行区间 | **DONE — ADDRESSED IN v3 §Locator** |
+| **OD-01R-07** | 两个 `resolution_status` 语义冲突 | **ACCEPTED** | 拆开 Provenance Resolution vs Option/Evidence Resolution；用现有 Frozen vocabulary 命名；不擅自改生产 Schema；若需新 Schema 字段 → STOP → 走本 CR | **DONE — ADDRESSED IN v3 §Status** |
+| **OD-01R-08** | `degraded` 与 fail-closed 关系不清 | **ACCEPTED** | `degraded` 不是后门；无法可靠验证 → fail closed；禁止 `degraded → 正常 Admission` 隐式行为 | **DONE — ADDRESSED IN v3 §FailClosed** |
+| **OD-01R-09** | 缺正式 Owner Decision / Finding Disposition 记录 | **ACCEPTED** | 在本文件正式登记 R-01～R-10 为 Owner Decision（本节） | **DONE — THIS SECTION** |
+| **OD-01R-10** | `options_unresolved` 坐标错误；`sp-M1` 章节错误 | **ACCEPTED** | 给出准确 L0 coordinate；`sp-M1` = `20 §5.5`（非 `20 §6.1`）；全文检索同类错误 | **DONE — ADDRESSED IN v3 §Refs** |
+
+### OD-01R-01 — 正式 L1 落位判定（Owner 接受的 Gap 路径）
+
+按 `90` / `91` 只读核对结果：
+
+| 规则来源 | 内容 |
+|----------|------|
+| `90 §1` | L1 = **Contract Change Record**；修改 L0 的唯一入口；未走完流程不得生效 |
+| `90 §1.2` | `Docs/V3_SPEC/` 允许「补 Change Record；**新增 L1**」；禁止「直接编辑；隐式改变」 |
+| `90 §11` | L0 **实际修改后**必须在 Change Audit Record 登记（先例 CR-001 嵌于 `90 §11`） |
+| `91 §5` | 新文档必须齐备出生证明（Document ID … Gate State Authority） |
+| `91 §5.1` | 创建门槛四项；DG 期间冻结新建治理文档（指 90/91/82/84 类元治理文档） |
+| `91 §3.1` | 合法 Status 含 `NOT RELEASED`（先例：`67`） |
+| 先例 `67` | CHANGE-4/5 候选，位于 `Docs/DECISIONS/`，**NOT RELEASED**，**不是**已注册正式 L1 |
+
+**障碍：**
+
+1. 正式「新增 L1」落位在 `Docs/V3_SPEC/`（`90 §1.2`）。
+2. 本轮硬边界要求 **Frozen Spec tree hash 保持 `b3eeb3e9a600347f18eae4e1becc1ec4fa4b6b4f` 不变**。
+3. 向 `Docs/V3_SPEC/` 新增任何文件（含 L1）都会改变该 tree hash。
+4. 既有目录模型内**没有**第二处正式 L1 registry。
+5. `Docs/COORDINATION/` **不在** `90 §1.2` 目录模型内。
+6. **不得**修改 `90/91` 规则迁就 CR-002；**不得**自创 L1 目录/层级/状态体系。
+
+**判定（binding）：**
+
+```text
+按照 Frozen Document Governance，CR-002 当前【不是】已经正式注册的 L1 Change Record。
+CR-002 = L1 candidate / NOT RELEASED（对齐 67 先例）
+GOVERNANCE GAP = 已登记（正式 L1 注册与「Frozen Spec tree hash 不得变」本轮约束互斥）
+禁止声称：CR-002 已是正式注册 L1 / 已生效 / 已授权改 L0
+```
+
+### OD-01R-03 — CHANGE 分类裁决（禁止压低）
+
+| 对象 | 原 Frozen Rule | OD-01 变化 | 实际变化 | **CHANGE** | Gate |
+|------|----------------|------------|----------|------------|------|
+| `00 §5` table cell/fragment 非目标 | 「文档级表格 cell/fragment 字符粒度索引」= M1 非目标 | table_cell 在 **option provenance 子集**解除延后 | **放宽既有非目标约束**（fragment / 完整表格索引仍非目标） | **CHANGE-4 Constraint Relaxation** | **四道门（69 §5）** |
+| `20 §5.3` option_label | 「按 A/B/C/D 顺序；每项到下一标签/下一题结束」= V3 侧 option 边界发现 | Path B：Producer = segmentation authority；V3 **不得** rediscovery | **删除/替换**既有 V3 无条件 option 边界规则 | **CHANGE-5 Constraint Removal**（+ 新规 CHANGE-2/3） | **四道门（69 §5）** |
+| `20 §5.5` 延后注 + form | table_cell/fragment 延后；无 form 维度 | form 维度 + 解除 table_cell option 子集延后 | 改既有规定 + 新增强制 | CHANGE-4 / CHANGE-2 / CHANGE-3 | 四道门（并入上列） |
+| `20 §7.2` Compiler | 只从 line / line_character 提取 | 扩展至新 form | 改变既有规定的行为 | **CHANGE-3** | 受影响层回归 |
+| 其余（10 §4/§6.3/§8、20 §6.1/§6.2/§7.3、50） | 见 Proposal v3 diff | 见 Proposal v3 diff | 见逐条 | CHANGE-1/2/3 | 见 CR-002 |
+
+**总体：含 CHANGE-4 + CHANGE-5 → 必须四道门 + Change Record。**
+**禁止**再写「这些不是 CHANGE-4/5，所以不需要对应 Gate」。
+
+### OD-01R-01～10 有效范围
+
+| Item | Effect |
+|------|--------|
+| OD-01R-01…10 | **Binding Owner Decision**；指导 Proposal v3 / CR-002 |
+| OD-01 design | 仍为 APPROVED DESIGN / **PENDING FROZEN SPEC INCORPORATION** |
+| Frozen Spec 00–50 | **UNCHANGED / NOT AUTHORIZED TO MODIFY** |
+| Production / Schema / Corpus / Phase 1 / X3 | **UNCHANGED / NOT ENTERED** |
+
+---
+
 
 **Document control**
 

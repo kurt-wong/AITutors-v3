@@ -1,282 +1,230 @@
-# CONTRACT-CHANGE-RECORD-CR-002-OD-01
+﻿# CONTRACT-CHANGE-RECORD-CR-002-OD-01
 
 ```text
-Document Type:       Contract Change Record
-Authority Level:     L1
-Status:              PROPOSED / OWNER AUTHORIZATION REQUIRED / NOT EFFECTIVE
-Normative:           YES（对后续 L0 修改流程；对 L0 语义尚未生效）
-Supersedes:          —
-Superseded By:       —
-Gate State Authority: NO
-Change Record ID:    CR-002
-Audit ID (planned):  CA-002（待 re-freeze 实际改 L0 时在 90 §11 登记）
-Date:                2026-09-23
-Revision:            v1 — established after F-OD01-01~08 Owner dispositions
+Document ID:           CR-002
+Title:                 Contract Change Record — OD-01 Option Provenance / Resolved Span
+Document Type:         Contract Change Record
+Authority Level:       L1
+Status:                NOT RELEASED
+Normative:             NO
+Purpose:               OD-01 修改 L0 的 Change Record 候选；承载 CHANGE 分类、Gate、影响面与授权边界
+Derives From:          OD-01（OWNER-DECISIONS）· OD-01R-01…10（同文件附录）· P04 · Proposal v3 · 00/10/20/50（L0 只读）· 90/91 · 69 §5
+May Change:            本 CR 候选文本；与 Proposal v3 的引用一致性；Gate evidence/status 行（仅当有证据）
+Must Not Change:       L0 00–50 · L0-META 90/91 · Frozen Contract / P01–P25 · Gate/Admission/Question Core · 生产代码 · Schema · Corpus · Preprocessing
+Supersedes:            CR-002 v1（2026-09-23，治理格式不合规版本）
+Superseded By:         —
+Gate State Authority:  NO（唯一 YES = 82 §3）
+Change Record ID:      CR-002
+Audit ID (planned):    CA-002（仅在 L0 实际修改后按 90 §11 登记）
+Date:                  2026-09-23
 ```
 
-> **本记录是修改 L0 的唯一入口（`90 R1`）：Contract Change Record。**
-> **当前 NOT EFFECTIVE。尚未修改 Frozen Spec。尚未 re-freeze。**
-> 未获 Owner Authorization 前，不得执行 L0 文本替换，不得宣称 OD-01 已写入 Frozen Spec。
+> **Status: NOT RELEASED（合法 Status，对齐 `91 §3.1` 与先例 `67`）。**
+> **Formal L1 registration = NOT REGISTERED。**
+> 本文件是 **L1 candidate**，**不是**已正式注册、已生效的 L1 Change Record。
+> **尚未修改 Frozen Spec。尚未 re-freeze。Owner Authorization 未授予。**
 
 ---
 
-## 0. 状态头（强制字段摘要）
+## 0. R-01 正式 L1 状态（必须能明确回答）
 
-| Field | Value |
-|-------|-------|
-| Document Type | Contract Change Record |
-| Authority Level | L1 |
-| Status | **PROPOSED / OWNER AUTHORIZATION REQUIRED / NOT EFFECTIVE** |
-| Normative | YES（流程）/ 对 L0 语义 **尚未生效** |
-| Supersedes | — |
-| Superseded By | — |
-| Gate State Authority | NO |
+> **问：按照 Frozen Document Governance，CR-002 当前是否已经是一个正式注册的 L1 Change Record？**
+> **答：否。**
+
+| 项 | 判定 |
+|----|------|
+| `90 §1` L1 = Contract Change Record | 本文件 Document Type 对齐 |
+| `90 §1.2` 新增 L1 落位 = `Docs/V3_SPEC/` | **未能落位** |
+| 原因 | 本轮禁止改变 Frozen Spec tree hash（`b3eeb3e9…`）；向 `Docs/V3_SPEC/` 加文件即改变 tree hash |
+| 第二正式 registry | **不存在**（目录模型内） |
+| `Docs/COORDINATION/` | **不在** `90 §1.2` 目录模型 |
+| 自创 L1 目录/层级/Status | **未使用**（无 `L1-proposal`；Status=`NOT RELEASED`） |
+| 修改 90/91 迁就 CR-002 | **未做** |
+| **GOVERNANCE GAP** | **RECORDED** |
+| **CR-002 formal L1 status** | **NOT REGISTERED / L1 candidate / NOT RELEASED** |
+| 对齐先例 | `67`（CHANGE-4/5 候选，NOT RELEASED） |
+
+**禁止表述：**「已注册 L1」「L1 已生效」「可据此修改 L0」。
 
 ---
 
 ## 1. 为什么修改（Why）
 
-1. **P04（Frozen Contract，CLOSED）** 要求 Choice Question 具备 per-option structured evidence：`options[] = {label, text, provenance}`，且 provenance 多态可验证。
-2. **现行 Frozen Resolved Span** 具备 `line` / `line_character` + offsets，但**缺少**正式 polymorphic option provenance form（`table_cell` / `multiple_source_spans` / `other`），且 `00 §5` / `20 §5.5` 将 table_cell/fragment 明确延后。
-3. **OD-01 Owner Decision** 裁决扩展 Frozen Resolved Span ontology，使 P04 Option Provenance 成为 V3 可表达、可验证的正式形态。
-4. **DSH 对抗复核**（VERIFIED WITH FINDINGS，F-OD01-01…08）指出原 Proposal 基线不完整、条款 diff 不全、与 `20 §5.3` 冲突未处置、双 provenance 权威未定义、fail-closed 未钉死、image_region 缺口、L0 修改路径未走 L1、引用错误。Owner 已逐项 ACCEPT 并裁决。
-5. 因此必须：**修订 Proposal（已完成）→ 建立本 L1 Change Record → 等待 Owner Authorization → 才能改 L0 → re-freeze**。
+1. P04（Frozen Contract，CLOSED）要求 Choice Question 具备 per-option structured evidence。
+2. 现行 L0 Resolved Span 缺少 polymorphic option provenance form；`00 §5`/`10 §4`/`20 §5.5` 对 table_cell/fragment 明确延后。
+3. OD-01 Owner Decision：扩展 Frozen Resolved Span。
+4. DSH F-OD01R-01…10：治理落位、格式、CHANGE 分类、双路径、diff 完整性、locator、双层 status、degraded、Owner 记录、引用坐标。
+5. Owner 已 ACCEPT 并裁决（OWNER-DECISIONS 附录 OD-01R）。
 
-**OD-01 不借机改变 Gate、Admission、Question Core 等其他冻结语义。**
-
----
-
-## 2. 修改哪些 L0 条款（Target）
-
-| # | Target | 现行坐标 | 动作 |
-|---|--------|----------|------|
-| T1 | `Docs/V3_SPEC/00_Master_Spec.md` §5 非目标（table cell/fragment 字符粒度） | 约 `:274-275` | 部分解除 table_cell option-provenance 子集；fragment 仍延后 |
-| T2 | `Docs/V3_SPEC/20_Document_Pipeline.md` §5.3 `option_label` | 约 `:280-281` | **取代**：Producer Artifact = option segmentation 唯一权威 |
-| T3 | `Docs/V3_SPEC/20_Document_Pipeline.md` §5.5 Resolved Span + `granularity` | 约 `:308-324` / `:322` | 增加 provenance form 维度；改 table_cell 延后注 |
-| T4 | `Docs/V3_SPEC/20_Document_Pipeline.md` §6.1 IR option `source_span` 示例语义 | 约 `:365-369` | 补单链路权威语义；示例 key 以 `sp-Q1-A` 为准 |
-| T5 | `Docs/V3_SPEC/20_Document_Pipeline.md` §7.2 步 1 Compiler 提取 | 约 `:454` | 扩展至新 provenance form |
-| T6 | `Docs/V3_SPEC/20_Document_Pipeline.md` §7.3 Question `dedup_key` | 约 `:523` | 注释性澄清 option 输入来源；**组合不变** |
-| T7 | `Docs/V3_SPEC/10_Data_Model.md` §6.3 `source_span` JSONB | 约 `:458-471` | 划界：仅可验证 provenance 扩展；对齐 `00 §5` JSONB 红线 |
-| T8 | `Docs/V3_SPEC/10_Data_Model.md` §8 不变量 2b/2c | 约 `:625-640` | 扩展 locator/hash 核验口径至新 form |
-
-完整 Current → Proposed 文本见 Proposal `FROZEN-SPEC-CHANGE-PROPOSAL-OD-01-OPTION-PROVENANCE.md` **§8 条款级 explicit diff**（本 CR 不复制全文，以该 §8 为唯一 diff 权威文本）。
-
-**明确不修改（UNCHANGED）：**
-
-- Gate 四层既有语义 / Admission 既有语义 / Question Core
-- Question / Unit canonical vocabulary；QT→UT 不建立全局映射
-- Question `dedup_key` canonical input **组合**（type + own stem + own options + 排除列表）
-- P01–P25 其他 Owner Decisions；OD-02 / OD-03 / OD-04 / OD-05 / G-01 / G-02
-- Identity：`source_content_sha256` ⊥ `derived_text_hash`
-- `options_lines` 保留义务（P04.2）
-- 历史数据重新处理原则 / Migration policy / X3 entry condition
-- `fragment` 延后本身
-- Database Schema / production code / preprocessing implementation / corpus
+**OD-01 不改变 Gate / Admission / Question Core 等其他冻结语义。**
 
 ---
 
-## 3. 修改前是什么（Before）
+## 2. Owner Decision 依据
 
-| 项 | Before |
-|----|--------|
-| Resolved Span form | 无 polymorphic provenance form 维度；`granularity ∈ {line, line_character}`；table_cell/fragment 延后 |
-| 字符级能力 | **已有** `line_character` + `start_offset`/`end_offset`（「单行多选项」） |
-| option 边界 | `20 §5.3`：V3 Resolver 按 A/B/C/D 顺序切 option |
-| option provenance 双表征 | Producer `options[]`（P04）与 IR `content.options[label].source_span` **权威关系未定义** |
-| fail-closed | P04.4 要求 `unresolved`/`INCOMPLETE`/`QC_FAIL`；Proposal v1 曾并存 `options_unresolved` 与 `0..n` 歧义 |
-| image_region | 无承载说明 |
-| Example span_id | v1 误写 `sp-<unit>.option.<label>` 为 Spec 示例 |
-| L0 修改路径 | 未建立 L1 Contract Change Record；未按 `90 §3` 分类 |
-
----
-
-## 4. 修改后是什么（After）
-
-| 项 | After（本 CR 提议；**尚未写入 L0**） |
-|----|--------------------------------------|
-| Resolved Span form | 增加 form ∈ `{line_range, char_span_in_line, table_cell, multiple_source_spans, other}` |
-| char_span_in_line | **映射**既有 `line_character`+offset；非第二坐标系 |
-| table_cell | option-provenance 子集解除延后；完整文档级表格索引仍非目标 |
-| fragment | **仍延后** |
-| image_region | `other` 的正式实例：`form=other, method=image_region`（非顶级 type） |
-| option 边界 | **Producer Artifact = option segmentation 唯一权威**；V3 只验证/规范化/拒绝/fail closed；**禁止 rediscovery** |
-| `20 §5.3` | 原 V3 切 option 规则 **被取代**（无 fallback） |
-| provenance 链路 | `options[].provenance`（Producer 证据）→ V3 verification/normalization → Frozen Resolved Span → IR `options["A"].source_span`；**单一 authority path** |
-| 冲突 | 不得静默覆盖；保留 conflict signal；走 review / unresolved / fail-closed |
-| fail-closed | option `resolution_status ∈ {resolved, unresolved, incomplete}` + QC 层 `QC_FAIL`；**废止独立 `options_unresolved` 语义字段**；resolved ⇒ provenance **1..n**；禁止 0-span 静默通过 |
-| Example key | 规范示例 `sp-Q1-A`（`20 §6.1`）；代码构造名不得回写为 Spec |
+| 来源 | 内容 |
+|------|------|
+| OD-01 | 扩展 Frozen Resolved Span；options[]={label,text,provenance}；options_lines 保留；禁一行一 option 假设；table_cell/multiple 可表达；不可靠 → fail closed；V3 不用 LLM 猜边界 |
+| OD-01R-01 | CR-002 须正式 L1；否则 Gap + 不得自称 L1 |
+| OD-01R-02 | 服从 90/91 格式；禁自创层/Status |
+| OD-01R-03 | 如实 CHANGE-3/4/5；`00 §5`=放宽；`20 §5.3`=删除/替换 |
+| OD-01R-04 | Path A + Path B；汇聚 Canonical IR |
+| OD-01R-05 | 补 `10 §4:107-108` / `20 §6.2` / `50:51` + 全树核对 |
+| OD-01R-06 | form 分型 locator；禁伪造 line_ref |
+| OD-01R-07 | Provenance Resolution ≠ Option/Evidence Resolution |
+| OD-01R-08 | degraded 非 fail-closed 后门 |
+| OD-01R-09 | 正式 Owner Disposition 记录 |
+| OD-01R-10 | options_unresolved / sp-M1 坐标 |
 
 ---
 
-## 5. 哪些语义保持不变（Invariants）
+## 3. Frozen Spec 变更真实范围（Target）
 
-- Gate 四层 / Admission / Question Core / canonical vocabulary / QT→UT
-- Question `dedup_key` 组合与 identity 语义
-- `text_hash = SHA256(text.encode("utf-8"))`；no double consumption
-- `options_lines` 必须保留
-- Historical Source Reprocessing Principle（历史不 patch、不迁移、不兼容推导）
-- 不新增 Question Type / Unit Type / Admission-required fields
-- 不建立第二 semantic authority path（OD-04 对齐）
-- P04 契约条文本身不改（语义落入 L0）
+| # | Target | 动作 | CHANGE |
+|---|--------|------|--------|
+| T1 | `00 §5` table cell/fragment 非目标 | table_cell **option provenance 子集**放宽；fragment/完整表格索引仍非目标 | **CHANGE-4** |
+| T2 | `10 §4:107-108` M1 裁剪 `_tables/_cells/_fragments` | 与 T1 联动澄清；**不**自动授权建表/migration | **CHANGE-4** |
+| T3 | `20 §5.3` option_label 无条件 V3 边界规则 | **删除/替换**为 Path A/B 分路径 authority | **CHANGE-5**（+2/3） |
+| T4 | `20 §5.5` granularity/延后注/form | form 维度 + 延后放宽 + 分型 locator | **CHANGE-4**（+2/3） |
+| T5 | `20 §6.1` IR option source_span | 单链路权威语义；示例 key=`sp-Q1-A` | CHANGE-2+1 |
+| T6 | `20 §6.2` IR 不变量 + 三层状态隔离 | 纳入新 form / 双层 resolution / degraded 纪律 | CHANGE-2+3 |
+| T7 | `20 §7.2` Compiler 提取 | 扩展 form；Path B 禁 rediscovery | **CHANGE-3** |
+| T8 | `20 §7.3` dedup_key | 输入来源澄清；**组合不变** | CHANGE-1 |
+| T9 | `10 §6.3` source_span JSONB | 划界；对齐 00 §5 JSONB 非目标；不授权 DDL | CHANGE-1+2 |
+| T10 | `10 §8` 2b/2c | 非 line form locator/hash 核验 | CHANGE-2 |
+| T11 | `50:51` 图像/表格 bbox 能力行 | 对齐 table_cell / image_region provenance | CHANGE-2+3 |
 
----
+完整 Current → Proposed 文本 = Proposal v3 **§5**（唯一 diff 权威文本）。
 
-## 6. Change Classification（`90 §3`）
-
-| 成分 | Class | 说明 |
-|------|-------|------|
-| 新增 polymorphic provenance form 维度 | CHANGE-2 Normative Addition | 新增强制可表达/可验证约束 |
-| `options[]` 结构语义落入 L0 | CHANGE-2 | 新增强制 invariant |
-| 废止/改写 `00 §5` table_cell 延后非目标 | **CHANGE-3** | 改变既有规定的行为/范围 |
-| 改 `20 §5.5` 延后注 / form 范围 | **CHANGE-3** | 改变既有规定 |
-| 改 `20 §5.3` option 边界规则 | **CHANGE-3** | 改变既有规定的行为 |
-| 改 `20 §7.2` Compiler 提取规则 | **CHANGE-3** | 改变既有规定的行为 |
-| `dedup_key` 输入来源澄清 | CHANGE-1 Clarification | 组合不变 |
-| 引用更正 | CHANGE-0/1 | 编辑/澄清 |
-
-**总体分类：CHANGE-3 — Normative Modification**
-
-判定依据：含多项「改变既有规定的行为」；按 `90 §3`「**拿不准往高里归**」，不得只按 CHANGE-2。
-
-**CHANGE-3 要求：Change Record + 受影响层回归。** 回归义务已登记（§8）；**本轮不执行回归**（实现未授权）。
-
-四道门（`69 §5`）：本变更 **不是** CHANGE-4/5，**不需要**四道门。但 **需要 Owner Authorization** 后方可改 L0（本 CR 流程门）。
+**UNCHANGED：** Gate 四层语义 · Admission · Question Core · vocabulary · QT→UT · dedup **组合** · P01–P25 · OD-02…G-02 · 历史重处理 · Migration policy · X3 · fragment 延后 · Schema DDL · 代码 · Preprocessing · Corpus。
 
 ---
 
-## 7. Affected Layers（受影响层）
+## 4. CHANGE-3 / CHANGE-4 / CHANGE-5（禁止压低）
 
-| Layer | 受影响 | 回归要求 |
-|-------|--------|----------|
-| **L0 Frozen Spec** `00` / `20` / `10`（§2 所列条款） | YES | 条款一致性 + 见 §8 |
-| L0-META `90` §11 Change Audit | 流程 | re-freeze 时登记 CA-002 |
-| Frozen Contract P04 | 语义落入；条文不改 | 无契约文本回归 |
-| Consumer Boundary / Resolved Span / IRBuilder / Compiler / Gate **Provenance 能力** | YES（能力扩展） | §8 全项 |
-| Gate Structural / Semantic / Admission **语义** | NO | 禁止改动；负向确认测试 |
-| Database Schema | NO | 禁止 migration |
-| Preprocessing implementation | NO（本阶段） | 实现另令 |
-| Production code | NO | 禁止 |
-| Corpus | NO | 禁止重跑 |
-
----
-
-## 8. Regression Requirements（受影响层回归范围）
-
-> **义务登记于本 CR；执行前提是 Owner Authorization + re-freeze 完成 + 实现授权。**
-> **本轮不执行任何回归测试。**
-
-1. Resolved Span 构造/解析/验证（全部 form + legacy 无 form 读取）
-2. `char_span_in_line` ↔ `line_character`+offset 一致性与编码单位
-3. `table_cell` 可回溯 raw 与 fail closed
-4. `multiple_source_spans` 有序 non-empty 与逐 span `10 §8` 2b/2c
-5. `other` / `image_region`：figure identity + region + degraded/unresolved
-6. option segmentation：仅消费 Producer `options[]`；**禁 rediscovery 负向测试**
-7. fail-closed：`unresolved` / `incomplete` / `QC_FAIL`；resolved ⇒ provenance 1..n；禁止 0-span 静默通过；禁止独立 `options_unresolved` 复活
-8. conflict signal：Producer provenance vs V3 验证冲突 → 保留信号、不静默覆盖、不进 ready
-9. Compiler option leaf 提取 + `text_hash`（`10 §8` 2c）
-10. Gate Provenance form/locator/text 校验 + no double consumption 交互
-11. Question `dedup_key`：组合不变；输入来自 verified Producer options
-12. `options_lines` 与 `options[]` 并存保留
-13. 负向：不得新增 Gate condition / Admission 条件（OD-03/P14 边界）
-
----
-
-## 9. Formal Chain 与当前停止点
+| 项 | 原 Rule | 新 Rule | 实际变化 | CHANGE | Gate |
+|----|---------|---------|----------|--------|------|
+| `00 §5` table_cell 非目标 | M1 不做文档级 cell/fragment 字符粒度 | option provenance 子集做 table_cell | **放宽既有约束** | **CHANGE-4** | **四道门** |
+| `10 §4` `_cells` 不建 | M1 裁剪 | option table_cell 可验证定位不被裁剪语义禁止 | **放宽** | **CHANGE-4** | **四道门** |
+| `20 §5.3` option_label | V3 无条件 A/B/C/D 发现边界 | Path B：Producer authority + 禁 rediscovery；Path A：Native 首次解析 | **删除/替换既有约束** | **CHANGE-5** | **四道门** |
+| `20 §5.5` 延后注 | table_cell/fragment 延后 | table_cell option 子集解除 | **放宽** | **CHANGE-4** | **四道门** |
+| Compiler / form / 状态隔离等 | 见 T5–T11 | 见 Proposal v3 | 改变行为 / 新增 | CHANGE-3 / CHANGE-2 | 回归 |
 
 ```text
-OD-01 Owner Decision                          [DONE]
-        ↓
-OD-01 Frozen Spec Change Proposal v2          [DONE — revised after F-OD01-01~08]
-        ↓
-L1 Contract Change Record (CR-002)            [THIS DOCUMENT — CREATED]
-        ↓
-Owner Authorization                           [REQUIRED — NOT GRANTED]
-        ↓
-L0 Frozen Spec modification                   [NOT EXECUTED]
-        ↓
-re-freeze                                     [NOT EXECUTED]
+CHANGE-3: PRESENT（Compiler 提取、状态隔离、path-aware 行为等）
+CHANGE-4: PRESENT（00 §5 / 10 §4 / 20 §5.5 非目标或延后放宽）— 四道门 REQUIRED
+CHANGE-5: PRESENT（20 §5.3 无条件 V3 option 边界规则删除/替换）— 四道门 REQUIRED
 ```
 
-**本次任务只完成到：L1 Change Record 已建立并准备进入 Owner Authorization。**
+**禁止：**「不是 CHANGE-4/5 → 不需要 Gate。」
 
 ---
 
-## 10. Owner Authorization 状态
-
-| Item | Status |
-|------|--------|
-| Owner decisions OD-01 + F-OD01-01…08 | ACCEPTED / 已裁决 |
-| Proposal v2（含 §8 explicit diff） | READY FOR REVIEW |
-| CR-002 本记录 | READY FOR AUTHORIZATION |
-| **Owner Authorization to modify L0** | **REQUIRED — NOT GRANTED** |
-| Freeze Order / re-freeze | **NOT ISSUED / NOT DONE** |
-| 当前是否已生效 | **NOT EFFECTIVE** |
-
-### 待 Owner 勾选（与 Proposal §13 对齐）
+## 5. Native / Artifact 双路径（与 Proposal v3 §3 一致）
 
 ```text
-[ ] A. Authorize CR-002 as the L1 entry for OD-01 (CHANGE-3 overall)
-[ ] B. Approve Target list T1–T8 and §8 explicit diff texts (or amend)
-[ ] C. Confirm UNCHANGED list (§2 / §5)
-[ ] D. Approve regression scope §8 (execution still gated by implementation auth)
-[ ] E. Pin remaining technical choices (Proposal §13 #2–#6: encoding unit,
-       table_cell locator, legacy reading rule, JSONB/DDL text, Gate validation depth)
-[ ] F. Issue explicit Freeze Order for re-freeze change set
-[ ] G. Plan 90 §11 CA-002 registration at actual L0 commit time
+Path A Native:  Source → … → Native Resolver → ResolvedRun → Canonical V3 IR
+Path B Artifact: Source → preprocessing Artifact → Adapter/Consumer → ResolvedRun → Canonical V3 IR
 ```
 
-全部勾选并下达 Freeze Order 前：
+| | Path A | Path B |
+|--|--------|--------|
+| Option Segmentation Authority | Native Resolver 确定性解析 | **Producer Artifact `options[]`** |
+| V3 禁止 | LLM 猜边界；冒充 Path B rediscovery 许可 | **rediscovery / 第二 segmentation authority** |
+| 汇聚 | ResolvedRun（唯一消费入口） | 同左 |
+| IR | **语义等价、结构一致** | 同左 |
+
+**provenance 链路（Path B）：** `options[].provenance`（输入证据）→ verification/normalization → Frozen Resolved Span → IR `source_span`；冲突 = conflict signal，不静默覆盖。
+
+---
+
+## 6. Provenance ontology / fail-closed（摘要）
+
+| 主题 | 规则 |
+|------|------|
+| Locator | form 分型；**禁止**给 table_cell / image_region / 多来源伪造 line_ref |
+| Provenance Resolution | `20 §5.2` ResolvedStatus（E 层） |
+| Option/Evidence Resolution | 独立语义；不与 E 层共用字段；新 Schema 字段仅经本 CR → Owner |
+| degraded | 可验证但质量下降；**非**后门；默认不得直通 Admission |
+| 无法可靠验证 | unresolved / incomplete / QC_FAIL → **fail closed** |
+| resolved cardinality | form **1..n**；禁止 0-span 静默通过 |
+| `options_unresolved` | **从未在 L0**；禁止引入（坐标见 Proposal v3 §6.1） |
+
+---
+
+## 7. Gate（四道门，69 §5）— 有证据才算通过
+
+| Gate | Requirement | Evidence | Status |
+|------|-------------|----------|--------|
+| **A Identity Closure** | identity 闭合；form 不破坏跨层 identity | 无 OD-01 form 级 identity 测试 | **PENDING** |
+| **B Legacy / Path B 对比** | 真实 corpus 可重复对比 | 无 option provenance 对比实验 | **PENDING** |
+| **C Safety Invariant** | C1–C6（immutable / no LLM admission / fail-closed pointer / span integrity / replay） | 未就新 form 重证 | **PENDING** |
+| **D Adapter Boundary** | Adapter≠第二 Resolver；禁 fuzzy/自主生成 | 原则一致，无 evidence package | **PENDING** |
 
 ```text
-CR-002                 = PROPOSED / OWNER AUTHORIZATION REQUIRED / NOT EFFECTIVE
-OD-01 as Frozen Spec   = NOT EFFECTIVE
-Frozen Spec            = UNCHANGED
-Production Code        = UNCHANGED
-Schema                 = UNCHANGED
-Corpus                 = UNCHANGED
-Re-freeze              = NOT EXECUTED
-Phase 1                = NOT ENTERED
+Gate A: PENDING
+Gate B: PENDING
+Gate C: PENDING
+Gate D: PENDING
 ```
 
----
-
-## 11. Evidence / References
-
-| Ref | Path / ID |
-|-----|-----------|
-| OD-01 Owner Decision | `Docs/COORDINATION/OWNER-DECISIONS-OD-01-OD-05-G-01-G-02.md` §OD-01 |
-| F-OD01-01…08 dispositions | Owner ACCEPT（任务书）+ Proposal §0 |
-| Proposal v2 + explicit diff | `Docs/COORDINATION/FROZEN-SPEC-CHANGE-PROPOSAL-OD-01-OPTION-PROVENANCE.md` |
-| DSH adversarial review | `AITutor-X/Docs/60_REPORTS/OD-01-FROZEN-SPEC-PROPOSAL-DSH-ADVERSARIAL-REVIEW.md` |
-| L0-META | `Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md` R1/R2/§3/§4/§11 |
-| Frozen Contract P04 | `PREPROCESSING-V3-CONTRACT-v0.3-DRAFT.md` §P04 |
-| Effective Frozen Spec tree | `b3eeb3e9a600347f18eae4e1becc1ec4fa4b6b4f`（unchanged） |
-| Prior CR 先例 | `90` CR-001（CHANGE-2，40 §5） |
+**不得**用 Proposal 完成 / Owner 同意 OD-01 / DSH 无阻塞 / 设计合理替代 Gate PASS。
 
 ---
 
-## 12. 显式不主张
+## 8. 回归要求（登记；不执行）
 
-1. **不主张**本 CR 已获 Owner Authorization。
-2. **不主张** L0 文本已修改或已 re-freeze。
-3. **不主张** OD-01 已是生效 Frozen Spec。
-4. **不主张**可以开始 Phase 1 / implementation / schema change / corpus rerun / migration。
-5. **不主张**修改 Gate / Admission / Question Core。
-6. **不主张** `90 §11` CA-002 已完成登记（登记绑定未来 L0 commit）。
+1. form 全集 + legacy 无 form 读取  
+2. 分型 locator 真实性（禁伪造 line_ref）  
+3. Path A / Path B → Canonical IR 等价  
+4. Path B 禁 rediscovery 负向  
+5. Provenance vs Option/Evidence status 隔离  
+6. degraded 不绕过 fail-closed  
+7. conflict signal  
+8. text_hash / 10 §8 2c  
+9. no double consumption  
+10. options_lines 保留  
+11. dedup 组合不变  
 
 ---
 
-## 13. Document control
+## 9. 当前状态与未授权事项
+
+```text
+CR-002 formal L1 status     = NOT REGISTERED / L1 candidate / NOT RELEASED
+CR-002 document status      = NOT RELEASED
+OD-01 as Frozen Spec        = NOT EFFECTIVE
+Owner Authorization         = REQUIRED / NOT GRANTED
+Freeze Order                = NOT ISSUED
+Gate A/B/C/D                = PENDING / PENDING / PENDING / PENDING
+```
+
+**尚未获得授权：** 修改 L0 00–50 · re-freeze · 实现 · Schema migration · corpus rerun · Phase 1 · X3 · push。
+
+**本轮允许：** Proposal v3 · 本 CR 候选 · OWNER-DECISIONS（含 OD-01R）· 治理记录。
+
+---
+
+## 10. 显式不主张
+
+1. 不主张本 CR 已正式注册为 L1。  
+2. 不主张 L0 已修改或已 re-freeze。  
+3. 不主张四道门已通过。  
+4. 不主张可开始 Phase 1 / schema / corpus / migration。  
+5. 不主张修改 Gate / Admission / Question Core。  
+6. 不主张 CA-002 已在 90 §11 登记（绑定未来 L0 commit）。
+
+---
+
+## 11. Document control
 
 | Field | Value |
 |-------|-------|
 | Path | `Docs/COORDINATION/CONTRACT-CHANGE-RECORD-CR-002-OD-01.md` |
-| Change Record ID | CR-002 |
-| Target | L0 `00_Master_Spec.md` / `20_Document_Pipeline.md` / `10_Data_Model.md`（条款见 §2） |
-| Change Class | **CHANGE-3 — Normative Modification**（overall；含 CHANGE-2/1 成分） |
-| Source Proposal | `FROZEN-SPEC-CHANGE-PROPOSAL-OD-01-OPTION-PROVENANCE.md` v2 |
-| Audit ID | CA-002（planned；re-freeze 时登记） |
-| Date | 2026-09-23 |
-| Owner Authorization | **REQUIRED / NOT GRANTED** |
-| Effective | **NOT EFFECTIVE** |
-| Frozen Spec | **UNCHANGED** |
+| Document Type | Contract Change Record |
+| Authority Level | L1（candidate；**NOT REGISTERED**） |
+| Status | **NOT RELEASED** |
+| Change Class | **CHANGE-4 + CHANGE-5**（并含 CHANGE-3/2/1） |
+| Source Proposal | `FROZEN-SPEC-CHANGE-PROPOSAL-OD-01-OPTION-PROVENANCE.md` v3 |
+| Owner Authority | OD-01 + OD-01R-01…10 |
+| Effective Frozen Spec | **UNCHANGED** (`b3eeb3e9a600347f18eae4e1becc1ec4fa4b6b4f`) |
