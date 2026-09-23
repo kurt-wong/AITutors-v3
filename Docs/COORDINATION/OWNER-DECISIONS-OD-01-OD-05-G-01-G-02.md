@@ -301,7 +301,7 @@ EFFECT: 指导 OD-01 Proposal v3 + CR-002 治理化；不修改 Frozen Spec / Co
 
 | ID | Finding（DSH） | Owner Decision | Required Action | Status |
 |----|-----------------|----------------|-----------------|--------|
-| **OD-01R-01** | CR-002 位于 `Docs/COORDINATION/`，不能仅凭自称成为正式 L1 | **ACCEPTED** | 按 `90/91` 完成正式 L1 登记；不得自创 L1 目录/层级/状态；不得改治理规则迁就 CR-002；若无法合法登记 → 记 Governance Gap，**不得声称已为正式 L1** | **PENDING**（见下方 R-01 判定） |
+| **OD-01R-01** | CR-002 位于 `Docs/COORDINATION/`，不能仅凭自称成为正式 L1 | **ACCEPTED** | 按 `90/91` 完成正式 L1 登记；不得自创 L1 目录/层级/状态；不得改治理规则迁就 CR-002；若无法合法登记 → 登记注册条件未满足（保留 Future registration path），**不得声称已为正式 L1** | **PENDING**（见下方 R-01 判定） |
 | **OD-01R-02** | Proposal / CR-002 治理格式不合规（含自创 `L1-proposal`） | **ACCEPTED** | 使用 `90 §4` + `91 §5` 出生证明字段（含 Derives From / May Change / Must Not Change）；合法 Status / 层级 / 引用；废止 `L1-proposal` | **VERIFIED** |
 | **OD-01R-03** | OD-01 对 Frozen Spec 影响分类不实（非「普通新增」） | **ACCEPTED** | 逐条重判 CHANGE-3/4/5；`00 §5` 非目标解除 = 约束放宽；`20 §5.3` V3 option 边界规则 = 删除/替换；如实登记，禁止压低级别 | **VERIFIED** |
 | **OD-01R-04** | 只写 Artifact Path，未覆盖 Native Path | **ACCEPTED** | 同时表达 Path A（Native）与 Path B（Artifact/Adapter）；禁止两套语义标准；汇聚 Canonical V3 IR；覆盖 Native / Adapter / ResolvedRun / Canonical IR | **VERIFIED** |
@@ -424,35 +424,41 @@ Proposal v4
 
 ---
 
-## OD-01V4R — Finding Disposition（OWNER APPROVED RECORD / PENDING EFFECTIVE FREEZE）
+---
+
+## OD-01V4R-15…29 — Finding Disposition（Decision Authority）
 
 ```text
-Document Type: Decision Record（appendix to OWNER-DECISIONS）
+Document Type: Decision Record
 Status: PENDING EFFECTIVE FREEZE
-Authority Level: Owner Decision — decision authority
-Derived From: F-OD01V4R-01…10 · 90/91 · Proposal v4R
-May Change: 本附录状态列（VERIFIED / PENDING）
+Purpose: 登记 F-OD01V4R-15…29 的 Owner 裁决与落实位置
+Authority Level: Decision Authority
+Registration Level: NOT REGISTERED
+Derives From: F-OD01V4R-15…29 · 90/91 §3.1 · Proposal v4R
+May Change: Status 列（VERIFIED / PENDING）
 Must Not Change: L0 · Frozen Contract · Schema · Code · Corpus
-Related Records: FROZEN-SPEC-CHANGE-PROPOSAL-OD-01-OPTION-PROVENANCE.md · CONTRACT-CHANGE-RECORD-CR-002-OD-01.md
+Related Records: Proposal v4R · CR-002 · Docs/REPORTS/OD-01-PROPOSAL-V4-TARGETED-ADVERSARIAL-REVIEW.md
 ```
 
-| Original Finding | Final ID | Owner Decision | Required Action | Status |
-|------------------|----------|----------------|-----------------|--------|
-| F-OD01V4R-01 | OD-01F-34 | APPROVED | Self Review ≠ DSH；OD-01-J 禁引 Self Review 为 DSH 证据；不删历史 | VERIFIED |
-| F-OD01V4R-02 | OD-01F-35 | APPROVED | Header 补 Document Type/Status/Authority Level/Derived From/May Change/Must Not Change/Related Records | VERIFIED |
-| F-OD01V4R-03 | OD-01F-36 | APPROVED | 仅用冻结状态词；不确定则 PENDING | VERIFIED |
-| F-OD01V4R-04 | OD-01F-37 | APPROVED | 分型 locator（line/line_character/table_cell/multiple/other） | VERIFIED |
-| F-OD01V4R-05 | OD-01F-38 | APPROED | 解析字段唯一 = span_resolution | VERIFIED |
-| F-OD01V4R-06 | OD-01F-39 | APPROVED | 恢复 Authority Level；Authority ≠ Registration | VERIFIED |
-| F-OD01V4R-07 | OD-01F-40 | APPROVED | ID Mapping；一问一 Final ID；不重编历史 | VERIFIED |
-| F-OD01V4R-08 | OD-01F-41 | APPROVED | 本轮禁止降级态；Future Consideration only | VERIFIED |
-| F-OD01V4R-09 | OD-01F-42 | APPROVED | table_cell identity = (source_version_id, table_id, row_index, col_index) | VERIFIED |
-| F-OD01V4R-10 | OD-01F-43 | APPROVED | offset = Unicode code point；0-based；start inclusive；end exclusive | VERIFIED |
+完整映射以 **Proposal v4R §0** 为准（含 F-OD01V4R-01…29 全表）。本附录仅登记本轮 15–29 裁决。
 
-**OD-01-J（修订）：** Proposal v4R → **DSH 外部验证** → Owner 批准 → re-freeze。  
-Self Review 报告仅内部检查，**不得**作为 DSH 证据。
-
-**有效范围：** OWNER APPROVED RECORD / PENDING EFFECTIVE FREEZE。Frozen Spec 等边界 UNCHANGED / NOT ENTERED。
+| Finding ID | Final ID | Owner Decision | Status |
+|------------|----------|----------------|--------|
+| F-OD01V4R-15 | OD-01F-48 | APPROVED — 重建唯一 Mapping Table | VERIFIED |
+| F-OD01V4R-16 | OD-01F-49 | APPROVED — Gap 单向化；保留 Future registration path | VERIFIED |
+| F-OD01V4R-17 | OD-01F-50 | APPROVED — Header 含 Purpose；字段名 Derives From | VERIFIED |
+| F-OD01V4R-18 | OD-01F-51 | APPROVED — Authority Level 仅决策权；与 Registration 分离 | VERIFIED |
+| F-OD01V4R-19 | OD-01F-52 | APPROVED — Status 仅用 91 §3.1 允许词 | VERIFIED |
+| F-OD01V4R-20 | OD-01F-53 | APPROVED — table_cell identity = Future Required Change | VERIFIED |
+| F-OD01V4R-21 | OD-01F-54 | APPROVED — CI-1…12 保留 Current Rule 全结构 | VERIFIED |
+| F-OD01V4R-22 | OD-01F-55 | APPROVED — CI-4 verbatim/summary 分离标注 | VERIFIED |
+| F-OD01V4R-23 | OD-01F-56 | APPROVED — form 术语对应表 | VERIFIED |
+| F-OD01V4R-24 | OD-01F-57 | APPROVED — Historical Self Review 格式 | VERIFIED |
+| F-OD01V4R-25 | OD-01F-58 | APPROVED — 删除外仓路径 | VERIFIED |
+| F-OD01V4R-26 | OD-01F-59 | APPROVED — 清除机械替换痕迹 | VERIFIED |
+| F-OD01V4R-27 | OD-01F-60 | APPROVED — 统一 Derives From | VERIFIED |
+| F-OD01V4R-28 | OD-01F-61 | APPROVED — v4R 唯一 Current Version | VERIFIED |
+| F-OD01V4R-29 | OD-01F-62 | APPROVED — Future 词 = Planning Category only | VERIFIED |
 
 ---
 
