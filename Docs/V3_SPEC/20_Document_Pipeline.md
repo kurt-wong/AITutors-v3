@@ -285,7 +285,8 @@ Normalized 至少处理：全半角、空白、中英文标点、OCR 转义噪�
 - **answer**：`answer_zone=answer_table` 按 question_label 定位答案行；
   `inline_answer` 按【答案】区；Resolver 只输出答案 source span，不生成答案正文。
 - **explanation**：定位【详解/解析】区；找不到完整区域 → ambiguous，不截断。
-- **blank**：一个 blank 必须映射到一个 sub_question/answer；无闭合 → IR incomplete。
+- **blank**：一个 blank 必须映射到一个 sub_question，或**同一份 Answer 的一个有序值**
+  （多空题 Answer 业务对象边界见 10 §6.3 OD-R-01）；无闭合 → IR incomplete。
 - **image**：reference 必须解析到 source version 图片索引（`source_figures`）；图须带
   page/bbox/placement/source（E 侧消费资格；完整 IS-7 写入门见 10 §4.4——E 侧 4 字段
   消费子集与 7 字段写资格的差异记为 BUG-011-E2，待统一）；无唯一图 → ambiguous，禁止

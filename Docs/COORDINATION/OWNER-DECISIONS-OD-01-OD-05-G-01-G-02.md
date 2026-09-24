@@ -37,6 +37,7 @@ RECORDED-AT:           2026-09-23 (governance task OD-01~05 + G-01/G-02 reconcil
 | **OD-05** | Producer-side Artifact Schema extensible / V3 Frozen Schema STOP | **APPROVED** — binding now |
 | **G-01** | Implementation Plan + Limited Implementation Authorization must enter Git | **APPROVED** — executed in this task |
 | **G-02** | `b743c5d → 7934844` = Freeze Registration only | **VERIFIED** |
+| **OD-R-01** | 多空题 Answer 业务对象边界（一份 Answer + 多个有序值，禁止拆成多份 Answer） | **APPROVED** — binding now；Frozen Spec 最小闭环已完成 |
 
 ---
 
@@ -575,6 +576,75 @@ Record State 重构 · 新 Status / category / field / authority type / registry
 
 ---
 
+
+---
+
+## OD-R-01 — 多空题 Answer 业务对象边界
+
+```text
+OD-R-01
+
+Decision:
+同一题号下的多空题属于一个 QuestionInstance；
+多个空属于同一份 Answer 的多个有序值（multi-value），
+按照空在题面中的顺序对应；
+不得将多个空拆分为多个 Answer 对象。
+
+Status:
+APPROVED
+
+Owner:
+Owner
+
+Scope:
+Business semantics only
+```
+
+> `Status: APPROVED` 为 **Owner decision-state 词汇**（与本文件 Summary Table 的 `**APPROVED**` 同源，OD-01-H 词汇族），**不是**文档 Header `Status` 字段的 `90 §4` / `91 §3.1` 冻结枚举值；本文件文档级 `Status` 仍为 `ACTIVE`。
+> `DATE: 2026-09-24`（本记录创建于当前时点；不回溯、不补写历史日期）。
+
+**核心语义（业务对象边界，非 schema 设计）**
+
+```text
+一个题号 / 一个 QuestionInstance
+    ├── 一份 Stem
+    └── 一份 Answer
+            ├── value[1] = 第 1 个空
+            ├── value[2] = 第 2 个空
+            └── value[3] = 第 3 个空
+```
+
+- `value[i]` 对应第 i 个空；顺序来自**空在题面中的自然出现顺序**。
+- 三个空**不是**三个 QuestionInstance；也**不是**三份 Answer 对象。
+
+**明确不予推广**（本 Decision 只针对「一个题号 / 一个 QuestionInstance 下多个作答空位」的正常多空题）
+
+```text
+不推广为：所有答案都是 multi-value · 所有复合答案都拆 values · 答案中多个数字分别建模 ·
+多步骤计算拆 value · 选择组合拆 value · 复杂答案结构化分解
+
+例：多选题答案 ABD 仍是一份 Answer，不拆成 Answer A / Answer B / Answer D。
+```
+
+**本 Decision 不裁决（不得据本条扩展）**
+
+```text
+evidence 数据模型 · evidence 粒度 · partial correctness · 每个空是否拥有独立 evidence state ·
+Answer evidence 与 value evidence 的关系 · 新的 evidence 状态 · 新的 evidence business object
+```
+
+**Admission 闭环静态验证（OD-R-01 生效后）**
+
+| Case | 形态 | QuestionInstance 数 | Answer 对象数 | Answer values 数 | value 顺序 | 结果 |
+|---|---|---|---|---|---|---|
+| A | 一个题号 + 2 空 + 2 答 | 1 | 1 | 2 | 题面空序 | 确定，无 admission ambiguity |
+| B | 一个题号 + 3 空 + 3 答 | 1 | 1 | 3 | 题面空序 | 确定，无 admission ambiguity |
+| C | 一个题号 + 多空，ordered multi-value | 1 | 1 | = 空数 | 题面空序 | 确定，无 admission ambiguity |
+
+**Frozen Spec 最小闭环落点**：`10 §6.3`（Answer 业务对象边界条款）；`20 §5.3` blank 映射规则
+（`sub_question/answer` → `sub_question，或同一份 Answer 的一个有序值`）。除该两处外未改字。
+
+---
 
 **Document control**
 

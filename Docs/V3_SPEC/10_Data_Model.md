@@ -465,6 +465,14 @@ subject/grade；metadata 是独立于 identity 的层次。同 dedup_key 复用�
 约束：
 
 - `(instance_id, role, label, role_index)` 唯一。
+- **Answer 业务对象边界（OD-R-01 冻结）**：一个 QuestionInstance 的 answer role 对应
+  **一份 Answer**；同一题号下多空题的多个空是**同一份 Answer 的多个有序值**
+  （multi-value），`value[i]` 对应第 i 个空，顺序取**空在题面中的自然出现顺序**
+  （`role_index` 承载该顺序）。三个空**不是**三个 QuestionInstance，也**不是**三份
+  Answer 对象。本条只约束"一个题号 / 一个 QuestionInstance 下多个作答空位"的正常
+  多空题，**不改变**既有普通答案语义（例如多选题答案 `ABD` 仍是一份 Answer，不拆成
+  A/B/D 三份 Answer），也不推广为"所有答案都是 multi-value / 多步骤计算拆 value /
+  复杂答案结构化分解"等其他形态。
 - `text` 绝不来自 LLM 输出。
 - **`source_span` 是 JSONB，不是 FK——PostgreSQL 无法强制它的引用与 hash 真实性。**
   它是**应用层 provenance invariant**，由 Resolver/Compiler/Gate 验证（§8 不变量
