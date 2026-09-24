@@ -668,6 +668,29 @@ Source Commit = `71f51f9`。Change classification：`20 §5.3` = **CHANGE-3**、
 已 cure。载体侧残留（payload `answer[]` 元素粒度 / `answer_status` 挂载点 / `value[i]` 指称）
 **只登记，不解决**：`84_CONFLICT_LEDGER.md` **D-07 / D-08**。
 
+**Owner Authorization Provenance（R-03，最小仓内落点）**
+
+> **复用既有机制，不新造 registry**：本块沿用本文件既有的 **`OD-01-R3 — CURRENT OWNER RATIFICATION`**
+> 同一模式（current ratification ≠ historical authorization）。
+
+```text
+授权内容（已由 Owner 给出；本块只做仓内 provenance 落点，不新增业务 Decision）：
+  OD-R-01 业务语义                          = APPROVED
+  两处 L0 最小业务语义修改                   = 保留，不回滚
+  补救范围                                  = L1 / 90 §11 CA / 10 §12 / 20 §12 /
+                                              re-freeze 登记 / 受影响现行断言最小一致性修复
+Review / Ratification                       = ACCEPTED / EFFECTIVE
+权威落点                                    = L1 CR-003 §9（Review / Owner Approval）、§10（Effective）
+```
+
+**current ratification ≠ historical authorization**：本块**不重构**、**不主张**任何历史 Owner Order
+或既往授权记录；也**不主张** `71f51f9` 在其发生时点已具备完整 L0 生效效力。
+
+**证据强度（如实标注）**：上述批准状态的**原始载体是本任务链的 Owner 指令**（仓外），不在 repository 内。
+本块是把该授权落入仓内的**最小 provenance 落点**，使 CR-003 §9 / §10 的 `APPROVED` 与
+`ACCEPTED / EFFECTIVE` 可在仓内被引用，而不是只停留在仓外任务书。本块**不是**新的 Owner Decision，
+**不改变** OD-R-01 内容。
+
 ---
 
 **Document control**

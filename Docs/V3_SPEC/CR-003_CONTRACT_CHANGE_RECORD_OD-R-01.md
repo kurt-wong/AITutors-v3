@@ -207,6 +207,21 @@ DSH F-06 / F-08 **不因本记录而重开 Owner Decision**。
 | G. Forbidden scope | code / schema·DDL / migration / corpus / evidence semantics / Admission runtime **全部未改** |
 | H. 旧 hash `b3eeb3e9` 逐项判定 historical vs false-current | 判定表见 G-02 §6 |
 
+**受影响实现层回归（CHANGE-3 要求）—— 如实记录为未验证**
+
+```text
+状态：NOT VERIFIED —— 尚未进入对应实施阶段
+范围：backend / Resolver / Compiler / IR / Gate / Admission 实现层回归
+本轮做了什么：只做 L0 文本层与现行断言层的静态一致性回归（上表 A–H）
+本轮没做什么：未改 backend、未增/改测试、未改 IR / Gate / Admission、
+              未重跑 Phase 1、未重开 X2.6 M.3
+为什么不跑：P1 Segment A 实施仍处 STOP；OD-R-01 的两处修改是 L0 业务语义落点，
+            其对应实现尚未进入该实施阶段
+```
+
+> **不得误读**：上表 G 项只证明「本轮没有触碰实现面」，**不等于**「实现层回归已通过」。
+> 本记录**不伪造** regression evidence。待对应实施阶段启动时，须补做受影响层回归并回填本节。
+
 ---
 
 ## 8. Procedural Remediation / Ratification
@@ -280,7 +295,8 @@ commit**（即引入本记录的 commit；沿用仓内既有措辞「本记录�
   `git rev-parse` 为准。
 
 **历史 hash 处置**：`b3eeb3e9…` 作为 pre-OD-R-01 baseline **永久保留**，任何文档中的历史
-表述**不得**被机械替换（`90 §2 R8`「Reconcile, don't rewrite」）。
+表述**不得**被机械替换（`90 §4`：「**存量文档不强制回填**（Reconcile, don't rewrite）」；
+废止传播另见 `90 §2 R8`，两条规则不同，不得互相代引）。
 
 ---
 

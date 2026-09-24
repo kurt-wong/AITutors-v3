@@ -132,7 +132,7 @@ Previous tree → OD-R-01 authorized change → Incorporation tree → governanc
 ```
 
 **历史 hash 处置**：`b3eeb3e9…` 作为 pre-OD-R-01 baseline **永久保留**；历史表述不得机械替换
-（`90 §2 R8`：Reconcile, don't rewrite）。
+（`90 §4`：存量文档不强制回填 / Reconcile, don't rewrite）。
 
 ### 6.3 `b3eeb3e9` 全仓断言逐项判定（historical vs false current-state）
 

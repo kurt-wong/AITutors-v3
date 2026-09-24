@@ -317,7 +317,10 @@ AUTHORIZED IN PRINCIPLE
 Schema Gap → STOP
 
 Frozen Spec:
-UNCHANGED (OD-01 change is PROPOSAL only until re-freeze)
+UNCHANGED w.r.t. OD-01 Option Provenance (that change is PROPOSAL only until re-freeze)
+【scope clarification，2026-09-24】本行**只**限定 OD-01 Option Provenance 那条 change 的
+状态，**不是**「当前 `Docs/V3_SPEC` tree 全局 UNCHANGED」的断言。全局 Frozen Spec tree
+现状与 re-freeze 链见 `G-02-FREEZE-REGISTRATION-VERIFICATION.md` §6。
 
 Frozen Contract:
 UNCHANGED
