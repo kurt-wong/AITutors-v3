@@ -337,7 +337,7 @@ EFFECT: 指导 OD-01 Proposal v3 + CR-002 治理化；不修改 Frozen Spec / Co
 | `90 §11` | L0 **实际修改后**必须在 Change Audit Record 登记（先例 CR-001 嵌于 `90 §11`） |
 | `91 §5` | 新文档必须齐备出生证明（Document ID … Gate State Authority） |
 | `91 §5.1` | 创建门槛四项；DG 期间冻结新建治理文档（指 90/91/82/84 类元治理文档） |
-| `91 §3.1` | 合法 Status 含 `NOT RELEASED`（先例：`67`） |
+| `90 §4:376` / `91 §5:168` | 合法 Status 含 `NOT RELEASED`（先例：`67`） |
 | 先例 `67` | CHANGE-4/5 候选，位于 `Docs/DECISIONS/`，**NOT RELEASED**，**不是**已注册正式 L1 |
 
 **障碍：**

@@ -742,7 +742,7 @@ CHANGE-5: ACKNOWLEDGED — four-gate required
 
 ```text
 CR-002 = Change Proposal Record
-Status: NOT RELEASED（90 §4 / 91 §3.1 枚举内）
+Status: NOT RELEASED（90 §4:376 / 91 §5:168 枚举内）
 L1: NOT REGISTERED AS L1（正文短语；非 Status 字段值）
 Registration Level: NOT REGISTERED
 Location: Docs/COORDINATION/（本仓；未归层，90:47）
