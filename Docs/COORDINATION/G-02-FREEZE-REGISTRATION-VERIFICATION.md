@@ -120,18 +120,34 @@ Re-freeze commit : 本记录所在 commit（机械取值：
 
 ### 6.2 Frozen Spec tree 链（全部由 git 对象计算，无手填 / 无猜测）
 
+**两条独立 change 的合并视图**（`f708370` 与 OD-R-01 各有独立 provenance，见 `CR-004` / `CR-003`）：
+
 | 阶段 | 取值命令 | tree hash |
 |---|---|---|
-| **Previous（pre-OD-R-01）** | `git rev-parse 9f1763e:Docs/V3_SPEC` | `b3eeb3e9a600347f18eae4e1becc1ec4fa4b6b4f` |
-| **Incorporation（OD-R-01 两处 L0 修改）** | `git rev-parse 71f51f9:Docs/V3_SPEC` | `442172f40942368a4856231a742bf4d273242034` |
-| **Re-freeze（含 CR-003 / CA-003 / 10 §12 / 20 §12）** | `git rev-parse <re-freeze commit>:Docs/V3_SPEC` | `8659e2fab715d1d2164f9bc559a04ceb05fd7fc0` |
+| **pre-f708370** | `git rev-parse f708370^:Docs/V3_SPEC` | `fa1e953e7c4638236b298cf1c137aa2a107d5ea5` |
+| **f708370 incorporation**（CR-004） | `git rev-parse f708370:Docs/V3_SPEC` | `b3eeb3e9a600347f18eae4e1becc1ec4fa4b6b4f` |
+| **pre-OD-R-01**（= `9f1763e`） | `git rev-parse 9f1763e:Docs/V3_SPEC` | `b3eeb3e9a600347f18eae4e1becc1ec4fa4b6b4f` |
+| **OD-R-01 incorporation**（CR-003） | `git rev-parse 71f51f9:Docs/V3_SPEC` | `442172f40942368a4856231a742bf4d273242034` |
+| **OD-R-01 re-freeze**（含 CR-003 / CA-003 / 10 §12 / 20 §12） | `git rev-parse 60fa9ff:Docs/V3_SPEC` | `8659e2fab715d1d2164f9bc559a04ceb05fd7fc0` |
+| **WS-A 治理一致性修正**（CR-003 R-03/04/05/06） | `git rev-parse 12493ca:Docs/V3_SPEC` | `a704cd8f08ba5360bfb3398b235ab26c8ad6a8d4` |
+| **WS-B provenance 登记**（CR-004 / CA-004 / 20 §12 / 90 §11）= **current** | `git rev-parse <本登记所在 commit>:Docs/V3_SPEC` | 见下方 CURRENT 行 |
 
 ```text
-Previous tree → OD-R-01 authorized change → Incorporation tree → governance closure → Re-freeze tree
-  b3eeb3e9…          （source commit 71f51f9）      442172f4…                        8659e2fa…
+fa1e953e… →(f708370)→ b3eeb3e9… →(71f51f9 / OD-R-01)→ 442172f4…
+          →(60fa9ff / OD-R-01 re-freeze)→ 8659e2fa… →(12493ca / WS-A)→ a704cd8f…
+          →(WS-B provenance)→ CURRENT
 ```
 
-**历史 hash 处置**：`b3eeb3e9…` 作为 pre-OD-R-01 baseline **永久保留**；历史表述不得机械替换
+**同值说明（非笔误）**：`b3eeb3e9…` **同时**是 f708370 的 incorporation tree 与 OD-R-01 的
+previous / pre-OD-R-01 tree —— f708370 是 `Docs/V3_SPEC` 在 OD-R-01 之前的最后一次内容变更
+（与本文件 §5「last content commit = f708370」一致）。
+
+**CURRENT Frozen Spec tree** = `2edd20101c4abf3238d5689b3bb3cba0d5fc75fe`
+（= `git rev-parse <本登记所在 commit>:Docs/V3_SPEC`；由 `git write-tree` + `git rev-parse T:Docs/V3_SPEC`
+计算，**非手填**。字面值可安全存于本文件——它在 `Docs/V3_SPEC/` 之外，无自指不动点。
+覆盖范围：CR-004 新增 L1 + `20 §12` f708370 补记 + `90 §11` CA-004 与审计范围枚举 + WS-A 的 CR-003 修正。）
+
+**历史 hash 处置**：`b3eeb3e9…` 与 `fa1e953e…` 作为历史 baseline **永久保留**；历史表述不得机械替换
 （`90 §4`：存量文档不强制回填 / Reconcile, don't rewrite）。
 
 ### 6.3 `b3eeb3e9` 全仓断言逐项判定（historical vs false current-state）

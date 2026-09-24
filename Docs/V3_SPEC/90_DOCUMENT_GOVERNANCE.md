@@ -229,6 +229,7 @@ I-5-1 的「21/21 ready IR」是 **Historical / Directional**，**不可复现**
 |---|---|---|---|---|---|---|
 | **CA-001** | `40_Development_Rules.md` §5 | `0dd954d` | 2026-09-13 14:43 | 新增一条**强制**规则：「测量语义必须复刻真实 pipeline…**禁止**用近似文本代替…度量脚本必须能指出它复刻哪一段 pipeline，并有测试锁死该复刻语义」 | **CHANGE-2 Normative Addition** | **CLOSED — (b) ratified via CR-001** |
 | **CA-003** | `10_Data_Model.md` §6.3 · `20_Document_Pipeline.md` §5.3 | `71f51f9` | 2026-09-24 | **OD-R-01 已批准业务语义的 Frozen Spec incorporation**（**不是**新的业务 Decision）：`10 §6.3` 新增「Answer 业务对象边界」条款（1 QuestionInstance → 1 Answer → N ordered values，禁止拆成多份 Answer）；`20 §5.3` blank 映射目标由 `sub_question/answer` 收窄为 `sub_question` 或「同一份 Answer 的一个有序值」 | `20 §5.3` = **CHANGE-3 Normative Modification**；`10 §6.3` = **CHANGE-2 Normative Addition**；主导 **CHANGE-3** | **CLOSED — ratified via CR-003** |
+| **CA-004** | `20_Document_Pipeline.md` §4.5 / §6.1 | `f708370` | 2026-09-21（登记 2026-09-24） | question/unit canonical vocabulary correction：`unit_type` 规定值 `standalone_question` → `standalone_unit`（§4.5 / §6.1 各 2 处，含小节标题）+ `§4.5` 新增注（legacy 词汇定性 / canonical 断言 / **禁** `standalone_question`·`composite_question` 作 canonical / Question Type 与 Unit Type 正交**不得混用**）。**Frozen Spec change ≠ backend implementation change ≠ test evidence**（分列见 CA-004 详情 4.A/4.B/4.C） | **CHANGE-3 — Normative Modification**（含 CHANGE-2 新增禁令分量；不归 CHANGE-1） | **CLOSED — ratified via CR-004** |
 
 ### CA-001 详情
 
@@ -385,12 +386,102 @@ Re-freeze Frozen Spec tree
 **编号说明**：`CA-002`/`CR-002` 已被 `Docs/COORDINATION/CONTRACT-CHANGE-RECORD-CR-002-OD-01.md`
 占用（NOT RELEASED / NOT REGISTERED / 未归层，本表内无 `CA-002`），本条取 **CA-003** 避免碰撞。
 
-### 审计范围声明
+### CA-004 — 详情（f708370 canonical Unit-Type vocabulary correction）
 
-本节**已审计** `0dd954d` 之后所有触及 L0 的提交。更早的 L0 修改（`10`/`20` 于
-09-08/09-09，`30`/`50` 于 09-08）在提交信息中已自带 `errata` /
-`Scope Freeze errata` / `spec-only, A-Guarded` 标记，属 90 之前的既有变更惯例，
-不在本轮审计范围。
+**性质（先读）**：本条为**既存** L0 修改 `f708370`（2026-09-21）补 provenance / audit，
+**不是**新的业务 Decision，**不回滚**该修改，**不重新裁决** canonical vocabulary。
+与 CA-003 / OD-R-01 **完全独立**（任务书 §15：不得把 f708370 并入 CR-003）。
+
+```text
+Audit ID           : CA-004
+Target             : L0 Docs/V3_SPEC/20_Document_Pipeline.md §4.5 / §6.1
+Source Commit      : f708370（2026-09-21T12:25:53+08:00；parent 13fdce08）
+Owner authority    : L0 README §2.2 术语裁决（权威）· L0 10 §5.2:290 / §6.5:516 闭集 ·
+                     IMPLEMENTATION-PLAN §0b:83 Terminology（mandatory）· OD-P09 / OD-P11 / OD-2
+                     （命题「standalone_question / composite_question 不得作为 canonical V3
+                     Unit Type」可被上述既有记录证明）
+                     【UNKNOWN】具名 instrument「Owner D1」/「2026-09-20 Concept Correction」
+                     在 Docs/ 内无同名正式记录；只记归属缺口，【不追认】新 Owner Decision
+L1 Change Record   : CR-004 — Docs/V3_SPEC/CR-004_CONTRACT_CHANGE_RECORD_F708370-UNIT-VOCABULARY.md
+Change Class       : CHANGE-3 — Normative Modification（主导；含 CHANGE-2 新增禁令分量）
+                     依据 = 20 §4/§6 是 Semantic Unit / IR 形态的【唯一】规定处，其 unit_type
+                     规定值改变 = 改变既有规定的行为；且新增注含新禁令 ⇒ 非 CHANGE-1
+Date               : 事件 2026-09-21 · 登记 2026-09-24
+```
+
+**Before / After**：见 `CR-004 §3`（逐位置 before/after + blob SHA-1 实测）。
+
+**四者分列（不得混为一个架构事实）**
+
+```text
+4.A  Frozen Spec change      = 20 §4.5 / §6.1 文字变化         → 计入 Change classification
+4.B  implementation change   = backend/app/domains/compile/ir.py 2 行
+                              （IRBuilder default / output）     → implementation consequence，不计入分类
+4.C  test evidence           = test_m3_boundary_canonical_vocabulary.py（新增 150 行）
+                              + test_x26_m1_acceptance_shapes.py（+17/-4）
+                                                            → verification evidence，不是架构事实
+4.D  本 Change Record        = provenance / classification / audit 登记
+```
+
+**受影响层回归**：本任务口径 **NOT VERIFIED**（未重跑实现层回归；任务书 §5 禁改 backend / 禁增测试 /
+禁重跑 Phase 1）。f708370 时点的测试自述（Targeted 137 passed / Regression 197 passed）
+按 **DOCUMENT CLAIM** 记录于 `CR-004 §6`，**不伪造**为本轮 regression evidence。
+
+**Review / disposition（2026-09-24）**：**ACCEPTED / EFFECTIVE**；disposition = **registered**。
+不回滚、不 reverse commit、不 rewrite history、不 force push。
+
+**Re-freeze reference**（独立链，不并入 CA-003）：
+
+```text
+pre-f708370 tree（13fdce08:Docs/V3_SPEC）= fa1e953e7c4638236b298cf1c137aa2a107d5ea5
+f708370 incorporation tree               = b3eeb3e9a600347f18eae4e1becc1ec4fa4b6b4f
+                                          （同值说明：亦即 OD-R-01 所称 previous / pre-OD-R-01 tree）
+current / new tree = git rev-parse <CA-004 生效 commit>:Docs/V3_SPEC
+权威登记 = CR-004 §8；字面值副本 = G-02 §6.2
+```
+
+### 审计范围声明（2026-09-24 重写为可验证枚举）
+
+> **原表述已撤回**：本节原写「本节**已审计** `0dd954d` 之后所有触及 L0 的提交」。该完备性主张在
+> `f708370` 漏出后**不成立**，现**撤回**，改为**逐笔枚举 + 逐笔处置**。本节**不再使用**
+> 「所有都已审计」这类不可验证的完备性断言。
+
+**枚举口径**：`git log -- Docs/V3_SPEC/{00,10,20,30,40,50}*.md`（L0 = Frozen Spec 00–50）。
+**处置取值仅三种**：`registered` / `historical-exempt` / `Owner-disposed`。**不存在第四种**
+`unknown but claim complete`。
+
+#### (a) `0dd954d` 及其后触及 L0 的提交 —— 完整枚举，5 笔
+
+| commit | target | date | disposition | provenance |
+|---|---|---|---|---|
+| `0dd954d` | `40 §5` | 2026-09-13 | **registered** | CA-001 → CR-001（CHANGE-2，ACCEPTED / EFFECTIVE） |
+| `f708370` | `20 §4.5` / `20 §6.1` | 2026-09-21 | **registered** | CA-004 → CR-004（CHANGE-3 主导） |
+| `71f51f9` | `10 §6.3` / `20 §5.3` | 2026-09-24 | **registered** | CA-003 → CR-003（CHANGE-3 主导 / CHANGE-2） |
+| `60fa9ff` | `10 §12` / `20 §12` | 2026-09-24 | **registered** | 变更记录追加 = 本审计机制的登记动作本身（`README:138`「追加到分册尾部」）；**非规范语义变更**；由 CA-003 / CR-003 §7-E 覆盖 |
+| `12493ca` | `CR-003`（L1，**非** L0 00–50） | 2026-09-24 | **registered** | WS-A 治理一致性修正（R-03/R-04/R-05/R-06）；触及 `Docs/V3_SPEC` 但**不触及 L0 00–50** ⇒ 非 L0 修改，按下方 (c) 静态检查点声明 |
+| CA-004 登记所在 commit | `20 §12` / `90 §11` / 新增 `CR-004`（L1） | 2026-09-24 | **registered** | 变更记录追加 + 本节审计登记 + 新增 L1；`20 §12` 为**非规范语义**的 changelog 追加，由 CA-004 自身覆盖 |
+
+#### (b) `0dd954d` 之前触及 L0 的提交 —— **historical-exempt**（一次性枚举登记）
+
+`88e7a29`（2026-09-05 init V3 baseline）· `b02c16c` `60bc497` `95c1700` `5ae9853` ·
+`ff64352` `a105bf8` `c6014f7` `3cca050` `9c1d43f` `b24b5a7` `19d236b` `5f0d3d0` `0b0a4d3`
+（2026-09-08）· `5c9ecc9`（2026-09-09）
+
+→ 全部 **historical-exempt**：均发生在 `90` 生效（`c5a899f`，2026-09-13 17:12）**之前**，
+提交信息自带 `errata` / `Scope Freeze errata` / `spec-only, A-Guarded` / `docs(D-n)` /
+`BUG-V3-xxx freeze` 等既有变更惯例标记。本条即为对该历史集合的**一次性枚举登记**，
+使「已审计」成为**可验证**状态；**不改写**其历史内容。
+
+#### (c) 静态检查点（R-02 —— 只记录最小治理要求，**不建机制**）
+
+**不新建** CI / 数据库 / 服务 / 脚本框架 / 生产代码。仅记录一条可人工执行的检查要求：
+
+> `Docs/V3_SPEC` tree hash 发生变化时，必须能在本节找到对应 CA 条目；
+> 若该变化**不触及** L0 `00–50`（例如仅改 `90` / `91` / `README`，或新增 / 修改 L1 文件），
+> 则在本节补一行声明其为「L0-META / L1 面改动，非 L0 修改」。仍**不使用**「已审计所有」表述。
+
+既有 `90 §11`（登记义务）+ `G-02 §6`（tree hash 记录）+ `CR-003 §10` / `CR-004 §8`（re-freeze
+identity）已足以形成「**L0 tree hash change → audit required**」闭环 ⇒ **不增加机制**。
 
 **90 生效后，任何 L0 修改若不在本节登记，即为违规。**
 

@@ -806,3 +806,28 @@ candidate/reject 必须按整个 composite 返回，禁止部分子题 approved�
   非 CHANGE-4/5，未放宽、未删除既有约束）。本 Change Record 主导分类即此。
 - **生效 / re-freeze 状态**：CR-003 Review **ACCEPTED / EFFECTIVE**（2026-09-24）起具完整
   L0 效力；re-freeze 信息同 `10 §12` 同日条目。
+
+### 2026-09-24（补记 f708370 · 事件 2026-09-21 · 经 CR-004 / CA-004 生效）
+
+- **canonical vocabulary correction（question / unit）**：`§4.5` 小节标题与 JSON 规定值、
+  `§6.1` 小节标题与 JSON 规定值，`unit_type` 由 `standalone_question` 改为 `standalone_unit`；
+  `§4.5` 新增注声明 `standalone_question` = Producer legacy vocabulary（见 README §2.2 术语裁决）、
+  V3 canonical Unit-Type 为 `standalone_unit`、**禁止** `standalone_question` / `composite_question`
+  作为 canonical vocabulary、Question Type 与 Unit Type 为正交维度**不得混用**。
+- **Source Commit**：`f708370`（2026-09-21T12:25:53+08:00）。
+  **Owner authority reference**：L0 `README §2.2` 术语裁决（权威）+ L0 `10 §5.2`/`§6.5` 闭集 +
+  `IMPLEMENTATION-PLAN §0b:83` Terminology（mandatory）+ `OD-P09`/`OD-P11`/`OD-2`
+  （f708370 自身所引的「Owner D1 / 2026-09-20 Concept Correction」具名 instrument 在仓内无同名
+  正式记录，记为 UNKNOWN，见 `CR-004 §2.3`）。
+  **对应 L1 / Change Record**：`CR-004`
+  （`Docs/V3_SPEC/CR-004_CONTRACT_CHANGE_RECORD_F708370-UNIT-VOCABULARY.md`）·
+  **Change Audit Record**：`90 §11 CA-004`。
+  分类：**CHANGE-3 — Normative Modification**（含 CHANGE-2 新增禁令分量；不归 CHANGE-1）。
+- **补记说明**：本条为**事后补记**（登记日 2026-09-24，事件日 2026-09-21），按 `README:138`
+  「变更记录统一追加到分册尾部、禁止覆盖历史」追加；既有条目零改写。
+- **implementation companion（≠ L0 change）**：`backend/app/domains/compile/ir.py`
+  （IRBuilder default 与 output 的 `standalone_question` → `standalone_unit`）。
+  **test evidence（≠ 架构事实）**：`test_m3_boundary_canonical_vocabulary.py`、
+  `test_x26_m1_acceptance_shapes.py`。
+- **生效 / re-freeze 状态**：CR-004 Review **ACCEPTED / EFFECTIVE**（2026-09-24）起具完整 L0 效力。
+  独立 re-freeze 链见 `CR-004 §8`；**不并入** OD-R-01 的 `CR-003`。
