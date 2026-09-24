@@ -1,11 +1,22 @@
 # OWNER-DECISIONS-OD-01-OD-05-G-01-G-02
 
 ```text
-STATUS: RECORDED
-AUTHORITY: OWNER DECISION RECORD
-PURPOSE: FORMAL RECORD OF BINDING OWNER DECISIONS
-SOURCE: DSH 独立对抗审查后 Owner 最终裁决
-RECORDED-AT: 2026-09-23 (governance task OD-01~05 + G-01/G-02 reconciliation)
+Document ID:           OD-01-OWNER-DECISIONS
+Title:                 OWNER-DECISIONS-OD-01-OD-05-G-01-G-02
+Document Type:         Decision Record
+Status:                ACTIVE
+Authority Level:       L2
+Normative:             YES
+Purpose:               FORMAL RECORD OF BINDING OWNER DECISIONS（治理角色描述：Owner Decision Record —— **非** Authority Level 取值，见 `91 §5:167`）
+Derives From:          DSH 独立对抗审查发现清单 · `90 §4/§5` · `91 §3.1/§5`（`Docs/V3_SPEC`，只读）
+May Change:            本文档的处置登记与元数据
+Must Not Change:       L0 00–50 · L0-META 90/91 · Frozen Contract · Schema · Code · Corpus · 历史决策语义
+Supersedes:            —
+Superseded By:         —
+Gate State Authority:  NO
+Record State:          RECORDED（**非** Status 字段值；`RECORDED` 不在 `90 §4:376` / `91 §3.1` 冻结状态词表内）
+SOURCE:                DSH 独立对抗审查后 Owner 最终裁决
+RECORDED-AT:           2026-09-23 (governance task OD-01~05 + G-01/G-02 reconciliation)
 ```
 
 > 本文件是 Owner Decision Record。
@@ -17,7 +28,7 @@ RECORDED-AT: 2026-09-23 (governance task OD-01~05 + G-01/G-02 reconciliation)
 
 ## Summary Table
 
-| ID | Decision | Status |
+| ID | Decision | Verification Result |
 |----|----------|--------|
 | **OD-01** | Extend Frozen Resolved Span（P04 Option Provenance ontology） | **APPROVED** — Frozen Spec Change Proposal **pending**；未 re-freeze 前不生效 |
 | **OD-02** | Source-derived Metadata = Source Authority + Conflict-as-signal | **APPROVED** — binding now |
@@ -299,7 +310,7 @@ EFFECT: 指导 OD-01 Proposal v3 + CR-002 治理化；不修改 Frozen Spec / Co
 > 本节是 **Owner Decision**。证据链：`DSH Finding → Owner Decision（本节）→ Implementation Instruction（Proposal v3 / CR-002）`。
 > 不改变既有 OD-01～OD-05 / G-01 / G-02 语义；仅追加 R-01～R-10 处置。
 
-| ID | Finding（DSH） | Owner Decision | Required Action | Status |
+| ID | Finding（DSH） | Owner Decision | Required Action | Verification Result |
 |----|-----------------|----------------|-----------------|--------|
 | **OD-01R-01** | CR-002 位于 `Docs/COORDINATION/`，不能仅凭自称成为正式 L1 | **ACCEPTED** | 按 `90/91` 完成正式 L1 登记；不得自创 L1 目录/层级/状态；不得改治理规则迁就 CR-002；若无法合法登记 → 登记注册条件未满足（保留 Future registration path），**不得声称已为正式 L1** | **PENDING**（见下方 R-01 判定） |
 | **OD-01R-02** | Proposal / CR-002 治理格式不合规（含自创 `L1-proposal`） | **ACCEPTED** | 使用 `90 §4` + `91 §5` 出生证明字段（含 Derives From / May Change / Must Not Change）；合法 Status / 层级 / 引用；废止 `L1-proposal` | **VERIFIED** |
@@ -377,9 +388,9 @@ REGISTRATION PATH = 有效未来路径；当前 Candidate only；intentionally d
 ## OD-01-A…J — Owner Decision（OWNER APPROVED RECORD / PENDING EFFECTIVE FREEZE）
 
 ```text
-RECORD-TYPE: OWNER DECISION
-STATUS: OWNER APPROVED RECORD / PENDING EFFECTIVE FREEZE
-AUTHORITY: Owner Decision（非 MIMO 建议 / 非 DSH 建议 / 非 Proposal 自述）
+RECORD-TYPE: OWNER DECISION（非 MIMO 建议 / 非 DSH 建议 / 非 Proposal 自述）
+Record State: OWNER APPROVED RECORD / PENDING EFFECTIVE FREEZE
+Authority Level: L2
 DATE: 2026-09-23
 BINDING FOR EXECUTION: YES
 EFFECT ON L0: NOT EFFECTIVE（PENDING EFFECTIVE FREEZE）
@@ -389,7 +400,7 @@ EFFECT ON L0: NOT EFFECTIVE（PENDING EFFECTIVE FREEZE）
 > 证据链：Finding → Owner Decision（本节）→ Implementation Instruction（Proposal v4 / CR-002）。
 > 不改变既有 OD-01～OD-05 / G-01 / G-02 / OD-01R-01…10 语义。
 
-| ID | Decision | Required Action | Status |
+| ID | Decision | Required Action | Verification Result |
 |----|----------|-----------------|--------|
 | **OD-01-A** | APPROVED | 恢复逐条 Frozen Text 级 Current → Proposed diff | VERIFIED IN v4 |
 | **OD-01-B** | APPROVED | 保留「现有能力 / 真缺口 / 延后 / 非目标」缺口基线 | VERIFIED IN v4 |
@@ -455,23 +466,25 @@ Registration Level: NOT REGISTERED
 
 完整映射以 **Proposal v4R §0** 为准（含 F-OD01V4R-01…29 全表）。本附录仅登记本轮 15–29 裁决。
 
-| Finding ID | Final ID | Owner Decision | Status |
-|------------|----------|----------------|--------|
-| F-OD01V4R-15 | OD-01F-48 | APPROVED — 重建唯一 Mapping Table | VERIFIED |
-| F-OD01V4R-16 | OD-01F-49 | APPROVED — Gap 单向化；保留 Future registration path | VERIFIED |
-| F-OD01V4R-17 | OD-01F-50 | APPROVED — Header 含 Purpose；字段名 Derives From | VERIFIED |
-| F-OD01V4R-18 | OD-01F-51 | APPROVED — Authority Level 仅决策权；与 Registration 分离 | VERIFIED |
-| F-OD01V4R-19 | OD-01F-52 | APPROVED — Status 仅用 91 §3.1 允许词 | VERIFIED |
-| F-OD01V4R-20 | OD-01F-53 | APPROVED — table_cell identity = Future Required Change | VERIFIED |
-| F-OD01V4R-21 | OD-01F-54 | APPROVED — CI-1…12 保留 Current Rule 全结构 | VERIFIED |
-| F-OD01V4R-22 | OD-01F-55 | APPROVED — CI-4 verbatim/summary 分离标注 | VERIFIED |
-| F-OD01V4R-23 | OD-01F-56 | APPROVED — form 术语对应表 | VERIFIED |
-| F-OD01V4R-24 | OD-01F-57 | APPROVED — Historical Self Review 格式 | VERIFIED |
-| F-OD01V4R-25 | OD-01F-58 | APPROVED — 删除外仓路径 | VERIFIED |
-| F-OD01V4R-26 | OD-01F-59 | APPROVED — 清除机械替换痕迹 | VERIFIED |
-| F-OD01V4R-27 | OD-01F-60 | APPROVED — 统一 Derives From | VERIFIED |
-| F-OD01V4R-28 | OD-01F-61 | APPROVED — v4R 唯一 Current Version | VERIFIED |
-| F-OD01V4R-29 | OD-01F-62 | APPROVED — Future 词 = Planning Category only | VERIFIED |
+| Finding ID | Final ID | Applied Fix | Verification Result |
+|------------|----------|-------------|---------------------|
+| F-OD01V4R-15 | OD-01F-48 | 重建唯一 Mapping Table | VERIFIED |
+| F-OD01V4R-16 | OD-01F-49 | Gap 单向化；保留 Future registration path | VERIFIED |
+| F-OD01V4R-17 | OD-01F-50 | Header 含 Purpose；字段名 Derives From | VERIFIED |
+| F-OD01V4R-18 | OD-01F-51 | Authority Level 仅决策权；与 Registration 分离 | VERIFIED |
+| F-OD01V4R-19 | OD-01F-52 | Status 仅用 91 §3.1 允许词 | VERIFIED |
+| F-OD01V4R-20 | OD-01F-53 | table_cell identity = Future Required Change | VERIFIED |
+| F-OD01V4R-21 | OD-01F-54 | CI-1…12 保留 Current Rule 全结构 | VERIFIED |
+| F-OD01V4R-22 | OD-01F-55 | CI-4 verbatim/summary 分离标注 | VERIFIED |
+| F-OD01V4R-23 | OD-01F-56 | form 术语对应表 | VERIFIED |
+| F-OD01V4R-24 | OD-01F-57 | Historical Self Review 格式 | VERIFIED |
+| F-OD01V4R-25 | OD-01F-58 | 删除外仓路径 | VERIFIED |
+| F-OD01V4R-26 | OD-01F-59 | 清除机械替换痕迹 | VERIFIED |
+| F-OD01V4R-27 | OD-01F-60 | 统一 Derives From | VERIFIED |
+| F-OD01V4R-28 | OD-01F-61 | v4R 唯一 Current Version | VERIFIED |
+| F-OD01V4R-29 | OD-01F-62 | Future 词 = Planning Category only | VERIFIED |
+
+> **元数据更正注（F-OD01V4R-50 / -58）：** 上表第 3 列原名 `Owner Decision`、值带 `APPROVED — ` 前缀；第 4 列原名 `Status`。`APPROVED` 与 `VERIFIED` 均不在 `91 §3.1`（十值）与 `90 §4:376`（六值）冻结状态词表内 —— 属 F-OD01V4R-50 / -58 所记问题。本轮更正＝列名改为 `Applied Fix` / `Verification Result`、移除 `APPROVED — ` 前缀；**行内容文字逐字未改**。事实记录：上表 15 项 `VERIFIED` 出自上一轮 agent 自判定，DSH F-OD01V4R-30…48 已举出反例（-15 → 本轮 F-49；-19 → 本轮 F-50；-24 → 本轮 F-55/F-56；-25 → 本轮 F-57）。
 
 ---
 
@@ -497,27 +510,29 @@ Registration Level: NOT REGISTERED
 
 完整修复证据见 `Docs/REPORTS/OD-01V4R-FINAL-REMEDIATION-REPORT.md`。本附录登记裁决。
 
-| Finding ID | Final ID | Owner Decision | Finding Disposition |
+| Finding ID | Final ID | Applied Fix（非 Owner 授权主张） | Finding Disposition |
 |------------|----------|----------------|---------------------|
-| F-OD01V4R-30 | OD-01F-63 | APPROVED — 映射表按 DSH 基线重建；-14 跨仓复制单独登记 | TEXT-CORRECTED |
-| F-OD01V4R-31 | OD-01F-64 | APPROVED — -08/-09/-10 Problem 按基线恢复 | TEXT-CORRECTED |
-| F-OD01V4R-32 | OD-01F-65 | APPROVED — 09/10 填入 V3-11/12；无空号 | TEXT-CORRECTED |
-| F-OD01V4R-33 | OD-01F-66 | APPROVED — README §2 列 Future Required Change target | REMEDIATED |
-| F-OD01V4R-34 | OD-01F-67 | APPROVED — form/granularity 维度定义；禁称正交 | REMEDIATED |
-| F-OD01V4R-35 | OD-01F-68 | APPROVED — locator 按 form 分型 | REMEDIATED |
-| F-OD01V4R-36 | OD-01F-69 | APPROVED — table_cell identity 方案 B | REMEDIATED |
-| F-OD01V4R-37 | OD-01F-70 | APPROVED — 20 §5.5 合并全文 | REMEDIATED |
-| F-OD01V4R-38 | OD-01F-71 | APPROVED — 示例 span_resolution | REMEDIATED |
-| F-OD01V4R-39 | OD-01F-72 | APPROVED — CR-002 Status=NOT RELEASED | TEXT-CORRECTED |
-| F-OD01V4R-40 | OD-01F-73 | APPROVED — Authority Level 用冻结枚举 | TEXT-CORRECTED |
-| F-OD01V4R-41 | OD-01F-74 | APPROVED — 状态词分层真陈述 | TEXT-CORRECTED |
-| F-OD01V4R-42 | OD-01F-75 | APPROVED — D1 附录出生证明齐备 | TEXT-CORRECTED |
-| F-OD01V4R-43 | OD-01F-76 | APPROVED — Self Review HISTORICAL + 字段齐备 | TEXT-CORRECTED |
-| F-OD01V4R-44 | OD-01F-77 | APPROVED — 历史正文全文恢复 | BODY-RESTORED |
-| F-OD01V4R-45 | OD-01F-78 | APPROVED — 移除 Gap 路径标题；登记未归层 | TEXT-CORRECTED |
-| F-OD01V4R-46 | OD-01F-79 | APPROVED — Supersedes=—；非规范字段移出 Header | TEXT-CORRECTED |
-| F-OD01V4R-47 | OD-01F-80 | APPROVED — V3 Problem 按基线恢复 | TEXT-CORRECTED |
-| F-OD01V4R-48 | OD-01F-81 | APPROVED — OD-01-J 统一 v4R → DSH 外部验证 | TEXT-CORRECTED |
+| F-OD01V4R-30 | OD-01F-63 | 映射表按 DSH 基线重建；-14 跨仓复制单独登记 | TEXT-CORRECTED |
+| F-OD01V4R-31 | OD-01F-64 | -08/-09/-10 Problem 按基线恢复 | TEXT-CORRECTED |
+| F-OD01V4R-32 | OD-01F-65 | 09/10 填入 V3-11/12；无空号 | TEXT-CORRECTED |
+| F-OD01V4R-33 | OD-01F-66 | README §2 列 Future Required Change target | REMEDIATED |
+| F-OD01V4R-34 | OD-01F-67 | form/granularity 维度定义；禁称正交 | REMEDIATED |
+| F-OD01V4R-35 | OD-01F-68 | locator 按 form 分型 | REMEDIATED |
+| F-OD01V4R-36 | OD-01F-69 | table_cell identity 方案 B | REMEDIATED |
+| F-OD01V4R-37 | OD-01F-70 | 20 §5.5 合并全文 | REMEDIATED |
+| F-OD01V4R-38 | OD-01F-71 | 示例 span_resolution | REMEDIATED |
+| F-OD01V4R-39 | OD-01F-72 | CR-002 Status=NOT RELEASED | TEXT-CORRECTED |
+| F-OD01V4R-40 | OD-01F-73 | Authority Level 用冻结枚举 | TEXT-CORRECTED |
+| F-OD01V4R-41 | OD-01F-74 | 状态词分层真陈述 | TEXT-CORRECTED |
+| F-OD01V4R-42 | OD-01F-75 | D1 附录出生证明齐备 | TEXT-CORRECTED |
+| F-OD01V4R-43 | OD-01F-76 | Self Review HISTORICAL + 字段齐备 | TEXT-CORRECTED |
+| F-OD01V4R-44 | OD-01F-77 | 历史正文全文恢复 | BODY-RESTORED |
+| F-OD01V4R-45 | OD-01F-78 | 移除 Gap 路径标题；登记未归层 | TEXT-CORRECTED |
+| F-OD01V4R-46 | OD-01F-79 | Supersedes=—；非规范字段移出 Header | TEXT-CORRECTED |
+| F-OD01V4R-47 | OD-01F-80 | V3 Problem 按基线恢复 | TEXT-CORRECTED |
+| F-OD01V4R-48 | OD-01F-81 | OD-01-J 统一 v4R → DSH 外部验证 | TEXT-CORRECTED |
+
+> **更正注（F-OD01V4R-58）：** 本表原以 `Owner Decision: APPROVED` 逐项登记，**无外部 Owner 证据**，且证据指向自写的 `Docs/REPORTS/OD-01V4R-FINAL-REMEDIATION-REPORT.md`（L3，不满足 `91:171` 向上闭包至 L0/L1/L2）。现改为 **`Applied Fix`（处置登记）**——**不含 Owner 授权主张**。本附录是修复落实登记，**不是** Owner Decision；不得据此声称已获 Owner 批准。列名由 `Owner Decision` 改为 `Applied Fix`，`APPROVED — ` 前缀移除（历史处置内容逐字保留）。
 
 ---
 
@@ -527,6 +542,6 @@ Registration Level: NOT REGISTERED
 | Field | Value |
 |-------|-------|
 | Path | `Docs/COORDINATION/OWNER-DECISIONS-OD-01-OD-05-G-01-G-02.md` |
-| Status | RECORDED |
-| Authority | OWNER DECISION RECORD |
+| Status | ACTIVE |
+| Record State | RECORDED |
 | Companion | `LIMITED-IMPLEMENTATION-AUTHORIZATION-v0.3.md` · `FROZEN-SPEC-CHANGE-PROPOSAL-OD-01-OPTION-PROVENANCE.md` · `G-02-FREEZE-REGISTRATION-VERIFICATION.md` · `IMPLEMENTATION-PLAN-v0.3.md` |

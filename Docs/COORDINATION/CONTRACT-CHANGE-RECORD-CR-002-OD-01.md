@@ -61,12 +61,14 @@ Formal L1 registration requires（Planning Category: Future Required Change）:
 
 | 字段 | 值 | 含义 |
 |------|-----|------|
-| Authority Level | **L2-proposed** | 冻结枚举值（`90 §4:375` / `91 §5:167`） |
+| Authority Level | **L2-proposed** | 冻结枚举值 —— 依据**仅为 `91 §5:167`**（F-OD01V4R-59 归因分列） |
 | Registration Level | **NOT REGISTERED** | 仅注册状态 |
 
+> **归因分列（F-OD01V4R-59）：** `91 §5:167` = `L0 | L0-META | L1 | L2 | **L2-proposed** | L3 | L4 | L5`；`90 §4:375` = `L0 | L1 | L2 | L3 | L4 | L5 | L0-META`（**不含 `L2-proposed`**）。二者同为 L0-META 而值域不一致，属**既存的 Frozen / L0 治理基线冲突**（pre-existing Frozen/L0 governance baseline conflict；非 OD-01 规范缺陷；不修改 90/91，不消解）（台账义务落 `84_CONFLICT_LEDGER.md`，位于 `Docs/DECISIONS/`，超出本轮授权范围）。
+
 Owner Decision 记录 = L2。Proposal = L2-proposed。Self Review（REPORTS）= L3。  
-**禁止**自创层级。**禁止** `Authority Level = L1`（除非已正式注册）。  
-**Planning Category: Future Required Change** — 冻结枚举无法表达「决策/提案/变更记录」三分角色；本轮取最接近冻结值。
+自创层级名（`Proposal Authority` / `Change Record Authority` / `Decision Authority`）在本文件中未出现；`Authority Level` 取值仅用上列冻结枚举。`Authority Level = L1` 在未正式注册时未使用。  
+**未决依赖：** 冻结枚举无法表达「决策/提案/变更记录」三分角色；本轮取最接近冻结值。
 
 ---
 
@@ -94,7 +96,7 @@ OD-01-A…J = OWNER APPROVED RECORD / PENDING EFFECTIVE FREEZE（历史原文；
 - 解析字段唯一：**span_resolution**
 - form 与 granularity：form=定位空间结构；granularity=解析粒度；M1 同名对偶标签，**非正交**
 - offset：Unicode code point
-- table_cell identity：**(source_version_id, table_id, row_index, column_index)**；`table_id` 生产来源**必须存在**（当前 Frozen Spec 未定义 → Future Required Change 确立后再写 Spec）
+- table_cell identity：**(source_version_id, table_id, row_index, column_index)**；`table_id` 生产来源 = **真实存在的 Preprocessing source identity**，当前**不存在**（实测：`CONTRACTS/`、`GOVERNANCE/`、`V3_SPEC/` 各 0 命中；仅 `docs_archive/` V2 遗留草稿；`10 §4` M1 裁剪不建）→ 不发明生产者、不建 schema；可核验判据五条有一条不成立即不得 `resolved`（fail closed → `unresolved` / `incomplete`）
 - README §2 须先登记：span_resolution / option_evidence_status / form
 
 **CHANGE-3 / CHANGE-4 / CHANGE-5: ACKNOWLEDGED**（不降级；4/5 须四道门）。

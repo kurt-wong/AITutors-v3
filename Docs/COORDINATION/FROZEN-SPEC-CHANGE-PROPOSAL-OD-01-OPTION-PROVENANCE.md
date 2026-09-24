@@ -8,7 +8,7 @@ Status:                PENDING
 Authority Level:       L2-proposed
 Purpose:               OD-01 option provenance 的 Current→Proposed 条款差异、缺口基线、三路径统一 provenance、可采纳 Frozen Text 与 Finding 映射
 Normative:             NO
-Derives From:          OD-01 · OD-01-A…J · OD-01R-01…10 · F-OD01-01…08 · F-OD01R-01…10 · F-OD01V3-01…12 · F-OD01V4-01…03 · F-OD01V4R-01…48 · P04 · L0 00/10/20/50（只读）· 90/91 §3.1 · 69 §5
+Derives From:          OD-01 · OD-01-A…J · OD-01R-01…10 · F-OD01-01…08 · F-OD01R-01…10 · F-OD01V3-01…12 · F-OD01V4-01…03 · F-OD01V4R-01…64 · P04 · L0 00/10/20/50（只读）· 90/91 §3.1 · 69 §5
 May Change:            本 Proposal 文本；配套 CR-002 Candidate 引用一致性
 Must Not Change:       L0 00–50 · L0-META 90/91 · Frozen Contract / P01–P25 · Gate/Admission/Question Core · Production · Preprocessing · Schema · Corpus · Migration
 Related Records:       CONTRACT-CHANGE-RECORD-CR-002-OD-01.md · OWNER-DECISIONS-OD-01-OD-05-G-01-G-02.md · Docs/REPORTS/OD-01-PROPOSAL-V4-TARGETED-ADVERSARIAL-REVIEW.md（Historical Self Review）· Docs/REPORTS/OD-01V4R-FINAL-REMEDIATION-REPORT.md
@@ -22,7 +22,7 @@ Current Version:       v4R（唯一 Current）
 > **Status 字段**仅使用 `90 §4` / `91 §3.1` 冻结枚举值。本文件 `Status: PENDING`。
 > **Finding Disposition 列不是 Status 字段**；处置词汇不声称属于 `91 §3.1`。
 > Frozen Spec tree = `b3eeb3e9a600347f18eae4e1becc1ec4fa4b6b4f`（UNCHANGED）。
-> **Authority Level 取值仅限冻结枚举**（`90 §4:375` / `91 §5:167`：L0 | L0-META | L1 | L2 | L2-proposed | L3 | L4 | L5）。不得自创层级。Registration Level 单独描述注册状态。
+> **Authority Level 取值仅限冻结枚举**。归因分列（F-OD01V4R-59）：`91 §5:167` = L0 | L0-META | L1 | L2 | **L2-proposed** | L3 | L4 | L5；`90 §4:375` = L0 | L1 | L2 | L3 | L4 | L5 | L0-META（**不含 L2-proposed**）。本文件 `L2-proposed` 的依据**仅为** `91 §5:167`。两表值域不一致属未决依赖，见 §5。不得自创层级。Registration Level 单独描述注册状态。
 > 核心方向不变：Artifact-first · Artifact-authoritative · Single provenance authority · No V3 rediscovery（Artifact 路径）· Fail closed。
 
 **审查边界：** Self Review = 内部检查（Historical Self Review 文档）。DSH Review = 外部验证。OD-01-J 证据链只接受 DSH Review。
@@ -35,11 +35,12 @@ Current Version:       v4R（唯一 Current）
 
 ## 0. Finding → Fix Mapping — 唯一完整表
 
-> 含 **F-OD01-01…08 · F-OD01R-01…10 · F-OD01V3-01…12 · F-OD01V4-01…03 · F-OD01V4R-01…48**。
+> 含 **F-OD01-01…08 · F-OD01R-01…10 · F-OD01V3-01…12 · F-OD01V4-01…03 · F-OD01V4R-01…64**。
 > 历史 Finding 不删除、不重编号。Final ID 一问一号、无空号。
 > `Problem` 列以 DSH 已提交基线报告的发现标题为准，不重释、不合并不降级。
 > 历史空号 `OD-01F-09`/`OD-01F-10` 由连续三轮漏登的 `F-OD01V3-11`/`F-OD01V3-12` 填入（不重编号既有 Final ID）。
-> 新问题自 **OD-01F-82** 起。`Finding Disposition` 列 ≠ Status 字段。
+> 新问题自 **OD-01F-82** 起；本轮已用至 **OD-01F-97**（F-OD01V4R-49…64）。下一起号 = **OD-01F-98**。
+> `Finding Disposition` 列 ≠ Status 字段。字节改动声明：既有 UTF-8 BOM 于前轮被移除（F-OD01V4R-63）；本轮写入不经 BOM。
 
 | Finding ID | Final ID | Problem（DSH 基准） | Fix Location | Verification Evidence | Finding Disposition |
 |------------|----------|---------------------|--------------|----------------------|---------------------|
@@ -54,20 +55,20 @@ Current Version:       v4R（唯一 Current）
 | F-OD01V3-11 | OD-01F-09 | 逐字引用保真度下降：`10 §4` 引文为改写版且置于 fenced 代码块内 | CI-2 Current Rule | 标注 verbatim/summary；补齐「依据 01 v0.3 收敛。」等 | REGISTERED |
 | F-OD01V3-12 | OD-01F-10 | 3 个文档被加入 UTF-8 BOM，属未声明的字节级改动 | 历史处置记录 | 本轮写入不经 BOM；字节改动仅限 COORDINATION/REPORTS | REGISTERED |
 | F-OD01R-01 | OD-01F-11 | CR-002 不能仅凭自称成为正式 L1 | §9 · CR-002 §0 | 注册条件未满足 + Future registration path | REMEDIATED |
-| F-OD01R-02 | OD-01F-12 | 治理 Header 不合规（含自创 L1-proposal） | 全文档 Header | 出生证明字段齐备 | REMEDIATED |
+| F-OD01R-02 | OD-01F-12 | 载具违犯 `91 §5.1` 冻结的文档创建门槛（MED-HIGH｜re-freeze 前置） | 全文档 Header（`91 §5` 出生证明四项门槛） | 出生证明字段齐备；创建资格问题已按门槛逐项处置 | REMEDIATED |
 | F-OD01R-03 | OD-01F-13 | CHANGE 分类压低 | §8 | CHANGE-3/4/5 ACKNOWLEDGED | REMEDIATED |
-| F-OD01R-04 | OD-01F-14 | 未覆盖多路径（只写 Artifact） | Proposal §4 | Native/Adapter/Artifact | REMEDIATED |
+| F-OD01R-04 | OD-01F-14 | 新 §5.3「Producer 唯一权威」与冻结的双轨语义冲突未处置（HIGH｜design） | Proposal §4 · CI-3 | 三路径统一；两路径语义等价主张已由 Native 边界判据支撑 | REMEDIATED |
 | F-OD01R-05 | OD-01F-15 | diff 影响面不全 | §7 | 含 10 §4 / 20 §6.2 / 50 / README §2 | REMEDIATED |
-| F-OD01R-06 | OD-01F-16 | 定位方式一刀切 | Proposal §3 · CI-4 | 分型 locator | REMEDIATED |
+| F-OD01R-06 | OD-01F-16 | 拟议 `20 §5.5` 文本自身不闭合（MED｜re-freeze 前置） | §6.3 合并全文 | CI-4 + CI-12 合并后单块全文；围栏闭合 | REMEDIATED |
 | F-OD01R-07 | OD-01F-17 | 两个解析状态字段命名冲突 | Proposal §2.2 | span_resolution 唯一 | REMEDIATED |
 | F-OD01R-08 | OD-01F-18 | fail-closed 与 degraded 关系不清 | Proposal §2.2 · §10 | 分层唯一承载；降级非本轮 | REMEDIATED |
-| F-OD01R-09 | OD-01F-19 | 缺 Owner Decision / Finding Disposition 记录 | OWNER-DECISIONS | OD-01R / V4R 附录 | REMEDIATED |
+| F-OD01R-09 | OD-01F-19 | Owner 处置/裁决在指定的 Owner Decision 载体内不可核验（MED｜provenance） | OD-01R 附录（**指定 Owner Decision 载体**本身） | 载体可核验性：R-01…R-10 处置已落指定载体；不涉自写/归层（那另属 OD-01F-25） | REMEDIATED |
 | F-OD01R-10 | OD-01F-20 | 引用坐标错误（options_unresolved / sp-M1） | 历史处置 | sp-M1 = 20 §5.5 | REMEDIATED |
 | F-OD01V3-01 | OD-01F-21 | 条款级 Proposed Frozen Text 全数消失 | Proposal §6 CI-1…12 | 每条含 Proposed Frozen Text | TEXT-CORRECTED |
 | F-OD01V3-02 | OD-01F-22 | v2「完整现状基线」13 行表被删除 | Proposal §1 | 缺口基线表恢复 | TEXT-CORRECTED |
 | F-OD01V3-03 | OD-01F-23 | `DONE` 作为状态值大面积使用（违反 91 §3.2） | 全文档 | 禁词扫描空；处置列≠Status | TEXT-CORRECTED |
 | F-OD01V3-04 | OD-01F-24 | Governance Gap 混淆候选落位与正式注册 | §9 · CR-002 §0 | 候选≠已注册；条件未满足 | TEXT-CORRECTED |
-| F-OD01V3-05 | OD-01F-25 | OD-01R-09「正式 Owner Decision」为 agent 自写且位于未归层目录，权威来源不可核验 | OWNER-DECISIONS · 本文件头 | 未归层声明；不引用为 L0/L1/L2 权威 | TEXT-CORRECTED |
+| F-OD01V3-05 | OD-01F-25 | OD-01R-09「正式 Owner Decision」为 agent 自写且位于未归层目录，权威来源不可核验 | **本文件头 · §9 未归层声明**（自写/归层面；不涉载体落位，那另属 OD-01F-19） | 未归层声明；不引用为 L0/L1/L2 权威 | TEXT-CORRECTED |
 | F-OD01V3-06 | OD-01F-26 | `degraded` 仍无合法层级/值域槽位 | §2.2 · §10 | 字段分层；降级=Future Consideration | REMEDIATED |
 | F-OD01V3-07 | OD-01F-27 | 字段命名冲突以「删除该字段」规避，而非按冻结 vocabulary 命名 | Proposal §2.2 | span_resolution 唯一命名保留 | TEXT-CORRECTED |
 | F-OD01V3-08 | OD-01F-28 | 新引入 `91 §3.1` 误引（×3） | 全文档 | Status 引用 90 §4 / 91 §3.1 枚举本体 | TEXT-CORRECTED |
@@ -124,6 +125,22 @@ Current Version:       v4R（唯一 Current）
 | F-OD01V4R-46 | OD-01F-79 | 非规范头字段持续增列；Supersedes 值格式错误 | 全文档 Header | Supersedes=清单或—；非规范字段移出 | TEXT-CORRECTED |
 | F-OD01V4R-47 | OD-01F-80 | v3 系列 Problem 4 行不符与 2 行互换 | §0 | V3 Problem 已按基线恢复 | TEXT-CORRECTED |
 | F-OD01V4R-48 | OD-01F-81 | D1 OD-01-J 流程块与同文件两版流程不一致 | D1 OD-01-J | 统一为 v4R → DSH 外部验证 | TEXT-CORRECTED |
+| F-OD01V4R-49 | OD-01F-82 | `§0` 的「以 DSH 基线为准」在 F-OD01R 系列不成立 | §0 F-OD01R-02/-04/-06/-09 四行 | 四行 Problem 已按 `8c2dca3` 基线标题恢复；R-09 与 V3-05 登记面已分离 | REMEDIATED |
+| F-OD01V4R-50 | OD-01F-83 | 条件 3/4 以缩小口径达成；D1 仍含列名为 `Status` 的非枚举值与旧式文件级 Header | Proposal §2.3 · D1 Header · D1 三处 Status 列 | 豁免口径已删；`Status` 列仅冻结枚举，非状态信息移 `Verification Result` 等非 Status 字段 | TEXT-CORRECTED |
+| F-OD01V4R-51 | OD-01F-84 | `§6.3` 合并全文围栏结构损坏，§7 差异附录被吞入代码块 | §6.3 外层围栏 | 外层改四反引号；合并全文为单一可复制块；§7/§8 不再落入代码块 | TEXT-CORRECTED |
+| F-OD01V4R-52 | OD-01F-85 | 合并 Frozen Text 含无来源、不可判定的新条款 | CI-4 · §6.3 | `option_evidence_status=resolved 时 form 为 1..n` 已删除（无 Current Rule 对应、语义不可判定） | TEXT-CORRECTED |
+| F-OD01V4R-53 | OD-01F-86 | `§5:263` 禁止的元陈述正出现在同一 change set 的 L0 成品文本；`table_cell` 构造性不可满足且台账义务未履行 | CI-1/2/8/9/12 · §6.3 · §5 | 元陈述移出 Proposed Text；`table_id` 记**未决依赖**；构造性残留与 `84` 台账义务记**未决风险** | TEXT-CORRECTED |
+| F-OD01V4R-54 | OD-01F-87 | 新建报告未过 `91 §5.1` 门槛 1，且与同 commit 新增的 D1 附录内容重叠 | Remediation Report `Purpose` | 已补与最近似文档（D1 附录）的不可合并差异论证 | TEXT-CORRECTED |
+| F-OD01V4R-55 | OD-01F-88 | 两份 `Docs/REPORTS/` 文档的 `Document Type` 不合规 | Self Review · Remediation Report Header | `Report` → 枚举值；`Experiment Report`+L3 → 与 `90:43-44` 层级一致 | TEXT-CORRECTED |
+| F-OD01V4R-56 | OD-01F-89 | Self Review「全文恢复 / 不覆盖、不删除」与事实不符 | Self Review 历史区 | 五处历史区改写已还原（标题/Document control/Path/插入行）；声明与事实一致 | TEXT-CORRECTED |
+| F-OD01V4R-57 | OD-01F-90 | 新报告 `Derives From` 含不可解析引用（本仓不存在的 `AGENTS.md` + 跨仓路径 `Docs/60_REPORTS`） | Remediation Report `Derives From` | 改为本仓可解析文档闭包 | TEXT-CORRECTED |
+| F-OD01V4R-58 | OD-01F-91 | D1 新附录预先登记 19 项「Owner Decision: APPROVED」，无外部证据且与同 commit 报告口径矛盾 | D1 V4R-30…48 附录 | 改为不含 Owner 授权主张的处置登记；三处状态口径统一 | TEXT-CORRECTED |
+| F-OD01V4R-59 | OD-01F-92 | `Authority Level` 归因引用不实，且与目录层模型冲突未登记 | Proposal Header · §2.1 · CR-002 §1 | 归因分列（`91 §5:167` 含 L2-proposed；`90 §4:375` 不含）；值域冲突与目录层冲突记未决风险 | TEXT-CORRECTED |
+| F-OD01V4R-60 | OD-01F-93 | CI-11 未声明地删除 L0 引用坐标 | CI-11 | 已恢复 `（10 §4.4/§6.6、20 §5.3/§7.2.5）` | TEXT-CORRECTED |
+| F-OD01V4R-61 | OD-01F-94 | CI-3 删除 Native 路径 option 边界规范，却要求两路径语义等价 | CI-3 | 已恢复 Native 边界判据「按 A/B/C/D 顺序；每项到下一标签/下一题结束」 | TEXT-CORRECTED |
+| F-OD01V4R-62 | OD-01F-95 | CI-7/8/9/10 相对 e611a4d 缩减拟制规范细节，未登记 | CI-7/8/9/10 `Reason` | 四条均已加缩减声明与理由 | TEXT-CORRECTED |
+| F-OD01V4R-63 | OD-01F-96 | 未声明的字节级改动：BOM 被移除 | 历史处置记录 | BOM 移除已声明（见 §0 规则与报告） | TEXT-CORRECTED |
+| F-OD01V4R-64 | OD-01F-97 | 交付说明与仓内证据不一致（三处状态口径） | Remediation Report · D1 附录 | `VERIFIED` / 自检 `PENDING` / `APPROVED` 三处口径已统一为分层真陈述 | TEXT-CORRECTED |
 
 **映射表规则：** 不使用 `R-xx` 等附加命名空间。`Finding Disposition` 词汇表（非 Status）：`REMEDIATED` · `TEXT-CORRECTED` · `REGISTERED` · `BODY-RESTORED` · `PENDING`。
 
@@ -158,7 +175,7 @@ Current Version:       v4R（唯一 Current）
 | CR-002 | **L2-proposed** | 变更记录候选 |
 | Self Review（Docs/REPORTS） | **L3** | 证据/报告 |
 
-**Planning Category: Future Required Change** — 冻结枚举（`90 §4:375` / `91 §5:167`）**无法表达**「决策权 / 提案权 / 变更记录权」三分角色。本轮取最接近冻结值（上表）。在正式值域经 L1 流程确立前，**禁止自创层级**（`91 §5.1` 门槛 3）。
+**Authority Level 归因（分列，F-OD01V4R-59）：** 上表 `L2-proposed` 的合法来源**仅为 `91 §5:167`**。`90 §4:375` 的值域为 `<L0 | L1 | L2 | L3 | L4 | L5 | L0-META>`，**不含** `L2-proposed`。两个 L0-META 文档的 Authority Level 值域不一致 —— 属**既存的 Frozen / L0 治理基线冲突**（pre-existing Frozen/L0 governance baseline conflict），**不是 OD-01 的规范缺陷**；不修改 90/91，不消解该冲突。`90 §5 Rule 4` 的台账义务落在 `84_CONFLICT_LEDGER.md`（`Docs/DECISIONS/`，**超出本轮授权范围**）。**禁止自创层级**（`91 §5.1` 门槛 3）。
 
 | 并行字段 | 值 | 含义 |
 |----------|-----|------|
@@ -177,16 +194,40 @@ Current Version:       v4R（唯一 Current）
 
 禁止 `resolution_status` 等双名。禁止 `options_unresolved` 作为字段名。
 
-### 2.3 状态词 — 分层真陈述
+### 2.3 状态词 — 冻结词表与字段归属
 
-| 场景 | 允许取值 | 依据 |
-|------|----------|------|
-| Header `Status` 字段 | 仅 `90 §4:376` / `91 §3.1` 枚举值（ACTIVE / SUPERSEDED / HISTORICAL / DRAFT / CLOSED / NOT RELEASED；及 91 §3.1 的 OPEN / PENDING / CONDITIONAL PASS / NOT STARTED / DEFERRED / RETRACTED） | 冻结枚举 |
-| Finding Disposition 列（非 Status 字段） | REMEDIATED / TEXT-CORRECTED / REGISTERED / BODY-RESTORED / PENDING | 处置词汇；**不声称**属 `91 §3.1` |
-| Owner Decision 历史表 Status 列 | 历史原文保留（不重写） | AGENTS：不重写历史决策语义 |
-| 禁用词（新文档） | COMPLETE / DONE / FINISHED / NEXT / REVIEWED / APPROED | `91 §3.2` |
+冻结状态词表（原文照录）：
 
-**不得**声称「状态词仅用 91 §3.1」覆盖处置列。不确定 → Header 填 `PENDING`。
+| 来源 | 值域 |
+|------|------|
+| `90 §4:376` / `91 §5:168`（Header `Status` 模板，六值） | `ACTIVE` / `SUPERSEDED` / `HISTORICAL` / `DRAFT` / `CLOSED` / `NOT RELEASED` |
+| `91 §3.1`（状态词，十值） | `OPEN` / `PENDING` / `CONDITIONAL PASS` / `CLOSED` / `NOT STARTED` / `DEFERRED` / `SUPERSEDED` / `RETRACTED` / `ACTIVE` / `HISTORICAL` |
+| `91 §3.2`（新文档禁用词） | `COMPLETE` / `DONE` / `FINISHED` / `NEXT` / `REVIEWED` |
+
+字段归属（F-OD01V4R-50 的更正对象）：
+
+| 信息类型 | 所在字段 | 说明 |
+|----------|----------|------|
+| Header 状态 | `Status` | 取值来自六值表 |
+| 表列状态 | `Status` | 取值来自十值表；适用于含历史表、附录表、Document control 表在内的一切同名列 |
+| 验证结论 | `Verification Result` | 例：`Verification Result: VERIFIED` |
+| 处置结果 | `Finding Disposition` | `REMEDIATED` / `TEXT-CORRECTED` / `REGISTERED` / `BODY-RESTORED` / `PENDING` |
+| 注册状态 | `Registration Level` | 例：`NOT REGISTERED` |
+
+两表值域之外、本轮曾出现在名为 `Status` 字段的取值：`VERIFIED` · `RECORDED` · `APPROVED` · `NOT EFFECTIVE` · `NOT REGISTERED`。其中 `APPROVED` / `VERIFIED` / `NOT EFFECTIVE` 亦见于 `OD-01-H` 所列处置词汇。
+本轮更正 = 将上述取值移出名为 `Status` 的字段，改置于 `Verification Result` / `Finding Disposition` / `Registration Level`；表格行的文字内容未改。
+
+`OD-01-H` 所列五词与 `91 §3.1` 的关系 = **字段归属**（`91 §3.1` 十值表约束 `Status` 字段；下列五词不因出现在 `OD-01-H` 而成为 Status 词表成员）：
+
+| `OD-01-H` 词 | 信息类型 | 所在字段 |
+|--------------|----------|----------|
+| `APPROVED` | 决策结论 | `Decision` |
+| `PENDING` | 状态 | `Status`（`91 §3.1` 十值内） |
+| `VERIFIED` | 验证结论 | `Verification Result` |
+| `NOT EFFECTIVE` | 对 L0 的生效描述 | `EFFECT ON L0` |
+| `NOT REGISTERED` | 注册状态 | `Registration Level` |
+
+**既存基线冲突：** `90 §4:376`（六值，无 `PENDING`）与 `91 §3.1`（十值，含 `PENDING`）值域不一致，二者同为 L0-META —— 属**既存的 Frozen / L0 治理基线冲突**（pre-existing Frozen/L0 governance baseline conflict），**不是 OD-01 的规范缺陷**；不修改 90/91，不消解该冲突。
 
 ---
 
@@ -246,21 +287,29 @@ table_cell identity = (source_version_id, table_id, row_index, column_index)
 | 字段 | 含义 | 生产来源（唯一） |
 |------|------|------------------|
 | `source_version_id` | sealed Source Version 主键 | Source Version seal（`10 §4`，已存在） |
-| `table_id` | 该 source version 内表格稳定标识 | **必须存在** — 见下 |
+| `table_id` | 该 source version 内表格稳定标识 | **真实存在的 Preprocessing source identity**（当前无 —— 见「生产来源核验记录」） |
 | `row_index` | 表内行索引，0-based | Producer/preprocessing 表格切分（Artifact `options[]` 携带；Path B） |
 | `column_index` | 表内列索引，0-based | 同上 |
 
-**可判定定位标准：** 四字段均有值，且 `source_version_id` / `row_index` / `column_index` 可在 sealed Source 与 Artifact `options[]` 中核对。
+**可核验判据（逐条可判定，F-OD01V4R-53）：** `table_cell` 定位可标 `option_evidence_status = resolved` ⇔ 下列**五条同时成立**：
 
-**table_id 生产来源规则：**
+| # | 条件 | 核对方式 | 实测核对结果 |
+|---|------|----------|--------------|
+| 1 | `source_version_id` 存在 | sealed Source（`10 §4`） | 可核对 |
+| 2 | `table_id` 由**真实存在的 Preprocessing source identity** 提供 | 对照生产来源给出的值 | **不成立** —— 当前无生产来源（见下） |
+| 3 | `row_index` 存在 | Artifact `options[]` | 可核对 |
+| 4 | `column_index` 存在 | Artifact `options[]` | 可核对 |
+| 5 | 该四元组可对照其生产来源核验 | 回放到同一 `source_version` | **不成立**（条件 2 不成立） |
 
-1. `table_id` 的生产来源**必须存在**（前置条件）。
-2. 当前 Frozen Spec **未定义** `table_id` 生产来源（`10 §4` 无 `document_source_tables`；`00 §5` 完整表格索引为非目标）。
-3. → **Planning Category: Future Required Change**：在 Frozen Spec 写入前，确立 `table_id` 唯一生产来源（Producer Artifact 字段或 `10 §4` 实体）并登记。写入 Spec 时的唯一来源 = 该已确立生产者。
-4. **不得**假设生产来源已存在。**不得**在本轮创建 schema / 字段 / 实现。
-5. 在生产来源确立前：`table_cell` **不得**标 `option_evidence_status=resolved`（fail closed → unresolved/incomplete + review）。
+**来源要求：** `table_id` 只取生产来源给出的值。V3 不识别 table、不为 table 编号、不按 HTML/Markdown 顺序或视觉内容推断、不由 LLM 生成；V3 只做 validate / verify / normalize / preserve evidence。
 
-**禁止**将 table_id 的定义完全推迟到未决未来（该状态不可判定）。**禁止**元陈述进入 L0（不写「identity 形状与 Frozen Spec 对齐前不得声称…」类流程句）。本条不授权数据库 schema 变更。
+**fail-closed（规范行为）：** 上列五条有一条不成立，即**不得视为已解析完成**；按现有 Frozen 语义取 `option_evidence_status` = `unresolved` / `incomplete` 并进入 review。不新增状态。
+
+**生产来源核验记录（事实）：** 在当前 Producer / preprocessing contract / artifact evidence 中检索 `table_id` —— `Docs/COORDINATION/CONTRACTS/` **0 命中**、`Docs/GOVERNANCE/` **0 命中**、`Docs/V3_SPEC/` **0 命中**；仅 `docs_archive/`（2026-09-03、2026-09-05_v2_legacy）14 命中，属 V2 遗留草稿。现行 `10 §4` 明写「**M1 裁剪**：`document_source_tables / _cells / _fragments` 不建」；`00 §5` 将文档级 cell/fragment 字符粒度索引列为非目标。⇒ **当前不存在真实、可验证的 `table_id` production source**。
+
+**台账记录（未处置）：** `90 §5 Rule 4`（`90:430`）「指不出唯一生产者的字段 = 治理缺口，进台账」→ 落点 `84_CONFLICT_LEDGER.md`（`Docs/DECISIONS/`）。该路径不在本轮修改范围内 → 状态：**未登记**。
+
+**元陈述位置：** 上列流程 / 规划性文字位于 Proposal 说明节；`§6` 的 Proposed Frozen Text 内已无同类语句。本条不涉及数据库 schema 变更。
 
 ---
 
@@ -283,7 +332,7 @@ table_cell identity = (source_version_id, table_id, row_index, column_index)
 ```text
 - 文档级表格 cell/fragment 字符粒度索引（首版只做 line + 必要 inline，见 20；待样本
   证明需要再加回）。
-  例外子集（CHANGE-4）：option provenance 允许 table_cell 定位（identity 见 10 §4 /
+  例外子集：option provenance 允许 table_cell 定位（identity 见 10 §4 /
   20 §5.5）。完整文档级 cell/fragment 索引与 fragment form 仍为非目标，不解除。
 ```
 
@@ -313,21 +362,22 @@ option provenance 的 table_cell 使用下列 identity 结构定位：
 
 字段含义：
   source_version_id  sealed Source Version 主键（生产来源：Source Version seal，10 §4）。
-  table_id           该 source version 内表格的稳定标识（生产来源必须存在，见下）。
-  row_index          表内行索引，0-based（生产来源：Producer 表格切分 / Artifact options[]）。
+  table_id           该 source version 内表格的稳定标识（生产来源：真实存在的
+                     Preprocessing source identity）。
+  row_index          表内行索引，0-based（生产来源：表格切分 / Artifact options[]）。
   column_index       表内列索引，0-based（同上）。
 
-table_id 生产来源（前置条件）：
-  table_id 的生产来源必须存在。当前 Frozen Spec 未定义 table_id 生产来源
-  （本节不建 document_source_tables）。Future Required Change：在 Frozen Spec
-  写入前确立 table_id 唯一生产来源并登记；写入 Spec 时的唯一来源 = 该已确立生产者。
-  不得假设生产来源已存在。本条不授权数据库 schema 变更。
-
-可判定标准：
-  table_cell 定位可验证 ⇔ 四元组四字段均有值，且 source_version_id / row_index /
-  column_index 可在 sealed Source 与 Artifact options[] 中核对。
-  table_id 生产来源确立前，table_cell 不得标 option_evidence_status=resolved
-  （fail closed → unresolved 或 incomplete，进入 review）。
+可核验判据：
+  table_cell 定位可标 option_evidence_status=resolved ⇔ 下列五条同时成立：
+    1. source_version_id 存在。
+    2. table_id 由真实存在的 Preprocessing source identity 提供。
+    3. row_index 存在。
+    4. column_index 存在。
+    5. 该四元组可对照其生产来源核验。
+  table_id 只取生产来源给出的值；V3 不识别 table、不为 table 编号、不按
+  HTML/Markdown 顺序或视觉内容推断、不由 LLM 生成。
+  五条有一条不成立 → 不得标 resolved；按现有语义取 option_evidence_status
+  = unresolved 或 incomplete 并进入 review（fail closed）。
 ```
 
 **Reason：** 与 CI-1 一致；消除不可判定条款与元陈述。 **Impact：** CHANGE-4。 **Affected：** `10 §4`。
@@ -349,7 +399,8 @@ table_id 生产来源（前置条件）：
   Artifact 路径：Preprocessing Artifact options[] 是 option segmentation 权威来源。
   V3 仅 verification / normalization / consistency check，并可 fail closed。
   V3 不得重新发现 option 边界，不得从 options_lines 切分 option。
-  Native 路径：Native Resolver 确定性 role resolution 产出 option 边界（首次解析）。
+  Native 路径：Native Resolver 确定性 role resolution 产出 option 边界（首次解析）；
+  option_label 按 A/B/C/D 顺序，每项到下一标签/下一题结束。
   两路径必须产出语义等价 option 结构；V3 消费层不得建立第二套 segmentation
   authority。label 重复 → ambiguous；缺 label → incomplete。
 ```
@@ -393,7 +444,6 @@ table_id 生产来源（前置条件）：
 - 解析字段唯一命名：span_resolution
   （值域 exact/normalized/contextual/fuzzy/ambiguous/missing/incomplete）。
   同节示例 JSON 中 resolution_status 同步替换为 span_resolution。
-- option_evidence_status=resolved 时 form 为 1..n。
 ```
 
 **Reason：** 消除正交/同名矛盾、无条件 line_ref、双名与示例不同步。 **Impact：** CHANGE-4+2。 **Affected：** `20 §5.5`；`10 §8`。
@@ -457,7 +507,7 @@ multiple_source_spans / other）。不得重新发现 option 边界；不得从 
 切分。无法可靠解析 → option_evidence_status=unresolved 或 incomplete，fail closed。
 ```
 
-**Reason：** 对齐 form。 **Impact：** CHANGE-3。 **Affected：** `20 §7.2`。
+**Reason：** 对齐 form。 **Impact：** CHANGE-3。 **Affected：** `20 §7.2`。 **缩减声明（F-OD01V4R-62）：** 相对前轮文本，本条不再复述 `compiled_roles[]` / `text_hash` 细节与「正文与 verified locator slice 一致」；理由＝本条只改 form 维度与禁 rediscovery，其余既有条款不动（CHANGE-3 范围），复述会引入与 L0 不同文的第二份规范。
 
 ### CI-8 `20 §7.3` — CHANGE-1
 
@@ -471,11 +521,10 @@ dedup 组合键与 Exact Replay / Rebuild 不变量。
 **Proposed Frozen Text**
 
 ```text
-dedup 组合键与 Exact Replay / Rebuild 不变量保持不变。Resolved Span 增加 form
-不改变既有 dedup 组合定义。
+dedup 组合键与 Exact Replay / Rebuild 不变量保持不变。
 ```
 
-**Reason：** 防误改。 **Impact：** CHANGE-1。 **Affected：** `20 §7.3`。
+**Reason：** 防误改。 **Impact：** CHANGE-1。 **Affected：** `20 §7.3`。 **缩减声明（F-OD01V4R-62）：** 相对前轮文本，本条不再复述 `dedup_key = canonical question type + own stem + own options（label order…）` 组合展开与「Question identity 不变」；理由＝CHANGE-1 系防误改（声明既有条款不变），展开组合定义会形成第二份规范文本，须以 L0 现行条文为唯一出处。
 
 ### CI-9 `10 §6.3` — CHANGE-1+2
 
@@ -490,10 +539,10 @@ JSONB invariant；option provenance 结构。
 
 ```text
 option provenance JSON 结构增加 form 与 span_resolution 字段（命名见 20 §6.2）。
-JSONB invariant 与既有键保持；不引入双名。
+不引入双名。
 ```
 
-**Reason：** 红线一致。 **Impact：** CHANGE-1+2。 **Affected：** `10 §6.3`。
+**Reason：** 红线一致。 **Impact：** CHANGE-1+2。 **Affected：** `10 §6.3`。 **缩减声明（F-OD01V4R-62）：** 相对前轮文本，本条不再复述 JSONB 允许承载键清单与「不得用 JSONB 隐式承载整个业务模型」；理由＝该清单属 `10 §6.3` 既有规范，本条只加 form / span_resolution 两字段，复述清单会改变其权威出处。
 
 ### CI-10 `10 §8` — CHANGE-2
 
@@ -511,7 +560,7 @@ line 系核验规则。
 line_ref」。禁止为 table_cell / other 伪造 line_ref。
 ```
 
-**Reason：** 分型。 **Impact：** CHANGE-2。 **Affected：** `10 §8`。
+**Reason：** 分型。 **Impact：** CHANGE-2。 **Affected：** `10 §8`。 **缩减声明（F-OD01V4R-62）：** 相对前轮文本，本条不再逐条复述 `2b line / line_character：…∈ document_source_lines 且 slice 存在；table_cell：…` 与 `2c resolved text_hash == …`；理由＝核验细则的唯一出处应为 `20 §5.5` locator 表（本条已指向），复述会形成第二份规范并可能与之不同文。
 
 ### CI-11 `50_Migration_Assets.md` bbox 行 — CHANGE-2+3
 
@@ -525,7 +574,7 @@ line_ref」。禁止为 table_cell / other 伪造 line_ref。
 **Proposed Frozen Text**
 
 ```text
-| 图像/表格 bbox 定位能力 | 保留思想，重写 | source_figures（page/bbox/placement/source，IS-7）+ role 归属；option provenance 的 table_cell 使用 table_cell identity 四元组定位，other(method=image_region) 使用 figure/region 身份；line_ref 可选，不得伪造 |
+| 图像/表格 bbox 定位能力 | 保留思想，重写 | source_figures（page/bbox/placement/source，IS-7）+ role 归属（10 §4.4/§6.6、20 §5.3/§7.2.5）；option provenance 的 table_cell 使用 table_cell identity 四元组定位，other(method=image_region) 使用 figure/region 身份；line_ref 可选，不得伪造 |
 ```
 
 **Reason：** 对齐。 **Impact：** CHANGE-2+3。 **Affected：** `50_Migration_Assets.md`。
@@ -546,7 +595,7 @@ form=other 的实例 image_region 使用 method=image_region，并必须携带 f
 身份、可验证区域（page/bbox/placement 或等价 region）、可独立回溯信息。
 image_region 不是顶级 provenance form。无法可靠确定时 option_evidence_status=
 unresolved 或 incomplete 并进入 review / fail closed；不得伪造 option text。
-fragment 不纳入 form 枚举。不引入降级质量标记（Planning Category: Future Consideration）。
+fragment 不纳入 form 枚举。不引入降级质量标记。
 ```
 
 **Reason：** 覆盖真实语料形态。 **Impact：** CHANGE-2。 **Affected：** `20 §5.5`（与 CI-4 合并，见 §6.3）。
@@ -585,9 +634,9 @@ fragment 不纳入 form 枚举。不引入降级质量标记（Planning Category
 > **迁移者须整节替换/合并使用下文。** 不得只复制增量片段自行拼接。
 > 含改写后 JSON 示例（`span_resolution`）。Current Rule 对照见 CI-4 / CI-12。
 
-**合并后 Proposed Frozen Text（完整目标）**
+**合并后 Proposed Frozen Text（完整目标）**（外层四反引号围栏 — F-OD01V4R-51：内含 ```` ```json ```` 嵌套块，外层必须长于内层，否则内层裸围栏会提前闭合并吞掉后续章节）
 
-```text
+````text
 ### 5.5 Resolved Span 输出
 
 ```json
@@ -628,11 +677,10 @@ fragment 不纳入 form 枚举。不引入降级质量标记（Planning Category
   身份、可验证区域（page/bbox/placement 或等价 region）、可独立回溯信息。
   image_region 不是顶级 provenance form。无法可靠确定时 option_evidence_status=
   unresolved 或 incomplete 并进入 review / fail closed；不得伪造 option text。
-  fragment 不纳入 form 枚举。不引入降级质量标记（Planning Category: Future Consideration）。
+  fragment 不纳入 form 枚举。不引入降级质量标记。
 - 解析字段唯一命名：span_resolution
   （值域 exact/normalized/contextual/fuzzy/ambiguous/missing/incomplete）。
   本节示例 JSON 已使用 span_resolution；禁止 resolution_status 双名。
-- option_evidence_status=resolved 时 form 为 1..n。
 - `text_hash` 由程序按该 span 实际内容计算；同一 source version 内 span 可重放。
 - **Annotation 不得包含本结构**（只在 Resolver 及之后出现）。
 - **`figure_id` 结构化字段（D-6 Figure Contract 冻结）**：`image` ResolvedSpan 额外携带
@@ -648,7 +696,7 @@ Resolved Relation：
 ```
 
 关系必须全部 resolved，IR 才可 ready。
-```
+````
 
 **插入/合并位置：** 整节替换现行 `20 §5.5`（自 `### 5.5 Resolved Span 输出` 至 Resolved Relation 段结束）。CI-4 与 CI-12 不得再各给一份互不衔接的增量。
 

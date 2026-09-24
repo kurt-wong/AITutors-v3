@@ -3,7 +3,7 @@
 ```text
 Document ID: OD-01-SELF-REVIEW-V4
 Title: OD-01 Proposal v4 — Historical Self Review
-Document Type: Report
+Document Type: Gate Report
 Status: HISTORICAL
 Authority Level: L3
 Purpose: 记录 Proposal v4 阶段内部检查结论（非外部验证）
@@ -28,13 +28,14 @@ Gate State Authority: NO
 ## 追加说明（非历史正文）
 
 1. 本文件为 **HISTORICAL** Self Review。`Status: HISTORICAL`（`91 §3.1`：历史记录，非现行）。
-2. 下方「历史正文」全文恢复自 git `b6cb762d453bbbd32a1459b2af7aa6860661fcfd`（108 行原稿），**不覆盖、不删除**。
+2. 下方「历史正文」全文取自 git `b6cb762d453bbbd32a1459b2af7aa6860661fcfd`（108 行原稿），**不覆盖、不删除、不改写**（F-OD01V4R-56：前轮曾对历史区追加标题后缀、改写 Document control 表头与 Path 行、并插入 3 行，该 5 处改写已**全部还原**为原稿字面；现行本仓路径 / Kind / DSH Review 三项信息见文末「Document control（现行）」，不入历史区）。
 3. 中间版本（`e611a4d`）曾将历史正文压缩为摘要 — 该压缩属治理缺陷（DSH F-OD01V4R-44）；本轮仅恢复原文并追加本说明。
 4. 本文档 **不是** DSH Verification；**不得**作为 OD-01-J 外部验证证据。
+5. **字节改动声明（F-OD01V4R-63）：** 原文件首字节 UTF-8 BOM 于前轮（`81b2080`）被移除，属未声明的字节级改动；此处显式声明。历史区文字内容未因此改变。本轮写入不经 BOM。
 
 ---
 
-## 历史正文（Self Review only）— 全文恢复
+## 历史正文（Self Review only）
 
 # OD-01 Proposal v4 — 定向对抗性审查（原文）
 
@@ -115,17 +116,14 @@ PENDING                  = Owner Review（OD-01-J：DSH 复核若 Owner 另令�
 
 ---
 
-**Document control（历史块内；原文保留）**
+**Document control**
 
 | Field | Value |
 |-------|-------|
-| Path（历史自述） | `Docs/60_REPORTS/OD-01-PROPOSAL-V4-TARGETED-ADVERSARIAL-REVIEW.md` |
-| Path（现行本仓） | `Docs/REPORTS/OD-01-PROPOSAL-V4-TARGETED-ADVERSARIAL-REVIEW.md` |
+| Path | `Docs/60_REPORTS/OD-01-PROPOSAL-V4-TARGETED-ADVERSARIAL-REVIEW.md` |
 | Status | HISTORICAL — SELF REVIEW |
 | Verdict | VERIFIED WITH FINDINGS |
 | Subject HEAD | AITutors-v3 `86da69c` |
-| Kind | **Historical Self Review** |
-| DSH Review | NOT THIS DOCUMENT |
 
 ---
 
