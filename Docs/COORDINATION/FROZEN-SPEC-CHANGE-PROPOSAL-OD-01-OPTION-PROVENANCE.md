@@ -21,7 +21,8 @@ Current Version:       v4R（唯一 Current）
 
 > **Status 字段**仅使用 `90 §4` / `91 §3.1` 冻结枚举值。本文件 `Status: PENDING`。
 > **Finding Disposition 列不是 Status 字段**；处置词汇不声称属于 `91 §3.1`。
-> Frozen Spec tree = `b3eeb3e9a600347f18eae4e1becc1ec4fa4b6b4f`（UNCHANGED）。
+> Frozen Spec tree = `b3eeb3e9a600347f18eae4e1becc1ec4fa4b6b4f` —— **本 Proposal 的编写基线（historical）**。
+> **更正（2026-09-24）**：原写「（UNCHANGED）」是**当时成立、现已为假**的现行断言。当前 Frozen Spec tree 已因 **OD-R-01** 经 **L1 `CR-003` / `90 §11 CA-003`** re-freeze 而改变（previous `b3eeb3e9…` → incorporation `442172f4…` → re-freeze tree；权威登记 = `Docs/V3_SPEC/CR-003_CONTRACT_CHANGE_RECORD_OD-R-01.md` §10）。漂移范围**仅** `10 §6.3`（新增一条）与 `20 §5.3`（blank 条）。本 Proposal 的 change set 是否与 `20 §5.3` 该行**行级重叠，未在本轮裁定**，须在本 Proposal 自身 review 时复核。
 > **Authority Level 取值仅限冻结枚举**。归因分列（F-OD01V4R-59）：`91 §5:167` = L0 | L0-META | L1 | L2 | **L2-proposed** | L3 | L4 | L5；`90 §4:375` = L0 | L1 | L2 | L3 | L4 | L5 | L0-META（**不含 L2-proposed**）。本文件 `L2-proposed` 的依据**仅为** `91 §5:167`。两表值域不一致属未决依赖，见 §5。不得自创层级。Registration Level 单独描述注册状态。
 > 核心方向不变：Artifact-first · Artifact-authoritative · Single provenance authority · No V3 rediscovery（Artifact 路径）· Fail closed。
 

@@ -793,3 +793,16 @@ candidate/reject 必须按整个 composite 返回，禁止部分子题 approved�
   `standalone`，role 可为 `stem` 等）；`figure_id` 注明格式 `FIG-{page_no}-{ordinal:02d}`。
 - §5.3 图消费资格与 IS-7 写入门区分：完整 7 字段写入门见 10 §4.4；E 侧 4 字段
   （page/bbox/placement/source）消费子集与写资格的差异记为 BUG-011-E2（待统一）。
+
+### 2026-09-24（OD-R-01 · 经 CR-003 / CA-003 生效）
+
+- §5.3 blank 条映射目标收窄：原「一个 blank 必须映射到一个 sub_question/**answer**」
+  改为「一个 blank 必须映射到一个 sub_question，或**同一份 Answer 的一个有序值**」，
+  并指向 `10 §6.3` 的 OD-R-01 条款。收窄消除了「N 空 = N 份 Answer」这一此前可接受的
+  读法，使正常多空题的 Answer 语义确定为 **1 QuestionInstance → 1 Answer → N ordered values**。
+- **对应 L1 / Change Record**：`CR-003`（`Docs/V3_SPEC/CR-003_CONTRACT_CHANGE_RECORD_OD-R-01.md`）
+  · **Change Audit Record**：`90 §11 CA-003` · **Source Commit**：`71f51f9`。
+  分类：**CHANGE-3 — Normative Modification**（改变既有规定的行为；非 CHANGE-1，语义已变；
+  非 CHANGE-4/5，未放宽、未删除既有约束）。本 Change Record 主导分类即此。
+- **生效 / re-freeze 状态**：CR-003 Review **ACCEPTED / EFFECTIVE**（2026-09-24）起具完整
+  L0 效力；re-freeze 信息同 `10 §12` 同日条目。

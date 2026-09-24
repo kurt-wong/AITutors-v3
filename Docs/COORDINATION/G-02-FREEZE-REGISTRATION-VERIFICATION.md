@@ -87,6 +87,8 @@ G-02 = VERIFIED
 Frozen Spec tree (Docs/V3_SPEC) = b3eeb3e9a600347f18eae4e1becc1ec4fa4b6b4f
   last content commit = f708370065870d89ac4ba025a1d47e38c411314e
   drift f708370..registration-HEAD = none
+  【historical —— Phase 0 Companion Baseline 快照（与下两行 "(at Phase 0)" 同一时点）；
+    当前 Frozen Spec tree 见 §6；本行历史值不得机械替换】
 
 Preprocessing HEAD (at Phase 0) = 2b92898f05f6541a5fc65c8300cb8a59a06c4928
 V3 HEAD (at Phase 0)           = 79348441dae0efce6855017b2b5c0491b08d6bb8
@@ -95,6 +97,63 @@ Phase 0 test baselines (measured):
   Preprocessing: 338 passed, 1 xfailed
   V3 backend:    2030 passed, 1 skipped, 1 xfailed
 ```
+
+---
+
+## 6. Re-freeze Registration（OD-R-01 / CR-003，2026-09-24）
+
+> 本节是 **Frozen Spec re-freeze 的字面值可读副本（非权威）**。
+> **权威登记 = `Docs/V3_SPEC/CR-003_CONTRACT_CHANGE_RECORD_OD-R-01.md` §10**（commit 锚定表述）。
+> 本文件位于 `Docs/V3_SPEC/` **之外**，故可安全承载该目录的 tree hash 字面值（无自指不动点）。
+> 争议时以 `git rev-parse <re-freeze commit>:Docs/V3_SPEC` 为准。
+
+### 6.1 Git identity
+
+```text
+Repository       : AITutors-v3（https://github.com/kurt-wong/AITutors-v3.git）
+Branch           : od01-r3-convergence
+L0 source commit : 71f51f97e5674cf04ab12d4c449e3796a160bb27
+  parent         : 9f1763ecb9ced7108e61449ee892fe5fadb1adc3
+Re-freeze commit : 本记录所在 commit（机械取值：
+                   git log -1 --format=%H -- Docs/COORDINATION/G-02-FREEZE-REGISTRATION-VERIFICATION.md）
+```
+
+### 6.2 Frozen Spec tree 链（全部由 git 对象计算，无手填 / 无猜测）
+
+| 阶段 | 取值命令 | tree hash |
+|---|---|---|
+| **Previous（pre-OD-R-01）** | `git rev-parse 9f1763e:Docs/V3_SPEC` | `b3eeb3e9a600347f18eae4e1becc1ec4fa4b6b4f` |
+| **Incorporation（OD-R-01 两处 L0 修改）** | `git rev-parse 71f51f9:Docs/V3_SPEC` | `442172f40942368a4856231a742bf4d273242034` |
+| **Re-freeze（含 CR-003 / CA-003 / 10 §12 / 20 §12）** | `git rev-parse <re-freeze commit>:Docs/V3_SPEC` | `8659e2fab715d1d2164f9bc559a04ceb05fd7fc0` |
+
+```text
+Previous tree → OD-R-01 authorized change → Incorporation tree → governance closure → Re-freeze tree
+  b3eeb3e9…          （source commit 71f51f9）      442172f4…                        8659e2fa…
+```
+
+**历史 hash 处置**：`b3eeb3e9…` 作为 pre-OD-R-01 baseline **永久保留**；历史表述不得机械替换
+（`90 §2 R8`：Reconcile, don't rewrite）。
+
+### 6.3 `b3eeb3e9` 全仓断言逐项判定（historical vs false current-state）
+
+| # | 位置 | 性质 | 判定 | 处置 |
+|---|---|---|---|---|
+| 1 | `FROZEN-SPEC-CHANGE-PROPOSAL-OD-01-OPTION-PROVENANCE.md:24` | 裸陈述「（UNCHANGED）」，文档 `Status: PENDING`（现行） | **false current-state assertion** | **已修**：改为历史编写基线 + 当前事实 + `CR-003` 指针 |
+| 2 | 本文件 §5 `:87` | Companion Baselines 快照（同块他行标 "(at Phase 0)"），本行缺限定语 | **historical（限定语缺失）** | **已修**：加 historical 限定语 + 新增 §6 |
+| 3 | `IMPLEMENTATION-PLAN-v0.3.md:31` | baseline 表（自标 `Frozen at 2026-09-23` / `HEAD at planning time`） | **historical** | **已修**：加 Baseline 时点声明（**值不改**） |
+| 4 | 同上 `:452` | Phase 0 Scope 核对项 | **historical**（同表同时点） | 由同一声明覆盖 |
+| 5 | 同上 `:828` | `Compiled from …` 溯源行 | **historical**（自述 compiled-from） | 由同一声明覆盖 |
+| 6 | `OWNER-DECISIONS-OD-01-OD-05-G-01-G-02.md:347` | 「本轮硬边界要求…」障碍分析 | **historical（会被误读为长期规则）** | **已修**：加时点范围注（**值不改**） |
+| 7 | `Docs/REPORTS/OD-01-PROPOSAL-V4-TARGETED-ADVERSARIAL-REVIEW.md:49/:73/:95` | DSH 审查报告，各自锚定被审对象 / HEAD | **historical（已自 scoped）** | **不改**（`90 §2 R8`） |
+| 8 | `Docs/REPORTS/OD-01V4R-FINAL-REMEDIATION-REPORT.md:27` | 「最终状态（强制保持）」 | **false current-state assertion** | **已修**：加历史范围声明（**值不改**） |
+| 9 | AITutor-X `Docs/60_REPORTS/**`（多处） | DSH 外部审查报告，各锚被审 commit | **historical（已自 scoped）· 异仓** | **不改**（不在本仓 git 范围） |
+
+**判定原则（未做全仓替换）**：只修「当前断言与当前事实**直接冲突**」处；historical 处只补
+scope 限定语，**不改历史值**。`LIMITED-IMPLEMENTATION-AUTHORIZATION-v0.3.md:320` 的
+`Frozen Spec: UNCHANGED (OD-01 change is PROPOSAL only until re-freeze)` 讲的是 **OD-01 Option
+Provenance** 那条 change 的状态（该 Proposal 仍未 re-freeze，此半句仍为真），其 `UNCHANGED`
+半句所指事实已由本节 §6.3 第 1 行的同一更正覆盖；该文件属 Limited Implementation Authorization
+（另一授权面），本轮**不改**，以免扩大修改范围。
 
 ---
 

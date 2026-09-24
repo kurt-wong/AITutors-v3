@@ -799,3 +799,20 @@ JSONB。**
   placement）。
 - §6.6 增 placement ≠ role 语义区分（source-level vs unit-level，值域可同、语义独立、
   不要求相等；禁止 E 反向 UPDATE `source_figures`）。
+
+### 2026-09-24（OD-R-01 · 经 CR-003 / CA-003 生效）
+
+- §6.3 约束列表新增「**Answer 业务对象边界（OD-R-01 冻结）**」一条：一个
+  QuestionInstance 的 answer role 对应**一份 Answer**；同一题号下多空题的多个空是
+  同一份 Answer 的多个有序值（multi-value），`value[i]` 对应第 i 个空，顺序取空在
+  题面中的自然出现顺序（`role_index` 承载该顺序）；三个空不是三个 QuestionInstance，
+  也不是三份 Answer 对象；不改变既有普通答案语义（多选题 `ABD` 仍是一份 Answer），
+  不推广为「所有答案都是 multi-value / 多步骤计算拆 value / 复杂答案结构化分解」。
+- **对应 L1 / Change Record**：`CR-003`（`Docs/V3_SPEC/CR-003_CONTRACT_CHANGE_RECORD_OD-R-01.md`）
+  · **Change Audit Record**：`90 §11 CA-003` · **Source Commit**：`71f51f9`。
+  分类：**CHANGE-2 — Normative Addition**（此前未规定 Answer 业务对象边界）。
+- **生效 / re-freeze 状态**：CR-003 Review **ACCEPTED / EFFECTIVE**（2026-09-24）起具完整
+  L0 效力。Frozen Spec re-freeze identity = `Docs/V3_SPEC` git tree object 锚定于本记录
+  生效 commit（字面值副本见 `Docs/COORDINATION/G-02-FREEZE-REGISTRATION-VERIFICATION.md` §6）；
+  previous tree `b3eeb3e9…` 作为历史 baseline 保留不改。
+- 字段表 / 唯一约束 / schema / migration **零改动**。

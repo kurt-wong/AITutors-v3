@@ -21,6 +21,13 @@ Gate State Authority:  NO
 > `Docs/REPORTS/` = L3/L4/L2-proposed。Authority Level: L3。  
 > 不修改 `Docs/V3_SPEC/**`。不执行 re-freeze / Phase 1 / Migration / push。
 
+> **历史范围声明（2026-09-24 加注，正文不改）**：下表「最终状态（强制保持）」是 **OD-01V4R
+> remediation 轮次**的终态声明，绑定该轮被审对象，属 **historical**。其中 `Frozen Spec: UNCHANGED
+> （tree b3eeb3e9…）` 与 `Re-freeze: NOT EXECUTED` 在**该轮**成立；**当前事实**已因 **OD-R-01** 经
+> **L1 `CR-003` / `90 §11 CA-003`** re-freeze 而改变（previous `b3eeb3e9…` → incorporation
+> `442172f4…` → re-freeze tree）。权威登记 = `Docs/V3_SPEC/CR-003_CONTRACT_CHANGE_RECORD_OD-R-01.md` §10。
+> 本注记只明确 historical scope，**不**改写本轮历史事实、**不**替换历史 hash。
+
 **最终状态（强制保持）**
 
 ```text

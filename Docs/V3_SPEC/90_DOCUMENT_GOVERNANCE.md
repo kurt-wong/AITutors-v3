@@ -228,6 +228,7 @@ I-5-1 的「21/21 ready IR」是 **Historical / Directional**，**不可复现**
 | ID | 文件 | 提交 | 时间 | 修改内容 | 分类 | Decision |
 |---|---|---|---|---|---|---|
 | **CA-001** | `40_Development_Rules.md` §5 | `0dd954d` | 2026-09-13 14:43 | 新增一条**强制**规则：「测量语义必须复刻真实 pipeline…**禁止**用近似文本代替…度量脚本必须能指出它复刻哪一段 pipeline，并有测试锁死该复刻语义」 | **CHANGE-2 Normative Addition** | **CLOSED — (b) ratified via CR-001** |
+| **CA-003** | `10_Data_Model.md` §6.3 · `20_Document_Pipeline.md` §5.3 | `71f51f9` | 2026-09-24 | **OD-R-01 已批准业务语义的 Frozen Spec incorporation**（**不是**新的业务 Decision）：`10 §6.3` 新增「Answer 业务对象边界」条款（1 QuestionInstance → 1 Answer → N ordered values，禁止拆成多份 Answer）；`20 §5.3` blank 映射目标由 `sub_question/answer` 收窄为 `sub_question` 或「同一份 Answer 的一个有序值」 | `20 §5.3` = **CHANGE-3 Normative Modification**；`10 §6.3` = **CHANGE-2 Normative Addition**；主导 **CHANGE-3** | **CLOSED — ratified via CR-003** |
 
 ### CA-001 详情
 
@@ -327,6 +328,62 @@ Date             : 2026-09-13
 
 **登记义务**：`90 §11` 自此对任何 L0 修改强制生效。**90 生效后的 L0 修改若
 不在此登记，即为违规。**
+
+### CA-003 — 详情（OD-R-01 Answer 业务对象边界）
+
+**性质（先读）**：`71f51f9` 的两处 L0 修改**不是新的业务 Decision**；它们是
+**OD-R-01 已批准业务语义的 Frozen Spec incorporation**。本条**不是** Owner Decision，
+**不定义**任何新业务语义、**不改变** `90`/`91` 治理原则。
+
+```text
+Audit ID           : CA-003
+Target             : L0 Docs/V3_SPEC/10_Data_Model.md §6.3
+                     L0 Docs/V3_SPEC/20_Document_Pipeline.md §5.3
+Source Commit      : 71f51f9（2026-09-24）
+Owner Decision     : OD-R-01（Answer business-object boundary，APPROVED 2026-09-24）
+L1 Change Record   : CR-003 — Docs/V3_SPEC/CR-003_CONTRACT_CHANGE_RECORD_OD-R-01.md
+Change Class       : 20 §5.3 = CHANGE-3 — Normative Modification
+                     10 §6.3 = CHANGE-2 — Normative Addition
+                     主导分类 = CHANGE-3（90 §3「拿不准往高里归」）
+Date               : 2026-09-24
+```
+
+**变更内容**：见 `CR-003 §2`（before / after 最小语义描述）。
+
+**分类依据**：`20 §5.3` 把既有规定「一个 blank → 一个 sub_question/answer」收窄为
+「sub_question 或**同一份 Answer 的一个有序值**」⇒ **改变既有规定的行为**，如实归
+CHANGE-3（**不**降级为 CHANGE-1——CHANGE-1 要求规范语义零变化）。`10 §6.3` 在此前
+**未规定**处新增强制约束 ⇒ CHANGE-2（与 `CR-001` 同型）。四道门仅适用 CHANGE-4/5
+⇒ **不需要**。
+
+**受影响层回归**：以静态一致性回归执行（本任务禁 code / runtime tests），覆盖 L0 文本层
+与引用该 baseline 的现行断言层；逐项结果见 `CR-003 §7`。
+
+**流程缺陷（已确认）**：先改 L0（`71f51f9`），后补治理手续。属 **procedural gap**，
+非内容错误（对齐 CA-001 同型定性）。
+
+**Owner Decision（2026-09-24）**：两处 L0 修改 **保留，不回滚**；OD-R-01 业务语义
+**APPROVED**；补救 = 创建 `CR-003` + 本条 CA-003 + `10 §12`/`20 §12` 变更记录 +
+Frozen Spec re-freeze 登记 + 受影响现行断言最小一致性修复。
+
+**Review（2026-09-24，Owner）**：**ACCEPTED / EFFECTIVE**。
+生效区分：CR-003 Accepted 之前「L0 文本已存在 ≠ CHANGE 已完成生效」；自 Accepted 起
+两处修改具有完整 L0 效力。
+
+**Re-freeze reference**：
+
+```text
+Previous Frozen Spec tree（= 9f1763e:Docs/V3_SPEC）
+  = b3eeb3e9a600347f18eae4e1becc1ec4fa4b6b4f   【历史 baseline，保留不改】
+Incorporation tree（= 71f51f9:Docs/V3_SPEC）
+  = 442172f40942368a4856231a742bf4d273242034
+Re-freeze Frozen Spec tree
+  = git rev-parse <CA-003 生效 commit>:Docs/V3_SPEC
+权威登记 = CR-003 §10（commit 锚定）；字面值副本 = G-02 §6（非权威）
+```
+
+**编号说明**：`CA-002`/`CR-002` 已被 `Docs/COORDINATION/CONTRACT-CHANGE-RECORD-CR-002-OD-01.md`
+占用（NOT RELEASED / NOT REGISTERED / 未归层，本表内无 `CA-002`），本条取 **CA-003** 避免碰撞。
 
 ### 审计范围声明
 

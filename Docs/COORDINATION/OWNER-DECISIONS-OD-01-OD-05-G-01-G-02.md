@@ -350,6 +350,13 @@ EFFECT: 指导 OD-01 Proposal v3 + CR-002 治理化；不修改 Frozen Spec / Co
 5. `Docs/COORDINATION/` **不在** `90 §1.2` 目录模型内。
 6. **不得**修改 `90/91` 规则迁就 CR-002；**不得**自创 L1 目录/层级/状态体系。
 
+> **障碍清单的时点范围（2026-09-24 加注）**：上列 1–6 条是 **OD-01 / CR-02 注册当时**的障碍分析，
+> 属**历史事实，正文保留不改**。其中第 2 条「本轮硬边界要求 Frozen Spec tree hash 保持
+> `b3eeb3e9…` 不变」只约束**该轮**，**不是**长期规则。**当前事实**：Owner 已于 2026-09-24 就
+> **OD-R-01** 授权 L0 最小修改并要求 re-freeze，第 2/3 条障碍由该 Owner Decision **显式解除**，
+> 首条正式 L1 **`CR-003`** 已落位 `Docs/V3_SPEC/`（`90 §1.2` 允许列「新增 L1」）。
+> 第 6 条**继续有效**（本轮亦未修改 `90/91` 治理原则、未自创层级/目录/状态体系）。
+
 **判定（binding）：**
 
 ```text
@@ -643,6 +650,23 @@ Answer evidence 与 value evidence 的关系 · 新的 evidence 状态 · 新的
 
 **Frozen Spec 最小闭环落点**：`10 §6.3`（Answer 业务对象边界条款）；`20 §5.3` blank 映射规则
 （`sub_question/answer` → `sub_question，或同一份 Answer 的一个有序值`）。除该两处外未改字。
+
+**Governance closure（2026-09-24 补齐，provenance 链闭合）**：本节登记的是 **Owner Decision**（L2，
+只能裁决、不能改 L0，`90 §2 R2`）；L0 的正式修改入口是 L1。链路：
+
+```text
+OD-R-01（本节，APPROVED）
+  → L1 CR-003（Docs/V3_SPEC/CR-003_CONTRACT_CHANGE_RECORD_OD-R-01.md）  【修改 L0 的唯一入口】
+  → 90 §11 CA-003（Change Audit Record）
+  → 10 §12 / 20 §12（L0 自带变更记录）
+  → Frozen Spec re-freeze（CR-003 §10；字面值副本 G-02 §6）
+  → Review ACCEPTED / EFFECTIVE（2026-09-24）
+```
+
+Source Commit = `71f51f9`。Change classification：`20 §5.3` = **CHANGE-3**、`10 §6.3` = **CHANGE-2**，
+主导 **CHANGE-3**（`90 §3`「拿不准往高里归」）；四道门不需要。procedural gap（先改 L0 后补手续）
+已 cure。载体侧残留（payload `answer[]` 元素粒度 / `answer_status` 挂载点 / `value[i]` 指称）
+**只登记，不解决**：`84_CONFLICT_LEDGER.md` **D-07 / D-08**。
 
 ---
 

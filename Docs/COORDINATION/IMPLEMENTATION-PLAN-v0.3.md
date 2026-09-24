@@ -34,6 +34,14 @@ RECONCILED: OD-01 ~ OD-05 + G-01 + G-02
 | AITutors-v3 HEAD at planning time | `79348441dae0efce6855017b2b5c0491b08d6bb8` |
 | Aitutors-preprocessing HEAD at planning time | `2b92898f05f6541a5fc65c8300cb8a59a06c4928` |
 
+> **Baseline 时点声明（2026-09-24 加注，历史值一律不改）**：本表及本计划内一切
+> `b3eeb3e9…` / `b743c5d` / `7934844` 表述（含 Phase 0 Scope 核对项与文末 `Compiled from` 行）
+> 均为 **2026-09-23 规划时点的 baseline 快照（historical）**。
+> **当前事实**：Frozen Spec tree 已因 **OD-R-01** 经 **L1 `CR-003` / `90 §11 CA-003`** re-freeze
+> 而改变（previous `b3eeb3e9…` → incorporation `442172f4…` → re-freeze tree）。
+> 权威登记 = `Docs/V3_SPEC/CR-003_CONTRACT_CHANGE_RECORD_OD-R-01.md` §10。
+> 本注记只明确 historical / baseline scope，**不**机械替换历史 hash、**不**改写本计划正文。
+
 **G-02 绑定表述（禁止其他说法）：**
 
 ```text
