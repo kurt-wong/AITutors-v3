@@ -399,6 +399,7 @@ EFFECT ON L0: NOT EFFECTIVE（PENDING EFFECTIVE FREEZE）
 > 本节是 **Owner Decision**。**不使用「已生效」含义。**
 > 证据链：Finding → Owner Decision（本节）→ Implementation Instruction（Proposal v4 / CR-002）。
 > 不改变既有 OD-01～OD-05 / G-01 / G-02 / OD-01R-01…10 语义。
+> **Provenance（current ratification，2026-09-24）：** 本块 `:391-396` 的字段化修正（`:392` `Record State` / `:393` `Authority Level`）经本文件 `OD-01-R3 — CURRENT OWNER RATIFICATION`（见文末）**current ratification** 追认。repository 内**未发现**其历史授权证据——该追认**不是**历史授权记录，也不改写 `:394` `DATE: 2026-09-23` 的历史事实。
 
 | ID | Decision | Required Action | Verification Result |
 |----|----------|-----------------|--------|
@@ -533,6 +534,44 @@ Registration Level: NOT REGISTERED
 | F-OD01V4R-48 | OD-01F-81 | OD-01-J 统一 v4R → DSH 外部验证 | TEXT-CORRECTED |
 
 > **更正注（F-OD01V4R-58）：** 本表原以 `Owner Decision: APPROVED` 逐项登记，**无外部 Owner 证据**，且证据指向自写的 `Docs/REPORTS/OD-01V4R-FINAL-REMEDIATION-REPORT.md`（L3，不满足 `91:171` 向上闭包至 L0/L1/L2）。现改为 **`Applied Fix`（处置登记）**——**不含 Owner 授权主张**。本附录是修复落实登记，**不是** Owner Decision；不得据此声称已获 Owner 批准。列名由 `Owner Decision` 改为 `Applied Fix`，`APPROVED — ` 前缀移除（历史处置内容逐字保留）。
+
+---
+
+## OD-01-R3 — CURRENT OWNER RATIFICATION（2026-09-24，当前追认）
+
+```text
+CURRENT OWNER RATIFICATION
+
+This record is created now.
+It does not reconstruct or assert a historical authorization record.
+The Owner hereby ratifies / confirms the applicable OD-01 V4R R3 decisions
+and authorizes the specific final-convergence actions defined in this record.
+
+current ratification ≠ historical authorization（当前追认 ≠ 历史授权）
+创建时点：2026-09-24（本记录创建于当前时点；不回溯、不补写历史日期）
+```
+
+> **历史事实（如实保留，不改写）：** repository 内**未发现** OD-01-A…J 记录块字段化（`STATUS:` / `AUTHORITY:` → `Record State:` / `Authority Level:`）的**历史授权证据**。
+> 本节**不**重构、**不**主张任何历史 Owner Order / 原始 Owner Authorization / 既往授权记录；也**不**主张该字段化修正在其历史时点已获授权。
+> Owner 于 **2026-09-24 当前时点**对下列范围作出 **current ratification（当前追认）**。
+
+**追认范围（最小化，仅限下列 5 项）：**
+
+1. **D1 `:391-396` provenance** —— 以 current ratification 追认 OD-01-A…J 记录块的字段化修正（`:392` `Record State` / `:393` `Authority Level`；值文与十行决策语义逐字未变）；**不**主张历史授权。
+2. **OD-01 V4R R3 最终收口执行** —— 追认已完成的收口动作：`Docs/DECISIONS/84_CONFLICT_LEDGER.md` 的 `D-06` 登记、`91 §3.1` 两处事实性错误修正（Proposal §9 CR-002 状态块、本文件 OD-01R 只读核对表），及其对应 commit `18e8d18` 与本记录所在 commit。
+3. **`D-06` 分类** —— 确认 `D-06` 归入现有 **D 类 — 分层 / 归属**（`84_CONFLICT_LEDGER.md`）；不新增类别、不改 `90 §5 Rule 4` / Ownership Matrix、不新增 ledger schema / category vocabulary。
+4. **`84` 历史 snapshot** —— 确认 `84 §0` / `84 §2` 的日期化历史汇总数字**保持原样、不予刷新**；不新增 Current Inventory / Current Count / Live Summary 等统计区块。
+5. **禁止事项** —— 确认下述清单继续有效；本节不为其提供任何授权。
+
+**明确不予追认 / 不予授权（不在本节范围）：**
+
+```text
+Frozen Spec / Frozen Contract 修改 · Schema · migration · production code ·
+Phase 1 · X3 · re-freeze · F-OD01V4R-49…64 登记入 D1 · R3-01 ·
+R3-03 / R3-04 / R3-05 / R3-06 / R3-07 / R3-10 的任何进一步处理 ·
+N-1…N-8 的任何进一步处理 · `未决依赖` 的删除 / 定义 / 注册 / 重设计 ·
+Record State 重构 · 新 Status / category / field / authority type / registry / ledger schema / terminology
+```
 
 ---
 
