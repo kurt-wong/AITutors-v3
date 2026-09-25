@@ -145,24 +145,32 @@ Re-freeze commit : 本记录所在 commit（机械取值：
 | **OD-R-01 re-freeze**（含 CR-003 / CA-003 / 10 §12 / 20 §12） | `git rev-parse 60fa9ff:Docs/V3_SPEC` | `8659e2fab715d1d2164f9bc559a04ceb05fd7fc0` |
 | **WS-A 治理一致性修正**（CR-003 R-03/04/05/06） | `git rev-parse 12493ca:Docs/V3_SPEC` | `a704cd8f08ba5360bfb3398b235ab26c8ad6a8d4` |
 | **WS-B provenance 登记**（CR-004 / CA-004 / 20 §12 / 90 §11） | `git rev-parse fbec14e:Docs/V3_SPEC` | `2edd20101c4abf3238d5689b3bb3cba0d5fc75fe` |
-| **最终卫生收口 M-01~M-05**（`CR-004 §2` 指引 + `§2.4` · `90 §1` L1 例子列事实同步 · `90 §11 (a)` 计数口径 · `90 §11 (c)` 授权落点澄清与声明登记）= **current** | `git rev-parse <本行登记所在 commit>:Docs/V3_SPEC` | 见下方 CURRENT 行 |
+| **最终卫生收口 M-01~M-05**（`CR-004 §2` 指引 + `§2.4` · `90 §1` L1 例子列事实同步 · `90 §11 (a)` 计数口径 · `90 §11 (c)` 授权落点澄清与声明登记） | `git rev-parse 5a46d33:Docs/V3_SPEC` | `63810f55c88cee983004136f288f1b6ff3527a8d` |
+| **H-01 修正**（`CR-003 §0.1`「搜索结论」段时点限定 + 历史口径注记；HYG-D1 / DSH 第 4 轮 H-01） | `git rev-parse 1ee84cd:Docs/V3_SPEC` | `47a59e50126f0f7e98f44d281f8d388236240735` |
+| **H-05~H-08 闭合**（`90 §11 (c)` 补登 `1ee84cd` 与整改行 · `CR-003 §0.1` 措辞精确化 H-07 · 本节 §6.2 CURRENT 同步 H-06 + 新增 §6.4 机械复核命令表 H-08）= **current** | `git rev-parse <本行登记所在 commit>:Docs/V3_SPEC` | 见下方 CURRENT 行 |
 
 ```text
 fa1e953e… →(f708370)→ b3eeb3e9… →(71f51f9 / OD-R-01)→ 442172f4…
           →(60fa9ff / OD-R-01 re-freeze)→ 8659e2fa… →(12493ca / WS-A)→ a704cd8f…
-          →(fbec14e / WS-B provenance)→ 2edd2010… →(最终卫生收口 M-01~M-05)→ CURRENT
+          →(fbec14e / WS-B provenance)→ 2edd2010… →(5a46d33 / 最终卫生收口 M-01~M-05)→ 63810f55…
+          →(1ee84cd / H-01 修正)→ 47a59e50… →(H-05~H-08 闭合)→ CURRENT
 ```
 
 **同值说明（非笔误）**：`b3eeb3e9…` **同时**是 f708370 的 incorporation tree 与 OD-R-01 的
 previous / pre-OD-R-01 tree —— f708370 是 `Docs/V3_SPEC` 在 OD-R-01 之前的最后一次内容变更
 （与本文件 §5「last content commit = f708370」一致）。
 
-**CURRENT Frozen Spec tree** = `63810f55c88cee983004136f288f1b6ff3527a8d`
-（= `git rev-parse <本行登记所在 commit>:Docs/V3_SPEC`；由 `git add` 后 `git write-tree` +
+**CURRENT Frozen Spec tree** = `ecd12c0e9682eaed2e3ad7c2416984b9cff92bee`
+（= `git rev-parse <本行登记所在 commit>:Docs/V3_SPEC`，其中「本行登记所在 commit」= **引入本 CURRENT
+字面值的 commit**（2026-09-25，H-05~H-08 闭合）。由 `git add` 后 `git write-tree` +
 `git rev-parse T:Docs/V3_SPEC` 计算，**非手填**。字面值可安全存于本文件——它在 `Docs/V3_SPEC/` 之外，
-无自指不动点。覆盖范围：M-01~M-05 最终卫生收口（`CR-004 §2` 指引 + 新增 `§2.4` 任务书坐标对照 ·
-`90 §1` L1 例子列事实同步 · `90 §11 (a)` 计数口径 · `90 §11 (c)` 授权落点澄清与声明登记）。
-**未触及** L0 `00`–`50`；OD-R-01 与 f708370 两条链的结论一律未变。）
+无自指不动点。覆盖范围：H-05~H-08 闭合（`90 §11 (c)` 声明登记补登 `1ee84cd` 与本整改行 ·
+`CR-003 §0.1` 措辞精确化 H-07 · 本节 §6.2 CURRENT 同步 H-06 + 新增 §6.4 机械复核命令表 H-08）。
+**未触及** L0 `00`–`50`；OD-R-01 与 f708370 两条链的结论一律未变。
+**固定点说明**：本行字面值位于 `Docs/V3_SPEC/` **之外**，写入它不改变被记的 `Docs/V3_SPEC` tree
+⇒ 无自指不动点（与 `CR-003 §10` 自指防火墙同一处置；`90 §11 (c)` 声明登记表因此**不写**自身
+tree 字面值）。今后凡 `Docs/V3_SPEC` 再次变化，本行与 §6.2 链式图须同步追加更新——这是本节的
+**既定义务**，不是新机制。）
 
 **历史 hash 处置**：`b3eeb3e9…` 与 `fa1e953e…` 作为历史 baseline **永久保留**；历史表述不得机械替换
 （`90 §4`：存量文档不强制回填 / Reconcile, don't rewrite）。
@@ -187,6 +195,107 @@ scope 限定语，**不改历史值**。`LIMITED-IMPLEMENTATION-AUTHORIZATION-v0
 Provenance** 那条 change 的状态（该 Proposal 仍未 re-freeze，此半句仍为真），其 `UNCHANGED`
 半句所指事实已由本节 §6.3 第 1 行的同一更正覆盖；该文件属 Limited Implementation Authorization
 （另一授权面），本轮**不改**，以免扩大修改范围。
+
+### 6.4 机械复核命令表（2026-09-25，H-08）—— 只记录命令与实测结果，**不建机制**
+
+> **本节目的**：把 `Docs/V3_SPEC` tree hash 变化 → **L0 未变** → **`90 §11 (c)` 声明存在** 这条
+> 三段关系做成**可机械复现**的检查。**不新增**治理机制 / 审批层 / registry / 状态字段。
+> 下列命令**全部实际执行**，结果为实测值。两条取证纪律：
+> ① **交替模式检索一律用 `-E`** —— BRE 下 `\|` 是字面量，不产出 alternation 语义；
+> ② **提交后核验一律指定 commit** —— `git diff --name-only` 在工作区干净时输入为空
+> （空验证），**不能**证明该 commit 改了什么。
+
+**被验 commit = `<本节登记所在 commit>`**（自指表述，按**引入本节的 commit** 解析）。
+其自身 hash **不能**写进本文件——commit hash 由文件内容决定，写入即自指不动点。
+机械取值：
+
+```text
+git log --format='%H %s' -- Docs/COORDINATION/G-02-FREEZE-REGISTRATION-VERIFICATION.md
+  → 取 subject 含「OD-R-01 H01 follow-up」的那一行
+```
+
+#### A. 交替模式检索（H-08(a)：必须 `-E`，且必须排除本表自身）
+
+**自指污染（必须排除）**：本表把被检模式的**字面量**写进了 `G-02`，任何全仓检索都会命中本表
+自身，结果即被污染、不构成证据。下表一律加 `:(exclude)` 排除本表。
+
+```text
+EXC = ':(exclude)Docs/COORDINATION/G-02-FREEZE-REGISTRATION-VERIFICATION.md'
+
+A1  git grep -n -E '§1:41' -- Docs/ Status.md "$EXC"
+    → 4 处，全在 CR-003（:52 / :55 / :56 / :57），均带时点限定
+
+A2  git grep -n -E '无 Contract Change Record|不存在 Contract Change Record|无一份 L1' \
+        -- Docs/ Status.md "$EXC"
+    → 唯一命中 Docs/DECISIONS/84_CONFLICT_LEDGER.md:176
+      （= H-02 / HYG-D2，NON-AUTHORIZED，按授权保留未改）
+
+A3  git grep -n -E '当期|上述文件清单|亦已新增' -- Docs/ Status.md "$EXC"
+    → 0 命中（exit 1）—— H-07(a)(b)(c) 三项均已消除
+
+A4  git grep -n -E '现存仅|当前无 Contract|尚未有.*Contract Change' -- Docs/ Status.md "$EXC"
+    → 唯一命中 CR-003:50，位于「截至 CR-003 创建时」限定范围内
+```
+
+**为何必须 `-E`（三种写法实测对照，均排除本表）**
+
+```text
+grep -rnE '无 Contract Change Record|不存在 Contract Change Record|无一份 L1' Docs/ Status.md
+    → 命中 84:176，exit 0        ERE：裸 `|` = alternation（语义唯一、可移植）
+
+grep -rn  '无 Contract Change Record\|不存在 Contract Change Record\|无一份 L1' Docs/ Status.md
+    → 命中 84:176，exit 0        GNU BRE 扩展：`\|` = alternation（非 POSIX，不可移植）
+
+grep -rn  '无 Contract Change Record|不存在 Contract Change Record|无一份 L1' Docs/ Status.md
+    → 0 命中，exit 1            BRE：裸 `|` = 字面量，无 alternation 语义
+```
+
+> **结论**：裸 `|` 在 BRE 下是**字面量**，写 `grep 'a|b|c'` 不可能产出 A2/A4 的结果；
+> `\|` 在 GNU grep 上虽可用，但属非 POSIX 扩展、语义含混、不可移植。
+> 取证一律写 **`-E` + 裸 `|`**。本表所载命令与结果一一对应，均可原样复现。
+
+#### B. 提交后改动核验必须指定 commit（H-08(b)：空验证 → 必须 `git show`）
+
+```text
+B1  git show --name-only --format= <被验 commit>
+    → 3 个 .md：
+        Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md
+        Docs/V3_SPEC/CR-003_CONTRACT_CHANGE_RECORD_OD-R-01.md
+        Docs/COORDINATION/G-02-FREEZE-REGISTRATION-VERIFICATION.md
+
+B2  git show --name-only --format= <被验 commit> | grep -vE '\.md$'
+    → 0 命中（exit 1）⇒ 非 .md 改动 = 0
+
+B3  git show --name-only --format= <被验 commit> | grep -E 'V3_SPEC/(00|10|20|30|40|50)_'
+    → 0 命中（exit 1）⇒ L0 00–50 改动 = 0
+```
+
+#### C. tree hash 变化 → L0 未变 → `90 §11 (c)` 声明存在（H-08(c)：三段机械链）
+
+```text
+C1  tree 确已变化
+    git rev-parse 1ee84cd:Docs/V3_SPEC        → 47a59e50126f0f7e98f44d281f8d388236240735
+    git rev-parse <被验 commit>:Docs/V3_SPEC  → ecd12c0e9682eaed2e3ad7c2416984b9cff92bee
+
+C2  L0 未变 —— 同 B3
+    → 0 命中 ⇒ 变化面不含 L0 00–50
+
+C3  §11(c) 声明存在
+    git grep -n -E 'L0-META / L1 面改动，非 L0 修改' -- Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md
+    → 命中 4 行：
+        :491  规则原文（90 §11 (c) 必须要求）
+        :512  5a46d33 行（最终卫生收口 M-01~M-05）
+        :513  1ee84cd 行（H-01 修正）
+        :514  <被验 commit> 行（H-05~H-08 闭合）
+    ⇒ 每次非 L0 的 Docs/V3_SPEC 变化均有对应声明行
+
+C4  登记值 == 事实值
+    git rev-parse <被验 commit>:Docs/V3_SPEC  ==  本节 §6.2 CURRENT 字面值
+    → ecd12c0e9682eaed2e3ad7c2416984b9cff92bee
+```
+
+> **C1→C2→C3→C4 即 `90 §11 (c)`「tree hash 变化 ⇒ 必须能找到对应 CA 条目；否则补一行声明」的
+> 机械可审计形式**。任一环节断链即违规。本表**只**记录命令与结果的对应关系，不引入新检查机制。
 
 ---
 

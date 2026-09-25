@@ -510,8 +510,16 @@ identity）已足以形成「**L0 tree hash change → audit required**」闭环
 | 改动所在 commit | 改动面 | 声明 |
 |---|---|---|
 | 本行所在 commit（2026-09-25，OD-R-01 最终卫生收口 M-01~M-05） | `90 §1` L1 例子列事实同步 · `90 §11 (a)` 计数口径修正 · `90 §11 (c)` 授权落点澄清与本表 · `CR-004 §2` 指引 + 新增 `§2.4` 任务书坐标对照 | **L0-META / L1 面改动，非 L0 修改**（未触及 L0 `00`–`50`） |
+| `1ee84cd`（2026-09-25，OD-R-01 H-01 修正 / HYG-D1） | `CR-003 §0.1`「搜索结论」段时点限定 + 历史口径注记（**仅 L1 文件正文措辞**，未改任何治理规则） | **L0-META / L1 面改动，非 L0 修改**（未触及 L0 `00`–`50`；`Docs/V3_SPEC` tree `63810f55…` → `47a59e50…`，机械取值 `git rev-parse 5a46d33:Docs/V3_SPEC` / `git rev-parse 1ee84cd:Docs/V3_SPEC`） |
+| 本行所在 commit（2026-09-25，OD-R-01 H01 follow-up：H-05~H-08 闭合） | `90 §11 (c)` 本表补登 `1ee84cd` 与本行 · `CR-003 §0.1` 措辞精确化（H-07）· `G-02 §6` CURRENT 同步 + 机械复核命令表（H-06 / H-08） | **L0-META / L1 面改动，非 L0 修改**（未触及 L0 `00`–`50`；本行的 tree 字面值**不入本文件**，见 `G-02 §6.2` CURRENT 行——理由同 `CR-003 §10` 自指防火墙） |
 
-> 机械取值：`git log -1 --format=%H -- Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md`。
+> **行锚定与机械取值（2026-09-25，H-05）**：表内「本行所在 commit」是**自指表述**，按**引入该行的
+> commit** 解析，不是「最近一次触及本文件的 commit」。自指写法沿用 `CR-003 §10` 处置——
+> `Docs/V3_SPEC/` 内不写自身 tree hash 字面值，避免自指不动点；已确定的 commit 一律写**实名**。
+> 本表首行引入于 `5a46d33`，`1ee84cd` 行为实名。查触及历史用
+> `git log --format='%H %s' -- Docs/V3_SPEC/90_DOCUMENT_GOVERNANCE.md`；
+> **不得**用 `git log -1 --format=%H` 解析自指行（该命令只返回**最近一次**触及本文件的 commit，
+> 不是该行的引入 commit）。
 
 **90 生效后，任何 L0 修改若不在本节登记，即为违规。**
 
