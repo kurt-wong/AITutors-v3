@@ -46,9 +46,14 @@ Gate State Authority:  NO
 | `Docs/DECISIONS/67_ANNOTATION_RESOLVER_BOUNDARY_ADJUSTMENT.md` | L2 目录位置 / `NOT RELEASED` | `67` 是 CHANGE-4/5 候选，**不是**已注册正式 L1（`OWNER-DECISIONS:342`），且目标是另一变更（删 `20:117` FORBIDDEN_FIELDS 的 `line_refs`）。 |
 | `Docs/COORDINATION/OWNER-DECISIONS-OD-01-OD-05-G-01-G-02.md` | L2 Owner Decision Record | `90 §2 R2`：L2 只能解释与裁决，**不能修改 L0**。Owner Decision 是本 Change Record 的**输入**，不是 L0 修改的**入口**。 |
 
-**搜索结论（无可合并同用途文件）**：`Docs/V3_SPEC/` 现存仅 `README.md` + `00/10/20/30/40/50/90/91`，
+**搜索结论（无可合并同用途文件）**：**截至 CR-003 创建时**（观察范围仅限本记录编制时点的
+`Docs/V3_SPEC/` 状态），`Docs/V3_SPEC/` 现存仅 `README.md` + `00/10/20/30/40/50/90/91`，
 `Document Type` 均为 Frozen Spec / Governance Meta-Spec，**无** `Contract Change Record`；
-`90 §1:41` 自述「L1 … 暂无」。
+`90 §1:41` **当期**自述「L1 … 暂无」。
+
+> **时点限定（历史口径）**：上述文件清单与 `90 §1:41` 引文**仅**描述 **CR-003 编制时点**的历史状态，
+> **不表示**「Contract Change Record 从未存在」。其后 `90 §1:41` 已按事实同步（见 `90:47` 注），
+> `Docs/V3_SPEC/` 亦已新增 `CR-003` / `CR-004` 两条 `Contract Change Record`。
 
 **物理落点依据**：`90 §1.2:79` 对 `Docs/V3_SPEC/` 的**允许**列明文含「引用；补 Change Record；**新增 L1**」。
 本文件即依该允许列创建；**不创建第二套 governance registry**。
