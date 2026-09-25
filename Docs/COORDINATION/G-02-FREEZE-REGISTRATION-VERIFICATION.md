@@ -279,14 +279,16 @@ Provenance** 那条 change 的状态（该 Proposal 仍未 re-freeze，此半句
 | 项 | 前提 | 说明 |
 |---|---|---|
 | 版本控制 | Git（实测 `git version 2.54.0.windows.1`） | `git grep` / `git show` / `git rev-parse` / `git write-tree` 全部依赖 Git |
-| `:(exclude)` pathspec magic | Git ≥ 1.9 | A 类排除本表自身所用；不支持时以 `git grep … \| grep -v <本文件路径>` 替代并**记录该替代** |
-| 正则引擎 | `git grep -E` = POSIX ERE | 与 GNU grep ERE 对裸 `\|` / `\|` 的处理一致（见下实测对照） |
+| `:(exclude)` pathspec magic | Git ≥ 1.9 | A 类排除本表自身所用；不支持时改用下方「无 GNU grep / 无 pathspec magic 时的等价替代」，并**记录该替代** |
+| 正则引擎 | `git grep -E` = POSIX ERE | 与 GNU grep ERE **一致**：裸管道符在 BRE 下是**字面量**，反斜杠加管道符是 GNU BRE 的 alternation 扩展（非 POSIX、不可移植）。三种写法的**实测**对照见下「为何必须 `-E`」段 |
 | 裸 `grep -rnE` / `grep -rn` / `grep -vE` | **GNU grep（或兼容实现）在 PATH** | 仅「为何必须 `-E`」对照段与 B2/B3 用到；实测环境有 GNU grep 3.0，DSH 复核环境**无** GNU grep |
 | shell | POSIX sh / Git Bash | 管道、`exit` 码语义（`exit 1` = 无命中） |
 
-**无 GNU grep 时的等价替代**：`grep -rnE '<pat>' <path>` → `git grep -n -E '<pat>' -- <path>`；
+**无 GNU grep / 无 pathspec magic 时的等价替代**：`grep -rnE '<pat>' <path>` → `git grep -n -E '<pat>' -- <path>`；
 `grep -vE '<pat>'` → `git grep … | git grep -v -E '<pat>'` 或等价管道。DSH 侧即以此在**无 GNU grep**
-环境复现，结果一致。
+环境复现，结果一致。无 `:(exclude)` pathspec magic 时，A 类排除本表自身的写法改为在管道末端
+以 `git grep -v -E '<本文件路径字面量>'`（或等价的 `grep -v`）滤掉本文件路径的输出行，
+**并记录该替代**（结果须与原写法一致）。
 
 **谁执行了什么、证明了什么**：A/B/C 各条由实施代理在 **Windows 11 + Git 2.54.0.windows.1 +
 GNU grep 3.0** 环境实际执行并抄录结果；DSH 以 `git grep` 在**无 GNU grep** 环境独立复现 A/B/C
