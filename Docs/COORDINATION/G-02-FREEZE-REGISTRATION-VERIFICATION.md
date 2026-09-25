@@ -118,6 +118,20 @@ Re-freeze commit : 本记录所在 commit（机械取值：
                    git log -1 --format=%H -- Docs/COORDINATION/G-02-FREEZE-REGISTRATION-VERIFICATION.md）
 ```
 
+### 6.1a 工作树 untracked 统计口径（2026-09-25，M-05.1）
+
+> 本工作流 hygiene 报告中若出现 untracked 计数，**必须**写明口径。
+> 两口径**不得**混成同一个数字。
+
+| 口径 | 命令 | 当前值（2026-09-25 实测） | 含义 |
+|---|---|---|---|
+| **目录折叠**（git 默认） | `git status --porcelain` | **10** | 未跟踪**目录**按 1 个条目计（`Docs/GOVERNANCE/` 计 1） |
+| **逐文件展开** | `git status --porcelain -uall` | **13** | 目录展开为文件：9 × `Docs/COORDINATION/CONTRACTS/PREPROCESSING-V3-*.md` + 4 × `Docs/GOVERNANCE/*.md` |
+
+> **要求**：报告 untracked 计数时写「默认 `git status --porcelain` 口径 = N」或「`-uall` 口径 = M」，
+> **不得**只写裸数字。历史报告中未标口径的数字按**默认目录折叠口径**理解；
+> 按 `90 §4`「存量文档不强制回填（Reconcile, don't rewrite）」**不作机械改写**。
+
 ### 6.2 Frozen Spec tree 链（全部由 git 对象计算，无手填 / 无猜测）
 
 **两条独立 change 的合并视图**（`f708370` 与 OD-R-01 各有独立 provenance，见 `CR-004` / `CR-003`）：
@@ -130,22 +144,25 @@ Re-freeze commit : 本记录所在 commit（机械取值：
 | **OD-R-01 incorporation**（CR-003） | `git rev-parse 71f51f9:Docs/V3_SPEC` | `442172f40942368a4856231a742bf4d273242034` |
 | **OD-R-01 re-freeze**（含 CR-003 / CA-003 / 10 §12 / 20 §12） | `git rev-parse 60fa9ff:Docs/V3_SPEC` | `8659e2fab715d1d2164f9bc559a04ceb05fd7fc0` |
 | **WS-A 治理一致性修正**（CR-003 R-03/04/05/06） | `git rev-parse 12493ca:Docs/V3_SPEC` | `a704cd8f08ba5360bfb3398b235ab26c8ad6a8d4` |
-| **WS-B provenance 登记**（CR-004 / CA-004 / 20 §12 / 90 §11）= **current** | `git rev-parse <本登记所在 commit>:Docs/V3_SPEC` | 见下方 CURRENT 行 |
+| **WS-B provenance 登记**（CR-004 / CA-004 / 20 §12 / 90 §11） | `git rev-parse fbec14e:Docs/V3_SPEC` | `2edd20101c4abf3238d5689b3bb3cba0d5fc75fe` |
+| **最终卫生收口 M-01~M-05**（`CR-004 §2` 指引 + `§2.4` · `90 §1` L1 例子列事实同步 · `90 §11 (a)` 计数口径 · `90 §11 (c)` 授权落点澄清与声明登记）= **current** | `git rev-parse <本行登记所在 commit>:Docs/V3_SPEC` | 见下方 CURRENT 行 |
 
 ```text
 fa1e953e… →(f708370)→ b3eeb3e9… →(71f51f9 / OD-R-01)→ 442172f4…
           →(60fa9ff / OD-R-01 re-freeze)→ 8659e2fa… →(12493ca / WS-A)→ a704cd8f…
-          →(WS-B provenance)→ CURRENT
+          →(fbec14e / WS-B provenance)→ 2edd2010… →(最终卫生收口 M-01~M-05)→ CURRENT
 ```
 
 **同值说明（非笔误）**：`b3eeb3e9…` **同时**是 f708370 的 incorporation tree 与 OD-R-01 的
 previous / pre-OD-R-01 tree —— f708370 是 `Docs/V3_SPEC` 在 OD-R-01 之前的最后一次内容变更
 （与本文件 §5「last content commit = f708370」一致）。
 
-**CURRENT Frozen Spec tree** = `2edd20101c4abf3238d5689b3bb3cba0d5fc75fe`
-（= `git rev-parse <本登记所在 commit>:Docs/V3_SPEC`；由 `git write-tree` + `git rev-parse T:Docs/V3_SPEC`
-计算，**非手填**。字面值可安全存于本文件——它在 `Docs/V3_SPEC/` 之外，无自指不动点。
-覆盖范围：CR-004 新增 L1 + `20 §12` f708370 补记 + `90 §11` CA-004 与审计范围枚举 + WS-A 的 CR-003 修正。）
+**CURRENT Frozen Spec tree** = `63810f55c88cee983004136f288f1b6ff3527a8d`
+（= `git rev-parse <本行登记所在 commit>:Docs/V3_SPEC`；由 `git add` 后 `git write-tree` +
+`git rev-parse T:Docs/V3_SPEC` 计算，**非手填**。字面值可安全存于本文件——它在 `Docs/V3_SPEC/` 之外，
+无自指不动点。覆盖范围：M-01~M-05 最终卫生收口（`CR-004 §2` 指引 + 新增 `§2.4` 任务书坐标对照 ·
+`90 §1` L1 例子列事实同步 · `90 §11 (a)` 计数口径 · `90 §11 (c)` 授权落点澄清与声明登记）。
+**未触及** L0 `00`–`50`；OD-R-01 与 f708370 两条链的结论一律未变。）
 
 **历史 hash 处置**：`b3eeb3e9…` 与 `fa1e953e…` 作为历史 baseline **永久保留**；历史表述不得机械替换
 （`90 §4`：存量文档不强制回填 / Reconcile, don't rewrite）。

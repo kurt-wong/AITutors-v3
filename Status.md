@@ -2621,7 +2621,7 @@ Errata   : 暂缓（67 号 CHANGE-5 不得发布，Gate B NOT CLOSED）
 | Level | 类型 | 权限 | 禁止 |
 |---|---|---|---|
 | **L0** | Frozen Spec `00`–`50` | 定义系统事实；Schema SoT = `20` | 不得被 L2–L5 隐式修改 |
-| **L1** | Contract Change Record | **修改 L0 的唯一入口**（当前为空） | 未走完流程不得生效 |
+| **L1** | Contract Change Record | **修改 L0 的唯一入口**（现有 `CR-003` / `CR-004` 两条） | 未走完流程不得生效 |
 | **L2** | Decision Record | 解释与裁决 | **不得产生新架构事实**；不得改 L0 |
 | **L3** | Gate Report | 证明状态 | 不得定义规则；Gate 状态只能**引用 82 §3** |
 | **L4** | Experiment Report | 提供证据 | 不得单独支撑 PASS；不得把实验结论升为事实 |
@@ -2629,6 +2629,10 @@ Errata   : 暂缓（67 号 CHANGE-5 不得发布，Gate B NOT CLOSED）
 
 **最高规则**：**L3/L4/L5 永远不得改变 L0/L1；L2 只能解释与裁决，不得修改 L0。**
 旧 A–E 的 C 拆为 L3+L4——Gate 报告与实验报告权限不同。
+
+> **（2026-09-25 事实同步，M-05.2）** 上表 L1 行原写「（当前为空）」，现已陈旧：仓内实际存在 2 条
+> 正式 L1（`CR-003` / `CR-004`）。**只改该陈旧事实断言**；L1 权限/禁止表述、L1 governance、
+> L1 registry、L1 命名与存储位置一律未改（同 `90 §1` 的同型事实同步）。
 
 ### 84 号 Conflict Ledger：15 OPEN / 4 已处置 / 3 误报
 

@@ -13,6 +13,37 @@ ENTERED-INTO-GIT: YES (G-01)
 > 实施过程中不得因为发现设计缺口而自行扩大 Contract、Frozen Spec、Schema、Gate、Admission 或 Authority 语义。
 > Implementation Plan 获批 ≠ unrestricted schema authorization。
 
+> **Ratification / Provenance 注记（2026-09-25，M-03）**
+>
+> 本注记**只**补 provenance 落点；**不**是新的 Owner approval，**不**扩大任何授权范围。
+>
+> ```text
+> 原始 Owner approval 的来源
+>   = 本 instrument（v0.3）内容的 Owner 批准，属【仓外任务授权载体】，不在 repository 内。
+>     仓内对应登记 = OWNER-DECISIONS-OD-01-OD-05-G-01-G-02.md 的 G-01
+>       （"Implementation Plan + Limited Implementation Authorization 必须进入 Git"，
+>         APPROVED — executed）
+>     —— G-01 是【入 Git 登记】，不是内容批准的原始载体，两者不得混同。
+>
+> 后续仓内编辑（2026-09-24 起）
+>   = 解释性修正（如下方 Frozen Spec: 行的 scope clarification）。
+>     只做【解释范围收窄 / 澄清指称对象】：
+>       未扩大任何授权范围 · 未放宽任何 forbidden scope ·
+>       未改 Authority Order · 未改任何 STOP condition · 未改 phase order / terminology 限制。
+>
+> 当前正文 ≠ 重新伪造的 Owner approval
+>   = 本注记不主张「当前正文 == Owner 批准时的原始文本」，也不主张该等式成立。
+>     现行正文 = 原始批准文本 + 后续仅收窄解释范围的修正 的【合成状态】。
+>     头部 STATUS: OWNER APPROVED 的语义一律不变，不在本注记中被重新签发或重新批准。
+>
+> ratification 机制状态
+>   = 仓内【有】可复用机制：current-ratification 模式（OD-01-R3 — CURRENT OWNER RATIFICATION，
+>       current ratification ≠ historical authorization）+ 入 Git 登记（G-01）。
+>     仓内【无】一份独立可解析的「Owner 批准文本原件」。
+>   ⇒ 复用上述既有机制落 provenance；【不新建】Owner approval 机制，【不新建】registry。
+>     本注记不构成、也不伪造任何新的 Owner approval。
+> ```
+
 ---
 
 ## 1. Authority Order
