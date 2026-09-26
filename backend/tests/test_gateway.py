@@ -166,14 +166,15 @@ def test_build_gateway_live_injects_http_provider(monkeypatch) -> None:
     """I-1-B：allow_live=True + mode=live → Factory 实际构造并注入 HTTPLLMProvider(Ollama)，
     timeout/base_url/model 从 settings 显式注入。"""
     monkeypatch.setattr(settings, "llm_gateway_mode", "live")
-    monkeypatch.setattr(settings, "ollama_base_url", "http://localhost:11434/v1")
-    monkeypatch.setattr(settings, "ollama_model", "qwen3.5:4b")
+    monkeypatch.setattr(settings, "mimo_api_key", "test-key")
+    monkeypatch.setattr(settings, "mimo_base_url", "https://api.xiaomimimo.com/v1")
+    monkeypatch.setattr(settings, "mimo_model", "mimo-v2.6-pro")
     monkeypatch.setattr(settings, "llm_request_timeout_seconds", 30.0)
     gw = build_gateway(allow_live=True, task_context="t", budget_ok=True)
     assert isinstance(gw._live_provider, HTTPLLMProvider)
-    assert gw._live_provider.name == "ollama"
-    assert gw._live_provider._base_url == "http://localhost:11434/v1"
-    assert gw._live_provider._model == "qwen3.5:4b"
+    assert gw._live_provider.name == "mimo"
+    assert gw._live_provider._base_url == "https://api.xiaomimimo.com/v1"
+    assert gw._live_provider._model == "mimo-v2.6-pro"
     assert gw._live_provider._timeout == 30.0
 
 

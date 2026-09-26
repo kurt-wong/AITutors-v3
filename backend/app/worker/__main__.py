@@ -84,6 +84,8 @@ def build_parser() -> argparse.ArgumentParser:
 
 async def _run(args: argparse.Namespace) -> None:
     set_allow_live(args.allow_live)
+    # FORMAL-E2E-ENABLEMENT-01: do NOT hardcode task_context/budget_ok here.
+    # TaskExecutor authorizes the gateway from the real claimed task + budget ensure.
     gateway = build_gateway(allow_live=args.allow_live)
     # Phase I-2B：mock 模式下使用返回有效 JSON 的 provider
     if gateway.mode == "mock":
@@ -97,6 +99,17 @@ async def _run(args: argparse.Namespace) -> None:
     processed = 0
     while await executor.run_once(worker_id=worker_id):
         processed += 1
+    # Flush provider reality evidence (configured vs actual)
+    try:
+        from app.ai.provider_reality import default_tracker
+        from pathlib import Path as _Path
+        out = _Path("provider_reality.json")
+        default_tracker._output_path = out
+        path = default_tracker.flush()
+        if path is not None:
+            print(f"provider reality evidence: {path}")
+    except Exception as exc:
+        print(f"provider reality flush skipped: {exc}")
     print(f"processed {processed} task(s)")
 
 

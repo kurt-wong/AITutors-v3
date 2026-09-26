@@ -139,8 +139,8 @@ class TaskExecutor:
         *,
         llm_gateway: LLMGateway,
         ocr_extractor,
-        default_provider: str = "ollama",
-        default_model: str = "qwen3.5-9b",
+        default_provider: str = "mimo",
+        default_model: str = "mimo-v2.6-pro",
         lease_seconds: int | None = None,
     ) -> None:
         self._session_factory = session_factory
@@ -182,6 +182,7 @@ class TaskExecutor:
 
     async def _process(self, task_id: uuid.UUID, worker_id: str, lease_token: str) -> None:
         params = await self._load_params(task_id)
+        await self._authorize_live_from_real_context(task_id)
         await self._heartbeat(task_id, worker_id, lease_token)
         version = await self._seal_stage(params)
         await self._heartbeat(task_id, worker_id, lease_token)
@@ -191,6 +192,32 @@ class TaskExecutor:
         await self._heartbeat(task_id, worker_id, lease_token)
         await self._compile_stage(version, ann)
         await self._complete_task(task_id, worker_id, lease_token)
+
+    async def _authorize_live_from_real_context(self, task_id: uuid.UUID) -> None:
+        """FORMAL-E2E-ENABLEMENT-01: authorize live gateway from real runtime context.
+
+        task_context = the real claimed Task row from DB (not dummy).
+        budget_ok = True only after BudgetService.ensure establishes budget
+        authority for this task. Forbidden: hardcode=True / object() / test bypass.
+        """
+        if self._gateway.mode != "live":
+            return
+        from app.ai.budget import AccountRef, BudgetService
+
+        async with self._session_factory() as s:
+            task = await s.get(Task, task_id)
+            if task is None:
+                raise RepositoryError(f"task {task_id} not found for live authorization")
+            budget = BudgetService(s)
+            await budget.ensure(AccountRef("task", str(task_id)))
+            await s.commit()
+            real_context = {
+                "task_id": str(task.id),
+                "task_type": task.task_type,
+                "claim_round": task.claim_round,
+                "status": task.status,
+            }
+        self._gateway.authorize(task_context=real_context, budget_ok=True)
 
     async def _load_params(self, task_id: uuid.UUID) -> dict:
         async with self._session_factory() as s:

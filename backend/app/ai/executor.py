@@ -27,6 +27,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.ai.audit import build_idempotency_key
 from app.ai.budget import BudgetService, five_account_refs
 from app.ai.gateway import LLMGateway
+from app.ai.provider_reality import default_tracker as _reality_tracker
 from app.core.config import settings
 from app.core.errors import CircuitOpen, LLMNetworkError, LLMProviderError
 from app.repositories.runtime_repository import LlmCallAuditRepository, TaskRepository
@@ -207,6 +208,24 @@ class LLMExecutor:
         # Phase C1：audit terminalization（Provider Invocation Runtime Truth，30 §10）
         # 独立于 settle 先行 commit——audit 终态一旦确定，不因后续 settle 失败回滚为 STARTED。
         # Lock-6 只要求 reserve + audit STARTED 同事务（Phase A），未要求 finalize + settle 同事务。
+        # Provider Reality Tracking (FORMAL-E2E-ENABLEMENT-01): configured vs actual
+        try:
+            actual_provider = getattr(self._gateway, "last_actual_provider", None)
+            _reality_tracker.record(
+                request_id=request_id,
+                task_id=task_id,
+                document_id=document_id,
+                stage=le_stage,
+                configured_provider=provider,
+                configured_model=model,
+                actual_provider=actual_provider,
+                execution_status="completed" if outcome is not None else "failed",
+                error_type=None if outcome is not None else self._error_type(last_exc),
+            )
+        except Exception:
+            # tracking must never break the accounting path
+            pass
+
         try:
             if outcome is not None:
                 await repo.finalize_audit(request_id, status="completed")
