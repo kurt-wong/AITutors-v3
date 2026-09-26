@@ -43,6 +43,9 @@ class HTTPLLMProvider:
         )
         if self._http_retry_count < 0:
             raise ValueError(f"http_retry_count must be >= 0, got {self._http_retry_count}")
+        # FORMAL-E2E-ENABLEMENT-02: last API response reality (model/usage) — not config echo
+        self.last_response_model: str | None = None
+        self.last_response_usage: dict | None = None
 
     async def complete(self, prompt: str) -> str:
         resp = None
@@ -81,6 +84,10 @@ class HTTPLLMProvider:
         try:
             data = resp.json()
             content = data["choices"][0]["message"]["content"]
+            # FORMAL-E2E-ENABLEMENT-02: actual_* must come from API response, not config
+            self.last_response_model = data.get("model")
+            usage = data.get("usage")
+            self.last_response_usage = usage if isinstance(usage, dict) else None
         except (KeyError, IndexError, TypeError, json.JSONDecodeError) as exc:
             # B-2（对抗审查）：HTTP 200 但 body 违反 adapter contract（非 JSON / choices 缺失/
             # 空 / message/content 缺失）→ 翻译为 LLMProviderError(retryable=False)。不得泄漏裸

@@ -26,7 +26,7 @@ def load_env():
 _env = load_env()
 API_KEY = _env.get("MIMO_API_KEY", "")
 BASE_URL = _env.get("MIMO_BASE_URL", "https://api.xiaomimimo.com/v1")
-MODEL = _env.get("MIMO_MODEL", "mimo-x-pro-preview")
+MODEL = _env.get("MIMO_MODEL", "mimo-v2.6-pro")  # FORMAL-E2E-ENABLEMENT-02: no legacy default
 
 PROMPT_TEMPLATE = """You are a structural annotation system for Chinese exam papers.
 

@@ -46,13 +46,15 @@ class LLMGateway:
         # Provider Reality Tracking：最近一次实际执行的 provider 名（等价机制，无 schema 变更）
         self._last_actual_provider: str | None = None
         self._last_configured_model: str | None = None
+        self._last_actual_model: str | None = None
+        self._last_actual_usage: dict | None = None
 
-    def authorize(self, *, task_context: object, budget_ok: bool = True) -> None:
+    def authorize(self, *, task_context: object, budget_ok: bool = False) -> None:
         """由真实运行上下文注入 live 授权。
 
-        FORMAL-E2E-ENABLEMENT-01：禁止 hardcode=True / object() / dummy context。
-        调用方必须传入真实 claimed task 上下文；budget_ok 必须在 BudgetService.ensure
-        成功建立预算权威之后才能为 True。
+        FORMAL-E2E-ENABLEMENT-01/02：禁止 hardcode=True / object() / dummy context。
+        budget_ok 默认 False（取消 fail-open）；只有 BudgetService.check() 真实通过
+        后调用方才允许显式传 budget_ok=True。budget unavailable = authorization denied。
         """
         if task_context is None:
             raise GatewayDeniedError(
@@ -68,6 +70,14 @@ class LLMGateway:
     @property
     def last_configured_model(self) -> str | None:
         return self._last_configured_model
+
+    @property
+    def last_actual_model(self) -> str | None:
+        return getattr(self, "_last_actual_model", None)
+
+    @property
+    def last_actual_usage(self) -> dict | None:
+        return getattr(self, "_last_actual_usage", None)
 
     async def complete(
         self,
@@ -97,7 +107,7 @@ class LLMGateway:
         if self._task_context is None:
             reasons.append("task context missing")
         if not self._budget_ok:
-            reasons.append("budget unavailable")
+            reasons.append("budget unavailable (authorization denied)")
         live = self._resolve_live_provider(provider)
         if live is None:
             reasons.append("no live provider configured")
@@ -112,12 +122,16 @@ class LLMGateway:
             )
         # Provider Invocation Port seam：每次真实 provider 调用前原子计数（Lock-4/Note-1）
         await invocation_counter.consume(task_id)
-        # Provider Reality Tracking：记录实际执行的 provider 名（等价机制）
-        self._last_actual_provider = getattr(live, "name", type(live).__name__)
+        # Provider Reality Tracking：configured 来自本地；actual 必须来自 API response
         self._last_configured_model = getattr(live, "_model", None) or getattr(
             live, "model", None
         )
-        return await live.complete(prompt)
+        self._last_actual_provider = getattr(live, "name", type(live).__name__)
+        result = await live.complete(prompt)
+        # actual_* 只能来自 response body（Issue-02：禁止 actual=config 伪记录）
+        self._last_actual_model = getattr(live, "last_response_model", None)
+        self._last_actual_usage = getattr(live, "last_response_usage", None)
+        return result
 
     def _resolve_live_provider(self, provider: str | None) -> object | None:
         """按 provider 名路由（BUG-V3-035 fallback）；名未命中 fail-closed（返回 None→deny）。

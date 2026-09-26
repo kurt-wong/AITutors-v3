@@ -40,6 +40,25 @@ class BudgetService:
             account_dim=ref.account_dim, scope_id=ref.scope_id, stage=ref.stage, limit=lim
         )
 
+    async def check(self, refs: list[AccountRef], *, amount: Decimal | None = None) -> bool:
+        """Budget availability check (FORMAL-E2E-ENABLEMENT-02 Issue-03).
+
+        Simple fail-closed check — not a full billing system.
+        Returns True only if every ref has an account with remaining headroom.
+        Missing account or over-limit -> False (authorization must deny).
+        """
+        probe = amount if amount is not None else Decimal("1")
+        try:
+            for ref in refs:
+                remaining = await self._repo.remaining(
+                    account_dim=ref.account_dim, scope_id=ref.scope_id, stage=ref.stage
+                )
+                if remaining is None or remaining < probe:
+                    return False
+            return True
+        except Exception:
+            return False
+
     async def reserve(self, refs: list[AccountRef], amount: Decimal) -> None:
         """五账户同一事务 reserve；任一失败抛 BudgetExceededError（不自 commit，调用方 rollback）。"""
         try:

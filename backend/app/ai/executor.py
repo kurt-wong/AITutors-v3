@@ -208,9 +208,15 @@ class LLMExecutor:
         # Phase C1：audit terminalization（Provider Invocation Runtime Truth，30 §10）
         # 独立于 settle 先行 commit——audit 终态一旦确定，不因后续 settle 失败回滚为 STARTED。
         # Lock-6 只要求 reserve + audit STARTED 同事务（Phase A），未要求 finalize + settle 同事务。
-        # Provider Reality Tracking (FORMAL-E2E-ENABLEMENT-01): configured vs actual
+        # Provider Reality Tracking (FORMAL-E2E-ENABLEMENT-02):
+        # actual_* from API response (not config echo). usage feeds finalize tokens.
+        actual_provider = None
+        actual_model = None
+        actual_usage = None
         try:
             actual_provider = getattr(self._gateway, "last_actual_provider", None)
+            actual_model = getattr(self._gateway, "last_actual_model", None)
+            actual_usage = getattr(self._gateway, "last_actual_usage", None)
             _reality_tracker.record(
                 request_id=request_id,
                 task_id=task_id,
@@ -219,6 +225,8 @@ class LLMExecutor:
                 configured_provider=provider,
                 configured_model=model,
                 actual_provider=actual_provider,
+                actual_model=actual_model,
+                actual_usage=actual_usage,
                 execution_status="completed" if outcome is not None else "failed",
                 error_type=None if outcome is not None else self._error_type(last_exc),
             )
@@ -226,12 +234,25 @@ class LLMExecutor:
             # tracking must never break the accounting path
             pass
 
+        # Populate token usage from API response into existing audit columns
+        _usage = actual_usage or {}
+        _in_toks = _usage.get("prompt_tokens") or _usage.get("input_tokens")
+        _out_toks = _usage.get("completion_tokens") or _usage.get("output_tokens")
+        _tot_toks = _usage.get("total_tokens")
         try:
             if outcome is not None:
-                await repo.finalize_audit(request_id, status="completed")
+                await repo.finalize_audit(
+                    request_id, status="completed",
+                    input_tokens=_in_toks,
+                    output_tokens=_out_toks,
+                    total_tokens=_tot_toks,
+                )
             else:
                 await repo.finalize_audit(
                     request_id, status="failed",
+                    input_tokens=_in_toks,
+                    output_tokens=_out_toks,
+                    total_tokens=_tot_toks,
                     error_type=self._error_type(last_exc),
                 )
             await s.commit()

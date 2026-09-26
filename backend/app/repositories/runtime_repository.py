@@ -168,6 +168,24 @@ class BudgetRepository(BaseRepository):
         row = res.mappings().one()
         return Budget(**{k: row[k] for k in Budget.__table__.columns.keys()})
 
+    async def remaining(
+        self, *, account_dim: str, scope_id: str, stage: str | None = None
+    ) -> Decimal | None:
+        """Remaining headroom (limit - used - reserved). None if account missing.
+        Used by BudgetService.check() — fail-closed availability probe (Issue-03).
+        """
+        res = await self._session.execute(
+            text(
+                'SELECT ("limit" - used - reserved) AS remaining FROM budget '
+                "WHERE account_dim=:ad AND scope_id=:sc AND stage IS NOT DISTINCT FROM :st"
+            ),
+            {"ad": account_dim, "sc": scope_id, "st": stage},
+        )
+        row = res.mappings().first()
+        if row is None:
+            return None
+        return row["remaining"]
+
     async def reserve(self, *, account_dim: str, scope_id: str, amount: Decimal, stage: str | None = None) -> None:
         """条件 UPDATE：used+reserved+amount<=limit 原子；0 行 = 超限。"""
         res = await self._session.execute(

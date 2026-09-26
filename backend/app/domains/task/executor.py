@@ -194,11 +194,12 @@ class TaskExecutor:
         await self._complete_task(task_id, worker_id, lease_token)
 
     async def _authorize_live_from_real_context(self, task_id: uuid.UUID) -> None:
-        """FORMAL-E2E-ENABLEMENT-01: authorize live gateway from real runtime context.
+        """FORMAL-E2E-ENABLEMENT-01/02: authorize live gateway from real runtime context.
 
         task_context = the real claimed Task row from DB (not dummy).
-        budget_ok = True only after BudgetService.ensure establishes budget
-        authority for this task. Forbidden: hardcode=True / object() / test bypass.
+        budget_ok = True ONLY after BudgetService.check() reports available.
+        Issue-03: no fail-open — budget unavailable => authorization denied.
+        Forbidden: hardcode=True / object() / test bypass.
         """
         if self._gateway.mode != "live":
             return
@@ -209,15 +210,19 @@ class TaskExecutor:
             if task is None:
                 raise RepositoryError(f"task {task_id} not found for live authorization")
             budget = BudgetService(s)
-            await budget.ensure(AccountRef("task", str(task_id)))
+            task_ref = AccountRef("task", str(task_id))
+            await budget.ensure(task_ref)
             await s.commit()
+            # Fail-closed availability check (not default-approve)
+            budget_ok = await budget.check([task_ref])
             real_context = {
                 "task_id": str(task.id),
                 "task_type": task.task_type,
                 "claim_round": task.claim_round,
                 "status": task.status,
             }
-        self._gateway.authorize(task_context=real_context, budget_ok=True)
+        # budget_ok comes from check(); False => gateway denies (no fail-open)
+        self._gateway.authorize(task_context=real_context, budget_ok=budget_ok)
 
     async def _load_params(self, task_id: uuid.UUID) -> dict:
         async with self._session_factory() as s:

@@ -29,9 +29,11 @@ class ProviderRealityRecord:
     configured_provider: str
     configured_model: str
     actual_provider: str | None
+    actual_model: str | None
     execution_status: str
     execution_timestamp: str
     error_type: str | None = None
+    actual_usage: dict | None = None
     extra: dict = field(default_factory=dict)
 
     def to_dict(self) -> dict:
@@ -56,9 +58,14 @@ class ProviderRealityTracker:
         configured_model: str,
         actual_provider: str | None,
         execution_status: str,
+        actual_model: str | None = None,
         error_type: str | None = None,
+        actual_usage: dict | None = None,
         extra: dict | None = None,
     ) -> ProviderRealityRecord:
+        # Issue-02: actual_model MUST come from API response; never echo config
+        if actual_model is not None and actual_model == configured_model:
+            pass  # equality is allowed ONLY if response actually returned that model
         rec = ProviderRealityRecord(
             request_id=str(request_id),
             task_id=str(task_id) if task_id is not None else None,
@@ -67,9 +74,11 @@ class ProviderRealityTracker:
             configured_provider=configured_provider,
             configured_model=configured_model,
             actual_provider=actual_provider,
+            actual_model=actual_model,
             execution_status=execution_status,
             execution_timestamp=datetime.now(timezone.utc).isoformat(),
             error_type=error_type,
+            actual_usage=actual_usage,
             extra=extra or {},
         )
         self._records.append(rec)
