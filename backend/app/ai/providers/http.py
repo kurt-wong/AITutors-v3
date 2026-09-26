@@ -43,11 +43,23 @@ class HTTPLLMProvider:
         )
         if self._http_retry_count < 0:
             raise ValueError(f"http_retry_count must be >= 0, got {self._http_retry_count}")
-        # FORMAL-E2E-ENABLEMENT-02: last API response reality (model/usage) — not config echo
+        # FORMAL-E2E-ENABLEMENT-02/03: last API response reality (not config echo).
+        # Reset at every complete() call — must never inherit previous success (Issue-D).
         self.last_response_model: str | None = None
         self.last_response_usage: dict | None = None
+        self.last_finish_reason: str | None = None
+        self.last_response_chars: int | None = None
+        self.last_response_bytes: int | None = None
+        self.last_parse_error_type: str | None = None
 
     async def complete(self, prompt: str) -> str:
+        # Issue-D: reset actual state BEFORE each call (no inheritance from prior success)
+        self.last_response_model = None
+        self.last_response_usage = None
+        self.last_finish_reason = None
+        self.last_response_chars = None
+        self.last_response_bytes = None
+        self.last_parse_error_type = None
         resp = None
         last_transport_error: httpx.TransportError | None = None
         # I-1-A：条件 Authorization 头——api_key 非空才发，空/None 完全不发（Ollama 无 key，
@@ -81,14 +93,24 @@ class HTTPLLMProvider:
                 f"LLM provider returned HTTP {status}",
                 retryable=status in _RETRYABLE_STATUS,
             ) from exc
+        raw_body = getattr(resp, "content", None)
+        if raw_body is None:
+            raw_body = getattr(resp, "_content", None)
+        self.last_response_bytes = len(raw_body) if raw_body is not None else None
         try:
             data = resp.json()
             content = data["choices"][0]["message"]["content"]
-            # FORMAL-E2E-ENABLEMENT-02: actual_* must come from API response, not config
+            # FORMAL-E2E-ENABLEMENT-02/03: actual_* + response evidence from API body
             self.last_response_model = data.get("model")
             usage = data.get("usage")
             self.last_response_usage = usage if isinstance(usage, dict) else None
+            try:
+                self.last_finish_reason = data["choices"][0].get("finish_reason")
+            except (KeyError, IndexError, TypeError):
+                self.last_finish_reason = None
+            self.last_response_chars = len(content) if isinstance(content, str) else None
         except (KeyError, IndexError, TypeError, json.JSONDecodeError) as exc:
+            self.last_parse_error_type = type(exc).__name__
             # B-2（对抗审查）：HTTP 200 但 body 违反 adapter contract（非 JSON / choices 缺失/
             # 空 / message/content 缺失）→ 翻译为 LLMProviderError(retryable=False)。不得泄漏裸
             # JSONDecodeError/IndexError/KeyError/TypeError——会被 LLMExecutor._error_type 误分类
@@ -99,6 +121,7 @@ class HTTPLLMProvider:
             ) from exc
         if content is None:
             # content 键存在但为 null → 同样 contract violation（明确按 adapter contract 处理）
+            self.last_parse_error_type = "ContentNull"
             raise LLMProviderError(
                 "LLM provider returned malformed body: content is null", retryable=False
             )

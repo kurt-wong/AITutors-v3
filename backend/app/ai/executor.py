@@ -227,6 +227,10 @@ class LLMExecutor:
                 actual_provider=actual_provider,
                 actual_model=actual_model,
                 actual_usage=actual_usage,
+                finish_reason=getattr(self._gateway, "last_finish_reason", None),
+                response_chars=getattr(self._gateway, "last_response_chars", None),
+                response_bytes=getattr(self._gateway, "last_response_bytes", None),
+                parse_error_type=getattr(self._gateway, "last_parse_error_type", None),
                 execution_status="completed" if outcome is not None else "failed",
                 error_type=None if outcome is not None else self._error_type(last_exc),
             )

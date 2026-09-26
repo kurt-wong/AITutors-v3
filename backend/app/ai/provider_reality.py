@@ -34,6 +34,10 @@ class ProviderRealityRecord:
     execution_timestamp: str
     error_type: str | None = None
     actual_usage: dict | None = None
+    finish_reason: str | None = None
+    response_chars: int | None = None
+    response_bytes: int | None = None
+    parse_error_type: str | None = None
     extra: dict = field(default_factory=dict)
 
     def to_dict(self) -> dict:
@@ -61,6 +65,10 @@ class ProviderRealityTracker:
         actual_model: str | None = None,
         error_type: str | None = None,
         actual_usage: dict | None = None,
+        finish_reason: str | None = None,
+        response_chars: int | None = None,
+        response_bytes: int | None = None,
+        parse_error_type: str | None = None,
         extra: dict | None = None,
     ) -> ProviderRealityRecord:
         # Issue-02: actual_model MUST come from API response; never echo config
@@ -79,6 +87,10 @@ class ProviderRealityTracker:
             execution_timestamp=datetime.now(timezone.utc).isoformat(),
             error_type=error_type,
             actual_usage=actual_usage,
+            finish_reason=finish_reason,
+            response_chars=response_chars,
+            response_bytes=response_bytes,
+            parse_error_type=parse_error_type,
             extra=extra or {},
         )
         self._records.append(rec)

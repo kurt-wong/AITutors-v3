@@ -92,7 +92,15 @@ class AnnotationService:
         try:
             payload = json.loads(response)
         except (json.JSONDecodeError, TypeError) as exc:
-            raise ValueError(f"LLM response not valid JSON: {exc}") from exc
+            # FORMAL-E2E-ENABLEMENT-03 Issue-C: minimal parse evidence (debug only;
+            # no raw user content / secrets stored — only sizes + error class)
+            _n = len(response) if isinstance(response, str) else None
+            _b = len(response.encode("utf-8")) if isinstance(response, str) else None
+            raise ValueError(
+                f"LLM response not valid JSON: {exc} "
+                f"[parse_error_type={type(exc).__name__} "
+                f"response_chars={_n} response_bytes={_b}]"
+            ) from exc
 
         ok, violations = validate_annotation_payload(payload)
         if not ok:

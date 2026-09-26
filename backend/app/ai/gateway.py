@@ -48,6 +48,10 @@ class LLMGateway:
         self._last_configured_model: str | None = None
         self._last_actual_model: str | None = None
         self._last_actual_usage: dict | None = None
+        self._last_finish_reason: str | None = None
+        self._last_response_chars: int | None = None
+        self._last_response_bytes: int | None = None
+        self._last_parse_error_type: str | None = None
 
     def authorize(self, *, task_context: object, budget_ok: bool = False) -> None:
         """由真实运行上下文注入 live 授权。
@@ -78,6 +82,22 @@ class LLMGateway:
     @property
     def last_actual_usage(self) -> dict | None:
         return getattr(self, "_last_actual_usage", None)
+
+    @property
+    def last_finish_reason(self) -> str | None:
+        return getattr(self, "_last_finish_reason", None)
+
+    @property
+    def last_response_chars(self) -> int | None:
+        return getattr(self, "_last_response_chars", None)
+
+    @property
+    def last_response_bytes(self) -> int | None:
+        return getattr(self, "_last_response_bytes", None)
+
+    @property
+    def last_parse_error_type(self) -> str | None:
+        return getattr(self, "_last_parse_error_type", None)
 
     async def complete(
         self,
@@ -122,15 +142,26 @@ class LLMGateway:
             )
         # Provider Invocation Port seam：每次真实 provider 调用前原子计数（Lock-4/Note-1）
         await invocation_counter.consume(task_id)
-        # Provider Reality Tracking：configured 来自本地；actual 必须来自 API response
+        # Provider Reality Tracking (Issue-D): reset BEFORE call — never inherit prior success
+        self._last_actual_provider = None
+        self._last_actual_model = None
+        self._last_actual_usage = None
+        self._last_finish_reason = None
+        self._last_response_chars = None
+        self._last_response_bytes = None
+        self._last_parse_error_type = None
         self._last_configured_model = getattr(live, "_model", None) or getattr(
             live, "model", None
         )
         self._last_actual_provider = getattr(live, "name", type(live).__name__)
         result = await live.complete(prompt)
-        # actual_* 只能来自 response body（Issue-02：禁止 actual=config 伪记录）
+        # actual_* / response evidence only from this response body
         self._last_actual_model = getattr(live, "last_response_model", None)
         self._last_actual_usage = getattr(live, "last_response_usage", None)
+        self._last_finish_reason = getattr(live, "last_finish_reason", None)
+        self._last_response_chars = getattr(live, "last_response_chars", None)
+        self._last_response_bytes = getattr(live, "last_response_bytes", None)
+        self._last_parse_error_type = getattr(live, "last_parse_error_type", None)
         return result
 
     def _resolve_live_provider(self, provider: str | None) -> object | None:
