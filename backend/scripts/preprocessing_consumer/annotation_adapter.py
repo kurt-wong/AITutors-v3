@@ -63,11 +63,13 @@ def _leaf_content(unit: ManifestUnit) -> dict:
             "role": "explanation",
             "explanation_zone": "inline_explanation",
         }
-    # options: 不再 fabricate per-label 声明。
-    # preprocessing 提供 options_lines 是事实，但不提供 per-label 粒度。
-    # V3 IRBuilder 按 label 查 span（sp-Q1.option.A），我们没有这个粒度的数据。
-    # 不声明 options → choice-type 单元会因 "options missing" 变 incomplete，
-    # 这是诚实结果：暴露 V3 格式与 preprocessing 证据粒度的真实 gap。
+    # options: per-label declaration when producer provides per-option spans.
+    # Fall back to gap registration when only options_lines range is available.
+    if unit.options:
+        content["options"] = [
+            {"role": "option", "label": opt.label}
+            for opt in unit.options
+        ]
     return content
 
 
@@ -89,7 +91,7 @@ def _unit_gaps(unit: ManifestUnit, canonical_unit_type: str) -> list[dict]:
                 "it is NOT evidence that standalone units have no material."
             ),
         })
-    if unit.original_question_type in _CHOICE_TYPES and unit.options_lines:
+    if unit.original_question_type in _CHOICE_TYPES and unit.options_lines and not unit.options:
         gaps.append({
             "code": GAP_OPTION_LABEL_SPAN_UNAVAILABLE,
             "unit_id": unit.unit_id,

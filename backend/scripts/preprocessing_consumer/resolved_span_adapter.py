@@ -30,14 +30,16 @@ def _make_span(
     start: int,
     end: int,
     source_version_id: uuid.UUID,
+    label: str | None = None,
 ) -> dict | None:
     """构造一个 ResolvedSpan dict。行号越界返回 None。"""
     n = len(lines)
     if start < 1 or end > n or start > end:
         return None
     line_refs = tuple(line_ref_for(i) for i in range(start, end + 1))
+    span_id = f"sp-{unit_id}.{role}" + (f".{label}" if label else "")
     return {
-        "span_id": f"sp-{unit_id}.{role}",
+        "span_id": span_id,
         "source_version_id": source_version_id,
         "role": role,
         "start_line_ref": line_ref_for(start),
@@ -93,9 +95,24 @@ def manifest_to_resolved_spans(
             _try(unit.unit_id, "answer", unit.answer_lines)
             _try(unit.unit_id, "explanation", unit.explanation_lines)
             _try(unit.unit_id, "extra", unit.extra_lines)
-            # options: preprocessing 只给区间，V3 option 是逐选项。
-            # Track B 先把整个 options 区间作为一个 span。
-            _try(unit.unit_id, "option", unit.options_lines)
+            # options: per-label spans when available; fallback to single region.
+            if unit.options:
+                for opt in unit.options:
+                    s = _make_span(unit.unit_id, "option", lines,
+                                   opt.start_line, opt.end_line,
+                                   source_version_id, label=opt.label)
+                    if s is not None:
+                        resolved.append(s)
+                    else:
+                        unresolved.append({
+                            "reference_id": f"ref-{unit.unit_id}.option.{opt.label}",
+                            "role": "option",
+                            "resolution_status": "missing",
+                            "evidence": (f"option {opt.label} lines {opt.start_line}-{opt.end_line} out of range",),
+                            "code": CODE_BROKEN_LINE_REFERENCE,
+                        })
+            else:
+                _try(unit.unit_id, "option", unit.options_lines)
         else:
             # span_id 命名与 IRBuilder._content_span_id 对齐（防跨路径漂移）：
             #   shared material → sp-<uid>.material

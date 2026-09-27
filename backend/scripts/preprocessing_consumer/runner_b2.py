@@ -263,11 +263,25 @@ def _build_resolved_run(
             })
 
     def _try_options_region(unit: ManifestUnit):
-        """options_lines → 单个 options_region span（不制造 per-label A/B/C/D）。"""
-        if not unit.options_lines:
-            return
-        start, end = unit.options_lines
-        _try(unit.unit_id, "options", (start, end), sv_id)
+        """options: per-label spans when available; fallback to single region."""
+        if unit.options:
+            for opt in unit.options:
+                s = _make_resolved_span(unit.unit_id, "option", lines,
+                                        opt.start_line, opt.end_line,
+                                        sv_id, label=opt.label)
+                if s is not None:
+                    spans.append(s)
+                else:
+                    unresolved.append({
+                        "reference_id": f"ref-{unit.unit_id}.option.{opt.label}",
+                        "role": "option",
+                        "resolution_status": "missing",
+                        "evidence": (f"option {opt.label} lines {opt.start_line}-{opt.end_line} out of range",),
+                        "code": CODE_BROKEN_LINE_REFERENCE,
+                    })
+        elif unit.options_lines:
+            start, end = unit.options_lines
+            _try(unit.unit_id, "options", (start, end), sv_id)
 
     def _answer_span(unit: ManifestUnit) -> tuple[int, int] | None:
         """answer_lines 优先；fallback 到 answer_evidence_lines（v2.4+）。"""

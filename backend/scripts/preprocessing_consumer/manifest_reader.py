@@ -27,6 +27,14 @@ class ManifestSection:
 
 
 @dataclass(frozen=True)
+class ManifestOption:
+    """Producer 声明的单个选项 span（label + 行号区间）。"""
+    label: str
+    start_line: int
+    end_line: int
+
+
+@dataclass(frozen=True)
 class ManifestUnit:
     unit_id: str
     unit_type: str                          # Producer 词表: standalone_question | composite_question
@@ -36,6 +44,7 @@ class ManifestUnit:
     printed_number: str | None = None
     stem_lines: tuple[int, int] | None = None
     options_lines: tuple[int, int] | None = None
+    options: tuple[ManifestOption, ...] = field(default_factory=tuple)
     extra_lines: tuple[int, int] | None = None
     answer_lines: tuple[int, int] | None = None
     explanation_lines: tuple[int, int] | None = None
@@ -86,6 +95,12 @@ def load_manifest(path: Path) -> Manifest:
             printed_number=u.get("printed_number"),
             stem_lines=_pair(u.get("stem_lines")),
             options_lines=_pair(u.get("options_lines")),
+            options=tuple(
+                ManifestOption(label=o["label"], start_line=int(o["start_line"]),
+                               end_line=int(o["end_line"]))
+                for o in (u.get("options") or [])
+                if isinstance(o, dict) and "label" in o and "start_line" in o
+            ),
             extra_lines=_pair(u.get("extra_lines")),
             answer_lines=_pair(u.get("answer_lines")),
             explanation_lines=_pair(u.get("explanation_lines")),

@@ -290,10 +290,10 @@ async def run_corpus(corpus_root: Path, output_path: Path):
         async with async_session_maker() as session:
             try:
                 ta = await _track_a(session, manifest, source_lines, source_path)
+                await session.commit()
             except Exception as exc:
-                ta = {"track": "A", "status": "session_error", "error": str(exc)[:500]}
-            finally:
                 await session.rollback()
+                ta = {"track": "A", "status": "session_error", "error": str(exc)[:500]}
         paper_result["track_a"] = ta
         if ta.get("status") == "completed":
             report["track_a"]["completed"] += 1
@@ -311,10 +311,10 @@ async def run_corpus(corpus_root: Path, output_path: Path):
         async with async_session_maker() as session:
             try:
                 tb = await _track_b(session, manifest, source_lines, source_path)
+                await session.commit()
             except Exception as exc:
-                tb = {"track": "B", "status": "session_error", "error": str(exc)[:500]}
-            finally:
                 await session.rollback()
+                tb = {"track": "B", "status": "session_error", "error": str(exc)[:500]}
         paper_result["track_b"] = tb
         if tb.get("status") == "completed":
             report["track_b"]["completed"] += 1
