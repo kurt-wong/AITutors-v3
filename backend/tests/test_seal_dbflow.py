@@ -63,7 +63,7 @@ async def test_b2_line_ref_db_unique_constraint(session, pdf_bytes):
     )
     await session.flush()
     v = await src.create_source_version(
-        document_id=doc.id, artifact_kind="pdf", role="native", provider="native",
+        document_id=doc.id, artifact_kind="raw_l1", role="native", provider="native",
         body_text="line1", body_hash=sha256_hex("line1"),
         integrity_hash=sha256_hex("line1"), page_count=1, line_count=1,
         status="draft",
@@ -409,7 +409,7 @@ async def test_figure_id_db_unique_constraint(session, pdf_bytes_with_figure):
     )
     await session.flush()
     v = await src.create_source_version(
-        document_id=doc.id, artifact_kind="pdf", role="native", provider="native",
+        document_id=doc.id, artifact_kind="raw_l1", role="native", provider="native",
         body_text="x", body_hash=sha256_hex("x"),
         integrity_hash=sha256_hex("x"), page_count=1, line_count=1,
         status="draft",

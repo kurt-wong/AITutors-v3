@@ -59,7 +59,7 @@ async def _seed_two_versions(session, texts_a, texts_b):
 
     async def _mk_sv(texts):
         sv = await src.create_source_version(
-            document_id=doc.id, artifact_kind="pdf", role="native", provider="native",
+            document_id=doc.id, artifact_kind="raw_l1", role="native", provider="native",
             body_text="\n".join(texts), body_hash=sha256_hex(list(texts)),
             integrity_hash=sha256_hex(list(texts)), page_count=1, line_count=len(texts),
             status="draft",

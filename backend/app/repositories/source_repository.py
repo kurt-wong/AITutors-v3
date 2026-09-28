@@ -11,6 +11,7 @@ from app.models.source import (
     DocumentSourceSpan,
     DocumentSourceVersion,
     SourceFigure,
+    validate_artifact_compatibility,
 )
 from app.repositories.base import (
     AppendOnlyViolation,
@@ -87,6 +88,10 @@ class SourceRepository(BaseRepository):
         re-read existing（winner/loser 收敛到同一 version）。stage/hash 为 None（非 seal 路径）
         在 NULLS DISTINCT 下不冲突，照常插入。
         """
+        try:
+            validate_artifact_compatibility(role, provider, artifact_kind)
+        except ValueError as e:
+            raise RepositoryError(str(e)) from e
         stmt = (
             pg_insert(DocumentSourceVersion)
             .values(

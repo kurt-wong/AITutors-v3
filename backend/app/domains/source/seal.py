@@ -27,7 +27,13 @@ from app.domains.source.line_index import (
     rebuild_body_text,
     verify_body_rebuild,
 )
-from app.models.source import DocumentSourceLine, DocumentSourceSpan, DocumentSourceVersion, SourceFigure
+from app.models.source import (
+    DocumentSourceLine,
+    DocumentSourceSpan,
+    DocumentSourceVersion,
+    SourceFigure,
+    validate_artifact_compatibility,
+)
 from app.repositories.source_repository import SourceRepository
 
 SEAL_CONTRACT_VERSION = "seal/v1"
@@ -35,25 +41,15 @@ SEAL_CONTRACT_VERSION = "seal/v1"
 _STAGE = "seal"
 _ARTIFACT_KIND = "raw_l1"  # OCR/native 第一层结构化文本（10 §4.2）
 
-# BUG-V3-008（errata）：seal role/provider 封闭配对。独立引擎必须独立身份，防 LE identity 漂移。
-_SEAL_ROLE_PROVIDERS = {
-    "native": {"native"},
-    "ocr_ppsv3": {"ppsv3"},
-    "ocr_ppsvl": {"paddleocr-vl"},
-    "docx": {"docx"},
-}
-
 
 def validate_seal_role_provider(role: str, provider: str) -> None:
-    """校验 seal role/provider 封闭配对（BUG-V3-008 errata）；非法组合 fail-fast。"""
-    allowed = _SEAL_ROLE_PROVIDERS.get(role)
-    if allowed is None:
-        raise ValueError(f"unknown seal role: {role!r}")
-    if provider not in allowed:
-        raise ValueError(
-            f"seal role/provider mismatch: role={role!r} provider={provider!r}"
-            f" (allowed: {sorted(allowed)})"
-        )
+    """校验 seal role/provider 封闭配对。委托给 models.source 单一权威校验器。
+
+    seal 路径额外限制：canonical 由非 seal 路径产生，seal 不接受。
+    """
+    if role == "canonical":
+        raise ValueError("seal does not produce canonical role")
+    validate_artifact_compatibility(role, provider, _ARTIFACT_KIND)
 
 Extractor = Callable[[bytes], Awaitable[OCRResult]]
 

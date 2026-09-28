@@ -28,7 +28,7 @@ async def _mk_draft(session):
         document_id=doc.id,
         artifact_kind="canonical_l1",
         role="canonical",
-        provider="native",
+        provider="",
         body_text="",
         body_hash=_SHA,
         integrity_hash=_SHA,

@@ -35,7 +35,8 @@ os.environ.setdefault(
 
 from sqlalchemy import delete
 
-from app.core.hashing import sha256_hex
+from app.core.hashing import logical_execution_hash, sha256_hex
+from app.core.raw_bytes_identity import load_raw_bytes_identity
 from app.db.session import async_session_maker
 from app.domains.gate.service import GateService
 from app.repositories.source_repository import SourceRepository
@@ -71,7 +72,9 @@ async def _create_source_records(
 
     body_text = "\n".join(l.text for l in source_lines)
     body_hash = compute_body_hash(source_lines)
-    file_sha = sha256_hex(body_text)
+    # Decision 2 Amendment (2-B): original_sha256 = SHA256(received artifact raw bytes)
+    raw_id = load_raw_bytes_identity(source_path)
+    file_sha = raw_id.sha256
 
     doc = await src_repo.create_document(
         original_object_key=f"preprocessing/{source_path.name}",
@@ -83,12 +86,21 @@ async def _create_source_records(
     )
     await session.flush()
 
-    le_hash = sha256_hex(f"seal:preprocessing:{file_sha}")
+    # LE hash 权威收敛：与 seal.py 同一 logical_execution_hash 公式
+    le_hash = logical_execution_hash(
+        task_type="document_ingest",
+        stage="seal",
+        contract_domain={
+            "seal_contract_version": "seal/v1",
+            "parser": {"provider": "preprocessing", "role": "preprocessing"},
+        },
+        input_domain={"original_sha256": file_sha},
+    )
     version = await src_repo.create_source_version(
         document_id=doc.id,
-        artifact_kind="markdown",
-        role="native",
-        provider="native",
+        artifact_kind="canonical_l1",
+        role="preprocessing",
+        provider="preprocessing",
         body_text=body_text,
         body_hash=body_hash,
         integrity_hash=body_hash,
@@ -141,7 +153,16 @@ async def _track_a(
             payload=payload,
             status="valid",
             logical_execution_stage="ann",
-            logical_execution_hash=sha256_hex(f"track-a:{sv_id}:{json.dumps(payload, sort_keys=True)}"),
+            logical_execution_hash=logical_execution_hash(
+                task_type="preprocessing_consumer_phase0",
+                stage="ann",
+                contract_domain={
+                    "annotation_schema_version": "semantic-metadata-annotation/v0.3",
+                    "prompt_version": f"preprocessing-adapter/{manifest.prompt_version}",
+                    "model_config_hash": sha256_hex(payload),
+                },
+                input_domain={"source_version_id": str(sv_id)},
+            ),
         )
         session.add(ann)
         await session.flush()

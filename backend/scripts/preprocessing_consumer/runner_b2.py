@@ -28,7 +28,7 @@ os.environ.setdefault(
     "postgresql+asyncpg://aitutors:change-me@localhost:5432/aitutors",
 )
 
-from app.core.hashing import sha256_hex
+from app.core.hashing import logical_execution_hash, sha256_hex
 from app.core.identity_gate import GATE_BLOCK, evaluate_identity_gate
 from app.core.identity_verifier import verify_identity
 from app.core.ir_identity import IRReadError, read_ir_identity
@@ -319,7 +319,9 @@ async def _create_source_records(
     src_repo = SourceRepository(session)
     body_text = "\n".join(l.text for l in source_lines)
     body_hash = compute_body_hash(source_lines)
-    file_sha = sha256_hex(body_text)
+    # Decision 2 Amendment (2-B): original_sha256 = SHA256(received artifact raw bytes)
+    raw_id = load_raw_bytes_identity(source_path)
+    file_sha = raw_id.sha256
 
     doc = await src_repo.create_document(
         original_object_key=f"preprocessing/{source_path.name}",
@@ -331,12 +333,21 @@ async def _create_source_records(
     )
     await session.flush()
 
-    le_hash = sha256_hex(f"seal:preprocessing:{file_sha}")
+    # LE hash 权威收敛：与 seal.py 同一 logical_execution_hash 公式
+    le_hash = logical_execution_hash(
+        task_type="document_ingest",
+        stage="seal",
+        contract_domain={
+            "seal_contract_version": "seal/v1",
+            "parser": {"provider": "preprocessing", "role": "preprocessing"},
+        },
+        input_domain={"original_sha256": file_sha},
+    )
     version = await src_repo.create_source_version(
         document_id=doc.id,
-        artifact_kind="markdown",
-        role="native",
-        provider="native",
+        artifact_kind="canonical_l1",
+        role="preprocessing",
+        provider="preprocessing",
         body_text=body_text,
         body_hash=body_hash,
         integrity_hash=body_hash,
@@ -401,7 +412,16 @@ async def _run_full_chain(
             payload=payload,
             status="valid",
             logical_execution_stage="ann",
-            logical_execution_hash=sha256_hex(f"track-b2:{sv_id}"),
+            logical_execution_hash=logical_execution_hash(
+                task_type="preprocessing_consumer_phase0",
+                stage="ann",
+                contract_domain={
+                    "annotation_schema_version": "semantic-metadata-annotation/v0.3",
+                    "prompt_version": f"preprocessing-adapter/{manifest.prompt_version}",
+                    "model_config_hash": sha256_hex(payload),
+                },
+                input_domain={"source_version_id": str(sv_id)},
+            ),
         )
         session.add(ann)
         await session.flush()
@@ -452,7 +472,22 @@ async def _run_full_chain(
             # standalone_unit 误判为 composite_unit。词表归一化已在集成边界完成（OD-2），
             # 此处只需直通；Gate 侧 `_candidate_unit_type` 仍做 fail-closed 防御（M.3）。
             unit_type = root.unit_type
-            le_hash = sha256_hex(f"compile:track-b2:{sv_id}:{ann.id}:{root.unit_id}")
+            # LE hash 权威收敛：与 gate/service.py 同一 logical_execution_hash 公式
+            le_hash = logical_execution_hash(
+                task_type="preprocessing_consumer_phase0",
+                stage="compile",
+                contract_domain={
+                    "resolver_version": "resolver/v1",
+                    "ir_schema_version": "semantic-question-ir/v0.3",
+                    "compiler_version": "compiler/v1",
+                    "gate_policy_version": "admission-gate/v1",
+                },
+                input_domain={
+                    "annotation_id": str(ann.id),
+                    "annotation_payload_hash": sha256_hex(payload),
+                    "unit_id": root.unit_id,
+                },
+            )
             candidate = await snap_repo.create_admission_candidate(
                 unit_type=unit_type,
                 source_version_id=sv_id,

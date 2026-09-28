@@ -35,7 +35,7 @@ async def _mk_doc_and_version(session, *, status: str, texts=("1. 题干", "A. �
     )
     await session.flush()
     sv = await src.create_source_version(
-        document_id=doc.id, artifact_kind="pdf", role="native", provider="native",
+        document_id=doc.id, artifact_kind="raw_l1", role="native", provider="native",
         body_text="\n".join(texts), body_hash=sha256_hex(list(texts)),
         integrity_hash=sha256_hex(list(texts)), page_count=1, line_count=len(texts),
         status="draft",

@@ -34,7 +34,7 @@ async def test_repository_create_db_roundtrip(session) -> None:
     await sr.flush()  # doc.id 由 client default 于 flush 赋值
     version = await sr.create_source_version(
         document_id=doc.id, artifact_kind="canonical_l1", role="canonical",
-        provider="native", body_text="", body_hash=_SHA, integrity_hash=_SHA,
+        provider="", body_text="", body_hash=_SHA, integrity_hash=_SHA,
         page_count=1, line_count=1, status="draft",
     )
     await sr.flush()  # version.id 落位后再建 line/figure

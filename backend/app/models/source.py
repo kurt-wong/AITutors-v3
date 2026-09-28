@@ -22,6 +22,44 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.db.base import Base
 from app.db.mixins import ProvenanceMixin, TimestampMixin, UUIDPrimaryKeyMixin, _utcnow
 
+# ── Artifact compatibility rules（Frozen Spec 10 §4.2 + Errata PRIMARY-PATH-01 §2.6）──
+# 单一权威定义。seal path 与 repository path 均调用本模块的校验函数。
+# 禁止在其他位置复制闭集或配对规则。
+
+_ARTIFACT_KINDS = frozenset({"original_binary", "raw_l1", "canonical_l1"})
+
+_ROLE_PROVIDER_PAIRS: dict[str, frozenset[str]] = {
+    "native": frozenset({"native"}),
+    "ocr_ppsv3": frozenset({"ppsv3"}),
+    "ocr_ppsvl": frozenset({"paddleocr-vl"}),
+    "docx": frozenset({"docx"}),
+    "preprocessing": frozenset({"preprocessing"}),
+    # Spec 10 §4.2: "canonical role 无 provider" — DB 列 NOT NULL，约定空字符串。
+    # [NEW-GAP-3 登记] provider="" 是实现约定（Spec 未指定 NOT NULL 列的空 provider 存储值），
+    # 不是 Spec 声明。如 Owner 裁定其他约定，需同步修改此处与测试 fixture。
+    "canonical": frozenset({""}),
+}
+
+
+def validate_artifact_compatibility(role: str, provider: str, artifact_kind: str) -> None:
+    """校验 role/provider 封闭配对 + artifact_kind 闭集。非法值 fail-fast。
+
+    所有 DocumentSourceVersion 写入路径必须经此校验（seal + repository）。
+    """
+    if artifact_kind not in _ARTIFACT_KINDS:
+        raise ValueError(
+            f"invalid artifact_kind: {artifact_kind!r} "
+            f"(allowed: {sorted(_ARTIFACT_KINDS)})"
+        )
+    allowed = _ROLE_PROVIDER_PAIRS.get(role)
+    if allowed is None:
+        raise ValueError(f"unknown role: {role!r}")
+    if provider not in allowed:
+        raise ValueError(
+            f"role/provider mismatch: role={role!r} provider={provider!r}"
+            f" (allowed: {sorted(allowed)})"
+        )
+
 
 class Document(UUIDPrimaryKeyMixin, Base):
     """documents（10 §4.1）。不保存最终题目文本；processing_status 是 Source 内容生命周期摘要。"""
