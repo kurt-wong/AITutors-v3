@@ -42,3 +42,8 @@ backend/data/
 PHASE_I*_REVIEW.md
 PHASE_I_REPORT.md
 PHASE_I2C_DIAGNOSTIC_REPORT.json
+
+# Runtime-generated provider snapshot (contains environment instance identifiers:
+# document_id / task_id / request_id). Not a reproducible governance asset.
+# Disposition: AITutor-X/Docs/60_REPORTS/UNTRACKED-ASSET-DISPOSITION-LIST-01.md §3.3 (group G10, decision (c) EXCLUDE)
+provider_reality.json
