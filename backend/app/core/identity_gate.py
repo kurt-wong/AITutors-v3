@@ -68,6 +68,8 @@ class IdentityGateDecision:
 def evaluate_identity_gate(verification) -> IdentityGateDecision:
     """汇总 M4 验证结果，做出放行/阻断决策。
 
+    冻结名（DESIGN-v1.1 §4.6）= `evaluate_identity`；本模块导出同名别名。
+
     输入: verification — M4 VerificationResult（或等价对象）
     输出: IdentityGateDecision(gate=..., identity_state=..., ...)
 
@@ -153,3 +155,7 @@ def evaluate_identity_gate(verification) -> IdentityGateDecision:
         GATE_PASS, "VERIFIED", "AVAILABLE",
         REASON_IDENTITY_VERIFIED_SEMANTIC_AVAILABLE, mismatches,
     )
+
+
+# DESIGN-v1.1 §4.6 冻结接口名（interface reference only，D2=b）。
+evaluate_identity = evaluate_identity_gate

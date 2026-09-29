@@ -326,7 +326,7 @@ STOP 后不得「先实现再说」。
 |---|---|---|
 | Authority assignment | ⏸ WAITING | OD-002 赋权 DEFERRED（D2=b 已部分收口接口依据） |
 | Design v1.1 正式 authority 化 | ⏸ PARTIAL | D2=(b)：**仅 §4.2–§4.6 M1–M5** interface reference；§1/§2/§3 不授权实现 |
-| D2/D3/D4 对应实现扩展 | ⏸ WAITING | 需 authority 输入（OD-003 OPEN） |
+| D2/D3/D4 对应实现扩展 | ✅ D4 M1–M5 interface **DONE**（2026-09-29） | 实现落点 `app/core/`（SYSTEM-BASELINE）；**不含** production Gate/Admission 接线（A8 仍 BLOCKED） |
 | 代表性冲突规则扩展 | ⏸ WAITING | 避免实现未裁语义 |
 
 ### C. 明确禁止（当前）
@@ -382,6 +382,28 @@ NOT AUTHORIZED:
   §1 Identity 双轴模型 / VERIFIED·PENDING·AVAILABLE 状态机
   新 identity schema · Migration · N-values · multi-blank
   R-5 signer · Gate authority 重构 · Admission 规则改写
+```
+
+#### D.2 Phase Evidence — M1–M5 interface（2026-09-29）
+
+```text
+授权条款 : D4=(b) DESIGN-v1.1 §4.2–§4.6 interface only
+实现落点 : backend/app/core/{manifest_identity,raw_bytes_identity,ir_identity,
+           identity_verifier,identity_gate}.py（SYSTEM-BASELINE 已登记）
+冻结名   : read_manifest_identity · load_raw_bytes(=load_raw_bytes_identity)
+           read_ir_identity · verify_identity · evaluate_identity(=evaluate_identity_gate)
+测试     : tests/test_identity_interface_freeze.py + 各 M 单元/对抗
+           （test_identity_* / test_adversarial_identity_verifier / test_adversarial_m5_*）
+结果     : 355 passed（M1–M5 相关面；当场 pytest，非抄旧数字）
+实际行为 : 纯函数接口层；raw bytes=唯一身份源；IR 不作身份源；
+           M5 fail-closed（VERIFIED+PENDING=BLOCK 为 fail-closed 加固，
+           非 §1 双轴语义权威）；identity FAILED 不判 semantic
+不变证明 : Frozen Spec 未改 · schema 未改 · migration 未发生 ·
+           Admission/Gate 语义未改 · 无新 identity 表/列 ·
+           production GateService 仍未接 M5（A8 BLOCKED 保持）
+未做     : §1 双轴状态机落库 · 新 schema · Migration Gate ·
+           Gate/Admission 语义重构 · production 接线
+Exit     : 满足 —— interface-only 实现闭环；下一步扩段须另令
 ```
 
 ### D.1 Multi-blank representation — BLOCKED（Owner 2026-09-29 选 3）

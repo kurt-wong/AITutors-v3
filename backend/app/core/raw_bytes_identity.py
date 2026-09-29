@@ -52,3 +52,7 @@ def load_raw_bytes_identity(source_path: Path) -> RawBytesIdentity:
         bytes_source=str(source_path),
         sha256=sha256,
     )
+
+
+# DESIGN-v1.1 §4.3 冻结接口名（interface reference only，D2=b）。
+load_raw_bytes = load_raw_bytes_identity
