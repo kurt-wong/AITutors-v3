@@ -173,6 +173,7 @@ await self._require_evidence_authority(candidate)                            # �
 | R-2 | **APP_SECRET 泄露属于 Deployment Environment Boundary**。本地 .env 提供、不入库；泄露后攻击者可伪造 proof——这是部署边界失守，不是本层缺陷。secret 缺失/过短本身 fail-closed。 | 92号 §2 声明 3 |
 | R-3 | **DB 触发器级 append-only 属于 Phase-2**。当前 append-only = 应用层（Repository 无 update/delete + insert 前状态机 + 探针函数）。拥有 DB 直连权限者可 UPDATE/DELETE——与 R-1/R-2 同属 Deployment Boundary 威胁模型（家庭内部弱信任模型）。92号 §7 风险 2 已记录此 trade-off。 | 92号 §5.5 |
 | R-4 | **source_version supersede 自动触发属于 Source 域职责**。`invalidate_claims_for_source_version` 已提供并测试；Source 域尚无 supersede 生产流程可接线。annotation 级联已接。 | 92号 §5.4 |
+| R-5 | **Machine validation events assume trusted in-process callers.** 自动路径不证明「谁产生了事件」，只证明「事件符合存储与状态机约束」。`append_event` 写入的机器 `validated` 事件会被 `auto_gate` approve 接受——与 R-3 同属 in-process / DB 信任模型。多服务 / 外部 Worker / 第三方 Gate 进入前须重开此项。 | Owner 2026-09-29 裁决（EB-008 A2 攻击向量） |
 
 ---
 

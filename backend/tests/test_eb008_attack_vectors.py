@@ -4,7 +4,7 @@
 已接受风险 R-1..R-4 不当作新发现重复上报（Notes §6）。
 
 FINDING-1 (A1) 已修复：未来时间戳劫持 invalidate 投影 → 修复后为回归测试。
-FINDING-2 (A2) 登记：伪造机器 VALIDATED 事件可驱动 auto_approve（无 Gate 溯源绑定）。
+A2 ACCEPTED RISK R-5（Owner 2026-09-29）：机器事件无 Gate 溯源绑定；测试钉住边界行为。
 """
 
 from __future__ import annotations
@@ -192,18 +192,13 @@ class TestTimestampProjectionAttack:
 
 
 class TestForgedMachineEvent:
-    """FINDING-2 (A2)：伪造机器 VALIDATED 事件 → auto_approve。
+    """ACCEPTED RISK R-5 (Owner 2026-09-29): machine events have no Gate provenance.
 
-    无新业务字段约束下，机器事件无溯源绑定；与 R-3 的 in-process 信任相邻。
-    登记为攻击证据：当前行为 = 放行（xfail 期望应拦截）。
+    R-5: Machine validation events assume trusted in-process callers.
+    Pins current boundary behavior for future multi-service / external worker regression.
     """
 
-    @pytest.mark.xfail(
-        reason="FINDING-2 A2: forged machine VALIDATED via append_event is accepted "
-               "by auto_gate approve (no Gate provenance binding on machine events)",
-        strict=True,
-    )
-    async def test_forged_machine_event_should_block_approve(self, session):
+    async def test_machine_event_relayed_without_provenance_proof__r5(self, session):
         sv, ann, cand = await _seed_materializable(session)
         repo = EvidenceRepository(session)
         await repo.append_event(
@@ -214,8 +209,8 @@ class TestForgedMachineEvent:
         result = await svc.approve(
             candidate_id=cand.id, provenance={"source": "auto_gate"}
         )
-        # 期望失败（被拦）；当前会 approved → xfail
-        assert result.decision_status != "approved"
+        # R-5 boundary: no independent provenance proof on machine events.
+        assert result.decision_status == "approved"
 
 
 class TestProofBinding:
