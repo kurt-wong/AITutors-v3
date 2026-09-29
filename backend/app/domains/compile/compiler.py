@@ -91,7 +91,13 @@ class Compiler:
         return next((c for c in node.content if c.role == role), None)
 
     def _compile_role(self, role: str, label: str | None, span_id: str) -> CompiledRole:
-        span = self._span_by_id[span_id]
+        span = self._span_by_id.get(span_id)
+        if span is None:
+            # 确定性拒绝：IR 引用的 span 不在 ResolvedRun 中（装配错误 / 悬空 span_id）
+            raise ValueError(
+                f"compiled role {role!r} references unknown span_id {span_id!r} "
+                f"(not in ResolvedRun); refuse to materialize"
+            )
         text = _slice_span(span, self._line_by_ref)
         return CompiledRole(
             role=role, span_id=span_id, line_refs=tuple(span.line_refs),
@@ -99,7 +105,12 @@ class Compiler:
         )
 
     def _compile_material(self, node: IRNode, sc):
-        span = self._span_by_id[sc.span_id]
+        span = self._span_by_id.get(sc.span_id)
+        if span is None:
+            raise ValueError(
+                f"material {sc.role!r} references unknown span_id {sc.span_id!r} "
+                f"(not in ResolvedRun); refuse to materialize"
+            )
         text = _slice_span(span, self._line_by_ref)
         dedup = identity_hash({"material_type": sc.role, "text": normalize_identity(text)})
         return CompiledMaterial(
