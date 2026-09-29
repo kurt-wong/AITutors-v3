@@ -286,7 +286,9 @@ EB-008 验收: 26/26（test_eb008_evidence_authority.py）
 | **A1** 时间戳投影 / naive 时间 | **CLOSED** | `b15c9fe` + `25933c3`；`test_eb008_attack_vectors.py`、`test_adv_reaudit*.py` |
 | **R-5** 机器事件无 Gate 溯源 | **ACCEPTED RISK**（非 bug / 非 TODO / 非 security debt） | Notes §6 R-5；`test_machine_event_relayed_without_provenance_proof__r5` 钉住边界 |
 | **OD-R-01** Answer 业务对象 | **PARTIAL CONFIRMED** | 1 Instance × 1 Answer `role_index=0` 成立；`Answer→N ordered values` **未建模** |
-| **D-07 / D-08** representation | **OPEN**（待 Owner） | CR-003 §6 显式排除；不据本节推导 |
+| **D-07 / D-08** representation | **DECIDED (3)**（2026-09-29 Owner） | 多空题 = `sub_questions`（N Instance × 1 Answer）；N-values = NOT IMPLEMENTED；见 `84_CONFLICT_LEDGER` 裁决节 |
+| **OD-002** Design v1.1 authority | **C — WORKING REFERENCE**（赋权 DEFERRED） | Owner 2026-09-29；待 D2/D3/D4 closure |
+| **OD-003** D2/D3/D4 | **OPEN**（随 OD-002 赋权后裁） | 不提前裁 |
 | **R-1..R-4** | 仍按 §6 | 不变 |
 
 **边界（本节不扩大解释）：**
@@ -298,5 +300,5 @@ R-5 含义：架构选择信任 in-process machine caller；多服务 / 外部 W
 OD-R-01 半确认含义：只证到「缺 N-values 载体」，不裁 representation
 ```
 
-**下一阻塞（业务裁决，非代码质量）：** CR-003 STOP 解除条件 = OD-R-01 representation（D-07/D-08）+ D2/D3/D4（OD-002/OD-003）。
+**下一阻塞（业务裁决，非代码质量）：** D-07/D-08 已裁 (3)；余 = OD-002 赋权 + OD-003 D2/D3/D4。CR-003 STOP 中 representation 分量已解，authority 分量仍 OPEN。
 

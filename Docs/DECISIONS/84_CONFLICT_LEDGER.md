@@ -71,6 +71,17 @@
 
 ---
 
+### 2026-09-29 Owner 裁决 — D-07 / D-08（representation）
+
+| ID | 裁决 |
+|---|---|
+| **D-07** | **DECIDED — (3) 多空题走 `sub_questions`（N Instance × 1 Answer）**。`payload answer[]` 元素 = Answer 对象（每 Instance 一份，`role=answer` / `role_index=0`），**不是**有序值数组。`answer_status` 挂在 Answer（`role=answer`）——与 `10 §6.3`「仅 role=answer」一致。**不**引入 Value / OrderedValue 载体 |
+| **D-08** | **DECIDED — N-values container = NOT IMPLEMENTED**。`value[i]` 不作为独立字段 / 行模型；多空题 = 多个可独立验证子题（`sub_questions`），**非**「一个 Answer 内 N 个有序值」。与 OD-R-01 L0 字面「N ordered values」的张力**由 Owner 接受**（设计选择：多空 = 多子任务，非单 Answer 多值） |
+
+**依据**：Owner 2026-09-29（本会话裁决输入）。**不改** Frozen Spec 正文、**不**授权 schema / migration、**不**新建决策文件。实现侧现状与此一致（`CompiledAnswer` 单 `text`；物化 1 Instance × 1 Answer 行）。
+
+---
+
 ## A 类 — 状态漂移（Gate / Phase 状态在文档间不一致）
 
 | ID | 冲突 | 证据 | 级别 | 状态 | 备注 |
@@ -119,8 +130,8 @@
 | **D-04** | L3 `74` 对 V3 自立规范 6 处 | `74:224`（Native Path **必须**保证…）`74:226`（preprocessing **必须**满足…）`74:283`（answer span **不得**重叠）`74:385`（**唯一**允许进 IR）`74:395-396`（**禁止** CLAIMED/PROPOSED → IR）`74:418`（Validation **必须** append-only） | 🟠 | **CLOSED** | 违反 `90 §2 R3`（L3 不得定义规则）。对照 `74:94`「这个结果**只能**证明」是**正确用法**。**6 处已全部改写为「report finding + 权威指针」**，正文测量内容零改动：`224`/`226` → 指 `81 §5.4` + `82 §5.0`；`283` → 指 `75 §九`（`role_region_consistency`）+ `20 §5.5`；`385`/`395-396` → 指 `75 §三 R5` + `75 §4.5` + `75 §二·禁止转换`；`418` → 指 `75 §4.4` + `75 §三 R4` |
 | **D-05** | Gate 状态行集中面：`Status.md` 45 行 / `69` 42 行 | 扫描统计 | 🟠 | **CLOSED** | **控制已就位，无需改文档。** `90 §4`（Status Header 规范，强制）+ `82 §3.3`（状态声明模板，供 B/C 层引用）均已冻结，且两者都写明「**存量文档不强制回填**（Reconcile, don't rewrite）」。存量不回填；`69` 中**实际已 stale** 的三个块由 A-05 处理完毕。新增行强制走模板 |
 | **D-06** | `table_id`（option provenance `table_cell` identity 第四元）**指不出唯一生产者** = 治理缺口（`90 §5 Rule 4`，`90:430`）；其生产来源应为真实存在的 **Preprocessing source identity**，现行 Frozen Spec 内不存在 | `Docs/COORDINATION/FROZEN-SPEC-CHANGE-PROPOSAL-OD-01-OPTION-PROVENANCE.md:290`（生产来源 = 真实存在的 Preprocessing source identity；当前无）· 同文 `:294-302`（可核验判据五条，条件 2 / 5 实测不成立）· `Docs/COORDINATION/CONTRACT-CHANGE-RECORD-CR-002-OD-01.md:99` · L0 `10_Data_Model.md:107-108`（M1 裁剪：`document_source_tables / _cells / _fragments` 不建）· L0 `00 §5`（文档级 cell/fragment 索引为非目标） | 🟠 | **OPEN** | 登记日期 2026-09-24。只登记，不裁决（本台账规则）。生产者类型 = **Producer / Preprocessing artifact identity**（沿用 `90 §5 Rule 4` 与 Proposal §5 既有词；未新增 authority 类型 / 字段 / 状态值）。现行行为 = fail closed（`option_evidence_status` 取 `unresolved` / `incomplete`，Proposal `:306`）。本登记不修改 Frozen Spec、不授权 schema / 代码 / migration、不改变 OD-01 语义。归类：按 Rule 4（Ownership Matrix）的**归属**轴入 D 类，未新增类别 |
-| **D-07** | **payload `answer[]` 元素粒度 / `answer_status` 挂载点未写明**（OD-R-01 最小闭环在载体侧的残留） | L0 `10_Data_Model.md §5.3` payload 行 `answer[]  编译后答案 + answer_status 三字段` vs 同文件 `§6.3` OD-R-01 条款「一份 Answer + 多个有序值」→ 数组元素 = Answer 对象还是有序值**未写明**；`answer_status` 挂在 Answer 还是挂在其有序值上**亦未写明**（`10 §6.3` 字段表 `answer_status` 行注为「仅 role=answer」） | 🟠 | **OPEN** | 登记日期 2026-09-24。**只登记，不裁决**（本台账规则）。来源 = DSH《OD-R-01 固化 + Frozen Spec 最小闭环》F-06。归类：按 Rule 4（Ownership Matrix）的**归属**轴入 D 类（沿用 D-06 先例），未新增类别 / 字段 / 状态值。现行行为 = OD-R-01 业务对象边界**已定**（1 QuestionInstance → 1 Answer → N ordered values，见 `CR-003`）；**载体表达未定**，不得据 OD-R-01 推导。本登记不修改 Frozen Spec、不授权 schema / 代码 / migration / evidence 建模，不构成新 Owner Decision |
-| **D-08** | **`value[i]` 指称在 `10 §6.3` 字段表中无对应字段；「N 个有序值 → 1 行还是 N 行」未写明** | L0 `10_Data_Model.md §6.3` OD-R-01 条款使用 `value[i]` 记号，而同节字段表（`id / instance_id / role / label / role_index / text / text_hash / source_span / answer_status`）**不存在 `value` 字段**；既存唯一约束 `(instance_id, role, label, role_index)` 的自然映射为 **N 行**，与「一份 Answer」的语义层表述之间的行数关系**未写明** | 🟠 | **OPEN** | 登记日期 2026-09-24。**只登记，不裁决**。来源 = DSH 同上 F-08；该 finding 自述**不主张**「必须补字段 / 必须改 schema」。归类：同 D-07 入 D 类（沿用 D-06 先例）。本登记不修改 Frozen Spec、不授权 schema / migration / ORM，不构成新 Owner Decision |
+| **D-07** | **payload `answer[]` 元素粒度 / `answer_status` 挂载点未写明**（OD-R-01 最小闭环在载体侧的残留） | L0 `10_Data_Model.md §5.3` payload 行 `answer[]  编译后答案 + answer_status 三字段` vs 同文件 `§6.3` OD-R-01 条款「一份 Answer + 多个有序值」→ 数组元素 = Answer 对象还是有序值**未写明**；`answer_status` 挂在 Answer 还是挂在其有序值上**亦未写明**（`10 §6.3` 字段表 `answer_status` 行注为「仅 role=answer」） | 🟠 | **DECIDED** | 登记日期 2026-09-24。**2026-09-29 Owner 裁决 = (3) sub_questions / N Instance × 1 Answer**（见本文件「2026-09-29 Owner 裁决」节）。来源 = DSH F-06。归类：按 Rule 4（Ownership Matrix）的**归属**轴入 D 类（沿用 D-06 先例），未新增类别 / 字段 / 状态值。现行行为 = OD-R-01 业务对象边界**已定**（1 QuestionInstance → 1 Answer → N ordered values，见 `CR-003`）；**载体表达未定**，不得据 OD-R-01 推导。本登记不修改 Frozen Spec、不授权 schema / 代码 / migration / evidence 建模，不构成新 Owner Decision |
+| **D-08** | **`value[i]` 指称在 `10 §6.3` 字段表中无对应字段；「N 个有序值 → 1 行还是 N 行」未写明** | L0 `10_Data_Model.md §6.3` OD-R-01 条款使用 `value[i]` 记号，而同节字段表（`id / instance_id / role / label / role_index / text / text_hash / source_span / answer_status`）**不存在 `value` 字段**；既存唯一约束 `(instance_id, role, label, role_index)` 的自然映射为 **N 行**，与「一份 Answer」的语义层表述之间的行数关系**未写明** | 🟠 | **DECIDED** | 登记日期 2026-09-24。**2026-09-29 Owner 裁决 = N-values NOT IMPLEMENTED；多空题走 sub_questions**（见裁决节；与 OD-R-01 字面张力 Owner 接受）。来源 = DSH F-08；该 finding 自述**不主张**「必须补字段 / 必须改 schema」。归类：同 D-07 入 D 类（沿用 D-06 先例）。本登记不修改 Frozen Spec、不授权 schema / migration / ORM，不构成新 Owner Decision |
 
 ---
 

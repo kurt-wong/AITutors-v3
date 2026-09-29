@@ -1,5 +1,11 @@
 # PREPROCESSING-V3-CONSUMER-IDENTITY-VERIFICATION-DESIGN-v1.1
 
+> **Authority (OD-002, Owner 2026-09-29): WORKING REFERENCE only.**
+> 本文件**不是**正式 Authority Source。Authority assignment **DEFERRED** 至 D2/D3/D4（OD-003）closure。
+> 不得据此声称 interface authority 已锚定；实现引用本文件时须标 `working reference / authority pending`。
+> 权威裁决载体：本注记 + `EB008-P1-IMPLEMENTATION-NOTES.md §10`；不新建 Decision 文件。
+
+
 > **性质**：Consumer Identity Verification 实现前最终收口。**IMPLEMENTATION READY DESIGN。NOT IMPLEMENTED。**
 > **基准**：Contract v0.2 FROZEN @ `f4941ff`（sha256 `9c6b9063…7528`）· Design v1（同目录，本文件取代其为实现基准）
 > **日期**：2026-09-16 · **状态**：IMPLEMENTATION READY DESIGN / NOT IMPLEMENTED / WAITING OWNER IMPLEMENTATION AUTHORIZATION
