@@ -265,7 +265,14 @@ def enforce_state_transition(
         return
 
     # Find latest event by timestamp (Medium 7 fix)
-    latest = max(existing_events, key=lambda e: e.validated_at)
+    # key 归一为 UTC aware，防 naive/aware 混比 TypeError（与 repository._as_utc 同则）
+    def _key(e: ValidationEvent):
+        ts = e.validated_at
+        if ts.tzinfo is None:
+            return ts.replace(tzinfo=timezone.utc)
+        return ts.astimezone(timezone.utc)
+
+    latest = max(existing_events, key=_key)
 
     # Terminal states: no more events allowed
     if latest.validation_result in _TERMINAL_STATES:

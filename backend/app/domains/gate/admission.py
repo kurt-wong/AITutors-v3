@@ -550,7 +550,14 @@ def _latest_human_entry(review_trail: list | None, review_result: str) -> dict |
 
 
 def _parse_review_time(value: str | None) -> datetime:
-    """review_trail entry time（ISO-8601）→ datetime；缺失用当前 UTC（fail-safe 兜底）。"""
+    """review_trail entry time（ISO-8601）→ aware UTC datetime。
+
+    缺失用当前 UTC（fail-safe 兜底）。naive ISO 按 UTC 解释（与 proof._to_utc_iso /
+    EvidenceRepository._as_utc 同则），避免下游 aware/naive 比较 TypeError。
+    """
     if not value:
         return datetime.now(timezone.utc)
-    return datetime.fromisoformat(value)
+    dt = datetime.fromisoformat(value)
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
