@@ -166,20 +166,34 @@ class TestAttackStateMachine:
         assert await service.is_evidence_validated(cand.id, "c1") is False
 
     async def test_manipulated_timestamps_confuse_state_machine(self, session):
-        """ATTACK: FUTURE timestamp event then rejected — state machine still blocks."""
+        """ATTACK: FUTURE timestamp event then rejected — state machine still blocks.
+
+        EB-008 A1 修复后：远期未来时间戳在写路径即被拒绝（防投影劫持）。
+        允许偏移内的未来时间仍走状态机约束。
+        """
         sv, _ann, cand = await seed_candidate(session)
         repo = EvidenceRepository(session)
         service = EvidencePromotionService(repo)
-        future_time = datetime.now(timezone.utc) + timedelta(days=365)
-        future_event = ValidationEvent(
-            event_id="ve-future", claim_id="c1", validation_result="validated",
+        far_future = datetime.now(timezone.utc) + timedelta(days=365)
+        far_event = ValidationEvent(
+            event_id="ve-far", claim_id="c1", validation_result="validated",
             checks=(), validation_method="frozen_header_rule", validator="gate/v1",
-            validated_at=future_time,
+            validated_at=far_future,
+        )
+        with pytest.raises(ValueError, match="future"):
+            await repo.append_event(
+                far_event, candidate_id=cand.id, source_version_id=sv.id,
+            )
+        # 偏移内未来时间：latest = validated → REJECTED 仍 blocked
+        near_future = datetime.now(timezone.utc) + timedelta(minutes=2)
+        near_event = ValidationEvent(
+            event_id="ve-near", claim_id="c1", validation_result="validated",
+            checks=(), validation_method="frozen_header_rule", validator="gate/v1",
+            validated_at=near_future,
         )
         await repo.append_event(
-            future_event, candidate_id=cand.id, source_version_id=sv.id,
+            near_event, candidate_id=cand.id, source_version_id=sv.id,
         )
-        # latest = future validated → REJECTED blocked
         with pytest.raises(ValueError, match="only INVALIDATED transition allowed"):
             await service.record_validation(
                 "c1", _gate_rejected(),
@@ -386,12 +400,15 @@ class TestAttackPerRunIsolation:
 
 class TestAttackTimestampOrdering:
     async def test_future_timestamp_wins(self, session):
-        """Does future timestamp win over past? (latest-by-validated_at)"""
+        """Does later timestamp win over earlier? (latest-by-validated_at)
+
+        EB-008 A1 修复后：远期未来时间戳被拒；用偏移内时间戳验证排序语义。
+        """
         sv, _ann, cand = await seed_candidate(session)
         repo = EvidenceRepository(session)
         service = EvidencePromotionService(repo)
         past = datetime.now(timezone.utc) - timedelta(days=1)
-        future = datetime.now(timezone.utc) + timedelta(days=1)
+        future = datetime.now(timezone.utc) + timedelta(minutes=2)
 
         e_past = ValidationEvent(
             event_id="ve-past", claim_id="c1", validation_result="validated",
@@ -409,12 +426,12 @@ class TestAttackTimestampOrdering:
         assert await service.is_evidence_validated(cand.id, "c1") is False
 
     async def test_past_timestamp_loses(self, session):
-        """Does past timestamp lose to future?"""
+        """Does past timestamp lose to later?"""
         sv, _ann, cand = await seed_candidate(session)
         repo = EvidenceRepository(session)
         service = EvidencePromotionService(repo)
         past = datetime.now(timezone.utc) - timedelta(days=1)
-        future = datetime.now(timezone.utc) + timedelta(days=1)
+        future = datetime.now(timezone.utc) + timedelta(minutes=2)
 
         e_past_rejected = ValidationEvent(
             event_id="ve-past", claim_id="c2", validation_result="rejected",

@@ -14,7 +14,7 @@ proof 验证不在此层自动执行——human_review 事件的 proof 由消费
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import select
 
@@ -37,6 +37,11 @@ from app.repositories.base import (
 
 # INVALIDATED 事件的默认 validator（92号 §5.4）
 SYSTEM_VALIDATOR = "system/v1"
+
+# 攻击修复（MIMO EB-008 A1，2026-09-29）：validated_at 为投影排序键（Rev-4 §5），
+# 调用方若写入未来时间戳，会压过之后的 invalidate 级联（级联写 now），使
+# Authority 投影停留在 VALIDATED、approve 穿透。允许时钟偏移，拒绝远期未来时间。
+_MAX_CLOCK_SKEW = timedelta(minutes=5)
 
 __all__ = [
     "AUTHORITY_INVALIDATED",
@@ -75,6 +80,12 @@ class EvidenceRepository(BaseRepository):
         if event.validation_method == "human_review" and not review_proof:
             raise RepositoryError(
                 "human_review ValidationEvent requires review_proof (EB-008 §5.2)"
+            )
+        # A1 防御：未来时间戳会劫持 latest-by-validated_at 投影，使后续 invalidate 失效。
+        if event.validated_at > datetime.now(timezone.utc) + _MAX_CLOCK_SKEW:
+            raise ValueError(
+                f"validated_at {event.validated_at.isoformat()} is more than "
+                f"{_MAX_CLOCK_SKEW} in the future; rejecting (EB-008 A1 projection attack)"
             )
         existing = await self.find_events_for_claim(candidate_id, event.claim_id)
         if existing:
@@ -271,6 +282,8 @@ class EvidenceRepository(BaseRepository):
                 latest = max(rows, key=lambda r: r.validated_at)
                 if latest.validation_result != "validated":
                     continue  # terminal 或 rejected：不级联
+                # A1 防御：级联事件必须严格晚于既有 latest，否则 invalidate 输掉投影。
+                cascade_at = max(now, latest.validated_at) + timedelta(microseconds=1)
                 event = ValidationEvent(
                     event_id=f"ve-{claim_id}-{uuid.uuid4().hex[:8]}",
                     claim_id=claim_id,
@@ -284,7 +297,7 @@ class EvidenceRepository(BaseRepository):
                     ),
                     validation_method=validation_method,
                     validator=validator,
-                    validated_at=now,
+                    validated_at=cascade_at,
                 )
                 rec = await self.append_event(
                     event,
