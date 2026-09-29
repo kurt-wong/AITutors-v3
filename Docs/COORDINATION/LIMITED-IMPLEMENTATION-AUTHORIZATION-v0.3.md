@@ -343,8 +343,29 @@ STOP 后不得「先实现再说」。
 
 ```text
 P0  EB-008 findings closure → regression stability → implementation confidence
-P1  Segment A hardening + OD-R-01 representation consistency（按 (3)）+ Compiler/Admission edge cases
+P1  Segment A hardening + Compiler/Admission edge cases（不含多空题）
 P2  等 OD-002 赋权 + OD-003 D2/D3/D4 之后再扩段
+```
+
+### D.1 Multi-blank representation — BLOCKED（Owner 2026-09-29 选 3）
+
+```text
+STATUS : BLOCKED（暂缓，不实施）
+REASON : L0 10:468-475 要求「同一 Answer 的 N ordered values」；
+         当前实现无 N-values 载体；
+         Owner intent (3) = N Instance × 1 Answer 与 L0 冲突。
+ACTION : 不实现多空题 · 不改 schema · 不改 Frozen Spec · 不启动 Migration
+UNBLOCK: L1 Change Request 或 Owner 批准的 authority update
+         （选项1 改 L0→N Instance / 选项2 实现 N-values —— 均未选）
+```
+
+Representation 现状：
+
+```text
+single answer     ✅ 已实现
+composite 子题    ✅ 已实现（N Instance × 1 Answer，非 L0 多空题）
+multi-blank       ❌ BLOCKED
+N-values          ❌ NOT IMPLEMENTED / 禁止擅自落地
 ```
 
 **不在本矩阵内**：新治理文档、历史报告清扫、批量改名、Migration Gate 启动。
