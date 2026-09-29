@@ -43,6 +43,13 @@ SYSTEM_VALIDATOR = "system/v1"
 # Authority 投影停留在 VALIDATED、approve 穿透。允许时钟偏移，拒绝远期未来时间。
 _MAX_CLOCK_SKEW = timedelta(minutes=5)
 
+
+def _as_utc(dt: datetime) -> datetime:
+    """naive 一律按 UTC 解释（与 proof._to_utc_iso 同则），避免 TypeError。"""
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
+
 __all__ = [
     "AUTHORITY_INVALIDATED",
     "AUTHORITY_NONE",
@@ -82,9 +89,10 @@ class EvidenceRepository(BaseRepository):
                 "human_review ValidationEvent requires review_proof (EB-008 §5.2)"
             )
         # A1 防御：未来时间戳会劫持 latest-by-validated_at 投影，使后续 invalidate 失效。
-        if event.validated_at > datetime.now(timezone.utc) + _MAX_CLOCK_SKEW:
+        validated_at = _as_utc(event.validated_at)
+        if validated_at > datetime.now(timezone.utc) + _MAX_CLOCK_SKEW:
             raise ValueError(
-                f"validated_at {event.validated_at.isoformat()} is more than "
+                f"validated_at {validated_at.isoformat()} is more than "
                 f"{_MAX_CLOCK_SKEW} in the future; rejecting (EB-008 A1 projection attack)"
             )
         existing = await self.find_events_for_claim(candidate_id, event.claim_id)
@@ -109,7 +117,7 @@ class EvidenceRepository(BaseRepository):
             validator=event.validator,
             reference_ids=list(event.reference_ids) if event.reference_ids else None,
             review_proof=review_proof,
-            validated_at=event.validated_at,
+            validated_at=validated_at,
         )
         await self.add(record)
         await self.flush()  # 回填 record.id
