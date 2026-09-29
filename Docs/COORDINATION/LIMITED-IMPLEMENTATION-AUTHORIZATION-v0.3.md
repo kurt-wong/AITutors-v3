@@ -323,7 +323,7 @@ STOP 后不得「先实现再说」。
 
 | 项目 | 状态 | 原因 |
 |---|---|---|
-| Authority assignment | ⏸ WAITING | OD-002 赋权 DEFERRED |
+| Authority assignment | ⏸ WAITING | OD-002 赋权 DEFERRED（D2=b 已部分收口接口依据） |
 | Design v1.1 正式 authority 化 | ⏸ PARTIAL | D2=(b)：**仅 §4.2–§4.6 M1–M5** interface reference；§1/§2/§3 不授权实现 |
 | D2/D3/D4 对应实现扩展 | ⏸ WAITING | 需 authority 输入（OD-003 OPEN） |
 | 代表性冲突规则扩展 | ⏸ WAITING | 避免实现未裁语义 |
@@ -334,7 +334,9 @@ STOP 后不得「先实现再说」。
 |---|---|
 | N-values / Value / OrderedValue / value-level evidence | D-07/D-08 意图 (3)；但 L0 `10:468-475` 仍要求有序值 ⇒ **两边都不得擅自落地** |
 | **多空题 → N Instance（(3) 生效）** | **BLOCKED** — 与 L0 OD-R-01 冲突，须 **L1 CR** 改 L0 后方可实施 |
-| 修改 Frozen Spec / Frozen Schema / Frozen Contract | Authority Order |
+| 修改 Frozen Spec / Frozen Contract | Authority Order |
+| **业务 schema 扩展**（新表/新业务字段/改 Question·Answer·Instance 语义） | D3=(c) 仍 STOP |
+| N-values / multi-blank 载体 / authority taxonomy 落库 | D3=(c) 明确排除 |
 | Gate / Admission **语义**变更 | §6 + STOP E/F |
 | Migration / 数据迁移 / Gate 9 / approval_block 变更 | Migration Authorization = NOT AUTHORIZED |
 | 为 R-5 加 signer / gate_run_id / event provenance | R-5 ACCEPTED；会重开 Authority 模型 |
@@ -345,6 +347,22 @@ STOP 后不得「先实现再说」。
 P0  EB-008 findings closure → regression stability → implementation confidence
 P1  Segment A hardening + Compiler/Admission edge cases（不含多空题）
 P2  等 OD-002 赋权 + OD-003 D2/D3/D4 之后再扩段
+```
+
+### D.0 Schema/Migration — D3=(c) Bugfix-only（Owner 2026-09-29）
+
+```text
+ALLOWED (LIMITED):
+  约束强化（NOT NULL/UNIQUE/FK/CHECK，前提已有数据满足）
+  索引 / 查询辅助结构
+  与 Frozen Spec 一致的非语义实现缺陷修复
+  条件：已有语义不变 · 已有数据解释不变 · Frozen Spec 不变 · 无新业务概念
+
+NOT AUTHORIZED:
+  新业务表 / 新业务字段 · Question/Answer/Instance 语义变更
+  N-values 载体 · multi-blank 实现 · authority taxonomy 落库
+  改变已有领域模型的 migration
+  （均需另次 Owner / L1 CR）
 ```
 
 ### D.1 Multi-blank representation — BLOCKED（Owner 2026-09-29 选 3）

@@ -289,7 +289,8 @@ EB-008 验收: 26/26（test_eb008_evidence_authority.py）
 | **D-07 / D-08** representation | **DECIDED INTENT (3) / BLOCKED by L0** | 意图= sub_questions；**L0 `10:468-475` 禁止多空题=N Instance**，须 L1 CR；见 84 台账 ⚠ 注 |
 | **OD-002** Design v1.1 authority | **C — WORKING REFERENCE**（赋权 DEFERRED） | Owner 2026-09-29；待 D2/D3/D4 closure |
 | **OD-003 D2** | **DECIDED (b)**（2026-09-29） | 仅 DESIGN-v1.1 §4.2–§4.6 M1–M5 = interface reference；§1 excluded/pending；§2 principle only；无 schema/migration/semantic authority |
-| **OD-003 D3/D4** | **OPEN** | D3 schema/migration 边界下一步裁 |
+| **OD-003 D3** | **DECIDED (c)**（2026-09-29） | Bugfix 级 migration only（约束/索引/非语义加固）；业务 schema 扩展 STOP；N-values/multi-blank 不开口 |
+| **OD-003 D4** | **OPEN** | implementation expansion boundary 下一步 |
 | **R-1..R-4** | 仍按 §6 | 不变 |
 
 **边界（本节不扩大解释）：**
