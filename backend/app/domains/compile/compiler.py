@@ -178,7 +178,12 @@ class Compiler:
 
         document-local；不含 question_id；unit_id 须来自 annotation（不得 UUID/random 生成）。
         """
-        span = self._span_by_id[stem_span_id]
+        span = self._span_by_id.get(stem_span_id)
+        if span is None:
+            raise ValueError(
+                f"occurrence_key references unknown span_id {stem_span_id!r} "
+                f"(not in ResolvedRun); refuse to materialize"
+            )
         stem_refs = list(span.line_refs)
         offsets = (
             [span.start_offset, span.end_offset]
