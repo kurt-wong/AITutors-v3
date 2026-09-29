@@ -302,3 +302,5 @@ OD-R-01 半确认含义：只证到「缺 N-values 载体」，不裁 representa
 
 **下一阻塞（业务裁决，非代码质量）：** D-07/D-08 已裁 (3)；余 = OD-002 赋权 + OD-003 D2/D3/D4。CR-003 STOP 中 representation 分量已解，authority 分量仍 OPEN。
 
+**实现边界（2026-09-29）：** 见 `LIMITED-IMPLEMENTATION-AUTHORIZATION-v0.3.md` §6A Implementation Boundary Matrix（A 可做 / B 等 D2-D4 / C 禁 N-values 与语义变更 / D 阶段目标）。
+

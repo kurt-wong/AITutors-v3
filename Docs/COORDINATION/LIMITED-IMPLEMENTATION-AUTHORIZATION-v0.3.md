@@ -296,6 +296,57 @@ STOP 后不得「先实现再说」。
 - silently resolving Frozen Spec conflicts
 - using implementation to override Owner Decisions
 - using Contract to override Frozen Spec
+- N-values / Value / OrderedValue model（含 value-level evidence binding）—— D-07/D-08 已裁 (3) 禁止再引入
+
+### 6.1 Scope clarification（2026-09-29，不扩大授权）
+
+§6 的 **modification** 指 **语义 / 架构 / Frozen 边界** 变更；**不含**在既定语义内的 bug fix、异常处理、回归/对抗测试补强与 hardening。后者属下表 A 栏（Owner 2026-09-29 确认）。本澄清**不**放宽 STOP Conditions，**不**允许 Gate/Admission/Frozen Schema **语义**变更。
+
+---
+
+## 6A. Implementation Boundary Matrix（2026-09-29 Owner 落界）
+
+> 性质：在**既有**授权内钉死边界，非重新设计 V3、非新 Decision 文件。
+> 前置：D-07/D-08 = DECIDED (3)（多空题 `sub_questions`；N-values NOT IMPLEMENTED）；OD-002 = C WORKING REFERENCE。
+
+### A. 当前明确授权（可执行）
+
+| 范围 | 状态 | 说明 |
+|---|---|---|
+| EB-008 P1 后续实现修复 | ✅ AUTHORIZED | 已接受范围内的实现修正（含 A1 同类时间/异常边界） |
+| 现有 Segment A 完善 | ✅ AUTHORIZED | **不**改 Frozen Schema 语义 |
+| 测试补强 | ✅ AUTHORIZED | regression / adversarial |
+| 代码质量修复 | ✅ AUTHORIZED | bug fix、异常处理、边界修复 |
+| 现有 IR → Compiler → Admission 链优化 | ✅ AUTHORIZED | **保持**既定语义（含 OD-R-01/D-07/D-08 已裁读法） |
+
+### B. 等待 Owner / D2/D3/D4（不得提前实现）
+
+| 项目 | 状态 | 原因 |
+|---|---|---|
+| Authority assignment | ⏸ WAITING | OD-002 赋权 DEFERRED |
+| Design v1.1 正式 authority 化 | ⏸ WAITING | 仅 WORKING REFERENCE |
+| D2/D3/D4 对应实现扩展 | ⏸ WAITING | 需 authority 输入（OD-003 OPEN） |
+| 代表性冲突规则扩展 | ⏸ WAITING | 避免实现未裁语义 |
+
+### C. 明确禁止（当前）
+
+| 禁止项 | 依据 |
+|---|---|
+| N-values / Value / OrderedValue / value-level evidence | D-07/D-08 = (3) |
+| 修改 Frozen Spec / Frozen Schema / Frozen Contract | Authority Order |
+| Gate / Admission **语义**变更 | §6 + STOP E/F |
+| Migration / 数据迁移 / Gate 9 / approval_block 变更 | Migration Authorization = NOT AUTHORIZED |
+| 为 R-5 加 signer / gate_run_id / event provenance | R-5 ACCEPTED；会重开 Authority 模型 |
+
+### D. 阶段目标（硬）
+
+```text
+P0  EB-008 findings closure → regression stability → implementation confidence
+P1  Segment A hardening + OD-R-01 representation consistency（按 (3)）+ Compiler/Admission edge cases
+P2  等 OD-002 赋权 + OD-003 D2/D3/D4 之后再扩段
+```
+
+**不在本矩阵内**：新治理文档、历史报告清扫、批量改名、Migration Gate 启动。
 
 ---
 
