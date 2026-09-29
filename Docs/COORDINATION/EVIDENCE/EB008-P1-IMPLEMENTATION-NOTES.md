@@ -1,8 +1,8 @@
 # EB008 P1 Implementation Notes — DSH Adversarial Review 基线
 
-> 状态：EB-008 Phase-1 实现完成（commit `88aeae8`），设计冻结基线 = 92号 FINAL（`Docs/DECISIONS/92_EB008_EVIDENCE_AUTHORITY_ENFORCEMENT_FINAL.md`）。
+> 状态：EB-008 Phase-1 **CONVERGED**（攻击复核节点 `25933c3`；实现 commit `88aeae8`）。设计冻结基线 = 92号 FINAL。
 > 用途：为 DSH 代码攻击测试提供实现事实。本文档只描述**当前代码是什么**，不提出新设计。
-> 全量测试证据：837 passed, 1 xfailed（xfail = F-4 空白 marker，与 EB-008 无关）。
+> 终态与遗留见 §10（2026-09-29 Owner 收敛）。全量证据见该节。
 
 ---
 
@@ -270,3 +270,33 @@ proof = generate_review_proof(candidate_id=cid, review_result="validated",
 | `backend/app/core/config.py` / `main.py` / `backend/.env.example` | APP_SECRET 配置与启动校验 |
 | `backend/tests/eb008_helpers.py` | 测试 seed |
 | `backend/tests/test_eb008_evidence_authority.py` | 26 条验收测试 |
+
+---
+
+## 10. P1 终态冻结（2026-09-29，Owner 收敛；不新建文档）
+
+```text
+EB-008 P1 : CONVERGED at 25933c3
+全量测试   : 2096 passed / 1 skipped / 1 xfailed（xfail = F-4 空白 marker）
+EB-008 验收: 26/26（test_eb008_evidence_authority.py）
+```
+
+| 项 | 终态 | 锚 / 证据 |
+|---|---|---|
+| **A1** 时间戳投影 / naive 时间 | **CLOSED** | `b15c9fe` + `25933c3`；`test_eb008_attack_vectors.py`、`test_adv_reaudit*.py` |
+| **R-5** 机器事件无 Gate 溯源 | **ACCEPTED RISK**（非 bug / 非 TODO / 非 security debt） | Notes §6 R-5；`test_machine_event_relayed_without_provenance_proof__r5` 钉住边界 |
+| **OD-R-01** Answer 业务对象 | **PARTIAL CONFIRMED** | 1 Instance × 1 Answer `role_index=0` 成立；`Answer→N ordered values` **未建模** |
+| **D-07 / D-08** representation | **OPEN**（待 Owner） | CR-003 §6 显式排除；不据本节推导 |
+| **R-1..R-4** | 仍按 §6 | 不变 |
+
+**边界（本节不扩大解释）：**
+
+```text
+不做：再扫攻击向量 / 重审 Frozen Spec / 回头改历史报告 / 为 R-5 建 Decision / 为 OD-R-01 建治理文件
+A1 关闭含义：UTC-aware + naive-as-UTC 下未来时间与 naive 时间均被拒或合法归一；不等于零信任
+R-5 含义：架构选择信任 in-process machine caller；多服务 / 外部 Worker 进入前须重开
+OD-R-01 半确认含义：只证到「缺 N-values 载体」，不裁 representation
+```
+
+**下一阻塞（业务裁决，非代码质量）：** CR-003 STOP 解除条件 = OD-R-01 representation（D-07/D-08）+ D2/D3/D4（OD-002/OD-003）。
+
