@@ -324,7 +324,7 @@ STOP 后不得「先实现再说」。
 | 项目 | 状态 | 原因 |
 |---|---|---|
 | Authority assignment | ⏸ WAITING | OD-002 赋权 DEFERRED |
-| Design v1.1 正式 authority 化 | ⏸ WAITING | 仅 WORKING REFERENCE |
+| Design v1.1 正式 authority 化 | ⏸ PARTIAL | D2=(b)：**仅 §4.2–§4.6 M1–M5** interface reference；§1/§2/§3 不授权实现 |
 | D2/D3/D4 对应实现扩展 | ⏸ WAITING | 需 authority 输入（OD-003 OPEN） |
 | 代表性冲突规则扩展 | ⏸ WAITING | 避免实现未裁语义 |
 

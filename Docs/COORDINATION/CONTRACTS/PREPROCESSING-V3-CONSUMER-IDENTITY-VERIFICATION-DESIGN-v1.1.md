@@ -4,6 +4,9 @@
 > 本文件**不是**正式 Authority Source。Authority assignment **DEFERRED** 至 D2/D3/D4（OD-003）closure。
 > 不得据此声称 interface authority 已锚定；实现引用本文件时须标 `working reference / authority pending`。
 > 权威裁决载体：本注记 + `EB008-P1-IMPLEMENTATION-NOTES.md §10`；不新建 Decision 文件。
+> **D2（Owner 2026-09-29）= (b) 仅 §4.2–§4.6 M1–M5 可作接口依据（Interface reference only）。**
+> 授权：接口边界 / IO 契约 / 模块职责 / 实现检查依据。**不**含 schema·migration·business semantic authority、**不**改 Frozen Spec、**不**自动进入 LIMITED Implementation。
+> **排除**：§1 Identity 双轴模型（pending authority）· §2 仅原则参考（无实现义务）· §3/§4.7/§5 reference only（§5 禁令仍有效）。
 
 
 > **性质**：Consumer Identity Verification 实现前最终收口。**IMPLEMENTATION READY DESIGN。NOT IMPLEMENTED。**
