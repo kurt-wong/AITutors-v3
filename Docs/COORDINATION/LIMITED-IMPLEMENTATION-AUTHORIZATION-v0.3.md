@@ -317,7 +317,7 @@ STOP 后不得「先实现再说」。
 | 现有 Segment A 完善 | ✅ AUTHORIZED | **不**改 Frozen Schema 语义 |
 | 测试补强 | ✅ AUTHORIZED | regression / adversarial |
 | 代码质量修复 | ✅ AUTHORIZED | bug fix、异常处理、边界修复 |
-| 现有 IR → Compiler → Admission 链优化 | ✅ AUTHORIZED | **保持**既定语义（含 OD-R-01/D-07/D-08 已裁读法） |
+| 现有 IR → Compiler → Admission 链优化 | ✅ AUTHORIZED | **保持**既定语义（以 L0 为准；**多空题 (3) 路径 BLOCKED**，见 C/注） |
 
 ### B. 等待 Owner / D2/D3/D4（不得提前实现）
 
@@ -332,7 +332,8 @@ STOP 后不得「先实现再说」。
 
 | 禁止项 | 依据 |
 |---|---|
-| N-values / Value / OrderedValue / value-level evidence | D-07/D-08 = (3) |
+| N-values / Value / OrderedValue / value-level evidence | D-07/D-08 意图 (3)；但 L0 `10:468-475` 仍要求有序值 ⇒ **两边都不得擅自落地** |
+| **多空题 → N Instance（(3) 生效）** | **BLOCKED** — 与 L0 OD-R-01 冲突，须 **L1 CR** 改 L0 后方可实施 |
 | 修改 Frozen Spec / Frozen Schema / Frozen Contract | Authority Order |
 | Gate / Admission **语义**变更 | §6 + STOP E/F |
 | Migration / 数据迁移 / Gate 9 / approval_block 变更 | Migration Authorization = NOT AUTHORIZED |

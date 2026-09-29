@@ -75,10 +75,18 @@
 
 | ID | 裁决 |
 |---|---|
-| **D-07** | **DECIDED — (3) 多空题走 `sub_questions`（N Instance × 1 Answer）**。`payload answer[]` 元素 = Answer 对象（每 Instance 一份，`role=answer` / `role_index=0`），**不是**有序值数组。`answer_status` 挂在 Answer（`role=answer`）——与 `10 §6.3`「仅 role=answer」一致。**不**引入 Value / OrderedValue 载体 |
-| **D-08** | **DECIDED — N-values container = NOT IMPLEMENTED**。`value[i]` 不作为独立字段 / 行模型；多空题 = 多个可独立验证子题（`sub_questions`），**非**「一个 Answer 内 N 个有序值」。与 OD-R-01 L0 字面「N ordered values」的张力**由 Owner 接受**（设计选择：多空 = 多子任务，非单 Answer 多值） |
+| **D-07** | **DECIDED INTENT (3) / BLOCKED by L0** — 多空题走 `sub_questions`（N Instance × 1 Answer）**。`payload answer[]` 元素 = Answer 对象（每 Instance 一份，`role=answer` / `role_index=0`），**不是**有序值数组。`answer_status` 挂在 Answer（`role=answer`）——与 `10 §6.3`「仅 role=answer」一致。**不**引入 Value / OrderedValue 载体 |
+| **D-08** | **DECIDED INTENT / BLOCKED by L0** — N-values container = NOT IMPLEMENTED**。`value[i]` 不作为独立字段 / 行模型；多空题 = 多个可独立验证子题（`sub_questions`），**非**「一个 Answer 内 N 个有序值」。与 OD-R-01 L0 字面「N ordered values」的张力**由 Owner 接受**（设计选择：多空 = 多子任务，非单 Answer 多值） |
 
-**依据**：Owner 2026-09-29（本会话裁决输入）。**不改** Frozen Spec 正文、**不**授权 schema / migration、**不**新建决策文件。实现侧现状与此一致（`CompiledAnswer` 单 `text`；物化 1 Instance × 1 Answer 行）。
+**依据**：Owner 2026-09-29（本会话裁决输入）。**不改** Frozen Spec 正文、**不**授权 schema / migration、**不**新建决策文件。
+
+> **⚠ BLOCKED — 与 L0 冲突（对抗复核 2026-09-29 实测）**
+> L0 `10_Data_Model.md:468-475`（OD-R-01 冻结）明文：「三个空**不是**三个 QuestionInstance」；多空题 = **同一份 Answer 的多个有序值**。
+> 裁决 (3) 的「多空题 → sub_questions → N Instance」与该条**直接冲突**。
+> Authority Order：`Frozen Spec > Owner Decisions` ⇒ **(3) 在 L0 经 L1 CR 修改前不得对多空题生效**。
+> **已验证可做的**仅是「多题号 composite 子题」路径（N Instance × 1 Answer，`test_adv_boundary_rulings`）——**不是** L0 意义上的「一个题号多空题」。
+> **多空题**当前实现亦**不合规**：N-values 未建模（`CompiledAnswer` 无 values）。
+> 下一步：要么 L1 CR 把多空题改成 N Instance（须 Owner 走 CHANGE 流程），要么实现 N-values 载体（L0 已要求）。**台账只登记冲突，不代改 L0。**
 
 ---
 

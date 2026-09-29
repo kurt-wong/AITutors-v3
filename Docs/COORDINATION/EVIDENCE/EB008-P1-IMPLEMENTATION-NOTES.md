@@ -286,7 +286,7 @@ EB-008 验收: 26/26（test_eb008_evidence_authority.py）
 | **A1** 时间戳投影 / naive 时间 | **CLOSED** | `b15c9fe` + `25933c3`；`test_eb008_attack_vectors.py`、`test_adv_reaudit*.py` |
 | **R-5** 机器事件无 Gate 溯源 | **ACCEPTED RISK**（非 bug / 非 TODO / 非 security debt） | Notes §6 R-5；`test_machine_event_relayed_without_provenance_proof__r5` 钉住边界 |
 | **OD-R-01** Answer 业务对象 | **PARTIAL CONFIRMED** | 1 Instance × 1 Answer `role_index=0` 成立；`Answer→N ordered values` **未建模** |
-| **D-07 / D-08** representation | **DECIDED (3)**（2026-09-29 Owner） | 多空题 = `sub_questions`（N Instance × 1 Answer）；N-values = NOT IMPLEMENTED；见 `84_CONFLICT_LEDGER` 裁决节 |
+| **D-07 / D-08** representation | **DECIDED INTENT (3) / BLOCKED by L0** | 意图= sub_questions；**L0 `10:468-475` 禁止多空题=N Instance**，须 L1 CR；见 84 台账 ⚠ 注 |
 | **OD-002** Design v1.1 authority | **C — WORKING REFERENCE**（赋权 DEFERRED） | Owner 2026-09-29；待 D2/D3/D4 closure |
 | **OD-003** D2/D3/D4 | **OPEN**（随 OD-002 赋权后裁） | 不提前裁 |
 | **R-1..R-4** | 仍按 §6 | 不变 |
