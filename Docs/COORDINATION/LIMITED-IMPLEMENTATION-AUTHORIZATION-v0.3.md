@@ -318,6 +318,7 @@ STOP 后不得「先实现再说」。
 | 测试补强 | ✅ AUTHORIZED | regression / adversarial |
 | 代码质量修复 | ✅ AUTHORIZED | bug fix、异常处理、边界修复 |
 | 现有 IR → Compiler → Admission 链优化 | ✅ AUTHORIZED | **保持**既定语义（以 L0 为准；**多空题 (3) 路径 BLOCKED**，见 C/注） |
+| **M1–M5 实现**（DESIGN-v1.1 §4.2–§4.6） | ✅ AUTHORIZED（D4=b） | interface-level only；**不含 §1 双轴语义**；不改 L0 / 不扩 schema / 不碰 Migration Gate |
 
 ### B. 等待 Owner / D2/D3/D4（不得提前实现）
 
@@ -334,6 +335,8 @@ STOP 后不得「先实现再说」。
 |---|---|
 | N-values / Value / OrderedValue / value-level evidence | D-07/D-08 意图 (3)；但 L0 `10:468-475` 仍要求有序值 ⇒ **两边都不得擅自落地** |
 | **多空题 → N Instance（(3) 生效）** | **BLOCKED** — 与 L0 OD-R-01 冲突，须 **L1 CR** 改 L0 后方可实施 |
+| Identity 双轴状态机 / VERIFIED·PENDING 语义实现 | D4=(b) 排除（§1 excluded） |
+| 新 identity schema / Gate·Admission 语义重构 / R-5 signer | D4=(b) 排除 |
 | 修改 Frozen Spec / Frozen Contract | Authority Order |
 | **业务 schema 扩展**（新表/新业务字段/改 Question·Answer·Instance 语义） | D3=(c) 仍 STOP |
 | N-values / multi-blank 载体 / authority taxonomy 落库 | D3=(c) 明确排除 |
@@ -363,6 +366,22 @@ NOT AUTHORIZED:
   N-values 载体 · multi-blank 实现 · authority taxonomy 落库
   改变已有领域模型的 migration
   （均需另次 Owner / L1 CR）
+```
+
+### D.2 Identity Gate — D4=(b) M1–M5 authorized（Owner 2026-09-29）
+
+```text
+AUTHORIZED (interface implementation only):
+  M1 Manifest Reader     读 manifest；不定义 identity authority
+  M2 Bytes Loader        取 raw bytes；不改变 source identity
+  M3 IR Identity Reader  读已有 IR identity；IR 不作 identity source
+  M4 Identity Verifier   验已有 identity；不新增 VERIFIED/FAILED 状态机
+  M5 Identity Gate       接口级 gate capability；不改 Admission/Gate 语义
+
+NOT AUTHORIZED:
+  §1 Identity 双轴模型 / VERIFIED·PENDING·AVAILABLE 状态机
+  新 identity schema · Migration · N-values · multi-blank
+  R-5 signer · Gate authority 重构 · Admission 规则改写
 ```
 
 ### D.1 Multi-blank representation — BLOCKED（Owner 2026-09-29 选 3）

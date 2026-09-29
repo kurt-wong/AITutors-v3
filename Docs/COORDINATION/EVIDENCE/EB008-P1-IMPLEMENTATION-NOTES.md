@@ -287,10 +287,10 @@ EB-008 验收: 26/26（test_eb008_evidence_authority.py）
 | **R-5** 机器事件无 Gate 溯源 | **ACCEPTED RISK**（非 bug / 非 TODO / 非 security debt） | Notes §6 R-5；`test_machine_event_relayed_without_provenance_proof__r5` 钉住边界 |
 | **OD-R-01** Answer 业务对象 | **PARTIAL CONFIRMED** | 1 Instance × 1 Answer `role_index=0` 成立；`Answer→N ordered values` **未建模** |
 | **D-07 / D-08** representation | **DECIDED INTENT (3) / BLOCKED by L0** | 意图= sub_questions；**L0 `10:468-475` 禁止多空题=N Instance**，须 L1 CR；见 84 台账 ⚠ 注 |
-| **OD-002** Design v1.1 authority | **C — WORKING REFERENCE**（赋权 DEFERRED） | Owner 2026-09-29；待 D2/D3/D4 closure |
+| **OD-002** Design v1.1 authority | **C — WORKING REFERENCE**（§1 赋权仍 DEFERRED） | D2=(b) 接口依据已裁；§1 pending |
 | **OD-003 D2** | **DECIDED (b)**（2026-09-29） | 仅 DESIGN-v1.1 §4.2–§4.6 M1–M5 = interface reference；§1 excluded/pending；§2 principle only；无 schema/migration/semantic authority |
 | **OD-003 D3** | **DECIDED (c)**（2026-09-29） | Bugfix 级 migration only（约束/索引/非语义加固）；业务 schema 扩展 STOP；N-values/multi-blank 不开口 |
-| **OD-003 D4** | **OPEN** | implementation expansion boundary 下一步 |
+| **OD-003 D4** | **DECIDED (b)**（2026-09-29） | M1–M5 interface 实现授权；§1 双轴语义 excluded；无 schema/Migration/语义重构 |
 | **R-1..R-4** | 仍按 §6 | 不变 |
 
 **边界（本节不扩大解释）：**
