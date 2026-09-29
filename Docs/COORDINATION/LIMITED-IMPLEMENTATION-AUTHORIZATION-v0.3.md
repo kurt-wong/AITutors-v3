@@ -394,7 +394,8 @@ NOT AUTHORIZED:
            read_ir_identity · verify_identity · evaluate_identity(=evaluate_identity_gate)
 测试     : tests/test_identity_interface_freeze.py + 各 M 单元/对抗
            （test_identity_* / test_adversarial_identity_verifier / test_adversarial_m5_*）
-结果     : 355 passed（M1–M5 相关面；当场 pytest，非抄旧数字）
+结果     : 355 passed（M1–M5 相关面）+ 全量 2152 passed / 1 skipped / 1 xfailed
+Commit   : dfeffdb（interface freeze + Phase Evidence）
 实际行为 : 纯函数接口层；raw bytes=唯一身份源；IR 不作身份源；
            M5 fail-closed（VERIFIED+PENDING=BLOCK 为 fail-closed 加固，
            非 §1 双轴语义权威）；identity FAILED 不判 semantic
