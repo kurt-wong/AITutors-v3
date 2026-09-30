@@ -328,7 +328,7 @@ STOP 后不得「先实现再说」。
 | Design v1.1 正式 authority 化 | ⏸ PARTIAL | D2=(b)：**仅 §4.2–§4.6 M1–M5** interface reference；§1/§2/§3 不授权实现 |
 | 代表性冲突规则扩展 | ⏸ WAITING | 避免实现未裁语义 |
 
-> D4 M1–M5 interface **CLOSED — interface-only implementation（依据 D4=(b)，2026-09-29）**——状态与 Phase Evidence 见 **D.2**，不属本「等待」栏。
+> D4 M1–M5 interface implementation（D4=(b) interface-only，2026-09-29）**已实施**——implementation evidence 见 **D.2**，不属本「等待」栏。
 
 ### C. 明确禁止（当前）
 
@@ -388,7 +388,7 @@ NOT AUTHORIZED:
 #### D.2 Phase Evidence — M1–M5 interface（2026-09-29，F-1–F-5 收口后）
 
 ```text
-状态     : CLOSED — D4 M1–M5 interface-only implementation（依据 D4=(b)，2026-09-29）
+实施事实 : D4=(b) interface-only implementation 已实施（2026-09-29）
            （interface only；非 production service 接线）
 授权条款 : D4=(b) DESIGN-v1.1 §4.2–§4.6 interface only
 实现落点 : backend/app/core/{manifest_identity,raw_bytes_identity,ir_identity,

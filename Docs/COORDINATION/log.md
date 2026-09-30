@@ -116,4 +116,27 @@
 
 ---
 
+## 2026-09-29 — Round: D4 Evidence Checkpoint Registration（G-02 模式）
+
+**动作**：按 G-02 既有 **Freeze Artifact ≠ Freeze Registration** 模式，登记 D4 evidence cleanup checkpoint。
+
+**D4 Evidence Cleanup Checkpoint（内容 checkpoint，实名 SHA）**：
+
+```text
+8ac24f664a27cd8ff96faa37a09ea623689dd64e
+```
+
+- 仓库 = `kurt-wong/AITutors-v3` · 分支 = `od01-r3-convergence`
+- 内容 = F-2 残留清除 + 91§3.1 状态词修正 + F-5 checkpoint 固化（LIMITED D.2 Phase Evidence）
+- 证据面 = M1–M5 interface-only implementation（D4=(b)）
+- Phase Evidence 全文 = `Docs/COORDINATION/LIMITED-IMPLEMENTATION-AUTHORIZATION-v0.3.md` D.2
+
+**Registration commit ≠ content checkpoint**（同 G-02：Freeze Artifact ≠ Freeze Registration）。本账本 commit 仅承载登记，不是 checkpoint 本身。
+
+**同时修正**：LIMITED D.2 状态字段 `CLOSED — …` → 无状态词事实陈述（91 §3.1 CLOSED 限 L3 Gate；LIMITED 非 Gate Report）。
+
+**边界**：零代码 · 零 schema · 零 migration · 零 Frozen Spec 修改 · 不新建治理文档 · 不扩审查面。
+
+---
+
 *（历史轮次：DEC-036 Owner Freeze 令 · DEC-035 Freeze Artifact remote 可复现闭环 · DEC-034 Freeze Object Final Alignment · DEC-033 Freeze Finalization Audit · DEC-032 Freeze 前最终登记 · DEC-031 Owner Final Decision v1 · DEC-030 Freeze Candidate Finalization · DEC-029 Freeze Candidate Review · DEC-027/028 Interface Finalization · DEC-023~026 FINALIZATION 四项 · DEC-020~022 B1/B2/B3 —— 详见 CURRENT.md 决策表与契约 §5.3。）*
