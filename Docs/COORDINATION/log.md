@@ -116,7 +116,7 @@
 
 ---
 
-## 2026-09-29 — Round: D4 Evidence Checkpoint Registration（G-02 模式）
+## 2026-09-30 — Round: D4 Evidence Checkpoint Registration（G-02 模式）
 
 **动作**：按 G-02 既有 **Freeze Artifact ≠ Freeze Registration** 模式，登记 D4 evidence cleanup checkpoint。
 

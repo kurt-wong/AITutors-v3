@@ -388,8 +388,9 @@ NOT AUTHORIZED:
 #### D.2 Phase Evidence — M1–M5 interface（2026-09-29，F-1–F-5 收口后）
 
 ```text
-实施事实 : D4=(b) interface-only implementation 已实施（2026-09-29）
-           （interface only；非 production service 接线）
+实施事实 : D4=(b) 裁决于 2026-09-29（`7ee1919`）；
+           M1–M5 interface-only implementation 已实施，
+           实现提交 `dfeffdb`（2026-09-30）；非 production service 接线
 授权条款 : D4=(b) DESIGN-v1.1 §4.2–§4.6 interface only
 实现落点 : backend/app/core/{manifest_identity,raw_bytes_identity,ir_identity,
            identity_verifier,identity_gate}.py（SYSTEM-BASELINE 已登记；
@@ -421,9 +422,12 @@ NOT AUTHORIZED:
 Checkpoint 链:
   `c1a64f1` = F-1–F-5 cleanup implementation（文案/数字收口）
   `ab0aa1e` = intermediate evidence checkpoint（F-5 pin）
-  最终 cleanup commit = F-2 残留 + 91§3.1 状态词 + checkpoint 固化（SHA 见交付报告）
-最终 D4 evidence cleanup checkpoint = 上述最终 cleanup commit
-           （外部指认，不自指；**禁** `git log -1` 活指针，90 §11 (c)）
+  `8ac24f664a27cd8ff96faa37a09ea623689dd64e`
+      = D4 evidence cleanup checkpoint（内容 checkpoint）
+      = 实名登记于 `log.md`「D4 Evidence Checkpoint Registration」
+  Registration commit = `2cf9410`
+      （registration ≠ checkpoint；G-02 模式）
+           **禁** `git log -1` 活指针（90 §11 (c)）；
            `dfeffdb`/`f025756` 仅为历史，不作当前锚
 Exit     : 满足 —— interface-only 实现闭环；下一步受控接入须另令
 ```
