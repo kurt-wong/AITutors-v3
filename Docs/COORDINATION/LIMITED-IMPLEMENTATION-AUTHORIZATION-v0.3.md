@@ -328,7 +328,7 @@ STOP 后不得「先实现再说」。
 | Design v1.1 正式 authority 化 | ⏸ PARTIAL | D2=(b)：**仅 §4.2–§4.6 M1–M5** interface reference；§1/§2/§3 不授权实现 |
 | 代表性冲突规则扩展 | ⏸ WAITING | 避免实现未裁语义 |
 
-> D4 M1–M5 interface **已收口/已落地**——状态与 Phase Evidence 见 **D.2**，不属本「等待」栏。
+> D4 M1–M5 interface **CLOSED — interface-only implementation（依据 D4=(b)，2026-09-29）**——状态与 Phase Evidence 见 **D.2**，不属本「等待」栏。
 
 ### C. 明确禁止（当前）
 
@@ -388,7 +388,8 @@ NOT AUTHORIZED:
 #### D.2 Phase Evidence — M1–M5 interface（2026-09-29，F-1–F-5 收口后）
 
 ```text
-状态     : 已收口 / 已落地（interface only；非 production service 接线）
+状态     : CLOSED — D4 M1–M5 interface-only implementation（依据 D4=(b)，2026-09-29）
+           （interface only；非 production service 接线）
 授权条款 : D4=(b) DESIGN-v1.1 §4.2–§4.6 interface only
 实现落点 : backend/app/core/{manifest_identity,raw_bytes_identity,ir_identity,
            identity_verifier,identity_gate}.py（SYSTEM-BASELINE 已登记；
@@ -417,9 +418,13 @@ NOT AUTHORIZED:
            production service 仍未接 M5（A8 BLOCKED 保持）
 未做     : §1 双轴状态机落库 · 新 schema · Migration Gate ·
            Gate/Admission 语义重构 · production service 接线
-Checkpoint: 内容收口 commit = `c1a64f1`（F-1–F-5 文案/数字）
-最终证据锚点: 本条目所在 commit（`git log -1 --oneline -- <本文件>`）——
-           **当前 Evidence 以该 commit 树为准**；`dfeffdb`/`f025756` 仅为历史，不作当前锚
+Checkpoint 链:
+  `c1a64f1` = F-1–F-5 cleanup implementation（文案/数字收口）
+  `ab0aa1e` = intermediate evidence checkpoint（F-5 pin）
+  最终 cleanup commit = F-2 残留 + 91§3.1 状态词 + checkpoint 固化（SHA 见交付报告）
+最终 D4 evidence cleanup checkpoint = 上述最终 cleanup commit
+           （外部指认，不自指；**禁** `git log -1` 活指针，90 §11 (c)）
+           `dfeffdb`/`f025756` 仅为历史，不作当前锚
 Exit     : 满足 —— interface-only 实现闭环；下一步受控接入须另令
 ```
 

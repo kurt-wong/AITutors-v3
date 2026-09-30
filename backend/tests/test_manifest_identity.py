@@ -2,7 +2,7 @@
 
 设计依据：
 - PREPROCESSING-V3-CONSUMER-IDENTITY-VERIFICATION-DESIGN-v1.1.md §4.2
-- Owner Phase 2 Authorization: 仅实现 M1，禁止 M3/M4/M5
+- D4=(b) interface-only implementation scope（DESIGN-v1.1 §4.2）；不构成 §1 双轴语义 authority
 
 约束：
 - ManifestIdentity 唯一字段 = source_content_sha256
