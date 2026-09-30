@@ -306,5 +306,5 @@ OD-R-01 半确认含义：只证到「缺 N-values 载体」，不裁 representa
 
 **实现边界（2026-09-29）：** Multi-blank = **BLOCKED**（Owner 选 3 暂缓；L0 冲突未解前不实施）。 见 `LIMITED-IMPLEMENTATION-AUTHORIZATION-v0.3.md` §6A Implementation Boundary Matrix（A 可做 / B 等 D2-D4 / C 禁 N-values 与语义变更 / D 阶段目标）。
 
-**D4 M1–M5 interface 闭环（2026-09-29）：** 实现落点 `app/core/`（非 Design 文内 scripts 路径——后者为 interface reference）；冻结名已导出；`test_identity_interface_freeze.py` 钉扎；相关面 **355 passed**。**不含** production Gate/Admission 接线（A8 仍 BLOCKED）· **不含** §1 双轴语义落库。Phase Evidence 全文见 LIMITED D.2。
+**D4 M1–M5 interface 闭环（2026-09-29）：** 实现落点 `app/core/`（非 Design 文内 scripts 路径——后者为 interface reference）；冻结名已导出；`test_identity_interface_freeze.py` 钉扎；相关面 **355 passed**（命令见 LIMITED D.2）· 全量 **2153 passed / 1 skipped / 1 xfailed**。**不含** production service Gate/Admission 接线（runner_b2 已接入；A8 仍 BLOCKED）· **不含** §1 双轴语义落库。`VERIFIED+PENDING=BLOCK` = fail-closed implementation invariant（非 Owner Decision / 非 §1 authority）。Phase Evidence 全文见 LIMITED D.2。
 

@@ -326,8 +326,9 @@ STOP 后不得「先实现再说」。
 |---|---|---|
 | Authority assignment | ⏸ WAITING | OD-002 赋权 DEFERRED（D2=b 已部分收口接口依据） |
 | Design v1.1 正式 authority 化 | ⏸ PARTIAL | D2=(b)：**仅 §4.2–§4.6 M1–M5** interface reference；§1/§2/§3 不授权实现 |
-| D2/D3/D4 对应实现扩展 | ✅ D4 M1–M5 interface **DONE**（2026-09-29） | 实现落点 `app/core/`（SYSTEM-BASELINE）；**不含** production Gate/Admission 接线（A8 仍 BLOCKED） |
 | 代表性冲突规则扩展 | ⏸ WAITING | 避免实现未裁语义 |
+
+> D4 M1–M5 interface **已收口/已落地**——状态与 Phase Evidence 见 **D.2**，不属本「等待」栏。
 
 ### C. 明确禁止（当前）
 
@@ -384,27 +385,40 @@ NOT AUTHORIZED:
   R-5 signer · Gate authority 重构 · Admission 规则改写
 ```
 
-#### D.2 Phase Evidence — M1–M5 interface（2026-09-29）
+#### D.2 Phase Evidence — M1–M5 interface（2026-09-29，F-1–F-5 收口后）
 
 ```text
+状态     : 已收口 / 已落地（interface only；非 production service 接线）
 授权条款 : D4=(b) DESIGN-v1.1 §4.2–§4.6 interface only
 实现落点 : backend/app/core/{manifest_identity,raw_bytes_identity,ir_identity,
-           identity_verifier,identity_gate}.py（SYSTEM-BASELINE 已登记）
+           identity_verifier,identity_gate}.py（SYSTEM-BASELINE 已登记；
+           由 6c4e3ff 早已引入，dfeffdb 未新增 core 模块）
 冻结名   : read_manifest_identity · load_raw_bytes(=load_raw_bytes_identity)
            read_ir_identity · verify_identity · evaluate_identity(=evaluate_identity_gate)
 测试     : tests/test_identity_interface_freeze.py + 各 M 单元/对抗
            （test_identity_* / test_adversarial_identity_verifier / test_adversarial_m5_*）
-结果     : 355 passed（M1–M5 相关面）+ 全量 2152 passed / 1 skipped / 1 xfailed
-Commit   : dfeffdb（interface freeze + Phase Evidence）
+结果     : M1–M5 相关面 355 passed（当场命令见下）
+           全量 2153 passed / 1 skipped / 1 xfailed
+相关面命令:
+  cd backend && python -m pytest tests/test_identity_interface_freeze.py \
+    tests/test_identity_verifier.py tests/test_identity_gate.py \
+    tests/test_manifest_identity.py tests/test_raw_bytes_identity.py \
+    tests/test_ir_identity.py tests/test_adversarial_identity_verifier.py \
+    tests/test_adversarial_m5_str_subclass.py tests/test_adversarial_m5_round1.py \
+    tests/test_adversarial_m5_round2.py tests/test_adversarial_m5_integration.py -q
 实际行为 : 纯函数接口层；raw bytes=唯一身份源；IR 不作身份源；
-           M5 fail-closed（VERIFIED+PENDING=BLOCK 为 fail-closed 加固，
-           非 §1 双轴语义权威）；identity FAILED 不判 semantic
+           M5 VERIFIED+PENDING=BLOCK = fail-closed implementation invariant
+           / hardening（严于 Design §4.6；**不**构成 §1 双轴语义 authority；
+           **无**声称的 Owner Decision 出处）；identity FAILED 不判 semantic
+接线层次 : M5 implementation ✅ · runner_b2 integration ✅
+           production service Gate/Admission 接线 ❌ · A8 authorization ❌
 不变证明 : Frozen Spec 未改 · schema 未改 · migration 未发生 ·
            Admission/Gate 语义未改 · 无新 identity 表/列 ·
-           production GateService 仍未接 M5（A8 BLOCKED 保持）
+           production service 仍未接 M5（A8 BLOCKED 保持）
 未做     : §1 双轴状态机落库 · 新 schema · Migration Gate ·
-           Gate/Admission 语义重构 · production 接线
-Exit     : 满足 —— interface-only 实现闭环；下一步扩段须另令
+           Gate/Admission 语义重构 · production service 接线
+Checkpoint: 见下「最终证据锚点」行（F-5；不以 dfeffdb/f025756 为当前锚）
+Exit     : 满足 —— interface-only 实现闭环；下一步受控接入须另令
 ```
 
 ### D.1 Multi-blank representation — BLOCKED（Owner 2026-09-29 选 3）

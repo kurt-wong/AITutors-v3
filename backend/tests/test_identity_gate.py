@@ -28,7 +28,7 @@ SHA_B = "b" * 64
 
 
 class TestTruthTable:
-    """M5 Truth Table — Owner Phase 2-M5 指令。"""
+    """M5 Truth Table — fail-closed implementation invariant（非 §1 双轴 authority）。"""
 
     def test_verified_available_pass(self):
         vr = verify_identity(SHA_A, SHA_A, SHA_A)

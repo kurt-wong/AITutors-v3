@@ -2,7 +2,7 @@
 
 设计依据：
 - PREPROCESSING-V3-CONSUMER-IDENTITY-VERIFICATION-DESIGN-v1.1.md §4.5
-- Owner Phase 2-M4 Authorization
+- D4=(b) interface-only（DESIGN-v1.1 §4.5）
 
 约束：
 - M4 是纯函数：零 IO、零异常、零副作用。

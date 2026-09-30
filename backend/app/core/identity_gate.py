@@ -4,7 +4,7 @@
 - PREPROCESSING-V3-CONSUMER-IDENTITY-VERIFICATION-DESIGN-v1.1.md §4.6
 - PREPROCESSING-V3-CONTRACT-v0.2 §5.6.1 (G-15)
 
-Truth Table（Owner 指令，超越 Design v1.1 §4.6）：
+Truth Table（fail-closed implementation invariant / hardening，严于 Design v1.1 §4.6）：
 ┌──────────────────┬──────────────────┬───────┐
 │ Identity State   │ Semantic State   │ Gate  │
 ├──────────────────┼──────────────────┼───────┤
@@ -73,7 +73,7 @@ def evaluate_identity_gate(verification) -> IdentityGateDecision:
     输入: verification — M4 VerificationResult（或等价对象）
     输出: IdentityGateDecision(gate=..., identity_state=..., ...)
 
-    行为（Design v1.1 §4.6 + Owner Truth Table）：
+    行为（Design v1.1 §4.6 + fail-closed hardening invariant）：
       - identity=FAILED → BLOCK
       - identity=VERIFIED + semantic=None → BLOCK (semantic_absent)
       - identity=VERIFIED + semantic=PENDING → BLOCK (semantic_pending)

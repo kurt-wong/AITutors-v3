@@ -1,6 +1,6 @@
 """M5 Consumer Gate — 集成级攻击测试。
 
-覆盖 Owner Phase 2-M5 指令的全部攻击面：
+覆盖 M5 fail-closed implementation invariant 的攻击面：
 1. Manifest 攻击（6 种）
 2. IR 攻击（6 种）
 3. 双轴组合穷举
