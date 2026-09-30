@@ -417,7 +417,9 @@ NOT AUTHORIZED:
            production service 仍未接 M5（A8 BLOCKED 保持）
 未做     : §1 双轴状态机落库 · 新 schema · Migration Gate ·
            Gate/Admission 语义重构 · production service 接线
-Checkpoint: 见下「最终证据锚点」行（F-5；不以 dfeffdb/f025756 为当前锚）
+Checkpoint: 内容收口 commit = `c1a64f1`（F-1–F-5 文案/数字）
+最终证据锚点: 本条目所在 commit（`git log -1 --oneline -- <本文件>`）——
+           **当前 Evidence 以该 commit 树为准**；`dfeffdb`/`f025756` 仅为历史，不作当前锚
 Exit     : 满足 —— interface-only 实现闭环；下一步受控接入须另令
 ```
 
