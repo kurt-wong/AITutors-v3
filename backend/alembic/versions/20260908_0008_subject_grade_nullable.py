@@ -19,8 +19,10 @@ _COLS = ("subject", "grade")
 def upgrade() -> None:
     for table in _TABLES:
         for col in _COLS:
-            op.execute(f"UPDATE {table} SET {col} = NULL WHERE {col} = ''")
+            # Order matters: drop NOT NULL before writing NULL, or the UPDATE
+            # violates the still-present constraint (see ENV-BLOCKER-ALEMBIC-0008).
             op.alter_column(table, col, existing_type=sa.String(), nullable=True)
+            op.execute(f"UPDATE {table} SET {col} = NULL WHERE {col} = ''")
 
 
 def downgrade() -> None:
