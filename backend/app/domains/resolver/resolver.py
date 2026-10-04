@@ -266,8 +266,23 @@ class SourceResolver:
         by_unit: dict[str, list] = {}
         for t in extract_targets(annotation_payload):
             by_unit.setdefault(t.unit_id, []).append(t)
+        # Fourth-cut B: resolve ALL material bodies first so stem boundaries can
+        # respect material regions (own-stem and neighbor-stem).
         for unit_id, targets in by_unit.items():
-            self._resolve_unit(out, unit_id, targets)
+            for t in targets:
+                if t.kind == "instruction_marker":
+                    self._span_other(out, unit_id, t)
+        mat_lines: set[str] = set()
+        mat_starts: list[int] = []
+        for s in out.resolved:
+            if s.role in _MATERIAL_ROLES:
+                for ref in s.line_refs:
+                    mat_lines.add(ref)
+                if s.line_refs:
+                    mat_starts.append(self._idx.seq_of(s.line_refs[0]))
+        for unit_id, targets in by_unit.items():
+            self._resolve_unit(out, unit_id, targets,
+                               mat_lines=mat_lines, mat_starts=mat_starts)
         self._enforce_material_overlap(out)
         rels = self._resolve_relations(
             out, extract_relations(annotation_payload)
@@ -330,7 +345,14 @@ class SourceResolver:
         return tuple(regions)
 
     # ------------------------------------------------------------------ 调度
-    def _resolve_unit(self, out: _Out, unit_id: str, targets) -> None:
+    def _resolve_unit(
+        self,
+        out: _Out,
+        unit_id: str,
+        targets,
+        mat_lines: set | frozenset = frozenset(),
+        mat_starts: list[int] | None = None,
+    ) -> None:
         stem_t = next((t for t in targets if t.kind == "question_label"), None)
         qn = stem_t.question_number if stem_t else None
         start_ref: str | None = None
@@ -338,15 +360,22 @@ class SourceResolver:
         if qn:
             start_ref = self._locate_question_start(out, unit_id, stem_t, qn)
         if start_ref:
-            # 本 unit 内容区 = 题号行之后、下一题/答案/详解表头之前（显式边界）。
             region_upper = self._region_end(start_ref)
+            # Neighbor-stem: stop at any resolved material body start.
+            start_seq = self._idx.seq_of(start_ref)
+            for ms in mat_starts or []:
+                if ms > start_seq and (region_upper is None or ms < region_upper):
+                    region_upper = ms
         option_hits = {}
         if start_ref:
             labels = tuple(t.label for t in targets if t.kind == "option_label" and t.label)
             option_hits = self._locate_options(out, unit_id, labels, start_ref, region_upper)
         for t in targets:
+            if t.kind == "instruction_marker":
+                continue  # already resolved in phase 1
             if t.kind == "question_label":
-                self._stem_span(out, unit_id, t, qn, start_ref, option_hits, region_upper)
+                self._stem_span(out, unit_id, t, qn, start_ref, option_hits, region_upper,
+                                exclude_refs=mat_lines)
             elif t.kind == "option_label":
                 self._option_span(out, unit_id, t, option_hits)
             else:
@@ -415,7 +444,8 @@ class SourceResolver:
             found[lab] = ("incomplete",)
         return found
 
-    def _stem_span(self, out, unit_id, t, qn, start_ref, option_hits, region_upper):
+    def _stem_span(self, out, unit_id, t, qn, start_ref, option_hits, region_upper,
+                   exclude_refs: frozenset | set | None = None):
         if start_ref is None:
             return  # 已由 _locate_question_start 记录 unresolved
         first_option_seq = None
@@ -423,7 +453,7 @@ class SourceResolver:
             if entry[0] == "ok" and entry[1]:
                 seq = self._idx.seq_of(entry[1])
                 first_option_seq = seq if first_option_seq is None else min(first_option_seq, seq)
-        # 显式边界：本 unit 首选项行；否则区界（下一题/表头）。
+        # 显式边界：本 unit 首选项行；否则区界（下一题/表头/material）。
         boundary_seq = first_option_seq if first_option_seq is not None else region_upper
         if boundary_seq is None:
             out.add_unresolved(
@@ -432,7 +462,12 @@ class SourceResolver:
             )
             return
         start_seq = self._idx.seq_of(start_ref)
-        refs = [l.line_ref for l in self._idx.between(start_seq, boundary_seq)]
+        # Fourth-cut B: stem must not consume material body lines.
+        exclude = exclude_refs or frozenset()
+        refs = [
+            l.line_ref for l in self._idx.between(start_seq, boundary_seq)
+            if l.line_ref not in exclude
+        ]
         if not refs:
             out.add_unresolved(t, "incomplete", ("stem span empty",))
             return
@@ -464,6 +499,32 @@ class SourceResolver:
         elif t.kind == "blank_label":
             self._blank_span(out, unit_id, t)
 
+    def _trim_blank_edge_refs(self, refs: list[str]) -> tuple[list[str], int, int]:
+        """Drop leading/trailing pure-blank lines from a material interior.
+
+        Fourth-cut A: marker ±1 padding can place blank lines at the interior
+        edges and collide with neighboring units. Substantive content is kept;
+        empty result is returned for the caller to treat as unresolved.
+        """
+        if not refs:
+            return [], 0, 0
+        lead = 0
+        while lead < len(refs):
+            line = self._idx.get(refs[lead])
+            if line.text and line.text.strip():
+                break
+            lead += 1
+        trail = 0
+        while trail < len(refs) - lead:
+            line = self._idx.get(refs[len(refs) - 1 - trail])
+            if line.text and line.text.strip():
+                break
+            trail += 1
+        end = len(refs) - trail
+        if lead >= end:
+            return [], lead, trail
+        return refs[lead:end], lead, trail
+
     def _material_span(self, out, unit_id, t):
         sm = t.start_marker or {}
         em = t.end_marker or {}
@@ -489,11 +550,19 @@ class SourceResolver:
                                    ("material interior empty (markers adjacent)",))
                 return
             # material 正文 = start/end marker **之间**（排他，instruction 行不进材料）。
-            refs = [l.line_ref for l in self._idx.between(s_seq + 1, e_seq)]
+            raw_refs = [l.line_ref for l in self._idx.between(s_seq + 1, e_seq)]
+            # Fourth-cut A: trim leading/trailing pure-blank padding lines.
+            refs, lead_n, trail_n = self._trim_blank_edge_refs(raw_refs)
+            if not refs:
+                out.add_unresolved(t, "incomplete",
+                                   ("material interior empty after blank trim",))
+                return
             status = "exact" if st == "exact" and et == "exact" else \
                 ("contextual" if "contextual" in (st, et) else "normalized")
             out.add_span(unit_id, t, refs, status,
-                         ("material between markers", sq, "…", eq, *s_extra, *e_extra))
+                         ("material between markers", sq, "…", eq,
+                          f"trim_blanks lead={lead_n} trail={trail_n}",
+                          *s_extra, *e_extra))
             return
         q = sm.get("text")
         if not q:
@@ -530,12 +599,80 @@ class SourceResolver:
                 return "contextual", in_zone, extra
         return status, refs, ()
 
+    def _evidence_line_refs(self, start_no: int, end_no: int) -> list[str] | None:
+        """Producer inclusive 1-based line numbers → line_refs.
+
+        Preprocessing convention (source_loader): single-page markdown with
+        line_ref = P1L{line_no:03d}. Missing any declared line → None
+        (no guessing / no partial range).
+        """
+        refs: list[str] = []
+        for n in range(start_no, end_no + 1):
+            ref = f"P1L{n:03d}"
+            try:
+                self._idx.get(ref)
+            except KeyError:
+                return None
+            refs.append(ref)
+        return refs
+
     def _answer_span(self, out, unit_id, t):
         qn = t.question_number
         if not qn:
             out.add_unresolved(t, "incomplete", ("answer needs question_label",))
             return
-        # 答案区：答案表头后、详解/解析表头前的行。qnbounded entry（题号 token+分隔）。
+
+        # B3c-A evidence transport: declared Producer answer_lines is the
+        # authoritative answer-evidence range. Do not re-scan the whole
+        # answer_zone to guess which line holds the answer (defects A/C).
+        el = getattr(t, "evidence_lines", None)
+        if el is not None:
+            refs = self._evidence_line_refs(el[0], el[1])
+            if refs is None:
+                out.add_unresolved(
+                    t, "incomplete",
+                    ("answer evidence range not fully bound to source lines",
+                     f"declared={el[0]}-{el[1]}"),
+                )
+                return
+            if len(refs) > 1:
+                # Multi-line evidence block: the declared range IS the answer
+                # evidence. Canonical token extraction from a multi-line block
+                # is NOT SPECIFIED (AnswerTokenContract) — bind the range as a
+                # line span and leave token choice to the Contract (likely
+                # pending_review). Do not invent "last line" / "故选" heuristics.
+                out.add_span(
+                    unit_id, t, refs, "exact",
+                    ("answer evidence range",
+                     f"lines={el[0]}-{el[1]}",
+                     "multi-line block (no token extraction)"),
+                )
+                return
+            # Single-line evidence: keep the existing AnswerTokenContract
+            # char-slice path (qn-entry within the declared line only).
+            line_ref = refs[0]
+            raw = self._idx.get(line_ref).text
+            offs = _entry_offsets(raw, qn)
+            if offs:
+                all_off = [m.start() for m in _ENTRY_RE.finditer(raw)]
+                nxt = next((o for o in all_off if o > offs[0]), len(raw))
+                out.add_char_span(
+                    unit_id, t, line_ref, offs[0], nxt, "exact",
+                    ("answer evidence range", f"lines={el[0]}-{el[1]}",
+                     f"qn={qn}", "single-line entry"),
+                )
+                return
+            # No qn token on the declared line: the declared line itself is
+            # the evidence (e.g. bare answer cell). Bind the full line.
+            out.add_span(
+                unit_id, t, [line_ref], "exact",
+                ("answer evidence range", f"lines={el[0]}-{el[1]}",
+                 "single-line full (no qn entry)"),
+            )
+            return
+
+        # Fallback (no declared evidence range): scan answer zone for the
+        # qn-bounded entry. Retained for hand-written annotations / tests.
         entries: list[tuple[str, int, int]] = []
         in_zone = False
         for l in self._idx.lines:
@@ -566,14 +703,36 @@ class SourceResolver:
 
     def _explanation_span(self, out, unit_id, t):
         qn = t.question_number
+
+        # Existing Producer mechanism (not a heuristic): ManifestUnit.explanation_lines
+        # is the declared explanation-evidence range — same transport as B3c-A
+        # answer_lines. Bind the full declared range; do not invent token lines.
+        el = getattr(t, "evidence_lines", None)
+        if el is not None:
+            refs = self._evidence_line_refs(el[0], el[1])
+            if refs is None:
+                out.add_unresolved(
+                    t, "incomplete",
+                    ("explanation evidence range not fully bound to source lines",
+                     f"declared={el[0]}-{el[1]}"),
+                )
+                return
+            out.add_span(
+                unit_id, t, refs, "exact",
+                ("explanation evidence range", f"lines={el[0]}-{el[1]}"),
+            )
+            return
+
+        # Fallback (no declared range): header scan. A second H-3 header is the
+        # existing region boundary (see the break below); the first header only
+        # opens the region.
         header_seen = False
         region: list[str] = []
         for l in self._idx.lines:
             norm = normalize_text(l.text)
-            if is_explanation_header(norm):
-                header_seen = True
-                continue
             if not header_seen:
+                if is_explanation_header(norm):
+                    header_seen = True
                 continue
             if is_explanation_header(norm) or is_answer_header(norm):
                 break

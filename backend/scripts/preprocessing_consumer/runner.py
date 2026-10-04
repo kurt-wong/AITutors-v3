@@ -43,7 +43,10 @@ from app.repositories.source_repository import SourceRepository
 from app.models.snapshot import AdmissionCandidate, SemanticAnnotation
 from app.models.source import Document, DocumentSourceLine, DocumentSourceVersion, SourceFigure
 
-from .annotation_adapter import manifest_to_annotation_payload
+from .annotation_adapter import (
+    attach_material_boundary_markers,
+    manifest_to_annotation_payload,
+)
 from .boundary import enforce_interface_scope
 from .manifest_reader import Manifest, find_manifests, load_manifest
 from .resolved_span_adapter import manifest_to_resolved_spans
@@ -144,6 +147,17 @@ async def _track_a(
         doc_id, sv_id = await _create_source_records(session, source_lines, source_path)
 
         payload = manifest_to_annotation_payload(manifest)
+        # First-cut INTERIOR_EMPTY fix: map inclusive material_lines to
+        # exclusive multi_line_pair boundary markers (delimiter lines outside content).
+        payload = attach_material_boundary_markers(
+            payload,
+            {
+                u.unit_id: u.material_lines
+                for u in manifest.units
+                if u.material_lines
+            },
+            [sl.text for sl in source_lines],
+        )
 
         ann = SemanticAnnotation(
             source_version_id=sv_id,

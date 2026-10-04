@@ -485,7 +485,179 @@ async def test_answer_shared_line_multi_qn():
     assert lines[5].text[a2.start_offset:a2.end_offset].startswith("2")
 
 
-# ------------------------------------------------------------------ fixture golden
+# ------------------------------------------------------------------ B3c-A evidence transport
+async def test_answer_evidence_lines_multi_line_binds_full_range():
+    """B3c-A：Producer 多行 answer_lines → ResolvedSpan.line_refs 覆盖完整区间。
+
+    不得退化为「只绑题号行」（defect A），不得发明最后一行/故选 heuristic。
+    """
+    lines = mk(
+        "1. 计算题题干", "A. 甲",
+        "【答案】",
+        "1.", "【考点】代数", "【分析】略", "【解答】过程", "故选A",
+    )
+    # answer_lines inclusive [4, 8] = "1." .. "故选A"
+    payload = {"semantic_units": [{"unit_id": "Q1", "content": {
+        "stem": {"question_label": "1"}, "options": [{"label": "A"}],
+        "answer": {"answer_zone": "answer_table", "question_label": "1",
+                   "answer_lines": [4, 8]}}}]}
+    run = resolver(lines).resolve(payload)
+    a = next(s for s in run.resolved_spans if s.span_id == "sp-Q1.answer")
+    assert a.line_refs == ("P1L004", "P1L005", "P1L006", "P1L007", "P1L008")
+    assert a.granularity == "line"
+    assert a.start_line_ref == "P1L004" and a.end_line_ref == "P1L008"
+
+
+async def test_answer_evidence_lines_single_line_keeps_qn_char_span():
+    """B3c-A：单行 answer_lines（共享答案表）→ 仍按 qn-entry 切 line_character。
+
+    只在声明行内查找，不再扫整个 answer_zone。
+    """
+    lines = mk(
+        "1. 第一题", "A. 甲", "2. 第二题", "A. 乙",
+        "【答案】", "1. A  2. B",
+    )
+    payload = {"semantic_units": [
+        {"unit_id": "Q1", "content": {"stem": {"question_label": "1"}, "options": [],
+          "answer": {"answer_zone": "answer_table", "question_label": "1",
+                     "answer_lines": [6, 6]}}},
+        {"unit_id": "Q2", "content": {"stem": {"question_label": "2"}, "options": [],
+          "answer": {"answer_zone": "answer_table", "question_label": "2",
+                     "answer_lines": [6, 6]}}}]
+    }
+    run = resolver(lines).resolve(payload)
+    a1 = next(s for s in run.resolved_spans if s.span_id == "sp-Q1.answer")
+    a2 = next(s for s in run.resolved_spans if s.span_id == "sp-Q2.answer")
+    assert a1.granularity == "line_character" and a1.line_refs == ("P1L006",)
+    assert a2.granularity == "line_character" and a2.line_refs == ("P1L006",)
+    assert lines[5].text[a1.start_offset:a1.end_offset].startswith("1")
+    assert lines[5].text[a2.start_offset:a2.end_offset].startswith("2")
+
+
+async def test_answer_evidence_lines_scoped_not_other_unit_block():
+    """B3c-A defect C：声明区间外的他题答案行不得被选中。"""
+    lines = mk(
+        "1. 第一题", "A. 甲", "2. 第二题", "A. 乙",
+        "【答案】",
+        "1. A",
+        "2. B",
+    )
+    # Q1 声明 answer_lines 指向第 6 行（自己的答案行），不得落到第 7 行。
+    payload = {"semantic_units": [{"unit_id": "Q1", "content": {
+        "stem": {"question_label": "1"}, "options": [],
+        "answer": {"answer_zone": "answer_table", "question_label": "1",
+                   "answer_lines": [6, 6]}}}]}
+    run = resolver(lines).resolve(payload)
+    a = next(s for s in run.resolved_spans if s.span_id == "sp-Q1.answer")
+    assert a.line_refs == ("P1L006",)
+
+
+async def test_answer_evidence_lines_unbound_range_incomplete():
+    """B3c-A：声明区间无法完整绑定到 source lines → incomplete（不猜、不截断）。"""
+    lines = mk("1. 题干", "A. 甲", "【答案】", "1. A")
+    payload = {"semantic_units": [{"unit_id": "Q1", "content": {
+        "stem": {"question_label": "1"}, "options": [],
+        "answer": {"answer_zone": "answer_table", "question_label": "1",
+                   "answer_lines": [4, 99]}}}]}
+    run = resolver(lines).resolve(payload)
+    assert not any(s.span_id == "sp-Q1.answer" for s in run.resolved_spans)
+    assert any(u.reference_id == "Q1.answer" and u.resolution_status == "incomplete"
+               for u in run.unresolved_references)
+
+
+async def test_answer_without_evidence_lines_keeps_zone_scan():
+    """无声明 answer_lines 时保留原 answer_zone 扫描（兼容手写 annotation / 旧测试）。"""
+    lines = mk("1. 题干", "A. 甲", "【答案】", "1. A")
+    payload = {"semantic_units": [{"unit_id": "Q1", "content": {
+        "stem": {"question_label": "1"}, "options": [],
+        "answer": {"answer_zone": "answer_table", "question_label": "1"}}}]}
+    run = resolver(lines).resolve(payload)
+    a = next(s for s in run.resolved_spans if s.span_id == "sp-Q1.answer")
+    assert a.line_refs == ("P1L004",) and a.granularity == "line_character"
+
+
+async def test_answer_evidence_lines_single_line_no_qn_entry_full_line():
+    """B3c-A：单行声明且行内无 qn token → 整行作为 evidence（不虚构 entry）。"""
+    lines = mk("1. 题干", "A. 甲", "【答案】", "A")
+    payload = {"semantic_units": [{"unit_id": "Q1", "content": {
+        "stem": {"question_label": "1"}, "options": [{"label": "A"}],
+        "answer": {"answer_zone": "answer_table", "question_label": "1",
+                   "answer_lines": [4, 4]}}}]}
+    run = resolver(lines).resolve(payload)
+    a = next(s for s in run.resolved_spans if s.span_id == "sp-Q1.answer")
+    assert a.line_refs == ("P1L004",) and a.granularity == "line"
+
+
+# ------------------------------------------------------------------ explanation boundary (explanation_lines)
+async def test_explanation_evidence_lines_binds_declared_range():
+    """Producer explanation_lines 是既有 explanation evidence 区间（非 heuristic）。
+
+    不得从首个【解析】贪婪扫到 EOF；不得吞并其他 unit 的 answer 行。
+    """
+    lines = mk(
+        "1. 第一题", "A. 甲", "2. 第二题", "A. 乙",
+        "1. A",                 # L5  Q1 answer
+        "【解析】",              # L6
+        "【详解】第一题解析",     # L7
+        "2. B",                 # L8  Q2 answer
+        "【解析】",              # L9
+        "【详解】第二题解析",     # L10
+    )
+    payload = {"semantic_units": [
+        {"unit_id": "Q1", "content": {
+            "stem": {"question_label": "1"}, "options": [],
+            "answer": {"answer_zone": "answer_table", "question_label": "1",
+                       "answer_lines": [5, 5]},
+            "explanation": {"explanation_zone": "inline_explanation",
+                            "question_label": "1", "explanation_lines": [6, 7]}}},
+        {"unit_id": "Q2", "content": {
+            "stem": {"question_label": "2"}, "options": [],
+            "answer": {"answer_zone": "answer_table", "question_label": "2",
+                       "answer_lines": [8, 8]},
+            "explanation": {"explanation_zone": "inline_explanation",
+                            "question_label": "2", "explanation_lines": [9, 10]}}},
+    ]}
+    run = resolver(lines).resolve(payload)
+    e1 = next(s for s in run.resolved_spans if s.span_id == "sp-Q1.explanation")
+    e2 = next(s for s in run.resolved_spans if s.span_id == "sp-Q2.explanation")
+    a2 = next(s for s in run.resolved_spans if s.span_id == "sp-Q2.answer")
+    assert e1.line_refs == ("P1L006", "P1L007")
+    assert e2.line_refs == ("P1L009", "P1L010")
+    # 不得吞并 Q2 的 answer 行
+    assert not (set(e1.line_refs) & set(a2.line_refs))
+    assert not (set(e2.line_refs) & set(a2.line_refs))
+
+
+async def test_explanation_evidence_lines_unbound_incomplete():
+    lines = mk("1. 题干", "【解析】", "【详解】x")
+    payload = {"semantic_units": [{"unit_id": "Q1", "content": {
+        "stem": {"question_label": "1"}, "options": [],
+        "explanation": {"explanation_zone": "inline_explanation",
+                        "question_label": "1", "explanation_lines": [2, 99]}}}]}
+    run = resolver(lines).resolve(payload)
+    assert not any(s.span_id == "sp-Q1.explanation" for s in run.resolved_spans)
+    assert any(u.reference_id == "Q1.explanation" and u.resolution_status == "incomplete"
+               for u in run.unresolved_references)
+
+
+async def test_explanation_scan_fallback_stops_at_next_header():
+    """无声明区间时：第二个 H-3 表头是既有区界（不得继续吞到 EOF）。"""
+    lines = mk(
+        "1. 题干", "A. 甲",
+        "【解析】", "1. 第一段解析",
+        "【解析】", "2. 第二段解析",
+    )
+    payload = {"semantic_units": [{"unit_id": "Q1", "content": {
+        "stem": {"question_label": "1"}, "options": [],
+        "explanation": {"explanation_zone": "inline_explanation",
+                        "question_label": "1"}}}]}
+    run = resolver(lines).resolve(payload)
+    e = next(s for s in run.resolved_spans if s.span_id == "sp-Q1.explanation")
+    # 从第一个【解析】后到第二个【解析】前；不含第二段
+    assert e.line_refs == ("P1L004",)
+    assert "P1L006" not in e.line_refs
+
+
 async def test_fixture_golden_composite_full_resolution():
     """段内 fixture golden：固定输入 → 固定预期解析率（正反例齐备）。"""
     lines = mk(

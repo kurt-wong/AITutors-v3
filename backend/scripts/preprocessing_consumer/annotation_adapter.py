@@ -49,20 +49,157 @@ def _qn(unit: ManifestUnit) -> str:
     return str(unit.question_numbers[0]) if unit.question_numbers else ""
 
 
+def _text_occurrence_count(line_texts: list[str], text: str) -> int:
+    return sum(1 for t in line_texts if t == text)
+
+
+def _nearest_unique_nonempty(
+    line_texts: list[str],
+    start_no: int,
+    *,
+    forward: bool,
+    limit: int = 12,
+) -> tuple[int, str] | None:
+    """Walk outward for a non-empty line whose text is UNIQUE in the document.
+
+    Duplicate marker text lets SourceResolver land on the wrong occurrence
+    (span explosion). If a line's text occurs more than once we skip it;
+    if no unique delimiter is found we return None (leave unresolved)
+    rather than emit an ambiguous marker.
+    """
+    n = len(line_texts)
+    step = 1 if forward else -1
+    no = start_no
+    for _ in range(limit):
+        if no < 1 or no > n:
+            return None
+        text = line_texts[no - 1]
+        if text and text.strip() and _text_occurrence_count(line_texts, text) == 1:
+            return no, text
+        no += step
+    return None
+
+
+def material_boundary_markers(
+    material_lines: tuple[int, int] | list[int],
+    line_texts: list[str],
+) -> dict | None:
+    """Producer inclusive material_lines → resolver multi_line_pair boundary markers.
+
+    Producer `material_lines=[s,e]` is INCLUSIVE content. Resolver multi_line_pair
+    interior is EXCLUSIVE of marker lines.
+
+    Rules (duplicate-marker / span-explosion guard):
+    - N=1: single-marker on the content line itself when its text is UNIQUE
+      (resolver default path yields exactly that one line).
+    - N>=2: unique-text delimiters strictly outside [s,e]; reject if padding
+      would exceed one line per side (prevents inflation drift).
+    - Never emit ambiguous (non-unique) marker text — leave unresolved instead.
+    """
+    if not material_lines or len(material_lines) != 2:
+        return None
+    s, e = int(material_lines[0]), int(material_lines[1])
+    if s < 1 or e > len(line_texts) or s > e:
+        return None
+
+    if s == e:
+        text = line_texts[s - 1]
+        if not text or not text.strip():
+            return None
+        if _text_occurrence_count(line_texts, text) != 1:
+            return None
+        return {"role": "material", "start_marker": {"text": text}}
+
+    start = _nearest_unique_nonempty(line_texts, s - 1, forward=False, limit=8)
+    end = _nearest_unique_nonempty(line_texts, e + 1, forward=True, limit=8)
+    if not start or not end:
+        return None
+    if end[0] <= start[0] + 1:
+        return None
+    # interior must cover [s,e]; extra edge lines are blank/separator padding
+    # that Fourth-cut A trims after resolver forms the raw interior.
+    interior_n = (end[0] - 1) - (start[0] + 1) + 1
+    if interior_n < (e - s + 1) or interior_n > (e - s + 1) + 12:
+        return None
+    return {
+        "role": "material",
+        "start_marker": {"granularity": "multi_line_pair", "text": start[1]},
+        "end_marker": {"text": end[1]},
+    }
+
+
+def attach_material_boundary_markers(
+    payload: dict,
+    material_lines_by_unit: dict,
+    line_texts: list[str],
+) -> dict:
+    """Attach boundary markers onto composite shared_components.material.
+
+    `material_lines_by_unit`: unit_id → (start, end) inclusive Producer range.
+    Only fills material declarations that lack start_marker (idempotent).
+    Records explicit gaps when a boundary marker cannot be formed.
+    """
+    gaps = payload.setdefault("producer_boundary", {})
+    known = gaps.setdefault("known_gaps", []) if isinstance(gaps, dict) else []
+    for unit in payload.get("semantic_units") or []:
+        if unit.get("unit_type") != "composite_unit":
+            continue
+        uid = unit.get("unit_id")
+        shared = unit.setdefault("shared_components", {})
+        mat = shared.get("material")
+        if not isinstance(mat, dict):
+            continue
+        if mat.get("start_marker") and mat.get("end_marker"):
+            continue
+        ml = material_lines_by_unit.get(uid)
+        if not ml:
+            continue
+        markers = material_boundary_markers(ml, line_texts)
+        if markers is None:
+            known.append({
+                "code": "MATERIAL_BOUNDARY_MARKER_UNAVAILABLE",
+                "unit_id": uid,
+                "detail": (
+                    f"material_lines={list(ml)} cannot be mapped to multi_line_pair "
+                    f"boundary markers (missing/empty delimiter line outside inclusive range)"
+                ),
+            })
+            continue
+        shared["material"] = markers
+    return payload
+
+
 def _leaf_content(unit: ManifestUnit) -> dict:
     """leaf 级 content role 声明（只声明 role，不携带正文；不补、不猜）。"""
     content: dict = {}
     content["stem"] = {"role": "stem", "question_label": _qn(unit)}
-    content["answer"] = {
+    answer = {
         "role": "answer",
         "question_label": _qn(unit),
         "answer_zone": "answer_table",
     }
+    # B3c-A evidence transport: Producer inclusive answer_lines is the
+    # authoritative answer-evidence range. Previously dropped here, forcing
+    # Resolver to re-scan the whole answer_zone (defects A/C). Preserve it
+    # verbatim as a [start, end] pair (answer_evidence_lines = v2.4+ fallback,
+    # same precedence as Track B runner_b2._answer_span).
+    al = unit.answer_lines or unit.answer_evidence_lines
+    if al and len(al) == 2 and int(al[0]) >= 1 and int(al[1]) >= int(al[0]):
+        answer["answer_lines"] = [int(al[0]), int(al[1])]
+    content["answer"] = answer
     if unit.explanation_lines:
-        content["explanation"] = {
+        expl = {
             "role": "explanation",
             "explanation_zone": "inline_explanation",
         }
+        # Existing Producer mechanism (same evidence-transport as answer_lines):
+        # ManifestUnit.explanation_lines is the declared explanation-evidence
+        # range. Track B already consumes it (resolved_span_adapter). Dropping
+        # it forced _explanation_span to re-scan from the first 【解析】 to EOF.
+        xl = unit.explanation_lines
+        if len(xl) == 2 and int(xl[0]) >= 1 and int(xl[1]) >= int(xl[0]):
+            expl["explanation_lines"] = [int(xl[0]), int(xl[1])]
+        content["explanation"] = expl
     # options: per-label declaration when producer provides per-option spans.
     # Fall back to gap registration when only options_lines range is available.
     if unit.options:

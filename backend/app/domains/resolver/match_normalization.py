@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import re
 
-MATCH_NORMALIZATION_VERSION = "match-norm/v1"
+MATCH_NORMALIZATION_VERSION = "match-norm/v1.1"
 
 _WS_RE = re.compile(r"\s+")
 _OCR_NOISE = str.maketrans(
@@ -35,9 +35,18 @@ def fold_full_width(ch: str) -> str:
     return ch
 
 
+_MD_HEADING_RE = re.compile(r"^#{1,6}\s+")
+
+
 def normalize_text(text: str) -> str:
-    """一行/一个 marker 的匹配用归一化（§5.2）。空白折叠到单空格并 trim。"""
-    folded = "".join(fold_full_width(c) for c in text)
+    """一行/一个 marker 的匹配用归一化（§5.2）。空白折叠到单空格并 trim。
+
+    v1.1：剥离行首 Markdown 标题记号（`# ` / `## ` …）。Producer（OCR→markdown）
+    以 `# 参考答案` 表达章节头；H-3 表头 token 是裸「参考答案」，不剥前缀则
+    answer region 恒 missing，真实北京卷 Gate 全量 skip（Phase1 实证）。
+    """
+    stripped = _MD_HEADING_RE.sub("", text, count=1)
+    folded = "".join(fold_full_width(c) for c in stripped)
     folded = folded.translate(_OCR_NOISE)
     return _WS_RE.sub(" ", folded).strip()
 

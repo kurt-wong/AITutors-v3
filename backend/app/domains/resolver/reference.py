@@ -29,6 +29,9 @@ class ResolveTarget:
     end_marker: dict | None = None
     zone: str | None = None
     image_ref: dict | None = None
+    # B3c-A: Producer inclusive 1-based [start, end] answer-evidence range
+    # (ManifestUnit.answer_lines / answer_evidence_lines). None = not declared.
+    evidence_lines: tuple[int, int] | None = None
 
 
 @dataclass(frozen=True)
@@ -207,6 +210,24 @@ def _answer_target(targets: list, unit_id: str, answer) -> None:
         return
     # BUG-V3-038：content role 术语统一 question_label（20 §4.5:169/204-205），
     # 不读 question_number（那是 unit 顶层字段）。禁 alias fallback。
+    evidence = None
+    el = answer.get("answer_lines")
+    if el is not None:
+        if not isinstance(el, (list, tuple)) or len(el) != 2:
+            raise ValueError(
+                f"unit {unit_id!r} content.answer.answer_lines must be [start, end], got {el!r}"
+            )
+        try:
+            s, e = int(el[0]), int(el[1])
+        except (TypeError, ValueError) as exc:
+            raise ValueError(
+                f"unit {unit_id!r} content.answer.answer_lines must be ints, got {el!r}"
+            ) from exc
+        if s < 1 or e < s:
+            raise ValueError(
+                f"unit {unit_id!r} content.answer.answer_lines invalid range {s}..{e}"
+            )
+        evidence = (s, e)
     targets.append(
         ResolveTarget(
             target_id=f"{unit_id}.answer", unit_id=unit_id, role="answer",
@@ -214,6 +235,7 @@ def _answer_target(targets: list, unit_id: str, answer) -> None:
             question_number=(
                 str(answer["question_label"]) if answer.get("question_label") else None
             ),
+            evidence_lines=evidence,
         )
     )
 
@@ -225,6 +247,27 @@ def _explanation_target(targets: list, unit_id: str, expl) -> None:
     if zone is None:
         return
     # BUG-V3-038：同 _answer_target，content role 用 question_label。
+    evidence = None
+    el = expl.get("explanation_lines")
+    if el is not None:
+        if not isinstance(el, (list, tuple)) or len(el) != 2:
+            raise ValueError(
+                f"unit {unit_id!r} content.explanation.explanation_lines must be "
+                f"[start, end], got {el!r}"
+            )
+        try:
+            s, e = int(el[0]), int(el[1])
+        except (TypeError, ValueError) as exc:
+            raise ValueError(
+                f"unit {unit_id!r} content.explanation.explanation_lines must be ints, "
+                f"got {el!r}"
+            ) from exc
+        if s < 1 or e < s:
+            raise ValueError(
+                f"unit {unit_id!r} content.explanation.explanation_lines invalid range "
+                f"{s}..{e}"
+            )
+        evidence = (s, e)
     targets.append(
         ResolveTarget(
             target_id=f"{unit_id}.explanation", unit_id=unit_id,
@@ -232,6 +275,7 @@ def _explanation_target(targets: list, unit_id: str, expl) -> None:
             question_number=(
                 str(expl["question_label"]) if expl.get("question_label") else None
             ),
+            evidence_lines=evidence,
         )
     )
 

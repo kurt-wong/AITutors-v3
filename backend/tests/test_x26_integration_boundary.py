@@ -232,6 +232,28 @@ class TestValidCases:
         assert len(m.sections) == 1
         assert m.sections[0].ordinal == 1
 
+    def test_answer_lines_transport_reaches_resolve_target(self):
+        """B3c-A：Producer answer_lines 不得在 adapter 被丢弃。
+
+        必须出现在 content.answer，并被 reference 解析为 ResolveTarget.evidence_lines。
+        """
+        from app.domains.resolver.reference import extract_targets
+
+        m = _manifest([
+            _unit("Q1", "standalone_question",
+                  stem_lines=(1, 1), answer_lines=(20, 26)),
+        ])
+        out = manifest_to_annotation_payload(m)
+        ans = out["semantic_units"][0]["content"]["answer"]
+        assert ans.get("answer_lines") == [20, 26], (
+            f"adapter must preserve Producer answer_lines, got {ans}"
+        )
+        targets = extract_targets(out)
+        at = next(t for t in targets if t.role == "answer")
+        assert at.evidence_lines == (20, 26), (
+            f"reference must expose evidence_lines, got {at.evidence_lines}"
+        )
+
     def test_ordering_preservation(self):
         """单元顺序与 IR 顺序一致；归一化不重排。"""
         units = [
