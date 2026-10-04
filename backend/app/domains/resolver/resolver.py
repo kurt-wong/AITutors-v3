@@ -44,7 +44,8 @@ def _raw_sha256(s: str) -> str:
 
 
 # 行内条目形态：题号 token + 分隔符（bounded，防 qn=1 误配 "10."）。offset 基于 raw text。
-_ENTRY_RE = re.compile(r"(?<![\d])(\d{1,3})\s*[.．、:]")
+# 兼容 Markdown escaped-dot（`27\\. A` ≡ `27. A`），与 is_question_start v1.2 同界。
+_ENTRY_RE = re.compile(r"(?<![\d])(\d{1,3})\s*(?:\\[.．、:]|[.．、:])")
 
 
 def _entry_offsets(text: str, qn: str) -> list[int]:
