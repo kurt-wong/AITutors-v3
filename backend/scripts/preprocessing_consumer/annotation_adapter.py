@@ -169,10 +169,38 @@ def attach_material_boundary_markers(
     return payload
 
 
+def _printed_qn(unit: ManifestUnit) -> str | None:
+    """Producer printed_number → source-entry form (str). list/int/str 皆可。
+
+    printed_number 是源文印刷题号（identity evidence，printed_provenance 标明
+    来源）；question_numbers 是入库全局身份。二者不同时，Resolver 查源必须用
+    printed form，IR 仍保留 question_numbers。不猜、不按顺序映射。
+    """
+    pn = unit.printed_number
+    if pn is None:
+        return None
+    if isinstance(pn, (list, tuple)):
+        if not pn:
+            return None
+        pn = pn[0]
+    s = str(pn).strip()
+    return s or None
+
+
 def _leaf_content(unit: ManifestUnit) -> dict:
     """leaf 级 content role 声明（只声明 role，不携带正文；不补、不猜）。"""
     content: dict = {}
-    content["stem"] = {"role": "stem", "question_label": _qn(unit)}
+    stem = {"role": "stem", "question_label": _qn(unit)}
+    # Question-identity evidence transport（B3c-A 同模式）：
+    # printed_number = 源文入口题号；questions_lines = 查源窗口。
+    # 二者均为 Producer 已声明事实，本层原样保留，不推导映射。
+    printed = _printed_qn(unit)
+    if printed is not None:
+        stem["question_label_printed"] = printed
+    ql = unit.questions_lines
+    if ql and len(ql) == 2 and int(ql[0]) >= 1 and int(ql[1]) >= int(ql[0]):
+        stem["question_search_lines"] = [int(ql[0]), int(ql[1])]
+    content["stem"] = stem
     answer = {
         "role": "answer",
         "question_label": _qn(unit),

@@ -32,6 +32,10 @@ class ResolveTarget:
     # B3c-A: Producer inclusive 1-based [start, end] answer-evidence range
     # (ManifestUnit.answer_lines / answer_evidence_lines). None = not declared.
     evidence_lines: tuple[int, int] | None = None
+    # Question-identity evidence (Producer printed_number / questions_lines):
+    # source-entry form and lookup window. None = not declared.
+    question_label_printed: str | None = None
+    question_search_lines: tuple[int, int] | None = None
 
 
 @dataclass(frozen=True)
@@ -178,10 +182,20 @@ def _stem_target(targets: list, unit_id: str, stem) -> None:
     qnum = stem.get("question_label")
     if qnum is None:
         return
+    printed = stem.get("question_label_printed")
+    search_lines = None
+    sl = stem.get("question_search_lines")
+    if isinstance(sl, (list, tuple)) and len(sl) == 2:
+        try:
+            search_lines = (int(sl[0]), int(sl[1]))
+        except (TypeError, ValueError):
+            search_lines = None
     targets.append(
         ResolveTarget(
             target_id=f"{unit_id}.stem", unit_id=unit_id, role="stem",
             kind="question_label", question_number=str(qnum),
+            question_label_printed=str(printed) if printed is not None else None,
+            question_search_lines=search_lines,
         )
     )
 

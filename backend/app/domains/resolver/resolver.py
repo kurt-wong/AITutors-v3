@@ -47,6 +47,31 @@ def _raw_sha256(s: str) -> str:
 # 兼容 Markdown escaped-dot（`27\\. A` ≡ `27. A`），与 is_question_start v1.2 同界。
 _ENTRY_RE = re.compile(r"(?<![\d])(\d{1,3})\s*(?:\\[.．、:]|[.．、:])")
 
+# 行中题号入口（真实卷拼接形态）：
+#   …完成 16~17 题。16. 北京…     —— 句号后紧接题号
+#   …完成26－2926.优化…           —— 区间尾数字后紧接题号（OCR 无分隔拼接）
+# 仅在查找「已声明的特定题号」时使用，不开放任意行中数字为题号。
+_MID_SENTENCE_QN_RE_T = r"。{qn}\s*(?:\\[.．、:]|[.．、:])"
+_MID_RANGE_QN_RE_T = (
+    r"(?<![\d]){qn}\s*[－~—–-]\s*\d{{1,3}}\s*{qn}\s*(?:\\[.．、:]|[.．、:])"
+)
+
+
+def _line_has_question_entry(text: str, qn: str) -> bool:
+    """该行是否存在题号 qn 的合法入口（行首 / 句末拼接 / 区间拼接）。
+
+    确定性：只认已声明的 qn，不猜「最近题号」。行首仍走 is_question_start
+    （含 escaped-dot v1.2）；行中仅接受上述两种真实卷拼接形态。
+    """
+    if is_question_start(normalize_text(text)) == qn:
+        return True
+    qn_esc = re.escape(qn)
+    if re.search(_MID_SENTENCE_QN_RE_T.format(qn=qn_esc), text):
+        return True
+    if re.search(_MID_RANGE_QN_RE_T.format(qn=qn_esc), text):
+        return True
+    return False
+
 
 def _entry_offsets(text: str, qn: str) -> list[int]:
     """raw 行内 qn 条目起点列表（行内多条目如同行多题答案时 >1）。"""
@@ -383,9 +408,24 @@ class SourceResolver:
                 self._span_other(out, unit_id, t)
 
     def _locate_question_start(self, out, unit_id, t, qn):
+        # Source-entry form: Producer printed_number when declared (global/local
+        # identity is Producer's fact — bug22_migration / printed_provenance —
+        # not inferred here). Fall back to the declared question_number.
+        search_qn = t.question_label_printed or qn
+        lines = self._question_zone()
+        # Lookup window: Producer questions_lines when declared (1-based inclusive,
+        # same convention as answer_lines → line_ref P1L{n:03d}). Scopes the
+        # search to the unit's own body so printed "1" in Part II does not
+        # collide with Part I / answer-area "1."
+        if t.question_search_lines:
+            lo, hi = t.question_search_lines
+            win_refs = self._evidence_line_refs(lo, hi)
+            if win_refs is not None:
+                win = frozenset(win_refs)
+                lines = [l for l in lines if l.line_ref in win]
         hits = [
-            l.line_ref for l in self._question_zone()
-            if is_question_start(normalize_text(l.text)) == qn
+            l.line_ref for l in lines
+            if _line_has_question_entry(l.text, search_qn)
         ]
         if len(hits) == 1:
             return hits[0]
