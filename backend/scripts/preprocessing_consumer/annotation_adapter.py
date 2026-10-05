@@ -59,6 +59,8 @@ def _nearest_unique_nonempty(
     *,
     forward: bool,
     limit: int = 12,
+    min_no: int | None = None,
+    max_no: int | None = None,
 ) -> tuple[int, str] | None:
     """Walk outward for a non-empty line whose text is UNIQUE in the document.
 
@@ -66,12 +68,24 @@ def _nearest_unique_nonempty(
     (span explosion). If a line's text occurs more than once we skip it;
     if no unique delimiter is found we return None (leave unresolved)
     rather than emit an ambiguous marker.
+
+    min_no / max_no: hard scope bounds (1-based inclusive). The walk never
+    leaves this window — neighbours' declared material ranges must not be
+    entered (English listening blocks sit adjacent and their duplicated
+    section headers force the unbounded walk into the neighbour).
     """
     n = len(line_texts)
     step = 1 if forward else -1
+    lo = min_no if min_no is not None else 1
+    hi = max_no if max_no is not None else n
     no = start_no
+    # Clamp the walk origin into the legal window before stepping.
+    if no > hi:
+        no = hi
+    if no < lo:
+        no = lo
     for _ in range(limit):
-        if no < 1 or no > n:
+        if no < lo or no > hi or no < 1 or no > n:
             return None
         text = line_texts[no - 1]
         if text and text.strip() and _text_occurrence_count(line_texts, text) == 1:
@@ -80,9 +94,29 @@ def _nearest_unique_nonempty(
     return None
 
 
+def _unique_in_range(
+    line_texts: list[str],
+    lo: int,
+    hi: int,
+    *,
+    from_end: bool = False,
+) -> tuple[int, str] | None:
+    """First/last unique non-empty line inside [lo, hi] (1-based inclusive)."""
+    if lo > hi:
+        return None
+    span = range(hi, lo - 1, -1) if from_end else range(lo, hi + 1)
+    for no in span:
+        text = line_texts[no - 1]
+        if text and text.strip() and _text_occurrence_count(line_texts, text) == 1:
+            return no, text
+    return None
+
+
 def material_boundary_markers(
     material_lines: tuple[int, int] | list[int],
     line_texts: list[str],
+    *,
+    neighbour_bounds: tuple[int, int] | None = None,
 ) -> dict | None:
     """Producer inclusive material_lines → resolver multi_line_pair boundary markers.
 
@@ -95,6 +129,15 @@ def material_boundary_markers(
     - N>=2: unique-text delimiters strictly outside [s,e]; reject if padding
       would exceed one line per side (prevents inflation drift).
     - Never emit ambiguous (non-unique) marker text — leave unresolved instead.
+    - neighbour_bounds=(prev_end, next_start): anchor search must not enter
+      another unit's declared material range. prev_end = end line of the
+      nearest previous material (0 if none); next_start = start line of the
+      nearest next material (len+1 if none). Start anchor ≥ prev_end,
+      end anchor ≤ next_start (shared boundary lines allowed).
+    - Fallback when a side has no unique line in scope: tighten BOTH anchors
+      to the first/last unique lines inside [s,e]. Keeps the span
+      non-overlapping and free of neighbour/section pollution; loses at most
+      the non-unique edge lines of the block.
     """
     if not material_lines or len(material_lines) != 2:
         return None
@@ -110,10 +153,64 @@ def material_boundary_markers(
             return None
         return {"role": "material", "start_marker": {"text": text}}
 
-    start = _nearest_unique_nonempty(line_texts, s - 1, forward=False, limit=8)
-    end = _nearest_unique_nonempty(line_texts, e + 1, forward=True, limit=8)
+    # Scope: never enter a neighbour's declared material range.
+    prev_end = 0
+    next_start = len(line_texts) + 1
+    if neighbour_bounds is not None:
+        prev_end = int(neighbour_bounds[0]) if neighbour_bounds[0] is not None else 0
+        next_start = (
+            int(neighbour_bounds[1]) if neighbour_bounds[1] is not None
+            else len(line_texts) + 1
+        )
+    # Anchor windows (shared boundary lines are legal):
+    #   start ∈ [prev_end, s-1]   end ∈ [e+1, next_start]
+    start_lo = max(prev_end, 1)
+    start_hi = s - 1
+    end_lo = e + 1
+    end_hi = min(next_start, len(line_texts))
+
+    start = (
+        _nearest_unique_nonempty(
+            line_texts, s - 1, forward=False, limit=8,
+            min_no=start_lo, max_no=start_hi,
+        )
+        if start_hi >= start_lo else None
+    )
+    end = (
+        _nearest_unique_nonempty(
+            line_texts, e + 1, forward=True, limit=8,
+            min_no=end_lo, max_no=end_hi,
+        )
+        if end_hi >= end_lo else None
+    )
+
     if not start or not end:
-        return None
+        # Deterministic fallback: replace only the missing side(s) with the
+        # first/last unique line inside [s,e]. Keeps the pair non-overlapping
+        # with neighbours; loses at most the non-unique edge lines of the block.
+        if not start:
+            start = _unique_in_range(line_texts, s, e, from_end=False)
+        if not end:
+            end = _unique_in_range(line_texts, s, e, from_end=True)
+        if not start or not end or start[0] >= end[0]:
+            return None
+        # Fallback pair: interior must be non-empty. Adjacent unique edges of a
+        # 2-line block leave no interior — reject rather than emit a broken pair.
+        if start[0] >= e and end[0] <= s:
+            return None
+        interior_n = (end[0] - 1) - (start[0] + 1) + 1
+        if interior_n < 1:
+            # last resort: single-marker on a unique in-block line (N=1 form)
+            solo = _unique_in_range(line_texts, s, e, from_end=False)
+            if solo:
+                return {"role": "material", "start_marker": {"text": solo[1]}}
+            return None
+        return {
+            "role": "material",
+            "start_marker": {"granularity": "multi_line_pair", "text": start[1]},
+            "end_marker": {"text": end[1]},
+        }
+
     if end[0] <= start[0] + 1:
         return None
     # interior must cover [s,e]; extra edge lines are blank/separator padding
@@ -138,9 +235,40 @@ def attach_material_boundary_markers(
     `material_lines_by_unit`: unit_id → (start, end) inclusive Producer range.
     Only fills material declarations that lack start_marker (idempotent).
     Records explicit gaps when a boundary marker cannot be formed.
+
+    Neighbour scope: for each unit, start/end anchors must not enter another
+    unit's declared material range (see material_boundary_markers).
     """
     gaps = payload.setdefault("producer_boundary", {})
     known = gaps.setdefault("known_gaps", []) if isinstance(gaps, dict) else []
+
+    # All declared material ranges for neighbour-scope computation.
+    ranges: list[tuple[int, int, str]] = []
+    for uid, ml in (material_lines_by_unit or {}).items():
+        if not ml or len(ml) != 2:
+            continue
+        try:
+            s, e = int(ml[0]), int(ml[1])
+        except (TypeError, ValueError):
+            continue
+        if s >= 1 and e >= s:
+            ranges.append((s, e, uid))
+    ranges.sort(key=lambda t: t[0])
+
+    def _neighbour_bounds(uid: str, s: int, e: int) -> tuple[int, int]:
+        prev_end = 0
+        next_start = len(line_texts) + 1
+        for rs, re, rid in ranges:
+            if rid == uid:
+                continue
+            # nearest previous material that ends at/before this start
+            if re < s and re > prev_end:
+                prev_end = re
+            # nearest next material that starts at/after this end
+            if rs > e and rs < next_start:
+                next_start = rs
+        return prev_end, next_start
+
     for unit in payload.get("semantic_units") or []:
         if unit.get("unit_type") != "composite_unit":
             continue
@@ -154,7 +282,11 @@ def attach_material_boundary_markers(
         ml = material_lines_by_unit.get(uid)
         if not ml:
             continue
-        markers = material_boundary_markers(ml, line_texts)
+        s, e = int(ml[0]), int(ml[1])
+        markers = material_boundary_markers(
+            ml, line_texts,
+            neighbour_bounds=_neighbour_bounds(uid, s, e),
+        )
         if markers is None:
             known.append({
                 "code": "MATERIAL_BOUNDARY_MARKER_UNAVAILABLE",
