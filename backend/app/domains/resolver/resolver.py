@@ -78,6 +78,115 @@ def _entry_offsets(text: str, qn: str) -> list[int]:
     return [m.start() for m in _ENTRY_RE.finditer(text) if m.group(1) == qn]
 
 
+# ------------------------------------------------------------------ B3c-B
+# Structured Answer Table Evidence Consumption (Owner ruling 2026-09).
+# When answer_lines points at an HTML/table line that self-describes
+# 「题号」row + 「答案」row, the target question number's same-column cell
+# is deterministic structured evidence — NOT semantic inference.
+# Any step fails → None (unresolved). No position/fallback guessing.
+
+_TD_RE = re.compile(r"<td[^>]*>(.*?)</td>", re.S | re.I)
+
+
+def _table_cells_with_offsets(raw: str) -> list[tuple[int, int, str]]:
+    """Parse <td>…</td> cells as (start, end, inner_text) over the raw line."""
+    out = []
+    for m in _TD_RE.finditer(raw):
+        inner = m.group(1)
+        # strip nested tags inside the cell (e.g. <br>) — keep visible text
+        visible = re.sub(r"<[^>]+>", "", inner)
+        # offsets of the visible text within raw: find first occurrence of visible in inner span
+        if visible == inner:
+            # account for whitespace-only differences by locating in the match
+            rel = inner.find(visible) if visible else 0
+            start = m.start(1) + (rel if rel >= 0 else 0)
+        else:
+            # find visible inside the original inner region
+            rel = inner.find(visible) if visible else -1
+            start = m.start(1) + (rel if rel >= 0 else 0)
+        if not visible:
+            # empty cell: keep span at inner start (zero-length not useful)
+            out.append((m.start(1), m.start(1), ""))
+            continue
+        out.append((start, start + len(visible), visible.strip()))
+    return out
+
+
+def decode_answer_table_cell(raw: str, qn: str) -> tuple[int, int, str] | None:
+    """Deterministic 题号-row + 答案-row same-column lookup (B3c-B).
+
+    Returns (start, end, cell_value) of the answer cell for `qn`, or None.
+    Strict conditions (Owner C-2) — all must hold:
+      1. a cell equal to '题号' exists;
+      2. a cell equal to '答案' exists;
+      3. `qn` appears in a 题号 sequence;
+      4. that qn maps to a unique column;
+      5. the paired 答案 sequence has a cell in the same column;
+      6. cell value is non-empty.
+    No last-row / nearest-token / order guessing.
+    """
+    if not raw or "<td" not in raw.lower():
+        return None
+    cells = _table_cells_with_offsets(raw)
+    if len(cells) < 4:
+        return None
+
+    # Collect row sequences: each '题号' starts a number row; each '答案' starts a value row.
+    # Tables may repeat the pair for horizontal paging (1-10, 11-20, ...).
+    qn_rows: list[list[tuple[int, int, str]]] = []
+    ans_rows: list[list[tuple[int, int, str]]] = []
+    mode = None
+    cur: list[tuple[int, int, str]] = []
+    for cell in cells:
+        txt = cell[2]
+        if txt == "题号":
+            if mode == "a" and cur:
+                ans_rows.append(cur)
+            elif mode == "n" and cur:
+                qn_rows.append(cur)
+            mode, cur = "n", []
+            continue
+        if txt == "答案":
+            if mode == "n" and cur:
+                qn_rows.append(cur)
+            elif mode == "a" and cur:
+                ans_rows.append(cur)
+            mode, cur = "a", []
+            continue
+        if mode is not None:
+            cur.append(cell)
+    if mode == "n" and cur:
+        qn_rows.append(cur)
+    if mode == "a" and cur:
+        ans_rows.append(cur)
+
+    if not qn_rows or not ans_rows:
+        return None
+
+    # Pair each 题号 row with the next 答案 row (declaration order).
+    hits: list[tuple[int, int, str]] = []
+    ai = 0
+    for qrow in qn_rows:
+        if ai >= len(ans_rows):
+            break
+        arow = ans_rows[ai]
+        ai += 1
+        for col, qcell in enumerate(qrow):
+            if qcell[2] != qn:
+                continue
+            if col >= len(arow):
+                continue
+            acell = arow[col]
+            if not acell[2]:
+                continue
+            hits.append((acell[0], acell[1], acell[2]))
+
+    # Unique column required (Owner C-2 #5).
+    if len(hits) != 1:
+        return None
+    return hits[0]
+
+
 # 行内选项标签（bounded，防 "对A项" 误配随机大写；需标签+分隔符）。
 _LABEL_RE = re.compile(r"(?<![\w])([A-Ha-h])\s*[.．、:)）]")
 
@@ -701,6 +810,19 @@ class SourceResolver:
                     unit_id, t, line_ref, offs[0], nxt, "exact",
                     ("answer evidence range", f"lines={el[0]}-{el[1]}",
                      f"qn={qn}", "single-line entry"),
+                )
+                return
+            # No qn token on the declared line: try B3c-B structured table
+            # consumption (self-describing 题号/答案 rows). Deterministic
+            # same-column lookup only — any failure falls through, no guessing.
+            decoded = decode_answer_table_cell(raw, qn)
+            if decoded is not None:
+                d_start, d_end, d_val = decoded
+                out.add_char_span(
+                    unit_id, t, line_ref, d_start, d_end, "exact",
+                    ("answer evidence range", f"lines={el[0]}-{el[1]}",
+                     "structured_answer_table", f"qn={qn}",
+                     f"cell={d_val}"),
                 )
                 return
             # No qn token on the declared line: the declared line itself is
