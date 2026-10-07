@@ -120,7 +120,7 @@ class TestRoleProvenanceContract:
         return root, ir, compiled, new_run, answer_span
 
     def test_answer_overlapping_explanation_region_pending(self):
-        """answer span overlaps explanation region -> pending_review."""
+        """P0-A: overlap keeps diagnostic but does not block auto."""
         lines = _single_lines("A")
         root0, ir0, compiled0, base_run = _pipeline(lines, _single_payload())
         ans_span = next(s for s in base_run.resolved_spans if s.role == "answer")
@@ -128,16 +128,14 @@ class TestRoleProvenanceContract:
             explanation_lines=list(ans_span.line_refs) + ["P1L008"],
         )
         d = evaluate(root=root, ir=ir, compiled=compiled, resolved_run=run)
-        assert d["decision"] == "pending_review", (
-            f"answer cap explanation != empty -> pending_review, got {d['decision']}"
+        assert d["decision"] == "auto_approve", (
+            f"P0-A: role_region diagnostic-only, got {d['decision']}"
         )
-        reasons = " ".join(d["reasons"])
-        assert "role provenance" in reasons or "overlaps" in reasons, (
-            f"reasons should mention role provenance, got: {reasons}"
-        )
+        diags = d["layers"]["provenance"].get("role_region_diagnostics") or []
+        assert diags, "diagnostic must be retained"
 
     def test_answer_overlapping_question_region_pending(self):
-        """answer span overlaps question region -> pending_review."""
+        """P0-A: question-region overlap is diagnostic-only too."""
         lines = _single_lines("A")
         root, ir, compiled, base_run = _pipeline(lines, _single_payload())
         answer_span = next(s for s in base_run.resolved_spans if s.role == "answer")
@@ -156,8 +154,8 @@ class TestRoleProvenanceContract:
             structural_regions=base_run.structural_regions + (overlap_region,),
         )
         d = evaluate(root=root, ir=ir, compiled=compiled, resolved_run=new_run)
-        assert d["decision"] == "pending_review", (
-            f"answer cap question != empty -> pending_review, got {d['decision']}"
+        assert d["decision"] == "auto_approve", (
+            f"P0-A: role_region diagnostic-only, got {d['decision']}"
         )
 
     def test_no_overlap_auto_approve(self):
@@ -170,7 +168,7 @@ class TestRoleProvenanceContract:
         )
 
     def test_cross_role_overlap_fail_closed(self):
-        """answer_lines overlap explanation_lines -> fail closed."""
+        """P0-A: cross-role region overlap is diagnostic, not a blocker."""
         lines = _single_lines("A")
         root0, ir0, compiled0, base_run = _pipeline(lines, _single_payload())
         ans_span = next(s for s in base_run.resolved_spans if s.role == "answer")
@@ -178,8 +176,9 @@ class TestRoleProvenanceContract:
             explanation_lines=list(ans_span.line_refs),
         )
         d = evaluate(root=root, ir=ir, compiled=compiled, resolved_run=run)
-        assert d["decision"] != "auto_approve", "Overlap must never auto_approve"
-        assert d["decision"] == "pending_review", f"Should pending_review, got {d['decision']}"
+        assert d["decision"] == "auto_approve", (
+            f"P0-A: diagnostic-only, got {d['decision']}"
+        )
 
 
 class TestRoleProvenanceE2ERegression:
@@ -255,12 +254,11 @@ class TestEvidencePromotionNegative:
     """
 
     def test_answer_span_in_explanation_region_rejected(self):
-        """Answer span pointing at explanation region -> pending_review."""
+        """P0-A: explanation-region overlap is diagnostic-only."""
         lines = _single_lines("A")
         root, ir, compiled, base_run = _pipeline(lines, _single_payload())
         answer_span = next(s for s in base_run.resolved_spans if s.role == "answer")
 
-        # Construct: explanation region covers the answer span's lines
         bad_region = SourceRegion(
             role="explanation",
             start_seq=0,
@@ -276,10 +274,11 @@ class TestEvidencePromotionNegative:
             structural_regions=base_run.structural_regions + (bad_region,),
         )
         d = evaluate(root=root, ir=ir, compiled=compiled, resolved_run=bad_run)
-        assert d["decision"] == "pending_review"
+        assert d["decision"] == "auto_approve"
+        assert d["layers"]["provenance"].get("role_region_diagnostics")
 
     def test_answer_span_in_question_region_rejected(self):
-        """Answer span pointing at question region -> pending_review."""
+        """P0-A: question-region overlap is diagnostic-only."""
         lines = _single_lines("A")
         root, ir, compiled, base_run = _pipeline(lines, _single_payload())
         answer_span = next(s for s in base_run.resolved_spans if s.role == "answer")
@@ -299,7 +298,8 @@ class TestEvidencePromotionNegative:
             structural_regions=base_run.structural_regions + (bad_region,),
         )
         d = evaluate(root=root, ir=ir, compiled=compiled, resolved_run=bad_run)
-        assert d["decision"] == "pending_review"
+        assert d["decision"] == "auto_approve"
+        assert d["layers"]["provenance"].get("role_region_diagnostics")
 
     def test_non_strict_auto_always_pending(self):
         """Non-strict-auto type with any answer content -> pending_review.

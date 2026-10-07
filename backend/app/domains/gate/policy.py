@@ -188,7 +188,11 @@ def evaluate(
     # answer span must not fall into explanation/question structural regions.
     # Resolver produces structural region map via deterministic header grammar;
     # Gate performs span set intersection (contract self-consistency, NOT NLP).
-    # Overlap -> downgrade auto (pending_review), not terminal rejected.
+    # P0-A (Owner 2026-09): overlap is DIAGNOSTIC-ONLY. structural_regions must
+    # not act as a Question auto-eligibility blocker on its own (prior Owner
+    # Decision: structural_regions is not a lifecycle controller). Keep the
+    # reason for audit/debugging; do NOT mutate auto_allowed; do NOT push into
+    # auto_blockers.
     role_provenance_violations: list[str] = []
     if resolved_run.structural_regions:
         region_by_role: dict[str, set[str]] = {}
@@ -205,24 +209,24 @@ def evaluate(
                 bad_lines = region_by_role.get(bad_role, set())
                 overlap = ans_lines & bad_lines
                 if overlap:
-                    auto_allowed = False
                     violation = (
                         f"leaf {leaf.unit_id!r} answer span {leaf.answer.span_id!r} "
                         f"overlaps {bad_role} region at lines {sorted(overlap)[:5]} "
-                        f"(role provenance violation)"
+                        f"(role provenance diagnostic)"
                     )
                     provenance_reasons.append(violation)
                     role_provenance_violations.append(violation)
 
     # provenance 层 fail 仅当证据矛盾（text_hash mismatch）；resolution 非 exact/normalized
     # 只降级 auto（pending），不构成 terminal 矛盾（20 §8.2 contextual 可人工）。
-    # role provenance violation 同样只降级 auto（pending_review）。
+    # role region overlap 仅 diagnostic（P0-A），不再影响 auto_allowed。
     hash_broken = any("text_hash mismatch" in r for r in provenance_reasons)
     provenance = _layer(
         "pass" if not hash_broken else "fail",
         provenance_reasons,
     )
     provenance["auto_allowed"] = bool(auto_allowed)
+    provenance["role_region_diagnostics"] = list(role_provenance_violations)
 
     # ---------------------------------------------------------------- semantic
     # F 已校验不变量 1-8（ready），G 只复核不重判（plan 组件2 / 20 §8.1「语义状态与 IR 一致」）。
@@ -256,9 +260,8 @@ def evaluate(
         auto_blockers: list[str] = []
         if not auto_allowed:
             auto_blockers.append("not byte-proven (resolution not in {exact, normalized})")
-        # Role-provenance violations surface as explicit auto_blockers.
-        for v in role_provenance_violations:
-            auto_blockers.append(v)
+        # P0-A: role_provenance_violations are diagnostic-only — they must NOT
+        # enter auto_blockers. Regression tests lock this authority level.
         for leaf in leaves:
             g = _leaf_grammar(leaf)
             if g is not None:
