@@ -188,7 +188,8 @@ def decode_answer_table_cell(raw: str, qn: str) -> tuple[int, int, str] | None:
 
 
 # 行内选项标签（bounded，防 "对A项" 误配随机大写；需标签+分隔符）。
-_LABEL_RE = re.compile(r"(?<![\w])([A-Ha-h])\s*[.．、:)）]")
+# 全角逗号 `，`：真实卷 `C. 水土流失 D，物种减少`（U44-46）。格式兼容，非 heuristic。
+_LABEL_RE = re.compile(r"(?<![\w])([A-Ha-h])\s*[.．、:，,)）]")
 
 
 def _label_offsets(text: str, label: str) -> list[int]:

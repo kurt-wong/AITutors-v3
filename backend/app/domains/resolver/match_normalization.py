@@ -80,8 +80,12 @@ def option_tokens(normalized_line: str, labels: tuple[str, ...]) -> tuple[str, .
 
 
 def _line_has_option_token(normalized_line: str, label: str) -> bool:
-    """选项形态匹配（M1 保守）：行首「A.」/「A、」/「(A)」等。禁匹配正文随机大写。"""
-    if re.match(rf"^{re.escape(label)}\s*[.．、):）]", normalized_line):
+    """选项形态匹配（M1 保守）：行首「A.」/「A、」/「(A)」等。禁匹配正文随机大写。
+
+    分隔符含全角/半角逗号：normalize 会把 `，` 折成 `,`，两侧都要认
+    （U44-46 `D，物种减少`）。
+    """
+    if re.match(rf"^{re.escape(label)}\s*[.．、:，,)）]", normalized_line):
         return True
     if re.match(rf"^[（(]{re.escape(label)}[)）]", normalized_line):
         return True
