@@ -48,7 +48,9 @@ _FALSE_TOKENS = frozenset({"F", "f", "错误", "错", "否", "×", "✗"})
 
 # E answer char-span 从 qn 条目起点切片（20 §5.5），raw answer text 常以题号开头
 # （如 "1. A"）；grammar 先剥离该题号前缀再读答案 token（与 E `_ENTRY_RE` 同界）。
-_LEAD_QN_RE = re.compile(r"^\s*[0-9]{1,3}\s*[.．、:)]*\s*")
+# G1 parser compatibility：Markdown escaped-dot 前缀 `1\. C` ≡ `1. C`（B3a 同族）。
+# 仅扩展分隔符形态，不改变 canonical token 语义。
+_LEAD_QN_RE = re.compile(r"^\s*[0-9]{1,3}\s*(?:\\[.．、:]|[.．、:)])*\s*")
 _TRAIL_NOISE_RE = re.compile(r"[。．,，、\s]+$")
 
 # --------------------------------------------------------------------------- #
@@ -105,6 +107,7 @@ _OPTIONAL_ANSWER_PREFIX = (
 #   括号字母      （A） / (A)     —— 开闭括号必须配对（全角配全角 / 半角配半角）
 #   答案标记      【答案】A
 #   分值前缀      （3分）A / (3分)A —— 同样要求括号配对
+#   分值后缀      D（2分） / D (2分) —— G3 parser compatibility（真实卷语文 Q6）
 #   字母 + 句号    A。 / A. / A．
 _SC_FORMS_RE = re.compile(
     r"""^(?:
@@ -114,6 +117,8 @@ _SC_FORMS_RE = re.compile(
       | (?P<marker>【答案】\s*[A-Za-z])                # 【答案】A
       | (?P<score_fw>（\s*\d+\s*分\s*）\s*[A-Za-z])    # （3分）A 全角配对
       | (?P<score_hw>\(\s*\d+\s*分\s*\)\s*[A-Za-z])    # (3分)A 半角配对
+      | (?P<sfx_score_fw>[A-Za-z])\s*（\s*\d+\s*分\s*）  # D（2分） 全角后缀
+      | (?P<sfx_score_hw>[A-Za-z])\s*\(\s*\d+\s*分\s*\)  # D(2分) 半角后缀
       | (?P<period>[A-Za-z])[。．.]                    # A。 / A. / A．
     )$""",
     re.VERBOSE,
@@ -136,10 +141,13 @@ def _answer_form_single_choice(cleaned: str) -> str | None:
     m = _SC_FORMS_RE.match(cleaned)
     if not m:
         return None
-    for grp in ("bare", "paren_fw", "paren_hw", "marker", "score_fw", "score_hw", "period"):
+    for grp in (
+        "bare", "paren_fw", "paren_hw", "marker",
+        "score_fw", "score_hw", "sfx_score_fw", "sfx_score_hw", "period",
+    ):
         val = m.group(grp)
         if val:
-            # marker/score 组含前缀，取其中的 ASCII 字母
+            # marker/score 组含前缀或后缀，取其中的 ASCII 字母
             letters = [ch for ch in val if ch.isascii() and ch.isalpha()]
             return letters[-1].upper() if letters else None
     return None
