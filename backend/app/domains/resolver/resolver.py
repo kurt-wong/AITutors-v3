@@ -190,13 +190,30 @@ def decode_answer_table_cell(raw: str, qn: str) -> tuple[int, int, str] | None:
 # 行内选项标签（bounded，防 "对A项" 误配随机大写；需标签+分隔符）。
 # 全角逗号 `，`：真实卷 `C. 水土流失 D，物种减少`（U44-46）。格式兼容，非 heuristic。
 _LABEL_RE = re.compile(r"(?<![\w])([A-Ha-h])\s*[.．、:，,)）]")
+# P1.4-B Rule B：digit-glued `2D.`（数学 Q4）。clean lookbehind `(?<![\w])` 会因
+# 前置 `2` 而漏检，故单独识别。NOT `2\cos…`（字母后无分隔符）。
+_LABEL_DIGIT_GLUE_RE = re.compile(r"(?<![A-Za-z0-9_])(\d)([A-H])\s*[.．、]")
+# P1.4-B Rule C：line-start `D 麦哲伦`（历史 Q29），缺分隔符。
+_LABEL_SPACE_SEP_RE = re.compile(r"^(?:[ \u00a0]*)([A-Ha-h])[ \u00a0]{1,3}(?=[\u4e00-\u9fff])")
+_LABEL_SPACE_SEP_PROSE = re.compile(
+    r"^[ \u00a0]*[A-Ha-h][ \u00a0]+(?:是|有|在|了|和|与|或|被|把|对|从|到|为|要|会|能|可|这|那|其|年|月|日)"
+)
 
 
 def _label_offsets(text: str, label: str) -> list[int]:
-    return [
-        m.start() for m in _LABEL_RE.finditer(text)
-        if m.group(1).upper() == label.upper()
-    ]
+    """Char offsets of option-label tokens for `label` in `text` (Rules A-C forms)."""
+    offs: list[int] = []
+    for m in _LABEL_RE.finditer(text):
+        if m.group(1).upper() == label.upper():
+            offs.append(m.start())
+    for m in _LABEL_DIGIT_GLUE_RE.finditer(text):
+        if m.group(2).upper() == label.upper():
+            offs.append(m.start(2))
+    if not _LABEL_SPACE_SEP_PROSE.search(text):
+        for m in _LABEL_SPACE_SEP_RE.finditer(text):
+            if m.group(1).upper() == label.upper():
+                offs.append(m.start(1))
+    return sorted(set(offs))
 
 
 # E owns source-span overlap（material span 不得与子题/其他 material 重叠）。
@@ -592,8 +609,64 @@ class SourceResolver:
                     found[lab] = ("inline", cursor_ref, offs[0], offs[0] + len(lab))
                     cursor_end = offs[0] + len(lab)
                     continue
+            # P1.4-B Rule A: trailing unlabeled option content after last located
+            # option (Chem Q23 `D．` dropped). Source-local only: content line
+            # inside the option region, no label token, next sequential letter.
+            trailing = self._trailing_unlabeled_option_line(
+                labels, found, cursor_seq, region_upper
+            )
+            if trailing is not None:
+                found[lab] = ("ok", trailing)
+                cursor_seq = self._idx.seq_of(trailing)
+                cursor_ref = trailing
+                cursor_end = 0
+                continue
             found[lab] = ("incomplete",)
         return found
+
+    def _trailing_unlabeled_option_line(self, labels, found, cursor_seq, region_upper):
+        """Rule A: first option-like content line after last located option with no label token.
+
+        Only used for the next sequential missing letter. Never scans outside the
+        option region (region_upper / cursor). Never uses answer evidence.
+        """
+        if not labels:
+            return None
+        # next expected letter among declared labels not yet found
+        missing = [lab for lab in labels if lab not in found or found[lab][0] == "incomplete"]
+        if not missing:
+            return None
+        want = missing[0]
+        # sequential: want must be the next letter after the highest found label
+        found_ok = [lab for lab in labels if lab in found and found[lab][0] in ("ok", "inline")]
+        if found_ok:
+            nxt = chr(ord(max(found_ok)) + 1)
+            if want != nxt:
+                return None
+        else:
+            if want != "A":
+                return None
+        for l in self._idx.lines:
+            if l.seq <= cursor_seq:
+                continue
+            if region_upper is not None and l.seq >= region_upper:
+                break
+            text = l.text
+            t = text.strip()
+            if not t or len(t) < 4:
+                continue
+            if t.startswith("<") or t.startswith("#") or t.startswith("---"):
+                continue
+            if _LABEL_RE.search(text) or _LABEL_DIGIT_GLUE_RE.search(text):
+                continue
+            if _LABEL_SPACE_SEP_PROSE.search(text):
+                continue
+            if _LABEL_SPACE_SEP_RE.search(text):
+                continue
+            if re.match(r"^\d+\s*[.．、\\]", t):
+                continue
+            return l.line_ref
+        return None
 
     def _stem_span(self, out, unit_id, t, qn, start_ref, option_hits, region_upper,
                    exclude_refs: frozenset | set | None = None):

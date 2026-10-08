@@ -84,11 +84,25 @@ def _line_has_option_token(normalized_line: str, label: str) -> bool:
 
     分隔符含全角/半角逗号：normalize 会把 `，` 折成 `,`，两侧都要认
     （U44-46 `D，物种减少`）。
+
+    P1.4-B Rule B：digit-glued `2D.` — 行内/行首 `数字+标签+分隔`（数学 Q4）。
+    P1.4-B Rule C：line-start `D 麦哲伦` — 标签+空白+CJK，无分隔符（历史 Q29）。
+    仍禁：正文 `B 是 1945…`（后随 是/有/在 等散文连接词）。
     """
     if re.match(rf"^{re.escape(label)}\s*[.．、:，,)）]", normalized_line):
         return True
     if re.match(rf"^[（(]{re.escape(label)}[)）]", normalized_line):
         return True
+    # Rule B: digit-glued (normalize folds fullwidth; digits stay)
+    if re.search(rf"(?<![A-Za-z0-9_])\d{re.escape(label)}\s*[.．、:，,)）]", normalized_line):
+        return True
+    # Rule C: line-start letter + space + CJK, not ordinary prose
+    if re.match(rf"^{re.escape(label)}[ \u00a0]+[\u4e00-\u9fff]", normalized_line):
+        if not re.match(
+            rf"^{re.escape(label)}[ \u00a0]+(?:是|有|在|了|和|与|或|被|把|对|从|到|为|要|会|能|可|这|那|其|年|月|日)",
+            normalized_line,
+        ):
+            return True
     return False
 
 
