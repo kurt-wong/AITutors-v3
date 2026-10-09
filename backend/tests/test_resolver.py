@@ -455,15 +455,18 @@ async def test_material_overlap_with_stem_rejected():
 
 # ------------------------------------------------------------------ inline 同行 (FAIL-4)
 async def test_option_shared_line_line_character():
-    """单行多选项 'A. 苹果 B. 香蕉' → B 以 line_character 定位（有界 label，非 first-match）。"""
+    """单行多选项 'A. 苹果 B. 香蕉' → Task A 内容区间（标签后→下一标签前），非 label-only。"""
     lines = mk("1. 哪个是水果", "A. 苹果  B. 香蕉")
     payload = {"semantic_units": [{"unit_id": "Q1", "content": {
         "stem": {"question_label": "1"}, "options": [{"label": "A"}, {"label": "B"}]}}]}
     run = resolver(lines).resolve(payload)
+    a = next(s for s in run.resolved_spans if s.span_id == "sp-Q1.option.A")
     b = next(s for s in run.resolved_spans if s.span_id == "sp-Q1.option.B")
     assert b.granularity == "line_character"
     assert b.line_refs == ("P1L002",)
-    assert lines[1].text[b.start_offset:b.end_offset] == "B"
+    # Task A: content span, not the label letter
+    assert lines[1].text[b.start_offset:b.end_offset].strip() == "香蕉"
+    assert lines[1].text[a.start_offset:a.end_offset].strip() == "苹果"
     assert not any(u.reference_id == "Q1.option.B" for u in run.unresolved_references)
 
 

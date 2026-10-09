@@ -68,7 +68,12 @@ class TestFullwidthCommaOptionLabel:
         assert "D" in opts, f"D must resolve, got {list(opts)} unres={[u.reference_id for u in run.unresolved_references]}"
         # D must sit on the Q44 line (L3), not the Q45 line
         assert opts["D"].line_refs[0] == "P1L003"
-        assert lines[2].text[opts["D"].start_offset:opts["D"].end_offset] == "D"
+        # Task A content span: after `D，` → content, not the label letter
+        d_txt = lines[2].text[opts["D"].start_offset:opts["D"].end_offset]
+        assert d_txt.strip() == "物种减少", d_txt
+        assert "A" in opts and "B" in opts
+        a_txt = lines[1].text[opts["A"].start_offset:opts["A"].end_offset]
+        assert a_txt.strip() == "全球变暖", a_txt
         for lab in "ABC":
             assert lab in opts, f"{lab} must stay resolved"
 

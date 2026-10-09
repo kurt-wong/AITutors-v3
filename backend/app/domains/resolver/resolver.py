@@ -216,6 +216,70 @@ def _label_offsets(text: str, label: str) -> list[int]:
     return sorted(set(offs))
 
 
+def _all_label_token_spans(text: str) -> list[tuple[int, int, str]]:
+    """All option-label token spans on a line: (start, end, letter) in source order.
+
+    end = index AFTER the separator (start of option content).
+    Used to slice content = after this label → before next label (Task A).
+    """
+    hits: list[tuple[int, int, str]] = []
+    for m in _LABEL_RE.finditer(text):
+        hits.append((m.start(), m.end(), m.group(1).upper()))
+    for m in _LABEL_DIGIT_GLUE_RE.finditer(text):
+        # token is `2D.` — glue digit belongs to the label TOKEN (not previous content)
+        # so previous option content ends before `2`, and D content starts after `D.`
+        hits.append((m.start(1), m.end(), m.group(2).upper()))
+    if not _LABEL_SPACE_SEP_PROSE.search(text):
+        for m in _LABEL_SPACE_SEP_RE.finditer(text):
+            # `D 麦哲伦` — content starts after letter + spaces
+            hits.append((m.start(1), m.end(), m.group(1).upper()))
+    # stable by start offset; drop exact duplicates
+    hits = sorted(set(hits), key=lambda x: (x[0], x[1]))
+    return hits
+
+
+def _option_content_bounds(
+    text: str,
+    label: str,
+    prefer_offset: int | None = None,
+    boundary_labels: frozenset | set | None = None,
+):
+    """Return (content_start, content_end) for `label` on `text`, or None.
+
+    Content = characters after this label's separator up to the next **declared**
+    option-label token (or end of line). NEVER includes the label token itself.
+    Task A: `A. 1 B. 2` → A content='1', B content='2'.
+    `boundary_labels` limits which tokens may end content — prevents chemical
+    `H:` in `B. H: O: H` from slicing B to empty when H is not a declared option.
+    """
+    tokens = _all_label_token_spans(text)
+    if not tokens:
+        return None
+    lab_u = label.upper()
+    idxs = [i for i, t in enumerate(tokens) if t[2] == lab_u]
+    if not idxs:
+        return None
+    pick = idxs[0]
+    if prefer_offset is not None:
+        for i in idxs:
+            if tokens[i][0] >= prefer_offset:
+                pick = i
+                break
+    start = tokens[pick][1]  # after separator
+    # next boundary: first later token whose letter is a declared option label
+    end = len(text)
+    for i in range(pick + 1, len(tokens)):
+        letter = tokens[i][2]
+        if boundary_labels is None or letter in boundary_labels:
+            end = tokens[i][0]
+            break
+    while end > start and text[end - 1] in " \t\u3000":
+        end -= 1
+    if start > end:
+        return None
+    return (start, end)
+
+
 # E owns source-span overlap（material span 不得与子题/其他 material 重叠）。
 _MATERIAL_ROLES = frozenset(
     {"material", "word_bank", "shared_option_pool", "task_instruction"}
@@ -578,8 +642,11 @@ class SourceResolver:
     def _locate_options(self, out, unit_id, labels, start_ref, region_upper):
         """逐 label 定位：优先行首选项；否则前一个选项行上的 bounded inline（单行多选项）。
 
-        返回 {label: ("ok", ref) | ("inline", ref, start, end) | ("ambiguous",) | ("incomplete",)}。
+        Task A: 多标签同行时返回 **内容区间**（标签后→下一标签前），不再整行吞并。
+        返回 {label: ("content", ref, c_start, c_end) | ("ok", ref) |
+                     ("inline", ref, start, end) | ("ambiguous",) | ("incomplete",)}。
         重复→ambiguous；完全缺失→incomplete。
+        搜索范围不扩大：仍只在已命中的选项行 / cursor 行上切内容。
         """
         found: dict[str, tuple] = {}
         cursor_seq = self._idx.seq_of(start_ref)
@@ -593,10 +660,21 @@ class SourceResolver:
                 and lab in option_tokens(normalize_text(l.text), (lab,))
             ]
             if len(starts) == 1:
-                found[lab] = ("ok", starts[0].line_ref)
-                cursor_seq = starts[0].seq
-                cursor_ref = starts[0].line_ref
-                cursor_end = 0  # 同行后续标签从行首后任意 offset 找（单行多选项）
+                line = starts[0]
+                bounds = _option_content_bounds(line.text, lab, prefer_offset=None, boundary_labels=set(labels))
+                # Task A: empty/invalid content (e.g. false-positive declared label
+                # `H` in `B. H: O: H` used as boundary) → fallback whole-line OK
+                # so we do not turn previously-resolved options into incomplete.
+                if bounds is not None and bounds[1] > bounds[0]:
+                    found[lab] = ("content", line.line_ref, bounds[0], bounds[1])
+                    cursor_seq = line.seq
+                    cursor_ref = line.line_ref
+                    cursor_end = bounds[1]
+                else:
+                    found[lab] = ("ok", line.line_ref)
+                    cursor_seq = line.seq
+                    cursor_ref = line.line_ref
+                    cursor_end = 0
                 continue
             if len(starts) > 1:
                 found[lab] = ("ambiguous",)
@@ -604,8 +682,19 @@ class SourceResolver:
             # 无行首选项：尝试在前一个选项行（同物理行多选项）bounded inline。
             if cursor_ref is not None:
                 line = self._idx.get(cursor_ref)
+                bounds = _option_content_bounds(line.text, lab, prefer_offset=cursor_end, boundary_labels=set(labels))
+                if bounds is not None and bounds[1] > bounds[0] and bounds[0] >= cursor_end:
+                    found[lab] = ("content", cursor_ref, bounds[0], bounds[1])
+                    cursor_end = bounds[1]
+                    continue
                 offs = [o for o in _label_offsets(line.text, lab) if o >= cursor_end]
                 if len(offs) == 1:
+                    # content after this label if non-empty, else label-only inline
+                    cb = _option_content_bounds(line.text, lab, prefer_offset=offs[0], boundary_labels=set(labels))
+                    if cb is not None and cb[1] > cb[0] and cb[0] >= cursor_end:
+                        found[lab] = ("content", cursor_ref, cb[0], cb[1])
+                        cursor_end = cb[1]
+                        continue
                     found[lab] = ("inline", cursor_ref, offs[0], offs[0] + len(lab))
                     cursor_end = offs[0] + len(lab)
                     continue
@@ -638,7 +727,8 @@ class SourceResolver:
             return None
         want = missing[0]
         # sequential: want must be the next letter after the highest found label
-        found_ok = [lab for lab in labels if lab in found and found[lab][0] in ("ok", "inline")]
+        # Task A: "content" hits count as located options for sequential trailing
+        found_ok = [lab for lab in labels if lab in found and found[lab][0] in ("ok", "inline", "content")]
         if found_ok:
             nxt = chr(ord(max(found_ok)) + 1)
             if want != nxt:
@@ -674,7 +764,8 @@ class SourceResolver:
             return  # 已由 _locate_question_start 记录 unresolved
         first_option_seq = None
         for lab, entry in option_hits.items():
-            if entry[0] == "ok" and entry[1]:
+            # Task A: content/inline hits also carry a line_ref (entry[1])
+            if entry[0] in ("ok", "content", "inline") and entry[1]:
                 seq = self._idx.seq_of(entry[1])
                 first_option_seq = seq if first_option_seq is None else min(first_option_seq, seq)
         # 显式边界：本 unit 首选项行；否则区界（下一题/表头/material）。
@@ -703,6 +794,11 @@ class SourceResolver:
         kind = entry[0]
         if kind == "ok":
             out.add_span(unit_id, t, [entry[1]], "exact", (f"option label={t.label}",))
+            return
+        if kind == "content":
+            # Task A: content span = after label → before next label (line_character)
+            out.add_char_span(unit_id, t, entry[1], entry[2], entry[3], "exact",
+                              (f"option label={t.label} (content span, line_character)",))
             return
         if kind == "inline":
             out.add_char_span(unit_id, t, entry[1], entry[2], entry[3], "exact",
