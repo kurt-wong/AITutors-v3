@@ -44,12 +44,30 @@ async def test_b1_seal_idempotent_single_doc_single_version(session, pdf_bytes):
     await session.flush()
     assert v2.id == v1_id
 
-    n_docs = (await session.execute(select(func.count()).select_from(Document))).scalar()
+    # Isolation: assert only THIS test's document/version, not whole-table counts.
+    sha = hashlib.sha256(pdf_bytes).hexdigest()
+    n_docs = (
+        await session.execute(
+            select(func.count()).select_from(Document).where(Document.original_sha256 == sha)
+        )
+    ).scalar()
     n_vers = (
-        await session.execute(select(func.count()).select_from(DocumentSourceVersion))
+        await session.execute(
+            select(func.count())
+            .select_from(DocumentSourceVersion)
+            .where(DocumentSourceVersion.id == v1_id)
+        )
+    ).scalar()
+    n_doc_vers = (
+        await session.execute(
+            select(func.count())
+            .select_from(DocumentSourceVersion)
+            .where(DocumentSourceVersion.document_id == v1.document_id)
+        )
     ).scalar()
     assert n_docs == 1
     assert n_vers == 1
+    assert n_doc_vers == 1
 
 
 async def test_b2_line_ref_db_unique_constraint(session, pdf_bytes):
@@ -166,7 +184,12 @@ async def test_cloud_path_goes_through_gateway_mock(session, pdf_bytes):
     assert v.logical_execution_hash is not None
     # 同文件不同 role/provider/contract → 不同 LE（BUG-V3-007 未冻结区，不覆写既有 native version）
     assert hashlib.sha256(pdf_bytes).hexdigest()  # 同一文件本体复用 document
-    n_docs = (await session.execute(select(func.count()).select_from(Document))).scalar()
+    # Isolation: only this document, not whole-table count.
+    n_docs = (
+        await session.execute(
+            select(func.count()).select_from(Document).where(Document.id == v.document_id)
+        )
+    ).scalar()
     assert n_docs == 1
 
 
@@ -187,8 +210,13 @@ async def test_b1_cross_transaction_idempotency(session, pdf_bytes):
             v2 = await _seal(s2, pdf_bytes)  # 新事务，DB 已持久化
             await s2.flush()
             assert v2.id == vid
+            # Isolation: only THIS document's versions, not whole-table count.
             n = (
-                await s2.execute(select(func.count()).select_from(DocumentSourceVersion))
+                await s2.execute(
+                    select(func.count())
+                    .select_from(DocumentSourceVersion)
+                    .where(DocumentSourceVersion.document_id == v2.document_id)
+                )
             ).scalar()
             assert n == 1
     finally:

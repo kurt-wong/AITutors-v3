@@ -29,7 +29,7 @@ PDF_BYTES = b"%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF"
 @pytest.mark.asyncio
 async def test_import_package_splits_identities(session):
     md = MD_BODY.encode("utf-8")
-    manifest = {"source_content_sha256": hashlib.sha256(md).hexdigest(), "identity_version": "v1"}
+    manifest = {"source_content_sha256": hashlib.sha256(md).hexdigest(), "identity_version": 2}
     package = PreprocessingPackage(
         original_bytes=PDF_BYTES,
         original_name="exam.pdf",

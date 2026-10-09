@@ -32,6 +32,7 @@ def _pkg(
     if manifest is None:
         manifest = {
             "source_content_sha256": hashlib.sha256(md).hexdigest(),
+            "identity_version": 2,
         }
     return PreprocessingPackage(
         original_bytes=original,
@@ -78,6 +79,7 @@ class TestIdentityVerification:
             md=md,
             manifest={
                 "source_content_sha256": hashlib.sha256(md).hexdigest(),
+                "identity_version": 2,
                 "original_sha256": "a" * 64,
             },
         )
@@ -110,6 +112,85 @@ class TestIdentityVerification:
             PreprocessingImportService.__new__(PreprocessingImportService),
             pkg,
         )
+
+
+class TestInterfaceScopeIdentityVersion:
+    """Interface Scope membership (identity_version == 2 / "2") via sole authority."""
+
+    @staticmethod
+    def _verify(pkg):
+        PreprocessingImportService._verify_package_identity(
+            PreprocessingImportService.__new__(PreprocessingImportService),
+            pkg,
+        )
+
+    def test_accepts_integer_2(self):
+        md = MD_BODY.encode("utf-8")
+        pkg = _pkg(md=md, manifest={
+            "source_content_sha256": hashlib.sha256(md).hexdigest(),
+            "identity_version": 2,
+        })
+        self._verify(pkg)
+
+    def test_accepts_string_2(self):
+        md = MD_BODY.encode("utf-8")
+        pkg = _pkg(md=md, manifest={
+            "source_content_sha256": hashlib.sha256(md).hexdigest(),
+            "identity_version": "2",
+        })
+        self._verify(pkg)
+
+    def test_rejects_string_v1(self):
+        md = MD_BODY.encode("utf-8")
+        pkg = _pkg(md=md, manifest={
+            "source_content_sha256": hashlib.sha256(md).hexdigest(),
+            "identity_version": "v1",
+        })
+        with pytest.raises(PreprocessingImportError) as ei:
+            self._verify(pkg)
+        assert ei.value.stage == "identity"
+        assert "OUT_OF_SCOPE" in str(ei.value) or "interface scope" in str(ei.value).lower()
+
+    def test_rejects_missing_identity_version(self):
+        md = MD_BODY.encode("utf-8")
+        pkg = _pkg(md=md, manifest={
+            "source_content_sha256": hashlib.sha256(md).hexdigest(),
+        })
+        with pytest.raises(PreprocessingImportError) as ei:
+            self._verify(pkg)
+        assert ei.value.stage == "identity"
+        assert "MISSING_IDENTITY_VERSION" in str(ei.value)
+
+    def test_rejects_out_of_scope_int_3(self):
+        md = MD_BODY.encode("utf-8")
+        pkg = _pkg(md=md, manifest={
+            "source_content_sha256": hashlib.sha256(md).hexdigest(),
+            "identity_version": 3,
+        })
+        with pytest.raises(PreprocessingImportError) as ei:
+            self._verify(pkg)
+        assert "OUT_OF_SCOPE" in str(ei.value)
+
+    def test_rejects_malformed_list(self):
+        md = MD_BODY.encode("utf-8")
+        pkg = _pkg(md=md, manifest={
+            "source_content_sha256": hashlib.sha256(md).hexdigest(),
+            "identity_version": ["2"],
+        })
+        with pytest.raises(PreprocessingImportError) as ei:
+            self._verify(pkg)
+        assert "MALFORMED_IDENTITY_VERSION" in str(ei.value)
+
+    def test_hash_check_still_independent_of_scope(self):
+        """Valid scope does not skip source_content_sha256 mismatch detection."""
+        md = MD_BODY.encode("utf-8")
+        pkg = _pkg(md=md, manifest={
+            "source_content_sha256": "0" * 64,
+            "identity_version": 2,
+        })
+        with pytest.raises(PreprocessingImportError) as ei:
+            self._verify(pkg)
+        assert "mismatch" in ei.value.reason
 
 
 class TestExtractorFailClosed:

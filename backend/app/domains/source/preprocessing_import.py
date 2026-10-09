@@ -291,7 +291,11 @@ class PreprocessingImportService:
         )
 
     def _verify_package_identity(self, package: PreprocessingPackage) -> None:
-        """Fail-closed identity checks. No silent repair, no native fallback."""
+        """Fail-closed identity checks. No silent repair, no native fallback.
+
+        Also enforces Interface Scope identity_version via the sole authority
+        `enforce_interface_scope` (boundary.py) — same rule set as runner path.
+        """
         if not package.original_bytes:
             raise PreprocessingImportError(
                 "original file empty", stage="identity"
@@ -320,6 +324,10 @@ class PreprocessingImportService:
                 stage="identity",
             )
 
+        # Interface Scope membership (identity_version == 2 / "2").
+        # Sole authority: scripts.preprocessing_consumer.boundary.enforce_interface_scope
+        self._verify_interface_scope(claimed_src, package.manifest)
+
         # If manifest declares original identity, it must match.
         claimed_orig = package.manifest.get("original_sha256") or package.manifest.get(
             "original_content_sha256"
@@ -332,3 +340,23 @@ class PreprocessingImportService:
                     f"(claimed={claimed_orig} computed={computed_orig})",
                     stage="identity",
                 )
+
+    @staticmethod
+    def _verify_interface_scope(claimed_src: str, manifest: dict) -> None:
+        """Defer identity_version membership to the sole Interface Scope authority."""
+        # Import late so test environments without scripts path still load.
+        import sys
+        from pathlib import Path as _P
+
+        backend_root = _P(__file__).resolve().parents[2]
+        if str(backend_root) not in sys.path:
+            sys.path.insert(0, str(backend_root))
+        from scripts.preprocessing_consumer.boundary import enforce_interface_scope
+
+        identity_version = manifest.get("identity_version")
+        decision = enforce_interface_scope(claimed_src, identity_version)
+        if not decision.accepted:
+            raise PreprocessingImportError(
+                f"interface scope rejected: {decision.code}: {decision.reason}",
+                stage="identity",
+            )
