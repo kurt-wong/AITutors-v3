@@ -16,12 +16,18 @@ from app.api.schemas import (
     DocumentSummary,
     FigureInfo,
     ImportResponse,
+    PreprocessingImportResponse,
     SourceLinesResponse,
     SourceLineInfo,
     SourceQualityReport,
     SourceVersionInfo,
 )
 from app.domains.source.import_service import DocumentImportService, ImportError_
+from app.domains.source.preprocessing_import import (
+    PreprocessingImportError,
+    PreprocessingImportService,
+    PreprocessingPackage,
+)
 from app.models.snapshot import AdmissionCandidate, SemanticAnnotation
 from app.models.source import Document, DocumentSourceVersion, SourceFigure
 
@@ -52,6 +58,62 @@ async def import_document(
         sha256=document.original_sha256,
         file_name=document.file_name,
         is_new=is_new,
+    )
+
+
+@router.post("/import-preprocessing", response_model=PreprocessingImportResponse)
+async def import_preprocessing(
+    original: UploadFile = File(...),
+    source_md: UploadFile = File(...),
+    manifest: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+) -> PreprocessingImportResponse:
+    """Formal preprocessing package import (Owner Round 2 option b).
+
+    Identity split is mandatory:
+    - original_sha256       = SHA256(original PDF/DOCX)
+    - source_content_sha256 = SHA256(source Markdown), verified against manifest
+    Fail-closed. Never falls back to native extraction.
+    """
+    import json
+
+    original_bytes = await original.read()
+    source_md_bytes = await source_md.read()
+    manifest_bytes = await manifest.read()
+    try:
+        manifest_obj = json.loads(manifest_bytes.decode("utf-8"))
+    except Exception as exc:
+        raise HTTPException(
+            status_code=400, detail=f"[load] manifest is not valid JSON: {exc}"
+        )
+    if not isinstance(manifest_obj, dict):
+        raise HTTPException(
+            status_code=400, detail="[load] manifest must be a JSON object"
+        )
+
+    package = PreprocessingPackage(
+        original_bytes=original_bytes,
+        original_name=original.filename or "original.pdf",
+        source_md=source_md_bytes,
+        manifest=manifest_obj,
+    )
+    service = PreprocessingImportService(db)
+    try:
+        result = await service.import_package(package=package, created_by="admin")
+    except PreprocessingImportError as exc:
+        raise HTTPException(
+            status_code=400, detail=f"[{exc.stage}] {exc.reason}"
+        ) from exc
+
+    await db.commit()
+    return PreprocessingImportResponse(
+        document_id=result.document.id,
+        source_version_id=uuid.UUID(result.source_version_id),
+        task_id=uuid.UUID(result.task_id) if result.task_id else None,
+        original_sha256=result.original_sha256,
+        source_content_sha256=result.source_content_sha256,
+        file_name=result.document.file_name,
+        is_new=result.is_new,
     )
 
 

@@ -238,17 +238,61 @@ class TaskExecutor:
         if not file_path:
             raise RepositoryError("task_params.file_path missing (seal requires file bytes)")
         file_bytes = Path(file_path).read_bytes()
+        source_mode = params.get("source_mode")
+        role = params.get("role", "native")
+        provider = params.get("seal_provider", "native")
+
+        if source_mode == "preprocessing" or role == "preprocessing":
+            # Formal preprocessing path: never re-extract via NativeTextProvider.
+            # Prefer the already-sealed version (idempotent LE lookup); if absent,
+            # reconstruct from the accepted markdown identity record only.
+            extractor = await self._build_preprocessing_extractor(params)
+        else:
+            extractor = self._ocr_extractor
+
         async with self._session_factory() as s:
             version = await SealService(s).seal_document(
                 file_bytes=file_bytes,
                 file_name=params.get("file_name", "document.pdf"),
                 file_type=params.get("file_type", "pdf"),
-                role=params.get("role", "native"),
-                provider=params.get("seal_provider", "native"),
-                extractor=self._ocr_extractor,
+                role=role,
+                provider=provider,
+                extractor=extractor,
             )
             await s.commit()
             return version
+
+    async def _build_preprocessing_extractor(self, params: dict):
+        """Fail-closed extractor factory for preprocessing-mode tasks."""
+        md_path = params.get("source_md_path")
+        if not md_path:
+            raise RepositoryError(
+                "task_params.source_md_path missing "
+                "(preprocessing mode requires accepted markdown)"
+            )
+        path = Path(md_path)
+        if not path.exists():
+            raise RepositoryError(
+                f"preprocessing source markdown unreadable: {md_path}"
+            )
+        source_md = path.read_bytes()
+        if not source_md:
+            raise RepositoryError("preprocessing source markdown empty")
+
+        from app.ai.ocr.preprocessing_provider import PreprocessingTextExtractor
+
+        expected = params.get("source_content_sha256")
+        if expected:
+            import hashlib
+
+            actual = hashlib.sha256(source_md).hexdigest()
+            if actual != expected:
+                raise RepositoryError(
+                    "source_content_sha256 mismatch on task input "
+                    f"(expected={expected} computed={actual})"
+                )
+        extractor = PreprocessingTextExtractor(source_md)
+        return extractor.extract
 
     # -- stage 1.5: Quality Check（Seal 后、Annotation 前的文本质量门） -------------
 

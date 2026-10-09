@@ -68,6 +68,16 @@ class ImportResponse(BaseModel):
     is_new: bool
 
 
+class PreprocessingImportResponse(BaseModel):
+    document_id: uuid.UUID
+    source_version_id: uuid.UUID
+    task_id: uuid.UUID | None = None
+    original_sha256: str
+    source_content_sha256: str
+    file_name: str
+    is_new: bool
+
+
 # ------------------------------------------------------------------ Source Quality
 class SourceQualityReport(BaseModel):
     status: str  # valid / degraded / invalid / ocr_required
