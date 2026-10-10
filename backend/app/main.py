@@ -9,7 +9,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routers import admin, candidates, documents, questions, tasks
+from app.api.routers import admin, candidates, documents, feedback, questions, tasks
 from app.core.config import settings
 from app.domains.evidence.proof import require_app_secret
 
@@ -38,6 +38,7 @@ app.include_router(candidates.router, prefix="/api")
 app.include_router(admin.router, prefix="/api")
 app.include_router(tasks.router, prefix="/api")
 app.include_router(questions.router, prefix="/api")
+app.include_router(feedback.router, prefix="/api")
 
 
 @app.get("/health")

@@ -213,3 +213,48 @@ class QuestionDetail(BaseModel):
     dedup_key: str
     created_at: datetime | None = None
     instances: list[QuestionInstanceInfo]
+
+
+# ------------------------------------------------------------------ Feedback (M3b)
+FEEDBACK_CATEGORY_VALUES = (
+    "stem_missing_or_incomplete",
+    "option_missing_or_incomplete",
+    "answer_missing_or_wrong",
+    "explanation_missing_or_wrong",
+    "material_missing_or_bad_ref",
+    "latex_render_error",
+    "identity_or_number_mismatch",
+    "subject_grade_wrong_or_unset",
+    "other",
+)
+
+
+class FeedbackCreateRequest(BaseModel):
+    question_id: uuid.UUID
+    instance_id: uuid.UUID | None = None
+    category: str
+    description: str
+    created_by: str = "console-user"
+    producer_unit_id: str | None = None
+
+
+class FeedbackOut(BaseModel):
+    id: uuid.UUID
+    question_id: uuid.UUID
+    instance_id: uuid.UUID | None = None
+    source_version_id: uuid.UUID | None = None
+    producer_unit_id: str | None = None
+    source_evidence: dict
+    content_snapshot: dict
+    category: str
+    description: str
+    status: str
+    created_by: str
+    created_at: datetime | None = None
+    review_note: str | None = None
+
+
+class FeedbackListResponse(BaseModel):
+    feedbacks: list[FeedbackOut]
+    total: int
+    categories: list[str]

@@ -19,7 +19,7 @@ async def _seed_question(session) -> tuple[Question, QuestionInstance, Document]
     doc = Document(
         id=uuid.uuid4(),
         original_object_key="k",
-        original_sha256="a" * 64,
+        original_sha256=uuid.uuid4().hex + uuid.uuid4().hex,
         file_name="paper.pdf",
         file_type="pdf",
         upload_meta={},
@@ -33,8 +33,8 @@ async def _seed_question(session) -> tuple[Question, QuestionInstance, Document]
         role="preprocessing",
         provider="preprocessing",
         body_text="x",
-        body_hash="b" * 64,
-        integrity_hash="c" * 64,
+        body_hash=uuid.uuid4().hex + uuid.uuid4().hex,
+        integrity_hash=uuid.uuid4().hex + uuid.uuid4().hex,
         page_count=1,
         line_count=1,
         status="sealed",
@@ -45,7 +45,7 @@ async def _seed_question(session) -> tuple[Question, QuestionInstance, Document]
         subject="化学",
         grade="高一",
         canonical_question_type="single_choice",
-        dedup_key="d" * 64,
+        dedup_key=uuid.uuid4().hex + uuid.uuid4().hex,
     )
     session.add(q)
     await session.flush()
@@ -120,7 +120,7 @@ async def test_question_null_subject_render_as_none(session):
         subject=None,
         grade=None,
         canonical_question_type="fill_in",
-        dedup_key="9" * 64,
+        dedup_key=uuid.uuid4().hex + uuid.uuid4().hex,
     )
     session.add(q)
     await session.flush()

@@ -5,6 +5,9 @@ import type {
   CandidateDetail,
   DocumentDetail,
   DocumentListResponse,
+  FeedbackCreateRequest,
+  FeedbackListResponse,
+  FeedbackOut,
   QuestionDetail,
   QuestionListResponse,
   SourceLinesResponse,
@@ -107,6 +110,26 @@ export function listQuestions(params?: {
 
 export function getQuestion(id: string): Promise<QuestionDetail> {
   return request(`/questions/${id}`);
+}
+
+// ------------------------------------------------------------------ Feedback (M3b)
+export function createFeedback(
+  body: FeedbackCreateRequest,
+): Promise<FeedbackOut> {
+  return request("/feedbacks", { method: "POST", body: JSON.stringify(body) });
+}
+
+export function listFeedbacks(params?: {
+  question_id?: string;
+  status?: string;
+  limit?: number;
+}): Promise<FeedbackListResponse> {
+  const qs = new URLSearchParams();
+  if (params?.question_id) qs.set("question_id", params.question_id);
+  if (params?.status) qs.set("status", params.status);
+  if (params?.limit != null) qs.set("limit", String(params.limit));
+  const suffix = qs.toString() ? `?${qs}` : "";
+  return request(`/feedbacks${suffix}`);
 }
 
 // ------------------------------------------------------------------ Tasks

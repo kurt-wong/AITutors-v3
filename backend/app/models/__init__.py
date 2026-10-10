@@ -16,6 +16,7 @@ from app.models.content import (
     UnitGroupMember,
 )
 from app.models.evidence import ValidationEventRecord
+from app.models.feedback import FEEDBACK_CATEGORIES, FEEDBACK_STATUSES, QuestionFeedback
 from app.models.runtime import Budget, LlmCallAudit, Task, TaskClaim
 from app.models.snapshot import AdmissionCandidate, AdmissionEvent, SemanticAnnotation
 from app.models.source import (
@@ -54,4 +55,7 @@ __all__ = [
     "Budget",
     "Task",
     "TaskClaim",
+    "QuestionFeedback",
+    "FEEDBACK_CATEGORIES",
+    "FEEDBACK_STATUSES",
 ]

@@ -181,3 +181,35 @@ export interface QuestionDetail {
   created_at: string | null;
   instances: QuestionInstanceInfo[];
 }
+
+// ------------------------------------------------------------------ Feedback (M3b)
+export interface FeedbackOut {
+  id: string;
+  question_id: string;
+  instance_id: string | null;
+  source_version_id: string | null;
+  producer_unit_id: string | null;
+  source_evidence: Record<string, unknown>;
+  content_snapshot: Record<string, unknown>;
+  category: string;
+  description: string;
+  status: string;
+  created_by: string;
+  created_at: string | null;
+  review_note: string | null;
+}
+
+export interface FeedbackListResponse {
+  feedbacks: FeedbackOut[];
+  total: number;
+  categories: string[];
+}
+
+export interface FeedbackCreateRequest {
+  question_id: string;
+  instance_id?: string | null;
+  category: string;
+  description: string;
+  created_by?: string;
+  producer_unit_id?: string | null;
+}

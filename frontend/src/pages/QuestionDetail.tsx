@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getQuestion } from "../api/client";
 import type { QuestionDetail as QDetail } from "../api/types";
+import { FeedbackForm } from "../components/FeedbackForm";
 import { MathText } from "../components/MathText";
 
 const ROLE_ORDER: Record<string, number> = {
@@ -155,6 +156,12 @@ export function QuestionDetailPage() {
           <span className="font-mono">{inst.occurrence_key.slice(0, 32)}…</span>
         </div>
       )}
+
+      <FeedbackForm
+        questionId={q.id}
+        instanceId={inst?.id}
+        questionLabel={`Question ${inst?.question_number ?? q.id.slice(0, 8)}（${q.id.slice(0, 8)}…）`}
+      />
     </div>
   );
 }
