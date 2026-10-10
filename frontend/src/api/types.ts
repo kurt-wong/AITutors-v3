@@ -124,3 +124,60 @@ export interface SourceLinesResponse {
   total_lines: number;
   lines: SourceLineInfo[];
 }
+
+// ------------------------------------------------------------------ Questions (M3a)
+export interface QuestionSummary {
+  id: string;
+  subject: string | null;
+  grade: string | null;
+  canonical_question_type: string;
+  instance_id: string;
+  document_id: string;
+  source_version_id: string;
+  question_number: string;
+  question_number_range: string;
+  page_no: number;
+  instance_order: number;
+  created_at: string | null;
+}
+
+export interface QuestionListResponse {
+  questions: QuestionSummary[];
+  total: number;
+}
+
+export interface InstanceRoleContentInfo {
+  id: string;
+  role: string;
+  label: string | null;
+  role_index: number;
+  text: string;
+  text_hash: string;
+  source_span: Record<string, unknown>;
+  answer_status: Record<string, unknown> | null;
+}
+
+export interface QuestionInstanceInfo {
+  id: string;
+  document_id: string;
+  document_file_name: string | null;
+  source_version_id: string;
+  source_role: string | null;
+  source_artifact_kind: string | null;
+  question_number: string;
+  question_number_range: string;
+  page_no: number;
+  instance_order: number;
+  occurrence_key: string;
+  contents: InstanceRoleContentInfo[];
+}
+
+export interface QuestionDetail {
+  id: string;
+  subject: string | null;
+  grade: string | null;
+  canonical_question_type: string;
+  dedup_key: string;
+  created_at: string | null;
+  instances: QuestionInstanceInfo[];
+}

@@ -6,6 +6,7 @@ const links = [
   { to: "/admin", label: "Workspace" },
   { to: "/admin/documents", label: "Documents" },
   { to: "/admin/documents/upload", label: "Import" },
+  { to: "/admin/questions", label: "Questions" },
 ];
 
 export function GlobalNav() {

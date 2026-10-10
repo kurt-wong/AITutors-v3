@@ -171,6 +171,9 @@ def build_annotation_payload_from_bound(
     *,
     source_content_sha256: str,
     manifest_identity_version: Any,
+    subject: str | None = None,
+    grade: str | None = None,
+    grade_source: str | None = None,
 ) -> dict:
     """Produce SemanticAnnotation.payload shape from bound units.
 
@@ -264,10 +267,12 @@ def build_annotation_payload_from_bound(
 
     return {
         "document_metadata_claims": {
-            "subject": None,
-            "grade": None,
+            # Producer manifest 权威映射（Owner 定稿）；缺失 → None（unknown）
+            "subject": subject,
+            "grade": grade,
             "year": None,
             "school": None,
+            "grade_source": grade_source,
         },
         "sections": [],
         "semantic_units": semantic_units,

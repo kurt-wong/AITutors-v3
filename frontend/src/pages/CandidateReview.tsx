@@ -8,6 +8,7 @@ import {
   rejectCandidate,
 } from "../api/client";
 import type { CandidateDetail } from "../api/types";
+import { MathText } from "../components/MathText";
 import { ResultToolbar } from "../components/ResultToolbar";
 
 export function CandidateReview() {
@@ -112,7 +113,7 @@ export function CandidateReview() {
               Question
             </div>
             <div className="text-[17px] leading-relaxed">
-              {String(stem.text ?? "")}
+              <MathText text={String(stem.text ?? "")} />
             </div>
           </div>
         )}
@@ -126,7 +127,7 @@ export function CandidateReview() {
               {options.map((o, i) => (
                 <div key={i} className="flex gap-2 text-[15px]">
                   <span className="font-medium">{String(o.label ?? "")}.</span>
-                  <span>{String(o.text ?? "")}</span>
+                  <MathText text={String(o.text ?? "")} />
                 </div>
               ))}
             </div>

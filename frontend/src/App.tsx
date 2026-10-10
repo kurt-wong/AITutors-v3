@@ -7,6 +7,8 @@ import { CandidateReview } from "./pages/CandidateReview";
 import { DocumentList } from "./pages/DocumentList";
 import { DocumentReview } from "./pages/DocumentReview";
 import DocumentUpload from "./pages/DocumentUpload";
+import { QuestionDetailPage } from "./pages/QuestionDetail";
+import { QuestionList } from "./pages/QuestionList";
 
 export default function App() {
   return (
@@ -18,6 +20,8 @@ export default function App() {
           <Route path="documents/upload" element={<DocumentUpload />} />
           <Route path="documents/:id" element={<DocumentReview />} />
           <Route path="candidates/:id" element={<CandidateReview />} />
+          <Route path="questions" element={<QuestionList />} />
+          <Route path="questions/:id" element={<QuestionDetailPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/admin" replace />} />
       </Routes>

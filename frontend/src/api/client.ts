@@ -5,6 +5,8 @@ import type {
   CandidateDetail,
   DocumentDetail,
   DocumentListResponse,
+  QuestionDetail,
+  QuestionListResponse,
   SourceLinesResponse,
   SourceQualityReport,
   TaskListResponse,
@@ -87,6 +89,24 @@ export function rejectCandidate(
 // ------------------------------------------------------------------ Admin
 export function getAdminStats(): Promise<AdminStats> {
   return request("/admin/stats");
+}
+
+// ------------------------------------------------------------------ Questions (M3a)
+export function listQuestions(params?: {
+  document_id?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<QuestionListResponse> {
+  const qs = new URLSearchParams();
+  if (params?.document_id) qs.set("document_id", params.document_id);
+  if (params?.limit != null) qs.set("limit", String(params.limit));
+  if (params?.offset != null) qs.set("offset", String(params.offset));
+  const suffix = qs.toString() ? `?${qs}` : "";
+  return request(`/questions${suffix}`);
+}
+
+export function getQuestion(id: string): Promise<QuestionDetail> {
+  return request(`/questions/${id}`);
 }
 
 // ------------------------------------------------------------------ Tasks

@@ -359,6 +359,9 @@ class TaskExecutor:
                 bound,
                 source_content_sha256=source_content_sha256,
                 manifest_identity_version=manifest.get("identity_version"),
+                subject=manifest.get("subject"),
+                grade=manifest.get("grade"),
+                grade_source=manifest.get("grade_source"),
             )
         except ManifestBindingError:
             raise

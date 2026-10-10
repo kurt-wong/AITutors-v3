@@ -156,3 +156,60 @@ class TaskSummary(BaseModel):
 class TaskListResponse(BaseModel):
     tasks: list[TaskSummary]
     total: int
+
+
+# ------------------------------------------------------------------ Question (M3a read-only)
+class QuestionSummary(BaseModel):
+    id: uuid.UUID
+    subject: str | None = None
+    grade: str | None = None
+    canonical_question_type: str
+    instance_id: uuid.UUID
+    document_id: uuid.UUID
+    source_version_id: uuid.UUID
+    question_number: str
+    question_number_range: str
+    page_no: int
+    instance_order: int
+    created_at: datetime | None = None
+
+
+class QuestionListResponse(BaseModel):
+    questions: list[QuestionSummary]
+    total: int
+
+
+class InstanceRoleContentInfo(BaseModel):
+    id: uuid.UUID
+    role: str
+    label: str | None = None
+    role_index: int
+    text: str
+    text_hash: str
+    source_span: dict
+    answer_status: dict | None = None
+
+
+class QuestionInstanceInfo(BaseModel):
+    id: uuid.UUID
+    document_id: uuid.UUID
+    document_file_name: str | None = None
+    source_version_id: uuid.UUID
+    source_role: str | None = None
+    source_artifact_kind: str | None = None
+    question_number: str
+    question_number_range: str
+    page_no: int
+    instance_order: int
+    occurrence_key: str
+    contents: list[InstanceRoleContentInfo]
+
+
+class QuestionDetail(BaseModel):
+    id: uuid.UUID
+    subject: str | None = None
+    grade: str | None = None
+    canonical_question_type: str
+    dedup_key: str
+    created_at: datetime | None = None
+    instances: list[QuestionInstanceInfo]
