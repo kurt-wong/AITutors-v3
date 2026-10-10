@@ -523,14 +523,29 @@ class TaskExecutor:
         version: DocumentSourceVersion,
         ann: SemanticAnnotation,
     ) -> None:
+        from pathlib import Path as _Path
+
+        from app.domains.source.funnel_recorder import FunnelRecorder
+
+        funnel = FunnelRecorder(package_id=f"sv-{version.id}")
         async with self._session_factory() as s:
-            await GateService(s).run(
+            candidates, skipped = await GateService(s).run(
                 source_version_id=version.id,
                 annotation_id=ann.id,
                 task_type=_TASK_TYPE,
                 attempt_id=uuid.uuid4(),
+                funnel=funnel,
             )
             await s.commit()
+        funnel.note(
+            f"compile_stage candidates={len(candidates)} skipped={len(skipped)}"
+        )
+        # Formal-path observability: persist per-unit skip/failure outcomes.
+        out = _Path("data/funnels") / f"{ann.id}.json"
+        try:
+            funnel.write(out)
+        except OSError:
+            funnel.note(f"funnel write failed: {out}")
 
     # ------------------------------------------------------------------ liveness
 

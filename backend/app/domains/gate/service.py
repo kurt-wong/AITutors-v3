@@ -35,6 +35,7 @@ from app.domains.gate.policy import evaluate, partition_candidate
 from app.domains.resolver import RESOLVER_VERSION
 from app.domains.resolver.resolver import SourceResolver
 from app.domains.resolver.span import SourceFigureView, SourceLineView
+from app.domains.source.funnel_recorder import FunnelRecorder, ir_skip_reasons
 from app.models.snapshot import AdmissionCandidate
 from app.repositories.evidence_repository import EvidenceRepository
 from app.repositories.snapshot_repository import SnapshotRepository
@@ -121,10 +122,13 @@ class GateService:
         annotation_id: uuid.UUID,
         task_type: str = "document_ingest",
         attempt_id: uuid.UUID | None = None,
+        funnel: FunnelRecorder | None = None,
     ) -> tuple[list[AdmissionCandidate], list[str]]:
         """编排一次 admission candidate 生成。返回 (candidates, skipped_incomplete_unit_ids)。
 
         attempt_id：compile-stage Runtime Provenance 透传（Lock-5，仅落 Artifact，不进 LE hash）。
+        funnel：可选 FunnelRecorder；传入时记录每个 Producer unit 的 skip/候选结局
+        （观测用，不改变 Gate/Admission 决策）。
         """
         version, ann = await validate_annotation_binding(
             source_version_id=source_version_id,
@@ -174,9 +178,26 @@ class GateService:
 
         candidates: list[AdmissionCandidate] = []
         skipped: list[str] = []
+        if funnel is not None:
+            funnel.set("input_units", len(ir.units))
+            funnel.set("ir_ready", sum(1 for u in ir.units if u.semantic_status == "ready"))
         for root in ir.units:
             if root.semantic_status != "ready":
                 skipped.append(root.unit_id)  # incomplete 不进 candidate（20 §5.2）
+                if funnel is not None:
+                    summary, problems = ir_skip_reasons(root)
+                    funnel.skip_unit(
+                        root.unit_id,
+                        "resolver_ir",
+                        summary,
+                        evidence={
+                            "semantic_status": root.semantic_status,
+                            "problems": problems,
+                            "question_number": root.question_number,
+                            "source_version_id": str(source_version_id),
+                            "annotation_id": str(annotation_id),
+                        },
+                    )
                 continue
             gate = evaluate(
                 root=root, ir=ir, compiled=compiled, resolved_run=resolved_run
@@ -248,6 +269,11 @@ class GateService:
                 )
 
         await self._snap.flush()
+        if funnel is not None:
+            funnel.set("candidates", len(candidates))
+            funnel.set("pending_review", sum(
+                1 for c in candidates if c.decision_status == "pending_review"
+            ))
         return candidates, skipped
 
     # ------------------------------------------------------------------ identity

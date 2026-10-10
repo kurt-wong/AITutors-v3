@@ -47,6 +47,27 @@ class FunnelRecorder:
             {"unit_id": unit_id, "stage": stage, "reason": reason}
         )
 
+    def skip_unit(
+        self,
+        unit_id: str,
+        stage: str,
+        reason: str,
+        *,
+        evidence: dict | None = None,
+    ) -> None:
+        """Record a skip with optional structured evidence (line ranges, IR problems).
+
+        Never invents success. Evidence is optional metadata; reason stays human-readable.
+        """
+        self.failures.append(
+            {
+                "unit_id": unit_id,
+                "stage": stage,
+                "reason": reason,
+                "evidence": evidence or {},
+            }
+        )
+
     def note(self, text: str) -> None:
         self.notes.append(text)
 
@@ -70,3 +91,44 @@ class FunnelRecorder:
             json.dumps(self.to_dict(), ensure_ascii=False, indent=2), encoding="utf-8"
         )
         return path
+
+
+def ir_skip_reasons(node) -> tuple[str, list[str]]:
+    """Derive (summary, problem_list) for an IR node that is not semantic_status=ready.
+
+    Mirrors compile/ir._validate_node problem categories without mutating IR.
+    """
+    problems: list[str] = []
+    content_by_role = {}
+    for ic in node.content:
+        content_by_role.setdefault(ic.role, ic)
+        if getattr(ic, "unsupported", False):
+            problems.append(f"unsupported content role {ic.role}")
+        elif ic.span_id is None:
+            problems.append(f"role {ic.role} unresolved")
+    if content_by_role.get("stem") is None:
+        problems.append("stem not declared")
+    elif content_by_role["stem"].span_id is None:
+        problems.append("stem unresolved")
+    if content_by_role.get("answer") is None:
+        problems.append("answer not declared")
+    elif content_by_role["answer"].span_id is None:
+        problems.append("answer unresolved")
+    has_opts = any(ic.role == "option" for ic in node.content)
+    if node.original_question_type in (
+        "single_choice",
+        "multiple_choice",
+        "true_false",
+    ):
+        if not has_opts:
+            problems.append("options missing for choice type")
+        else:
+            bad = [
+                ic.label
+                for ic in node.content
+                if ic.role == "option" and ic.span_id is None
+            ]
+            if bad:
+                problems.append(f"option spans unresolved: {bad}")
+    summary = "; ".join(problems) if problems else f"semantic_status={node.semantic_status}"
+    return summary, problems
