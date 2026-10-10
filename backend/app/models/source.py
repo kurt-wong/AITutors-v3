@@ -45,17 +45,19 @@ def artifact_kind_for_role(role: str) -> str:
     """Sole authority: role -> artifact_kind (CR-005).
 
     preprocessing -> canonical_l1 (accepted first-layer structured text)
+    canonical     -> canonical_l1 (non-seal path convention)
     all other roles -> raw_l1 (OCR/native first layer)
     """
-    if role == "preprocessing":
+    if role in ("preprocessing", "canonical"):
         return "canonical_l1"
     return "raw_l1"
 
 
 def validate_artifact_compatibility(role: str, provider: str, artifact_kind: str) -> None:
-    """校验 role/provider 封闭配对 + artifact_kind 闭集。非法值 fail-fast。
+    """校验 role/provider 封闭配对 + artifact_kind 权威映射。非法值 fail-fast。
 
     所有 DocumentSourceVersion 写入路径必须经此校验（seal + repository）。
+    role -> artifact_kind 由 artifact_kind_for_role() 强制（CR-005）。
     """
     if artifact_kind not in _ARTIFACT_KINDS:
         raise ValueError(
@@ -69,6 +71,17 @@ def validate_artifact_compatibility(role: str, provider: str, artifact_kind: str
         raise ValueError(
             f"role/provider mismatch: role={role!r} provider={provider!r}"
             f" (allowed: {sorted(allowed)})"
+        )
+    # CR-005: enforce role -> artifact_kind mapping (single authority).
+    expected = artifact_kind_for_role(role)
+    # Preserve existing docx semantics: docx may also use original_binary.
+    allowed_kinds = {expected}
+    if role == "docx":
+        allowed_kinds = {expected, "original_binary"}
+    if artifact_kind not in allowed_kinds:
+        raise ValueError(
+            f"role/artifact_kind mismatch: role={role!r} artifact_kind={artifact_kind!r} "
+            f"(expected {sorted(allowed_kinds)} per CR-005 authority)"
         )
 
 
