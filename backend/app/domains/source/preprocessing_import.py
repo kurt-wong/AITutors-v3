@@ -343,15 +343,11 @@ class PreprocessingImportService:
 
     @staticmethod
     def _verify_interface_scope(claimed_src: str, manifest: dict) -> None:
-        """Defer identity_version membership to the sole Interface Scope authority."""
-        # Import late so test environments without scripts path still load.
-        import sys
-        from pathlib import Path as _P
+        """Defer identity_version membership to the sole production authority.
 
-        backend_root = _P(__file__).resolve().parents[2]
-        if str(backend_root) not in sys.path:
-            sys.path.insert(0, str(backend_root))
-        from scripts.preprocessing_consumer.boundary import enforce_interface_scope
+        Rules live in app.domains.source.identity_scope (no scripts/ dependency).
+        """
+        from app.domains.source.identity_scope import enforce_interface_scope
 
         identity_version = manifest.get("identity_version")
         decision = enforce_interface_scope(claimed_src, identity_version)

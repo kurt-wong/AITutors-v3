@@ -1,14 +1,34 @@
-"""pytest conftest：env 注入（app import 前）、session 迁移、async session 回滚隔离。"""
+"""pytest conftest: env injection (before app import), session isolation, rollback.
+
+DB isolation (B1-R2-BOUNDARY-AND-DB-ISOLATION-03): tests MUST run against
+aitutors_test, never the shared business DB `aitutors`.
+"""
 
 import os
 
-os.environ.setdefault("APP_ENV", "test")
-os.environ.setdefault(
-    "DATABASE_URL",
-    "postgresql+asyncpg://aitutors:change-me@localhost:5432/aitutors",
-)
-# EB-008 §5.2：test 环境注入满足 ≥32 字节的 APP_SECRET（proof 生成/验证可用）
-os.environ.setdefault("APP_SECRET", "test-app-secret-32-bytes-minimum!!")
+# FORCE isolated test DB BEFORE any app import. Env vars beat .env in Settings.
+_TEST_DB_URL = "postgresql+asyncpg://aitutors:change-me@localhost:5432/aitutors_test"
+
+os.environ["APP_ENV"] = "test"
+os.environ["DATABASE_URL"] = _TEST_DB_URL
+os.environ["APP_SECRET"] = "test-app-secret-32-bytes-minimum!!"
+
+
+def _assert_not_shared_db() -> None:
+    """Fail fast if the session factory points at the shared business DB."""
+    from app.core.config import settings
+
+    url = settings.database_url
+    if url.rstrip("/").endswith("/aitutors") or url.rstrip("/").endswith("/aitutors?"):
+        raise RuntimeError(
+            f"TEST ISOLATION VIOLATION: DATABASE_URL points at shared DB: {url!r}. "
+            "Tests must run against aitutors_test."
+        )
+    if "aitutors_test" not in url:
+        raise RuntimeError(
+            f"TEST ISOLATION VIOLATION: expected aitutors_test in DATABASE_URL, got {url!r}"
+        )
+
 
 import pytest
 import pytest_asyncio
@@ -17,15 +37,19 @@ from alembic.config import Config
 
 from app.db.session import async_session_maker
 
+_assert_not_shared_db()
+
 
 @pytest.fixture(scope="session", autouse=True)
 def migrated_db() -> None:
-    """确保段 A baseline（19 表）已应用（幂等）。"""
+    """Ensure Phase A baseline schema is applied on the isolated test DB."""
+    _assert_not_shared_db()
     command.upgrade(Config("alembic.ini"), "head")
 
 
 @pytest_asyncio.fixture
 async def session():
+    _assert_not_shared_db()
     async with async_session_maker() as s:
         yield s
         await s.rollback()
@@ -33,7 +57,7 @@ async def session():
 
 @pytest.fixture
 def pdf_bytes() -> bytes:
-    """PyMuPDF 生成的两页文本层 PDF（本地确定性，非外部资产）。"""
+    """PyMuPDF-generated two-page text-only PDF (local deterministic, not external)."""
     import fitz
 
     doc = fitz.open()
@@ -49,11 +73,7 @@ def pdf_bytes() -> bytes:
 
 @pytest.fixture
 def pdf_bytes_with_figure() -> bytes:
-    """PyMuPDF 生成的一页文本 + 一张已放置图片 PDF（本地确定性，非外部资产）。
-
-    BUG-011-B：native 图提取需真实 image placement（get_image_info 可定位 + xref 可
-    extract_image），区别于纯文本 pdf_bytes（figures=()）。
-    """
+    """PyMuPDF one-page PDF with a real image placement (get_image_info + xref)."""
     import fitz
 
     doc = fitz.open()
@@ -64,4 +84,3 @@ def pdf_bytes_with_figure() -> bytes:
     data = doc.tobytes()
     doc.close()
     return data
-

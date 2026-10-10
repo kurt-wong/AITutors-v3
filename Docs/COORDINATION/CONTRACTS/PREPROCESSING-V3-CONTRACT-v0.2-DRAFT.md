@@ -772,6 +772,56 @@ Contract Freeze Candidate Artifact:
 
 ---
 
+## Errata（NOT FROZEN 期修订 · 2026-10-09 · Owner B1-R2-BOUNDARY-AND-DB-ISOLATION-03）
+
+> **状态**：本节在 Contract v0.2 **NOT FROZEN** 期间追加，授权范围 = 仅修正 DA-38 / B1-G4 的**跨系统身份绑定落点与表达**。不改变 Frozen Spec 10 已冻结的表结构、UNIQUE 约束、role/provider 封闭配对或其他语义。若后续 Owner Freeze 令下达，本 Errata 应并入正文后再冻结。
+
+### E-DA-38 · 跨系统身份绑定落点澄清
+
+**背景冲突**：
+
+| 来源 | 原表述 |
+|---|---|
+| §5.4 DA-38 / B1-G4 | 「V3 绑定跨系统 sha（raw bytes **写入 `documents.original_sha256`**）」 |
+| §1.3 对照表 | 「`original_sha256` … 否（**将来装接口键值**）」 |
+| Owner Round 2 指令 §2 | `documents.original_sha256` **仅**原始上传字节（PDF/DOCX）；Markdown 字节不得写入该列 |
+
+**Errata（取代 DA-38 / B1-G4 中「写入 `documents.original_sha256`」的落点表述）**：
+
+1. **跨系统身份绑定意图仍然成立**。V3 必须在 ingest 时绑定 `source_content_sha256`（= SHA-256(preprocessing Markdown 原始字节)，64 小写 hex），使跨系统对账可离线重建。
+
+2. **`documents.original_sha256` 仅表示原始 PDF/DOCX 上传字节的 SHA-256**。该列 UNIQUE 语义 = BUG-V3-007「一个原始文件 = 一个 Document 主档」，**不得**写入 Markdown 哈希、产物哈希或 `canonical_json` 包裹值。
+
+3. **`source_content_sha256` 的绑定落点 = Source Version 层**，具体：
+   - `document_source_versions.source_meta` / 构建输入身份字段（`input_identity` JSONB）；
+   - 以及 `documents.upload_meta` 中的审计性副本（非 UNIQUE 身份列）。
+
+4. **`input_identity` 的用途**：承载「本次 Seal/构建的输入身份」，属于 **P7 输入身份**（Spec 10 §7）。它可同时记录 `original_sha256`（原件）与 `source_content_sha256`（源文本身份），是**身份对账用的复合记录**，不是第二个 UNIQUE 键，也不是 path。
+
+5. **同一原始 PDF 可以对应多个 Markdown 版本**（例如重切、修复 OCR、语义改写）。Markdown 内容变化 → 新的 `source_content_sha256` → 新的 `DocumentSourceVersion`（经 `parent_version_id` 表达血统），**不改变** `documents.original_sha256`，不创建第二个 Document。
+
+6. **`role=preprocessing` 差异（不得隐去）**：
+   - 代码层：`models/source.py` `_ROLE_PROVIDER_PAIRS` 已含 `"preprocessing": frozenset({"preprocessing"})`，Seal/Repository 路径已支持。
+   - Frozen Spec 10 §4.2 role 枚举原文为 `native / ocr_ppsv3 / ocr_ppsvl / docx / canonical`，**未列出 `preprocessing`**。
+   - 该差异属 **Spec 枚举 vs 实现扩展** 的登记缺口，本 Errata **不修改** Frozen Spec 10。是否将 `preprocessing` 补入 Spec role 枚举 = Owner 后续裁决项。
+
+**修改前后对照**：
+
+| 项 | 修改前 | 修改后 |
+|---|---|---|
+| DA-38 绑定落点 | 写入 `documents.original_sha256` | 绑定在 Source Version 层（`source_meta`/`input_identity`）；`original_sha256` 保持原件字节身份 |
+| §1.3 `original_sha256` 说明 | 「将来装接口键值」 | 「**仅**原始文档字节身份；接口键 `source_content_sha256` 不入此列」 |
+| 跨系统绑定意图 | （表述模糊） | 明确成立，落点见上 |
+| 多 MD 对一 PDF | （未说明） | 明确允许；经 Source Version 血统表达 |
+| `role=preprocessing` | （未对照） | 显式登记 Spec 枚举缺口 |
+| Frozen Spec 10 结构/UNIQUE | — | **不变** |
+| 哈希算法 / 64 hex 格式 | — | **不变** |
+| path 非身份原则 | — | **不变** |
+
+**未决**：`role=preprocessing` 是否补入 Frozen Spec 10 §4.2 role 枚举 → Owner。
+
+---
+
 ## 边界声明
 
 **本文件做了**：Owner B1/B2/B3 裁决的契约化（§1-4）+ DEC-B1 细化（§1.1）+ FINALIZATION v1 四项（§1.6/§1.7/§3.2+§4.1/§5.5）+ Interface Decision Finalization v1（DEC-027）+ Interface Finalization Revision v1（DEC-028：source identity 64hex + path 非身份 + 16 份 Semantic Pending + 语义层终局词表加 unknown + unknown→pending_review）+ Freeze Candidate Review v1（DEC-029：命名提案 + bytes 能力冻结 + 16 份四保证）+ Freeze Candidate Finalization v1（DEC-030：命名采纳 + 词面收口 + bytes/双状态确认 + 废止「Semantic Unavailable」）+ Owner Final Decision v1（DEC-031：四项原则终局确认 §0.1/§1.1/§1.6/§1.2a + Step 1/2 执行授权 §5.4/§8 + 机械冻结条件 §8 + 五项延期 §0.2/§6 + V3 下一阶段核心风险 = 消费端验证链 §2.3）+ Contract v0.2 最终冻结收口 Consumer 侧（DEC-032：Task 1 文本核验 · Task 2 五项 NOT IMPLEMENTED §5.6.1 · Task 3 实现边界 §5.6.2 + §1.3 · Task 4 16 份设计 §1.6 · 验证链 Gate→Admission §2.3）+ **Freeze Finalization Audit（DEC-033，本轮）**：**Task 1 冻结状态描述修正**（Step 1/2 历史「未开始」→ DONE / PASS，§8 + §5.4 + 状态头）· **Task 2 Freeze Evidence 引用登记**（§9.1，五类证据齐全）· **Task 3 Freeze Object 明确化**（§9.2，唯一冻结对象）· **Task 4 关键词再验证** · DA-1~37 · Implementation Status Table（§5.4）· v0.1 差异对照（§7）· 开放项 OQ-1~21 与冻结前提更新（§6/§8/§9）。每条款标 DECISION/OBSERVED/UNKNOWN/REQUIREMENT。
