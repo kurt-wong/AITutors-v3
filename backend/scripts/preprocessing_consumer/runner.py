@@ -65,6 +65,44 @@ def _classify_error(exc: Exception) -> str:
     return "implementation_bug"
 
 
+def _locate_original_beside(source_path: Path) -> Path | None:
+    """Locate the original PDF/DOCX that produced this markdown (E-DA-38).
+
+    Prefers an explicit sibling with the same stem (paper.pdf next to paper.md).
+    Never guesses among multiple candidates — fails closed via None.
+    """
+    parent = source_path.parent
+    stem = source_path.stem
+    # strip common suffixes like .src / .annotated
+    for suffix in (".annotated", ".src", ".src.md"):
+        if stem.endswith(suffix.replace(".md", "")):
+            stem = stem[: -len(suffix.replace(".md", ""))]
+    candidates = []
+    seen = set()
+    for ext in (".pdf", ".docx", ".PDF", ".DOCX"):
+        p = parent / f"{stem}{ext}"
+        if p.is_file():
+            key = str(p.resolve()).lower()
+            if key not in seen:
+                seen.add(key)
+                candidates.append(p)
+    # also accept any single PDF/DOCX in the same directory when stem match fails
+    if not candidates:
+        found = []
+        seen2 = set()
+        for p in parent.iterdir():
+            if p.suffix.lower() in (".pdf", ".docx") and p.is_file():
+                key = str(p.resolve()).lower()
+                if key not in seen2:
+                    seen2.add(key)
+                    found.append(p)
+        if len(found) == 1:
+            candidates = found
+    if len(candidates) == 1:
+        return candidates[0]
+    return None
+
+
 async def _create_source_records(
     session,
     source_lines: list[SourceLine],
@@ -75,16 +113,33 @@ async def _create_source_records(
 
     body_text = "\n".join(l.text for l in source_lines)
     body_hash = compute_body_hash(source_lines)
-    # Decision 2 Amendment (2-B): original_sha256 = SHA256(received artifact raw bytes)
-    raw_id = load_raw_bytes_identity(source_path)
-    file_sha = raw_id.sha256
+
+    # E-DA-38 / CR-005 identity split:
+    #   documents.original_sha256   = SHA256(original PDF/DOCX raw bytes) ONLY
+    #   source_content_sha256       = SHA256(source Markdown raw bytes) -> source_meta
+    from app.models.source import artifact_kind_for_role
+
+    source_content_sha256 = load_raw_bytes_identity(source_path).sha256
+
+    original_path = _locate_original_beside(source_path)
+    if original_path is None:
+        raise RuntimeError(
+            "original PDF/DOCX not found beside source markdown; "
+            "refusing to write Markdown hash into documents.original_sha256 (E-DA-38)"
+        )
+    file_sha = load_raw_bytes_identity(original_path).sha256
 
     doc = await src_repo.create_document(
-        original_object_key=f"preprocessing/{source_path.name}",
+        original_object_key=f"preprocessing/{original_path.name}",
         original_sha256=file_sha,
-        file_name=source_path.name,
-        file_type="text/markdown",
-        upload_meta={"source": "preprocessing_phase0"},
+        file_name=original_path.name,
+        file_type=original_path.suffix.lstrip(".").lower(),
+        upload_meta={
+            "source": "preprocessing_phase0",
+            "source_mode": "preprocessing",
+            "source_content_sha256": source_content_sha256,
+            "source_md": source_path.name,
+        },
         processing_status="pending",
     )
     await session.flush()
@@ -101,7 +156,7 @@ async def _create_source_records(
     )
     version = await src_repo.create_source_version(
         document_id=doc.id,
-        artifact_kind="canonical_l1",
+        artifact_kind=artifact_kind_for_role("preprocessing"),
         role="preprocessing",
         provider="preprocessing",
         body_text=body_text,
@@ -110,6 +165,10 @@ async def _create_source_records(
         page_count=1,
         line_count=len(source_lines),
         status="draft",
+        source_meta={
+            "source_mode": "preprocessing",
+            "source_content_sha256": source_content_sha256,
+        },
         logical_execution_stage="seal",
         logical_execution_hash=le_hash,
     )

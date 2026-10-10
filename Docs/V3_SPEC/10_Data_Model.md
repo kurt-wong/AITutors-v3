@@ -132,8 +132,8 @@ C. 管线快照域（immutable snapshot，LLM 依赖或确定性编译的审计�
 |---|---|---|
 | id | UUID | PK |
 | document_id | UUID | FK documents |
-| artifact_kind | VARCHAR | original_binary / raw_l1 / canonical_l1 |
-| role | VARCHAR | native / ocr_ppsv3 / ocr_ppsvl / docx / canonical |
+| artifact_kind | VARCHAR | original_binary / raw_l1 / canonical_l1；**preprocessing role → canonical_l1**（CR-005） |
+| role | VARCHAR | native / ocr_ppsv3 / ocr_ppsvl / docx / preprocessing / canonical |
 | provider | VARCHAR | native / ppsv3 / paddleocr-vl / docx |
 | parent_version_id | UUID NULL | 修正/派生来源 |
 | body_text | TEXT | seal 前由 line index 确定性重建 |
@@ -148,6 +148,7 @@ C. 管线快照域（immutable snapshot，LLM 依赖或确定性编译的审计�
 
 - `status=sealed` 后禁止任何 UPDATE（Repository 抛错，不静默忽略）。
 - **role/provider 封闭配对（BUG-V3-008 errata）**：`ocr_ppsv3 ⟺ ppsv3`、`ocr_ppsvl ⟺
+- **`preprocessing` role（CR-005 最小变更）**：`role=preprocessing` ≡ `provider=preprocessing`；合法 `artifact_kind` = **`canonical_l1`**（已验收第一层结构化文本，非 OCR 原始层）。其余 role 的 `artifact_kind` 不变（`native`/`ocr_*`/`docx` → `raw_l1`）。
   paddleocr-vl`、`native ⟺ native`、`docx ⟺ docx`；`canonical` role 无 provider。禁止任意
   组合。`provider`/`role` 均进入 seal LE hash（contract_domain.parser），独立引擎必须独立
   身份，防 identity 漂移。

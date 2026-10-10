@@ -124,7 +124,7 @@
 |---|---|---|---|---|
 | **跨系统身份键（接口键）** | `source_version_id`（接口义） | **`source_content_sha256`** | 64 小写 hex sha256 | **是** |
 | V3 内部 seal 版本 FK | `source_version_id`（V3 代码） | 不变 `source_version_id`（**专用为 V3 内部词面**） | `uuid.UUID` | 否 |
-| V3 内部内容 hash 列 | `original_sha256` | 不变 `original_sha256` | `String(64)` UNIQUE | 否（将来装接口键值） |
+| V3 内部内容 hash 列 | `original_sha256` | 不变 `original_sha256` | `String(64)` UNIQUE | 否（**仅原件字节身份**；接口键不入此列 — E-DA-38） |
 | producer IR 文件级 sha | `source_sha256` | 不变（producer 域） | sha256 hex | 映射（与接口键同值） |
 | producer IR 单元级 provenance | `provenance.source_version` | 不变（producer 域） | sha256 hex | 映射（与接口键同值） |
 
@@ -505,7 +505,7 @@ schema 噪声不只 unit_type 一处：恰 1 例 `andalone_question` + 恰 1 例
 | unit_type 值域守卫（生成链） | producer | **not started**（B3 语义须先落字） | G5 |
 | 存量 1 例 unit_type 修复 | producer | **deferred**（Owner 令：接口冻结优先；且破坏 R50 基线，须配对再冻结） | Readiness §5 D1 |
 | V3 具备 IR 消费路径 | V3 | **not started**（0 命中） | B1-G3 |
-| V3 绑定跨系统 sha（raw bytes 写入 `documents.original_sha256`） | V3 | **not started**（当前为 canonical_json 包裹值） | B1-G4 / B2-G1 |
+| V3 绑定跨系统 sha（落点见 E-DA-38 Errata：Source Version 层；`documents.original_sha256` 仅原件字节） | V3 | **not started**（当前为 canonical_json 包裹值） | B1-G4 / B2-G1 |
 | sha 对账闸门按 raw bytes 可执行 | V3 | **not started**（依赖上两项） | B2-G3 |
 | unknown unit_type → PENDING_REVIEW / REJECTED | 双侧 | **not started**（当前静默 incomplete→skip / 零守卫） | D3-G1/G2 / G5 |
 | 语义层 `unknown` 取值引入 | V3 | **值集已裁 = `{ready,incomplete,unknown}`（DEC-028 Part 5）**；V3 加值 = **not started**（须解冻 BUG-V3-018） | OQ-20 |

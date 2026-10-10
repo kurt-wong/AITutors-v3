@@ -41,6 +41,17 @@ _ROLE_PROVIDER_PAIRS: dict[str, frozenset[str]] = {
 }
 
 
+def artifact_kind_for_role(role: str) -> str:
+    """Sole authority: role -> artifact_kind (CR-005).
+
+    preprocessing -> canonical_l1 (accepted first-layer structured text)
+    all other roles -> raw_l1 (OCR/native first layer)
+    """
+    if role == "preprocessing":
+        return "canonical_l1"
+    return "raw_l1"
+
+
 def validate_artifact_compatibility(role: str, provider: str, artifact_kind: str) -> None:
     """校验 role/provider 封闭配对 + artifact_kind 闭集。非法值 fail-fast。
 

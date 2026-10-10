@@ -346,6 +346,8 @@ class TestRunnerOutputValues:
 
         src = tmp_path / "test.md"
         src.write_text("Hello\nWorld\n", encoding="utf-8")
+        pdf = tmp_path / "test.pdf"
+        pdf.write_bytes(b"%PDF-1.4 original-bytes")
         lines = load_source_lines(src)
 
         doc_id, sv_id = await _create_source_records(session, lines, src)
@@ -363,6 +365,8 @@ class TestRunnerOutputValues:
 
         src = tmp_path / "test_b2.md"
         src.write_text("Hello\nWorld\n", encoding="utf-8")
+        pdf = tmp_path / "test_b2.pdf"
+        pdf.write_bytes(b"%PDF-1.4 original-bytes-b2")
         lines = load_source_lines(src)
 
         doc_id, sv_id = await _create_source_records(session, lines, src)
@@ -378,16 +382,22 @@ class TestRunnerOutputValues:
         from scripts.preprocessing_consumer.runner import _create_source_records
         from scripts.preprocessing_consumer.source_loader import load_source_lines
 
-        content = b"Hello\nWorld\n"
+        md_content = b"Hello\nWorld\n"
+        pdf_content = b"%PDF-1.4 original-file-bytes"
         src = tmp_path / "test_raw.md"
-        src.write_bytes(content)
+        src.write_bytes(md_content)
+        pdf = tmp_path / "test_raw.pdf"
+        pdf.write_bytes(pdf_content)
         lines = load_source_lines(src)
 
         doc_id, sv_id = await _create_source_records(session, lines, src)
         repo = SourceRepository(session)
-        doc = await repo.find_document_by_sha256(hashlib.sha256(content).hexdigest())
-
-        assert doc is not None, "document must be findable by raw-bytes SHA256"
+        pdf_sha = hashlib.sha256(pdf_content).hexdigest()
+        md_sha = hashlib.sha256(md_content).hexdigest()
+        doc = await repo.find_document_by_sha256(pdf_sha)
+        assert doc is not None, "document must be findable by ORIGINAL PDF SHA256"
+        assert doc.original_sha256 == pdf_sha
+        assert doc.original_sha256 != md_sha, "must not write Markdown hash as original_sha256"
 
     async def test_runner_le_hash_uses_unified_formula(self, session, tmp_path):
         """[LE hash 收敛] runner 的 _create_source_records 产出的 le_hash
@@ -396,16 +406,19 @@ class TestRunnerOutputValues:
         from scripts.preprocessing_consumer.runner import _create_source_records
         from scripts.preprocessing_consumer.source_loader import load_source_lines
 
-        content = b"le-hash-verify\n"
+        md_content = b"le-hash-verify\n"
+        pdf_content = b"%PDF-1.4 le-hash-original"
         src = tmp_path / "le_test.md"
-        src.write_bytes(content)
+        src.write_bytes(md_content)
+        pdf = tmp_path / "le_test.pdf"
+        pdf.write_bytes(pdf_content)
         lines = load_source_lines(src)
 
         doc_id, sv_id = await _create_source_records(session, lines, src)
         repo = SourceRepository(session)
         v = await repo.get_version(sv_id)
 
-        raw_sha = hashlib.sha256(content).hexdigest()
+        raw_sha = hashlib.sha256(pdf_content).hexdigest()
         expected = logical_execution_hash(
             task_type="document_ingest",
             stage="seal",
@@ -432,6 +445,7 @@ class TestRunnerOutputValues:
         content = b"ann-readback\n"
         src = tmp_path / "ann_readback.md"
         src.write_bytes(content)
+        (tmp_path / "ann_readback.pdf").write_bytes(b"%PDF-1.4 ann-original")
         lines = load_source_lines(src)
 
         doc_id, sv_id = await _create_source_records(session, lines, src)
@@ -497,6 +511,7 @@ class TestRunnerOutputValues:
         content = b"compile-readback\n"
         src = tmp_path / "compile_readback.md"
         src.write_bytes(content)
+        (tmp_path / "compile_readback.pdf").write_bytes(b"%PDF-1.4 compile-original")
         lines = load_source_lines(src)
 
         doc_id, sv_id = await _create_source_records(session, lines, src)

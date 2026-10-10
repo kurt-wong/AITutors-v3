@@ -32,6 +32,7 @@ from app.models.source import (
     DocumentSourceSpan,
     DocumentSourceVersion,
     SourceFigure,
+    artifact_kind_for_role,
     validate_artifact_compatibility,
 )
 from app.repositories.source_repository import SourceRepository
@@ -39,7 +40,9 @@ from app.repositories.source_repository import SourceRepository
 SEAL_CONTRACT_VERSION = "seal/v1"
 
 _STAGE = "seal"
-_ARTIFACT_KIND = "raw_l1"  # OCR/native 第一层结构化文本（10 §4.2）
+# artifact_kind is derived per-role by sole authority (CR-005).
+# Default for legacy call sites that do not pass role yet.
+_ARTIFACT_KIND = "raw_l1"  # fallback only; prefer artifact_kind_for_role(role)
 
 
 def validate_seal_role_provider(role: str, provider: str) -> None:
@@ -49,7 +52,9 @@ def validate_seal_role_provider(role: str, provider: str) -> None:
     """
     if role == "canonical":
         raise ValueError("seal does not produce canonical role")
-    validate_artifact_compatibility(role, provider, _ARTIFACT_KIND)
+    validate_artifact_compatibility(
+        role, provider, artifact_kind_for_role(role)
+    )
 
 Extractor = Callable[[bytes], Awaitable[OCRResult]]
 
@@ -121,7 +126,11 @@ class SealService:
             raise ValueError("body_text is not deterministic from line index (IS-4)")
         body_hash = compute_body_hash(body_text)
 
-        provenance = {"role": role, "provider": provider, "artifact_kind": _ARTIFACT_KIND}
+        provenance = {
+        "role": role,
+        "provider": provider,
+        "artifact_kind": artifact_kind_for_role(role),
+    }
         line_hashes: list[str] = []
         for sl in lines:
             line_hashes.append(self._line_hash(sl, provider))
@@ -134,7 +143,7 @@ class SealService:
 
         version = await self._repo.create_source_version(
             document_id=doc_id,
-            artifact_kind=_ARTIFACT_KIND,
+            artifact_kind=artifact_kind_for_role(role),
             role=role,
             provider=provider,
             body_text=body_text,
