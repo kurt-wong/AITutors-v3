@@ -319,12 +319,135 @@ class TaskExecutor:
         if report.status == "ocr_required":
             raise OCRRequiredError(report)
 
+    async def _annotation_from_manifest_units(
+        self,
+        task_id: uuid.UUID,
+        version: DocumentSourceVersion,
+        params: dict,
+    ) -> SemanticAnnotation:
+        """M2-R2 formal path: bind Producer manifest units, annotate without re-split.
+
+        unit_id stays Producer's. Per-unit LLM semantic checks are optional and
+        recorded; payload structure comes from verified line-range binding.
+        """
+        import json as _json
+
+        from app.domains.source.manifest_annotation import (
+            ManifestBindingError,
+            bind_units_from_manifest,
+            build_annotation_payload_from_bound,
+        )
+
+        manifest_path = Path(params["manifest_path"])
+        md_path = Path(params.get("source_md_path") or "")
+        if not manifest_path.exists():
+            raise ManifestBindingError(f"manifest not found: {manifest_path}")
+        if not md_path.exists():
+            raise ManifestBindingError(f"source markdown not found: {md_path}")
+
+        manifest = _json.loads(manifest_path.read_text(encoding="utf-8"))
+        source_lines = md_path.read_text(encoding="utf-8").splitlines()
+        source_content_sha256 = params.get("source_content_sha256") or ""
+
+        try:
+            bound = bind_units_from_manifest(
+                manifest,
+                source_lines,
+                source_content_sha256=source_content_sha256,
+            )
+            payload = build_annotation_payload_from_bound(
+                bound,
+                source_content_sha256=source_content_sha256,
+                manifest_identity_version=manifest.get("identity_version"),
+            )
+        except ManifestBindingError:
+            raise
+
+        # Per-unit LLM semantic checks (bounded, recorded). Does not replace binding.
+        llm_checks: list[dict] = []
+        max_checks = int(params.get("manifest_llm_checks", 3))
+        attempt_id = uuid.uuid4()
+        provider = params.get("llm_provider", self._default_provider)
+        model = params.get("llm_model", self._default_model)
+        for bu in bound[:max_checks]:
+            check_prompt = (
+                "你是题目语义核对助手。只输出 JSON：{\"ok\": true/false, \"note\": \"...\"}。\n"
+                f"单元 ID={bu.unit_id}，题号={bu.question_numbers}。\n"
+                f"绑定文本：\n{bu.bound_text[:1500]}\n"
+                "请判断该绑定文本是否对应上述题号的单一题目（不串题）。"
+            )
+            try:
+                async with self._session_factory() as s:
+                    from app.ai.executor import LLMExecutor
+
+                    ex = LLMExecutor(s, self._gateway)
+                    resp = await ex.complete(
+                        check_prompt,
+                        le_stage="ann_unit_check",
+                        le_hash=f"unit-check:{bu.bound_text_hash[:16]}",
+                        attempt_id=attempt_id,
+                        task_id=task_id,
+                        document_id=version.document_id,
+                        provider=provider,
+                        model=model,
+                    )
+                llm_checks.append(
+                    {"unit_id": bu.unit_id, "ok": True, "response_chars": len(resp or "")}
+                )
+            except Exception as exc:  # noqa: BLE001
+                llm_checks.append(
+                    {
+                        "unit_id": bu.unit_id,
+                        "ok": False,
+                        "error": f"{type(exc).__name__}: {exc}",
+                    }
+                )
+                # bounded failure: record and continue, do not retry storm
+
+        payload.setdefault("producer_boundary", {})["llm_unit_checks"] = llm_checks
+        payload["producer_boundary"]["input_mode"] = "manifest_units"
+        payload["producer_boundary"]["bound_unit_count"] = len(bound)
+
+        model_config_hash = sha256_hex(
+            {
+                "provider": provider,
+                "model": model,
+                "mode": "manifest_units",
+                "binding_schema": "m2r2-v2",  # bump when payload field contract changes
+                "source_content_sha256": source_content_sha256,
+            }
+        )
+        async with self._session_factory() as s:
+            from app.ai.executor import LLMExecutor
+            from app.domains.annotation.service import AnnotationService
+
+            ann = await AnnotationService(s, LLMExecutor(s, self._gateway)).annotate_from_payload(
+                source_version_id=version.id,
+                payload=payload,
+                model_config_hash=model_config_hash,
+                task_type=_TASK_TYPE,
+                attempt_id=attempt_id,
+                task_id=task_id,
+                document_id=version.document_id,
+                provider=provider,
+                model=model,
+            )
+            await s.commit()
+            return ann
+
     async def _annotation_stage(
         self,
         task_id: uuid.UUID,
         version: DocumentSourceVersion,
         params: dict,
     ) -> SemanticAnnotation:
+        # M2-R2: preprocessing manifest units are the authoritative unit source.
+        # Do NOT let LLM re-split the document or renumber Producer unit_ids.
+        if params.get("source_mode") == "preprocessing" and params.get("manifest_path"):
+            return await self._annotation_from_manifest_units(
+                task_id, version, params
+            )
+
         prompt = build_annotation_prompt(version.body_text)
         # 同一 Task Attempt 贯穿 primary + fallback（BUG-V3-035：fallback 不得改变 Task Attempt）。
         attempt_id = uuid.uuid4()

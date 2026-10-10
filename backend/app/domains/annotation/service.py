@@ -122,3 +122,60 @@ class AnnotationService:
         )
         await self._repo.flush()
         return ann
+
+    async def annotate_from_payload(
+        self,
+        *,
+        source_version_id: uuid.UUID,
+        payload: dict,
+        model_config_hash: str,
+        task_type: str = "document_ingest",
+        annotation_schema_version: str = ANNO_SCHEMA_VERSION,
+        prompt_version: str = ANN_PROMPT_VERSION,
+        attempt_id: uuid.UUID | None = None,
+        task_id: uuid.UUID | None = None,
+        document_id: uuid.UUID | None = None,
+        provider: str | None = None,
+        model: str | None = None,
+    ) -> SemanticAnnotation:
+        """Persist a pre-built annotation payload without LLM re-split (M2-R2).
+
+        Used by the formal preprocessing path where Producer manifest units are
+        the authoritative unit source. Same LE hash / validation / persist rules
+        as annotate(); no LLM call is made.
+        """
+        le_hash = logical_execution_hash(
+            task_type=task_type,
+            stage=_STAGE,
+            contract_domain={
+                "annotation_schema_version": annotation_schema_version,
+                "prompt_version": prompt_version,
+                "model_config_hash": model_config_hash,
+            },
+            input_domain={"source_version_id": str(source_version_id)},
+        )
+        existing = await self._repo.find_annotation_by_le_hash(
+            logical_execution_stage=_STAGE, logical_execution_hash=le_hash
+        )
+        if existing is not None:
+            return existing
+
+        ok, violations = validate_annotation_payload(payload)
+        if not ok:
+            raise ValueError(
+                f"annotation payload contains forbidden fields: {violations}"
+            )
+
+        ann = await self._repo.create_semantic_annotation(
+            source_version_id=source_version_id,
+            annotation_schema_version=annotation_schema_version,
+            prompt_version=prompt_version,
+            model_config_hash=model_config_hash,
+            payload=payload,
+            status="valid",
+            logical_execution_stage=_STAGE,
+            logical_execution_hash=le_hash,
+            attempt_id=attempt_id,
+        )
+        await self._repo.flush()
+        return ann

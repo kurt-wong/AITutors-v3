@@ -225,6 +225,10 @@ class PreprocessingImportService:
             original_path.write_bytes(package.original_bytes)
         md_path = import_dir / f"{original_sha256}.source.md"
         md_path.write_bytes(package.source_md)
+        manifest_path = import_dir / f"{original_sha256}.manifest.json"
+        manifest_path.write_text(
+            json.dumps(package.manifest, ensure_ascii=False), encoding="utf-8"
+        )
 
         # Seal with preprocessing extractor. SealService derives Document from
         # original file bytes → original_sha256 stays the original-document identity.
@@ -243,6 +247,7 @@ class PreprocessingImportService:
             role="preprocessing",
             provider="preprocessing",
             extractor=extractor.extract,
+            line_mode="raw_1to1",
         )
         await self._session.flush()
 
@@ -274,6 +279,7 @@ class PreprocessingImportService:
                 "source_mode": "preprocessing",
                 "source_content_sha256": source_content_sha256,
                 "source_md_path": str(md_path),
+                "manifest_path": str(manifest_path),
                 "source_version_id": str(version.id),
                 "role": "preprocessing",
                 "seal_provider": "preprocessing",

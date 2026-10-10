@@ -41,11 +41,10 @@ class PreprocessingTextExtractor:
         text = self._source_md.decode("utf-8")
         raw_lines = text.splitlines()
         lines: list[OCRLine] = []
+        # Preserve 1:1 raw markdown line numbering (including blank lines) so
+        # Producer manifest stem_lines/answer_lines bind correctly (M2-R2).
         for i, raw in enumerate(raw_lines, start=1):
-            # Keep empty lines as structural separators only if non-ws exists.
             content = raw.rstrip("\n")
-            if content.strip() == "":
-                continue
             lines.append(OCRLine(text=content, page_no=1, bbox=None, spans=()))
 
         source_meta = {

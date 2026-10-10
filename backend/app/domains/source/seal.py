@@ -74,11 +74,13 @@ class SealService:
         role: str,
         provider: str,
         extractor: Extractor,
+        line_mode: str = "default",
     ) -> DocumentSourceVersion:
         """返回 sealed DocumentSourceVersion（幂等：同文件+同 role/provider/contract → 既有行）。
 
         role/provider 为 seal 执行契约的一部分（10 §4.2 role / §4.3 provider 语义），
         extractor 必须与 role/provider 一致（native 本地确定性 / cloud 经 OCRGateway）。
+        line_mode 进入 LE hash：raw_1to1 = 保留 markdown 原始行号（含空行）。
         """
         validate_seal_role_provider(role, provider)
         original_sha256 = hashlib.sha256(file_bytes).hexdigest()
@@ -101,7 +103,7 @@ class SealService:
             stage=_STAGE,
             contract_domain={
                 "seal_contract_version": SEAL_CONTRACT_VERSION,
-                "parser": {"provider": provider, "role": role},
+                "parser": {"provider": provider, "role": role, "line_mode": line_mode},
             },
             input_domain={"original_sha256": original_sha256},
         )
