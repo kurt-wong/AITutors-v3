@@ -62,6 +62,13 @@ class BoundUnit:
     bound_text_hash: str
     section: str | None = None
     printed_number: int | None = None
+    # GEO-SUBQ: deterministic per-question expansion (payload-ready sub entries).
+    # Empty when not expandable — never a fake single-question over a multi-q range.
+    sub_questions: list[dict] = field(default_factory=list)
+    subq_skipped: dict[int, str] = field(default_factory=dict)
+    subq_unit_reason: str | None = None
+    # material marker dict for shared_components (resolver needs marker text).
+    material_shared: dict = field(default_factory=dict)
 
 
 def _sha256_text(text: str) -> str:
@@ -167,8 +174,70 @@ def bind_units_from_manifest(
                 printed_number=printed_i,
             )
         )
+        # GEO-SUBQ: deterministic sub-question expansion (fail-closed per sub).
+        _expand_subs(bound[-1], source_lines)
+        _bind_material_marker(bound[-1], source_lines)
 
     return bound
+
+
+def _bind_material_marker(bu: "BoundUnit", source_lines: list[str]) -> None:
+    """Declare resolver-locatable marker text for shared material.
+
+    Resolver's _material_span resolves a marker text to a line span. For
+    multi-line material, multi_line_pair takes the EXCLUSIVE interior (markers
+    themselves are excluded) — wrong for inclusive manifest ranges. Use the
+    first non-empty material line as a single-line marker instead: the shared
+    component then resolves deterministically without inventing boundaries.
+    """
+    rng = bu.ranges.get("material")
+    if rng is None:
+        return
+    n = len(source_lines)
+    for i in range(rng.start, rng.end + 1):
+        if 1 <= i <= n:
+            text = source_lines[i - 1].strip()
+            if text:
+                bu.material_shared = {
+                    "role": "material",
+                    "start_marker": {"text": text, "granularity": "line"},
+                }
+                return
+
+
+def _expand_subs(bu: "BoundUnit", source_lines: list[str]) -> None:
+    """Attach deterministic sub_questions to a multi-q composite BoundUnit.
+
+    Only proven structure (题号→题干→A-D→答案表) is emitted; anything ambiguous
+    is skipped per question. short_answer / non-choice stays unexpanded.
+    """
+    from app.domains.source.subq_expand import (
+        expand_composite_sub_questions,
+        specs_to_payload_subs,
+    )
+
+    q_range = None
+    if bu.ranges.get("stem") is not None:
+        q_range = (bu.ranges["stem"].start, bu.ranges["stem"].end)
+    a_range = None
+    if bu.ranges.get("answer") is not None:
+        a_range = (bu.ranges["answer"].start, bu.ranges["answer"].end)
+
+    result = expand_composite_sub_questions(
+        source_lines,
+        question_numbers=bu.question_numbers,
+        questions_range=q_range,
+        answer_range=a_range,
+        original_question_type=bu.original_question_type,
+    )
+    bu.subq_unit_reason = result.unit_reason
+    bu.subq_skipped = dict(result.skipped)
+    if result.sub_questions:
+        bu.sub_questions = specs_to_payload_subs(
+            bu.unit_id,
+            result.sub_questions,
+            original_question_type=bu.original_question_type,
+        )
 
 
 def build_annotation_payload_from_bound(
@@ -262,16 +331,21 @@ def build_annotation_payload_from_bound(
 
         # composite_question → composite_unit
         # - 单题（len(question_numbers)==1）：questions 区间 1:1 译为一个子题。
-        # - 多题（如 1-2）且 Producer 未声明子题边界：**禁止**合成假单题
-        #   （stem 覆盖材料+多题是错误断言）。保留 material + 题组证据，
-        #   sub_questions 留空 → IR 判 incomplete，安全拒绝，不入库。
+        # - 多题：优先用 GEO-SUBQ 确定性展开结果（sub_questions 已逐题带证据）；
+        #   未展开则 sub_questions 留空 → IR 判 incomplete，安全拒绝，不入库。
+        #   禁止合成假单题（stem 覆盖材料+多题是错误断言）。
         if norm.canonical_unit_type == "composite_unit":
             shared: dict[str, Any] = {}
             if bu.ranges["material"] is not None:
-                shared["material"] = {"role": "material"}
+                # GEO-SUBQ: use marker-carrying material so the resolver can
+                # actually bind the shared component (was bare {"role": ...}).
+                shared["material"] = bu.material_shared or {"role": "material"}
             n_q = len(bu.question_numbers)
             subs: list[dict[str, Any]] = []
-            if n_q == 1:
+            if bu.sub_questions:
+                # Deterministic expansion already payload-shaped (stem/options/answer).
+                subs = list(bu.sub_questions)
+            elif n_q == 1:
                 subs = [
                     {
                         "unit_id": f"{bu.unit_id}.sub",
@@ -294,7 +368,7 @@ def build_annotation_payload_from_bound(
                 "shared_components": shared,
                 "sub_questions": subs,
             }
-            if n_q > 1:
+            if n_q > 1 and not subs:
                 # 题组证据（不冒充单题）：行区间 + 题号列表
                 unit_out["group_evidence"] = {
                     "question_numbers": list(bu.question_numbers),
@@ -314,6 +388,8 @@ def build_annotation_payload_from_bound(
                         else None
                     ),
                     "structure": "undetermined_sub_questions",
+                    "subq_unit_reason": bu.subq_unit_reason,
+                    "subq_skipped": {str(k): v for k, v in bu.subq_skipped.items()},
                 }
             semantic_units.append(unit_out)
         else:

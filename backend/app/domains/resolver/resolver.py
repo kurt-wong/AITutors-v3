@@ -45,15 +45,16 @@ def _raw_sha256(s: str) -> str:
 
 # 行内条目形态：题号 token + 分隔符（bounded，防 qn=1 误配 "10."）。offset 基于 raw text。
 # 兼容 Markdown escaped-dot（`27\\. A` ≡ `27. A`），与 is_question_start v1.2 同界。
-_ENTRY_RE = re.compile(r"(?<![\d])(\d{1,3})\s*(?:\\[.．、:]|[.．、:])")
+# GEO-SUBQ：OCR 分隔符变体 `·`/`，`（实测 `15·`/`20，`）同等对待。
+_ENTRY_RE = re.compile(r"(?<![\d])(\d{1,3})\s*(?:\\[.．、:·，]|[.．、:·，])")
 
 # 行中题号入口（真实卷拼接形态）：
 #   …完成 16~17 题。16. 北京…     —— 句号后紧接题号
 #   …完成26－2926.优化…           —— 区间尾数字后紧接题号（OCR 无分隔拼接）
 # 仅在查找「已声明的特定题号」时使用，不开放任意行中数字为题号。
-_MID_SENTENCE_QN_RE_T = r"。{qn}\s*(?:\\[.．、:]|[.．、:])"
+_MID_SENTENCE_QN_RE_T = r"。{qn}\s*(?:\\[.．、:·，]|[.．、:·，])"
 _MID_RANGE_QN_RE_T = (
-    r"(?<![\d]){qn}\s*[－~—–-]\s*\d{{1,3}}\s*{qn}\s*(?:\\[.．、:]|[.．、:])"
+    r"(?<![\d]){qn}\s*[－~—–-]\s*\d{{1,3}}\s*{qn}\s*(?:\\[.．、:·，]|[.．、:·，])"
 )
 
 
@@ -189,7 +190,9 @@ def decode_answer_table_cell(raw: str, qn: str) -> tuple[int, int, str] | None:
 
 # 行内选项标签（bounded，防 "对A项" 误配随机大写；需标签+分隔符）。
 # 全角逗号 `，`：真实卷 `C. 水土流失 D，物种减少`（U44-46）。格式兼容，非 heuristic。
-_LABEL_RE = re.compile(r"(?<![\w])([A-Ha-h])\s*[.．、:，,)）]")
+# GEO-SUBQ：紧凑组合选项 `A.①②B.①④` 的圈号紧贴下一标签；`②` 属 \\w 会挡住
+# `(?<![\w])`，改为仅排除 ASCII 词符 + CJK 汉字（防 `对A`/`则A`），圈号不再误挡。
+_LABEL_RE = re.compile(r"(?<![A-Za-z0-9_一-鿿])([A-Ha-h])\s*[.．、:，,)）]")
 # P1.4-B Rule B：digit-glued `2D.`（数学 Q4）。clean lookbehind `(?<![\w])` 会因
 # 前置 `2` 而漏检，故单独识别。NOT `2\cos…`（字母后无分隔符）。
 _LABEL_DIGIT_GLUE_RE = re.compile(r"(?<![A-Za-z0-9_])(\d)([A-H])\s*[.．、]")

@@ -67,8 +67,10 @@ def is_question_start(normalized_line: str) -> str | None:
     v1.2：兼容 Markdown escaped-dot（`21\\. xxx` ≡ `21. xxx`）。Producer
     OCR→markdown 常见形态；源文不变，仅 Question entry recognition 等价。
     仅接受 `\\` 紧跟分隔符——`21\\xxx` / `21\\` 不得误判为题号入口。
+    GEO-SUBQ：OCR 分隔符变体 `·`/`，`（实测 `15·`/`20，`）与既有
+    `[.．、:]` 同等作为题号分隔，非地理特例。`，` 经 fold_full_width 归一为 `,`。
     """
-    m = re.match(r"^(\d{1,3})\s*(?:\\[.．、:]|[.．、:]|\s|$)", normalized_line)
+    m = re.match(r"^(\d{1,3})\s*(?:\\[.．、:·,，]|[.．、:·,，]|\s|$)", normalized_line)
     return m.group(1) if m else None
 
 
