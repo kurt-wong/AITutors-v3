@@ -528,6 +528,19 @@ class TaskExecutor:
         from app.domains.source.funnel_recorder import FunnelRecorder
 
         funnel = FunnelRecorder(package_id=f"sv-{version.id}")
+        # 最小追溯：run_id + 输入哈希（源 md / 任务参数中的 manifest 路径）
+        run_id = f"{ann.id}-{uuid.uuid4().hex[:8]}"
+        input_hashes = {
+            "annotation_id": str(ann.id),
+            "source_version_id": str(version.id),
+            "source_body_hash": getattr(version, "body_hash", None),
+            "source_content_sha256": (getattr(version, "source_meta", None) or {}).get(
+                "source_content_sha256"
+            )
+            if isinstance(getattr(version, "source_meta", None), dict)
+            else None,
+        }
+        funnel.set_run_identity(run_id, input_hashes)
         async with self._session_factory() as s:
             candidates, skipped = await GateService(s).run(
                 source_version_id=version.id,
@@ -540,8 +553,8 @@ class TaskExecutor:
         funnel.note(
             f"compile_stage candidates={len(candidates)} skipped={len(skipped)}"
         )
-        # Formal-path observability: persist per-unit skip/failure outcomes.
-        out = _Path("data/funnels") / f"{ann.id}.json"
+        # Formal-path observability: persist per-run funnel (filename includes run_id).
+        out = _Path("data/funnels") / f"{ann.id}_{run_id}.json"
         try:
             funnel.write(out)
         except OSError:

@@ -33,6 +33,8 @@ class FunnelRecorder:
     counts: dict[str, int] = field(default_factory=lambda: {s: 0 for s in STAGES})
     failures: list[dict] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
+    run_id: str | None = None
+    input_hashes: dict = field(default_factory=dict)
 
     def set(self, stage: str, n: int) -> None:
         if stage not in self.counts:
@@ -41,6 +43,14 @@ class FunnelRecorder:
 
     def bump(self, stage: str, n: int = 1) -> None:
         self.set(stage, self.counts[stage] + n)
+
+    def set_run_identity(
+        self, run_id: str, input_hashes: dict | None = None
+    ) -> None:
+        """Bind this funnel to one run: run_id + input md/manifest/pdf hashes."""
+        self.run_id = run_id
+        if input_hashes:
+            self.input_hashes = dict(input_hashes)
 
     def fail_unit(self, unit_id: str, stage: str, reason: str) -> None:
         self.failures.append(
@@ -72,17 +82,19 @@ class FunnelRecorder:
         self.notes.append(text)
 
     def to_dict(self) -> dict:
+        # pending_review ⊆ ir_ready（候选子集），不得从 input 再扣一次；
+        # unexplained_loss = 无失败记录且未就绪的单元。
+        explained = self.counts["ir_ready"] + len(self.failures)
         return {
             "package_id": self.package_id,
+            "run_id": self.run_id,
+            "input_hashes": self.input_hashes,
             "started_at": self.started_at,
             "finished_at": datetime.now(timezone.utc).isoformat(),
             "stages": self.counts,
             "failures": self.failures,
             "notes": self.notes,
-            "unexplained_loss": self.counts["input_units"]
-            - self.counts["ir_ready"]
-            - self.counts["pending_review"]
-            - len(self.failures),
+            "unexplained_loss": max(0, self.counts["input_units"] - explained),
         }
 
     def write(self, path: Path) -> Path:
