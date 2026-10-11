@@ -1,0 +1,3143 @@
+{
+  "summary": {
+    "total": 18,
+    "pending_review": 16,
+    "rejected": 2,
+    "db": "aitutors_geo_subq_v2"
+  },
+  "items": [
+    {
+      "id": "25abb720-13dc-4d2e-a674-e20507ad6ac0",
+      "unit_type": "standalone_unit",
+      "decision_status": "pending_review",
+      "question_ref": "U-cl1",
+      "all_refs": [
+        "U-cl1"
+      ],
+      "gate_reasons": [
+        "leaf 'U-cl1' type 'fill_in' not strict-auto (grammar None)"
+      ],
+      "gate_layers": {
+        "semantic": {
+          "status": "pass",
+          "reasons": []
+        },
+        "admission": {
+          "status": "fail",
+          "reasons": [
+            "leaf 'U-cl1' type 'fill_in' not strict-auto (grammar None)"
+          ]
+        },
+        "provenance": {
+          "status": "pass",
+          "reasons": []
+        },
+        "structural": {
+          "status": "pass",
+          "reasons": []
+        }
+      },
+      "stem": "1. （4分）农历九月初九是重阳节，也叫敬老节，有人制作重阳糕孝敬老人。制作重阳糕的部分原料如下：①糯米粉、②红枣、③植物油、④白糖。请回答：\n\n（1）富含淀粉的是 ___ （填序号，下同）。\n\n（2）富含油脂的是___。\n\n（3）富含维生素的是___。\n\n（4）属于调味剂的是O。\n",
+      "options": [],
+      "answer": "1. (4分，每空1分)\n\n（1）①（2）③（3）②（4）④",
+      "explanation": "",
+      "material_info": {
+        "is_composite": false,
+        "unit_type": "standalone_unit",
+        "leaf_count": 1,
+        "leaf_ids": [
+          "U-cl1"
+        ]
+      },
+      "evidence": [],
+      "raw_lines": [
+        {
+          "line_ref": "P1L291",
+          "text": "1. （4分）农历九月初九是重阳节，也叫敬老节，有人制作重阳糕孝敬老人。制作重阳糕的部分原料如下：①糯米粉、②红枣、③植物油、④白糖。请回答：",
+          "page": 1,
+          "line": 291
+        },
+        {
+          "line_ref": "P1L292",
+          "text": "",
+          "page": 1,
+          "line": 292
+        },
+        {
+          "line_ref": "P1L293",
+          "text": "（1）富含淀粉的是 ___ （填序号，下同）。",
+          "page": 1,
+          "line": 293
+        },
+        {
+          "line_ref": "P1L294",
+          "text": "",
+          "page": 1,
+          "line": 294
+        },
+        {
+          "line_ref": "P1L295",
+          "text": "（2）富含油脂的是___。",
+          "page": 1,
+          "line": 295
+        },
+        {
+          "line_ref": "P1L296",
+          "text": "",
+          "page": 1,
+          "line": 296
+        },
+        {
+          "line_ref": "P1L297",
+          "text": "（3）富含维生素的是___。",
+          "page": 1,
+          "line": 297
+        },
+        {
+          "line_ref": "P1L298",
+          "text": "",
+          "page": 1,
+          "line": 298
+        },
+        {
+          "line_ref": "P1L299",
+          "text": "（4）属于调味剂的是O。",
+          "page": 1,
+          "line": 299
+        },
+        {
+          "line_ref": "P1L300",
+          "text": "",
+          "page": 1,
+          "line": 300
+        },
+        {
+          "line_ref": "P1L566",
+          "text": "1. (4分，每空1分)",
+          "page": 1,
+          "line": 566
+        },
+        {
+          "line_ref": "P1L567",
+          "text": "",
+          "page": 1,
+          "line": 567
+        },
+        {
+          "line_ref": "P1L568",
+          "text": "（1）①（2）③（3）②（4）④",
+          "page": 1,
+          "line": 568
+        }
+      ],
+      "created_at": "2026-10-11 11:33:14.362627+00:00"
+    },
+    {
+      "id": "2332659a-a1f3-4044-ab27-3527c0e5b887",
+      "unit_type": "standalone_unit",
+      "decision_status": "pending_review",
+      "question_ref": "U-cl2",
+      "all_refs": [
+        "U-cl2"
+      ],
+      "gate_reasons": [
+        "leaf 'U-cl2' answer grammar: answer not expressible as canonical value"
+      ],
+      "gate_layers": {
+        "semantic": {
+          "status": "pass",
+          "reasons": []
+        },
+        "admission": {
+          "status": "fail",
+          "reasons": [
+            "leaf 'U-cl2' answer grammar: answer not expressible as canonical value"
+          ]
+        },
+        "provenance": {
+          "status": "pass",
+          "reasons": []
+        },
+        "structural": {
+          "status": "pass",
+          "reasons": []
+        }
+      },
+      "stem": "2. （8分）阅读短文，回答问题。\n",
+      "options": [
+        {
+          "label": "A",
+          "text": "化学是自然科学的重要组成部分，其特征是从微观层次认识物质，在不同层面创造物质。化学的魅力是在自然界的基础上，创造一个全新的世界。",
+          "span_id": "sp-U-cl2.option.A"
+        },
+        {
+          "label": "B",
+          "text": "纵观化学发展史可知，青铜与铁是青铜时代和铁器时代人类创造的新材料，酿酒和发酵工艺是原始的食品化学工艺，药物的发现和提纯工艺是早期药物化学。近现代以来，合成化学在无机、有机、催化、高分子和超分子等领域得到了蓬勃发展，其产物广泛应用在纳米材料、医药、航空、航天及军事等领域。",
+          "span_id": "sp-U-cl2.option.B"
+        },
+        {
+          "label": "C",
+          "text": "化学是揭示元素到生命奥秘的核心力量，其核心技术就是通过对分子层面的操纵创造物质。化学在促进人类文明可持续发展中发挥着日益重要的作用！",
+          "span_id": "sp-U-cl2.option.C"
+        },
+        {
+          "label": "D",
+          "text": "请依据以上短文，判断下列说法是否正确（填“对”或“错”）。",
+          "span_id": "sp-U-cl2.option.D"
+        }
+      ],
+      "answer": "2.（8分，每空2分）\n\n（1）对 （2）对 （3）对 （4）对",
+      "explanation": "",
+      "material_info": {
+        "is_composite": false,
+        "unit_type": "standalone_unit",
+        "leaf_count": 1,
+        "leaf_ids": [
+          "U-cl2"
+        ]
+      },
+      "evidence": [],
+      "raw_lines": [
+        {
+          "line_ref": "P1L301",
+          "text": "2. （8分）阅读短文，回答问题。",
+          "page": 1,
+          "line": 301
+        },
+        {
+          "line_ref": "P1L302",
+          "text": "",
+          "page": 1,
+          "line": 302
+        },
+        {
+          "line_ref": "P1L303",
+          "text": "化学是自然科学的重要组成部分，其特征是从微观层次认识物质，在不同层面创造物质。化学的魅力是在自然界的基础上，创造一个全新的世界。",
+          "page": 1,
+          "line": 303
+        },
+        {
+          "line_ref": "P1L305",
+          "text": "纵观化学发展史可知，青铜与铁是青铜时代和铁器时代人类创造的新材料，酿酒和发酵工艺是原始的食品化学工艺，药物的发现和提纯工艺是早期药物化学。近现代以来，合成化学在无机、有机、催化、高分子和超分子等领域得到了蓬勃发展，其产物广泛应用在纳米材料、医药、航空、航天及军事等领域。",
+          "page": 1,
+          "line": 305
+        },
+        {
+          "line_ref": "P1L307",
+          "text": "化学是揭示元素到生命奥秘的核心力量，其核心技术就是通过对分子层面的操纵创造物质。化学在促进人类文明可持续发展中发挥着日益重要的作用！",
+          "page": 1,
+          "line": 307
+        },
+        {
+          "line_ref": "P1L309",
+          "text": "请依据以上短文，判断下列说法是否正确（填“对”或“错”）。",
+          "page": 1,
+          "line": 309
+        },
+        {
+          "line_ref": "P1L570",
+          "text": "2.（8分，每空2分）",
+          "page": 1,
+          "line": 570
+        },
+        {
+          "line_ref": "P1L571",
+          "text": "",
+          "page": 1,
+          "line": 571
+        },
+        {
+          "line_ref": "P1L572",
+          "text": "（1）对 （2）对 （3）对 （4）对",
+          "page": 1,
+          "line": 572
+        }
+      ],
+      "created_at": "2026-10-11 11:33:14.366634+00:00"
+    },
+    {
+      "id": "ed0dcf50-f530-46d2-9871-496939fd82a7",
+      "unit_type": "standalone_unit",
+      "decision_status": "pending_review",
+      "question_ref": "U-cl3",
+      "all_refs": [
+        "U-cl3"
+      ],
+      "gate_reasons": [
+        "leaf 'U-cl3' type 'short_answer' not strict-auto (grammar None)"
+      ],
+      "gate_layers": {
+        "semantic": {
+          "status": "pass",
+          "reasons": []
+        },
+        "admission": {
+          "status": "fail",
+          "reasons": [
+            "leaf 'U-cl3' type 'short_answer' not strict-auto (grammar None)"
+          ]
+        },
+        "provenance": {
+          "status": "pass",
+          "reasons": []
+        },
+        "structural": {
+          "status": "pass",
+          "reasons": []
+        }
+      },
+      "stem": "3. （8分）水体中植物营养素过多蓄积会加速藻类和其他浮游生物的大量繁殖，使水质恶化。利用微生物对含氮废水进行处理的流程如下：\n\n<div style=\"text-align: center;\"><img src=\"../../_imgs/2018北京春季高中会考化学（教师版）(1)/img_in_image_box_101_1238_890_1298.jpg\" alt=\"Image\" width=\"66%\" /></div>\n\n\n请回答：\n\n（1）造成水体富营养化的元素有氮元素和___（填字母）。\n\na. 磷元素\n\nb. 氧元素\n\n（2）根据图1和图2，推断使用亚硝化菌的最佳条件为___。\n\n---\n\n<div style=\"text-align: center;\"><img src=\"../../_imgs/2018北京春季高中会考化学（教师版）(1)/img_in_chart_box_98_87_453_274.jpg\" alt=\"Image\" width=\"29%\" /></div>\n\n\n<div style=\"text-align: center;\">图1</div>\n\n\n<div style=\"text-align: center;\"><img src=\"../../_imgs/2018北京春季高中会考化学（教师版）(1)/img_in_chart_box_449_88_921_272.jpg\" alt=\"Image\" width=\"39%\" /></div>\n\n\n<div style=\"text-align: center;\">图2</div>\n\n\n（3）过程③，发生化合反应的化学方程式为___。\n\n（4）利用微生物处理含氮废水的优点为___。\n\n《有机化学基础》模块试题\n",
+      "options": [],
+      "answer": "3.（8分，每空2分）\n\n（1）a\n\n（2）pH=8、 $ 32^{\\circ} $C\n\n硝化菌\n\n(3) $ 2HNO_{2}+O_{2}\\xlongequal{\\Delta}2HNO_{3} $\n\n（4）反应条件温和；终产物无污染；过程中使用的物质无毒、无害",
+      "explanation": "",
+      "material_info": {
+        "is_composite": false,
+        "unit_type": "standalone_unit",
+        "leaf_count": 1,
+        "leaf_ids": [
+          "U-cl3"
+        ]
+      },
+      "evidence": [],
+      "raw_lines": [
+        {
+          "line_ref": "P1L319",
+          "text": "3. （8分）水体中植物营养素过多蓄积会加速藻类和其他浮游生物的大量繁殖，使水质恶化。利用微生物对含氮废水进行处理的流程如下：",
+          "page": 1,
+          "line": 319
+        },
+        {
+          "line_ref": "P1L320",
+          "text": "",
+          "page": 1,
+          "line": 320
+        },
+        {
+          "line_ref": "P1L321",
+          "text": "<div style=\"text-align: center;\"><img src=\"../../_imgs/2018北京春季高中会考化学（教师版）(1)/img_in_image_box_101_1238_890_1298.jpg\" alt=\"Image\" width=\"66%\" /></div>",
+          "page": 1,
+          "line": 321
+        },
+        {
+          "line_ref": "P1L322",
+          "text": "",
+          "page": 1,
+          "line": 322
+        },
+        {
+          "line_ref": "P1L323",
+          "text": "",
+          "page": 1,
+          "line": 323
+        },
+        {
+          "line_ref": "P1L324",
+          "text": "请回答：",
+          "page": 1,
+          "line": 324
+        },
+        {
+          "line_ref": "P1L325",
+          "text": "",
+          "page": 1,
+          "line": 325
+        },
+        {
+          "line_ref": "P1L326",
+          "text": "（1）造成水体富营养化的元素有氮元素和___（填字母）。",
+          "page": 1,
+          "line": 326
+        },
+        {
+          "line_ref": "P1L327",
+          "text": "",
+          "page": 1,
+          "line": 327
+        },
+        {
+          "line_ref": "P1L328",
+          "text": "a. 磷元素",
+          "page": 1,
+          "line": 328
+        },
+        {
+          "line_ref": "P1L329",
+          "text": "",
+          "page": 1,
+          "line": 329
+        },
+        {
+          "line_ref": "P1L330",
+          "text": "b. 氧元素",
+          "page": 1,
+          "line": 330
+        },
+        {
+          "line_ref": "P1L331",
+          "text": "",
+          "page": 1,
+          "line": 331
+        },
+        {
+          "line_ref": "P1L332",
+          "text": "（2）根据图1和图2，推断使用亚硝化菌的最佳条件为___。",
+          "page": 1,
+          "line": 332
+        },
+        {
+          "line_ref": "P1L333",
+          "text": "",
+          "page": 1,
+          "line": 333
+        },
+        {
+          "line_ref": "P1L334",
+          "text": "---",
+          "page": 1,
+          "line": 334
+        },
+        {
+          "line_ref": "P1L335",
+          "text": "",
+          "page": 1,
+          "line": 335
+        },
+        {
+          "line_ref": "P1L336",
+          "text": "<div style=\"text-align: center;\"><img src=\"../../_imgs/2018北京春季高中会考化学（教师版）(1)/img_in_chart_box_98_87_453_274.jpg\" alt=\"Image\" width=\"29%\" /></div>",
+          "page": 1,
+          "line": 336
+        },
+        {
+          "line_ref": "P1L337",
+          "text": "",
+          "page": 1,
+          "line": 337
+        },
+        {
+          "line_ref": "P1L338",
+          "text": "",
+          "page": 1,
+          "line": 338
+        },
+        {
+          "line_ref": "P1L339",
+          "text": "<div style=\"text-align: center;\">图1</div>",
+          "page": 1,
+          "line": 339
+        },
+        {
+          "line_ref": "P1L340",
+          "text": "",
+          "page": 1,
+          "line": 340
+        },
+        {
+          "line_ref": "P1L341",
+          "text": "",
+          "page": 1,
+          "line": 341
+        },
+        {
+          "line_ref": "P1L342",
+          "text": "<div style=\"text-align: center;\"><img src=\"../../_imgs/2018北京春季高中会考化学（教师版）(1)/img_in_chart_box_449_88_921_272.jpg\" alt=\"Image\" width=\"39%\" /></div>",
+          "page": 1,
+          "line": 342
+        },
+        {
+          "line_ref": "P1L343",
+          "text": "",
+          "page": 1,
+          "line": 343
+        },
+        {
+          "line_ref": "P1L344",
+          "text": "",
+          "page": 1,
+          "line": 344
+        },
+        {
+          "line_ref": "P1L345",
+          "text": "<div style=\"text-align: center;\">图2</div>",
+          "page": 1,
+          "line": 345
+        },
+        {
+          "line_ref": "P1L346",
+          "text": "",
+          "page": 1,
+          "line": 346
+        },
+        {
+          "line_ref": "P1L347",
+          "text": "",
+          "page": 1,
+          "line": 347
+        },
+        {
+          "line_ref": "P1L348",
+          "text": "（3）过程③，发生化合反应的化学方程式为___。",
+          "page": 1,
+          "line": 348
+        }
+      ],
+      "created_at": "2026-10-11 11:33:14.370515+00:00"
+    },
+    {
+      "id": "888e856f-5d40-4503-802e-a82c7ff72199",
+      "unit_type": "standalone_unit",
+      "decision_status": "pending_review",
+      "question_ref": "Q26",
+      "all_refs": [
+        "Q26"
+      ],
+      "gate_reasons": [
+        "leaf 'Q26' type 'short_answer' not strict-auto (grammar None)"
+      ],
+      "gate_layers": {
+        "semantic": {
+          "status": "pass",
+          "reasons": []
+        },
+        "admission": {
+          "status": "fail",
+          "reasons": [
+            "leaf 'Q26' type 'short_answer' not strict-auto (grammar None)"
+          ]
+        },
+        "provenance": {
+          "status": "pass",
+          "reasons": []
+        },
+        "structural": {
+          "status": "pass",
+          "reasons": []
+        }
+      },
+      "stem": "26. 已知  $ \\theta \\in (\\frac{\\pi}{2}, \\pi) $，且  $ \\sin \\theta = \\frac{3}{5} $.\n\n（Ⅰ） $ \\tan\\theta= $___；\n\n（Ⅱ）求 $ \\cos\\left(\\theta+\\frac{\\pi}{3}\\right) $的值.\n",
+      "options": [],
+      "answer": "26.\n\n【考点】三角函数的化简求值.\n\n【分析】（Ⅰ）由条件利用同角三角函数的基本关系，求得  $ \\cos\\theta $ 的值，可得  $ \\tan\\theta $ 的值.\n\n---\n\n（Ⅱ）由条件利用两角和的余弦公式，求得  $ \\cos\\left(\\theta+\\frac{\\pi}{3}\\right) $ 的值.\n\n【解答】解：（Ⅰ）∵ θ ∈ （ $ \\frac{\\pi}{2} $，π），且 sin θ =  $ \\frac{3}{5} $，∴cos θ =  $ -\\sqrt{1 - \\sin^2 \\theta} = -\\frac{4}{5} $，∴ tan θ = - $ \\frac{3}{4} $，故答案为：- $ \\frac{3}{4} $。\n\n（Ⅱ）∵ cos （θ +  $ \\frac{\\pi}{2} $）= cos θ cos  $ \\frac{\\pi}{2} $ - sin θ sin  $ \\frac{\\pi}{2} $ = - $ \\frac{4}{4} $， $ \\frac{1}{2} $ -  $ \\frac{3}{3} $， $ \\frac{\\sqrt{3}}{2} $ -  $ \\frac{4 + 3\\sqrt{3}}{3} $",
+      "explanation": "",
+      "material_info": {
+        "is_composite": false,
+        "unit_type": "standalone_unit",
+        "leaf_count": 1,
+        "leaf_ids": [
+          "Q26"
+        ]
+      },
+      "evidence": [],
+      "raw_lines": [
+        {
+          "line_ref": "P1L157",
+          "text": "26. 已知  $ \\theta \\in (\\frac{\\pi}{2}, \\pi) $，且  $ \\sin \\theta = \\frac{3}{5} $.",
+          "page": 1,
+          "line": 157
+        },
+        {
+          "line_ref": "P1L158",
+          "text": "",
+          "page": 1,
+          "line": 158
+        },
+        {
+          "line_ref": "P1L159",
+          "text": "（Ⅰ） $ \\tan\\theta= $___；",
+          "page": 1,
+          "line": 159
+        },
+        {
+          "line_ref": "P1L160",
+          "text": "",
+          "page": 1,
+          "line": 160
+        },
+        {
+          "line_ref": "P1L161",
+          "text": "（Ⅱ）求 $ \\cos\\left(\\theta+\\frac{\\pi}{3}\\right) $的值.",
+          "page": 1,
+          "line": 161
+        },
+        {
+          "line_ref": "P1L162",
+          "text": "",
+          "page": 1,
+          "line": 162
+        },
+        {
+          "line_ref": "P1L579",
+          "text": "26.",
+          "page": 1,
+          "line": 579
+        },
+        {
+          "line_ref": "P1L580",
+          "text": "",
+          "page": 1,
+          "line": 580
+        },
+        {
+          "line_ref": "P1L581",
+          "text": "【考点】三角函数的化简求值.",
+          "page": 1,
+          "line": 581
+        },
+        {
+          "line_ref": "P1L582",
+          "text": "",
+          "page": 1,
+          "line": 582
+        },
+        {
+          "line_ref": "P1L583",
+          "text": "【分析】（Ⅰ）由条件利用同角三角函数的基本关系，求得  $ \\cos\\theta $ 的值，可得  $ \\tan\\theta $ 的值.",
+          "page": 1,
+          "line": 583
+        },
+        {
+          "line_ref": "P1L584",
+          "text": "",
+          "page": 1,
+          "line": 584
+        },
+        {
+          "line_ref": "P1L585",
+          "text": "---",
+          "page": 1,
+          "line": 585
+        },
+        {
+          "line_ref": "P1L586",
+          "text": "",
+          "page": 1,
+          "line": 586
+        },
+        {
+          "line_ref": "P1L587",
+          "text": "（Ⅱ）由条件利用两角和的余弦公式，求得  $ \\cos\\left(\\theta+\\frac{\\pi}{3}\\right) $ 的值.",
+          "page": 1,
+          "line": 587
+        },
+        {
+          "line_ref": "P1L588",
+          "text": "",
+          "page": 1,
+          "line": 588
+        },
+        {
+          "line_ref": "P1L589",
+          "text": "【解答】解：（Ⅰ）∵ θ ∈ （ $ \\frac{\\pi}{2} $，π），且 sin θ =  $ \\frac{3}{5} $，∴cos θ =  $ -\\sqrt{1 - \\sin^2 \\theta} = -\\frac{4}{5} $，∴ tan θ = - $ \\frac{3}{4} $，故答案为：- $ \\frac{3}{4} $。",
+          "page": 1,
+          "line": 589
+        },
+        {
+          "line_ref": "P1L590",
+          "text": "",
+          "page": 1,
+          "line": 590
+        },
+        {
+          "line_ref": "P1L591",
+          "text": "（Ⅱ）∵ cos （θ +  $ \\frac{\\pi}{2} $）= cos θ cos  $ \\frac{\\pi}{2} $ - sin θ sin  $ \\frac{\\pi}{2} $ = - $ \\frac{4}{4} $， $ \\frac{1}{2} $ -  $ \\frac{3}{3} $， $ \\frac{\\sqrt{3}}{2} $ -  $ \\frac{4 + 3\\sqrt{3}}{3} $",
+          "page": 1,
+          "line": 591
+        }
+      ],
+      "created_at": "2026-10-11 11:33:15.566510+00:00"
+    },
+    {
+      "id": "4d05591d-d1a2-4205-81ab-ccc47939e74a",
+      "unit_type": "standalone_unit",
+      "decision_status": "pending_review",
+      "question_ref": "Q27",
+      "all_refs": [
+        "Q27"
+      ],
+      "gate_reasons": [
+        "leaf 'Q27' type 'short_answer' not strict-auto (grammar None)"
+      ],
+      "gate_layers": {
+        "semantic": {
+          "status": "pass",
+          "reasons": []
+        },
+        "admission": {
+          "status": "fail",
+          "reasons": [
+            "leaf 'Q27' type 'short_answer' not strict-auto (grammar None)"
+          ]
+        },
+        "provenance": {
+          "status": "pass",
+          "reasons": []
+        },
+        "structural": {
+          "status": "pass",
+          "reasons": []
+        }
+      },
+      "stem": "27. 如图，在三棱柱 ABC - A₁B₁C₁ 中，BB₁ ⊥ 平面 ABC，∠ABC = 90°，AB=2，BC = ⋅ = 1，D 是棱 A₁B₁ 上一点。\n\n（Ⅰ）证明： $ BC \\bot AD $；\n\n（Ⅱ）求三棱锥 B-ACD 的体积.\n\n<div style=\"text-align: center;\"><img src=\"../../_imgs/2018北京春季高中会考数学（教师版）(1)/img_in_image_box_78_576_380_739.jpg\" alt=\"Image\" width=\"25%\" /></div>\n\n",
+      "options": [],
+      "answer": "27.\n\n【考点】棱柱、棱锥、棱台的体积；空间中直线与直线之间的位置关系.\n\n【分析】（Ⅰ）根据线面垂直的性质定理证明 BC⊥平面  $ ABB_{1}A_{1} $，即可证明：BC⊥AD；\n\n（Ⅱ）利用转化法结合三棱锥的体积公式即可求三棱锥 B-ACD 的体积.\n\n【解答】证明：（Ⅰ）在三棱柱 ABC - A_{1}B_{1}C_{1} 中，BB_{1}⊥平面 ABC， $ \\angle ABC=90^{\\circ} $\n\n $$ \\therefore\\mathrm{BC}\\perp\\mathrm{AB}, $$ \n\n∵$BB_{1}$⊥平面 ABC，BZ⊂平面 ABC，\n\n $$ \\therefore\\mathrm{BB}_{1}\\perp\\mathrm{BC}, $$ \n\n $$ \\because BB_{1}\\cap AB=B, $$ \n\n $ \\therefore BC \\perp $ 平面  $ ABB_{1}A_{1} $\n\n∵AD⊂平面  $ ABB_{1}A_{1} $,\n\n $$ \\therefore\\mathrm{BC}\\perp\\mathrm{AD}. $$ \n\n（Ⅱ）$\\because BC \\perp$ 平面 $ABB_{1}A_{1}$，\n\n∴BC 是三棱锥 C-ABD 的高，\n\n则  $ V_{B-ACD}=V_{C-ABD}=\\frac{1}{3}S_{\\triangle ABD}\\cdot BC=\\frac{1}{3}\\times\\frac{1}{2}AB\\cdot BB_{1}\\cdot BC=\\frac{1}{3}\\times\\frac{1}{2}\\times2\\times1=\\frac{1}{3} $\n\n即  $ V_{B-ACD}=\\frac{1}{3} $.",
+      "explanation": "",
+      "material_info": {
+        "is_composite": false,
+        "unit_type": "standalone_unit",
+        "leaf_count": 1,
+        "leaf_ids": [
+          "Q27"
+        ]
+      },
+      "evidence": [],
+      "raw_lines": [
+        {
+          "line_ref": "P1L163",
+          "text": "27. 如图，在三棱柱 ABC - A₁B₁C₁ 中，BB₁ ⊥ 平面 ABC，∠ABC = 90°，AB=2，BC = ⋅ = 1，D 是棱 A₁B₁ 上一点。",
+          "page": 1,
+          "line": 163
+        },
+        {
+          "line_ref": "P1L164",
+          "text": "",
+          "page": 1,
+          "line": 164
+        },
+        {
+          "line_ref": "P1L165",
+          "text": "（Ⅰ）证明： $ BC \\bot AD $；",
+          "page": 1,
+          "line": 165
+        },
+        {
+          "line_ref": "P1L166",
+          "text": "",
+          "page": 1,
+          "line": 166
+        },
+        {
+          "line_ref": "P1L167",
+          "text": "（Ⅱ）求三棱锥 B-ACD 的体积.",
+          "page": 1,
+          "line": 167
+        },
+        {
+          "line_ref": "P1L168",
+          "text": "",
+          "page": 1,
+          "line": 168
+        },
+        {
+          "line_ref": "P1L169",
+          "text": "<div style=\"text-align: center;\"><img src=\"../../_imgs/2018北京春季高中会考数学（教师版）(1)/img_in_image_box_78_576_380_739.jpg\" alt=\"Image\" width=\"25%\" /></div>",
+          "page": 1,
+          "line": 169
+        },
+        {
+          "line_ref": "P1L170",
+          "text": "",
+          "page": 1,
+          "line": 170
+        },
+        {
+          "line_ref": "P1L171",
+          "text": "",
+          "page": 1,
+          "line": 171
+        },
+        {
+          "line_ref": "P1L593",
+          "text": "27.",
+          "page": 1,
+          "line": 593
+        },
+        {
+          "line_ref": "P1L594",
+          "text": "",
+          "page": 1,
+          "line": 594
+        },
+        {
+          "line_ref": "P1L595",
+          "text": "【考点】棱柱、棱锥、棱台的体积；空间中直线与直线之间的位置关系.",
+          "page": 1,
+          "line": 595
+        },
+        {
+          "line_ref": "P1L596",
+          "text": "",
+          "page": 1,
+          "line": 596
+        },
+        {
+          "line_ref": "P1L597",
+          "text": "【分析】（Ⅰ）根据线面垂直的性质定理证明 BC⊥平面  $ ABB_{1}A_{1} $，即可证明：BC⊥AD；",
+          "page": 1,
+          "line": 597
+        },
+        {
+          "line_ref": "P1L598",
+          "text": "",
+          "page": 1,
+          "line": 598
+        },
+        {
+          "line_ref": "P1L599",
+          "text": "（Ⅱ）利用转化法结合三棱锥的体积公式即可求三棱锥 B-ACD 的体积.",
+          "page": 1,
+          "line": 599
+        },
+        {
+          "line_ref": "P1L600",
+          "text": "",
+          "page": 1,
+          "line": 600
+        },
+        {
+          "line_ref": "P1L601",
+          "text": "【解答】证明：（Ⅰ）在三棱柱 ABC - A_{1}B_{1}C_{1} 中，BB_{1}⊥平面 ABC， $ \\angle ABC=90^{\\circ} $",
+          "page": 1,
+          "line": 601
+        },
+        {
+          "line_ref": "P1L602",
+          "text": "",
+          "page": 1,
+          "line": 602
+        },
+        {
+          "line_ref": "P1L603",
+          "text": " $$ \\therefore\\mathrm{BC}\\perp\\mathrm{AB}, $$ ",
+          "page": 1,
+          "line": 603
+        },
+        {
+          "line_ref": "P1L604",
+          "text": "",
+          "page": 1,
+          "line": 604
+        },
+        {
+          "line_ref": "P1L605",
+          "text": "∵$BB_{1}$⊥平面 ABC，BZ⊂平面 ABC，",
+          "page": 1,
+          "line": 605
+        },
+        {
+          "line_ref": "P1L606",
+          "text": "",
+          "page": 1,
+          "line": 606
+        },
+        {
+          "line_ref": "P1L607",
+          "text": " $$ \\therefore\\mathrm{BB}_{1}\\perp\\mathrm{BC}, $$ ",
+          "page": 1,
+          "line": 607
+        },
+        {
+          "line_ref": "P1L608",
+          "text": "",
+          "page": 1,
+          "line": 608
+        },
+        {
+          "line_ref": "P1L609",
+          "text": " $$ \\because BB_{1}\\cap AB=B, $$ ",
+          "page": 1,
+          "line": 609
+        },
+        {
+          "line_ref": "P1L610",
+          "text": "",
+          "page": 1,
+          "line": 610
+        },
+        {
+          "line_ref": "P1L611",
+          "text": " $ \\therefore BC \\perp $ 平面  $ ABB_{1}A_{1} $",
+          "page": 1,
+          "line": 611
+        },
+        {
+          "line_ref": "P1L612",
+          "text": "",
+          "page": 1,
+          "line": 612
+        },
+        {
+          "line_ref": "P1L613",
+          "text": "∵AD⊂平面  $ ABB_{1}A_{1} $,",
+          "page": 1,
+          "line": 613
+        }
+      ],
+      "created_at": "2026-10-11 11:33:15.570085+00:00"
+    },
+    {
+      "id": "f8d4edd8-b833-4eb9-8f26-724a5a38dc22",
+      "unit_type": "standalone_unit",
+      "decision_status": "pending_review",
+      "question_ref": "Q28",
+      "all_refs": [
+        "Q28"
+      ],
+      "gate_reasons": [
+        "leaf 'Q28' type 'short_answer' not strict-auto (grammar None)"
+      ],
+      "gate_layers": {
+        "semantic": {
+          "status": "pass",
+          "reasons": []
+        },
+        "admission": {
+          "status": "fail",
+          "reasons": [
+            "leaf 'Q28' type 'short_answer' not strict-auto (grammar None)"
+          ]
+        },
+        "provenance": {
+          "status": "pass",
+          "reasons": []
+        },
+        "structural": {
+          "status": "pass",
+          "reasons": []
+        }
+      },
+      "stem": "28. 已知直线 l： $ x + y = 1 $ 与 y 轴交于点 P，圆 O 的方程为  $ x^{2} + y^{2} = r^{2} (r > 0) $.\n\n（Ⅰ）如果直线 l 与圆 O 相切，那么 r= ___；（将结果直接填写在答题卡的相应位置上）\n\n（Ⅱ）如果直线 l 与圆 O 交于 A，B 两点，且  $ \\frac{|PA|}{|PB|} = \\frac{1}{2} $，求 r 的值.\n",
+      "options": [],
+      "answer": "28.\n\n【考点】直线与圆的位置关系.\n\n【分析】（Ⅰ）如果直线 l 与圆 O 相切，圆心到直线的距离 d=r；\n\n（Ⅱ）如果直线 l 与圆 O 交于 A, B 两点，且  $ \\frac{|PA|}{|PB|} = \\frac{1}{2} $，分类讨论，利用相交弦定理、勾股定理求 r 的值。\n\n【解答】解：（Ⅰ）圆心到直线的距离  $ d = \\frac{1}{\\sqrt{2}} = \\frac{\\sqrt{2}}{2} $， $ \\therefore r = \\frac{\\sqrt{2}}{2} $…\n\n（Ⅱ）设 $ \\left|PA\\right|=x $，则 $ \\left|PB\\right|=2x $\n\n圆心到直线的距离  $ d=\\frac{\\sqrt{2}}{2} $.\n\n①点P在圆内， $ |AB|=3x $，则 $ x\\cdot2x=(r-1)(r+1) $， $ \\therefore x^2=\\frac{1}{2}(r^2-1) $，\n\n---\n\n $$ \\therefore r^{2}=\\frac{9}{8}(r^{2}-1)+\\frac{1}{2},\\therefore r=\\sqrt{5}; $$ \n\n②点P在圆外，则 $ x\\cdot2x=(1-r)(r+1) $， $ \\therefore x^2=\\frac{1}{2}(1-r^2) $，\n\n $ \\therefore r^2=\\frac{9}{8}(1-r^2)+\\frac{1}{2} $， $ \\therefore r=\\frac{\\sqrt{5}}{5} $；\n\n $ \\therefore r $的值为 $ \\frac{\\sqrt{5}}{5} $或 $ \\sqrt{5} $…\n\n故答案为： $ \\frac{\\sqrt{2}}{2} $。",
+      "explanation": "",
+      "material_info": {
+        "is_composite": false,
+        "unit_type": "standalone_unit",
+        "leaf_count": 1,
+        "leaf_ids": [
+          "Q28"
+        ]
+      },
+      "evidence": [],
+      "raw_lines": [
+        {
+          "line_ref": "P1L172",
+          "text": "28. 已知直线 l： $ x + y = 1 $ 与 y 轴交于点 P，圆 O 的方程为  $ x^{2} + y^{2} = r^{2} (r > 0) $.",
+          "page": 1,
+          "line": 172
+        },
+        {
+          "line_ref": "P1L173",
+          "text": "",
+          "page": 1,
+          "line": 173
+        },
+        {
+          "line_ref": "P1L174",
+          "text": "（Ⅰ）如果直线 l 与圆 O 相切，那么 r= ___；（将结果直接填写在答题卡的相应位置上）",
+          "page": 1,
+          "line": 174
+        },
+        {
+          "line_ref": "P1L175",
+          "text": "",
+          "page": 1,
+          "line": 175
+        },
+        {
+          "line_ref": "P1L176",
+          "text": "（Ⅱ）如果直线 l 与圆 O 交于 A，B 两点，且  $ \\frac{|PA|}{|PB|} = \\frac{1}{2} $，求 r 的值.",
+          "page": 1,
+          "line": 176
+        },
+        {
+          "line_ref": "P1L177",
+          "text": "",
+          "page": 1,
+          "line": 177
+        },
+        {
+          "line_ref": "P1L625",
+          "text": "28.",
+          "page": 1,
+          "line": 625
+        },
+        {
+          "line_ref": "P1L626",
+          "text": "",
+          "page": 1,
+          "line": 626
+        },
+        {
+          "line_ref": "P1L627",
+          "text": "【考点】直线与圆的位置关系.",
+          "page": 1,
+          "line": 627
+        },
+        {
+          "line_ref": "P1L628",
+          "text": "",
+          "page": 1,
+          "line": 628
+        },
+        {
+          "line_ref": "P1L629",
+          "text": "【分析】（Ⅰ）如果直线 l 与圆 O 相切，圆心到直线的距离 d=r；",
+          "page": 1,
+          "line": 629
+        },
+        {
+          "line_ref": "P1L630",
+          "text": "",
+          "page": 1,
+          "line": 630
+        },
+        {
+          "line_ref": "P1L631",
+          "text": "（Ⅱ）如果直线 l 与圆 O 交于 A, B 两点，且  $ \\frac{|PA|}{|PB|} = \\frac{1}{2} $，分类讨论，利用相交弦定理、勾股定理求 r 的值。",
+          "page": 1,
+          "line": 631
+        },
+        {
+          "line_ref": "P1L632",
+          "text": "",
+          "page": 1,
+          "line": 632
+        },
+        {
+          "line_ref": "P1L633",
+          "text": "【解答】解：（Ⅰ）圆心到直线的距离  $ d = \\frac{1}{\\sqrt{2}} = \\frac{\\sqrt{2}}{2} $， $ \\therefore r = \\frac{\\sqrt{2}}{2} $…",
+          "page": 1,
+          "line": 633
+        },
+        {
+          "line_ref": "P1L634",
+          "text": "",
+          "page": 1,
+          "line": 634
+        },
+        {
+          "line_ref": "P1L635",
+          "text": "（Ⅱ）设 $ \\left|PA\\right|=x $，则 $ \\left|PB\\right|=2x $",
+          "page": 1,
+          "line": 635
+        },
+        {
+          "line_ref": "P1L636",
+          "text": "",
+          "page": 1,
+          "line": 636
+        },
+        {
+          "line_ref": "P1L637",
+          "text": "圆心到直线的距离  $ d=\\frac{\\sqrt{2}}{2} $.",
+          "page": 1,
+          "line": 637
+        },
+        {
+          "line_ref": "P1L638",
+          "text": "",
+          "page": 1,
+          "line": 638
+        },
+        {
+          "line_ref": "P1L639",
+          "text": "①点P在圆内， $ |AB|=3x $，则 $ x\\cdot2x=(r-1)(r+1) $， $ \\therefore x^2=\\frac{1}{2}(r^2-1) $，",
+          "page": 1,
+          "line": 639
+        },
+        {
+          "line_ref": "P1L640",
+          "text": "",
+          "page": 1,
+          "line": 640
+        },
+        {
+          "line_ref": "P1L641",
+          "text": "---",
+          "page": 1,
+          "line": 641
+        },
+        {
+          "line_ref": "P1L642",
+          "text": "",
+          "page": 1,
+          "line": 642
+        },
+        {
+          "line_ref": "P1L643",
+          "text": " $$ \\therefore r^{2}=\\frac{9}{8}(r^{2}-1)+\\frac{1}{2},\\therefore r=\\sqrt{5}; $$ ",
+          "page": 1,
+          "line": 643
+        },
+        {
+          "line_ref": "P1L644",
+          "text": "",
+          "page": 1,
+          "line": 644
+        },
+        {
+          "line_ref": "P1L645",
+          "text": "②点P在圆外，则 $ x\\cdot2x=(1-r)(r+1) $， $ \\therefore x^2=\\frac{1}{2}(1-r^2) $，",
+          "page": 1,
+          "line": 645
+        },
+        {
+          "line_ref": "P1L646",
+          "text": "",
+          "page": 1,
+          "line": 646
+        },
+        {
+          "line_ref": "P1L647",
+          "text": " $ \\therefore r^2=\\frac{9}{8}(1-r^2)+\\frac{1}{2} $， $ \\therefore r=\\frac{\\sqrt{5}}{5} $；",
+          "page": 1,
+          "line": 647
+        },
+        {
+          "line_ref": "P1L648",
+          "text": "",
+          "page": 1,
+          "line": 648
+        }
+      ],
+      "created_at": "2026-10-11 11:33:15.574168+00:00"
+    },
+    {
+      "id": "3b14ade3-e286-40c2-a7de-b0f945395c5e",
+      "unit_type": "standalone_unit",
+      "decision_status": "pending_review",
+      "question_ref": "Q29",
+      "all_refs": [
+        "Q29"
+      ],
+      "gate_reasons": [
+        "leaf 'Q29' type 'short_answer' not strict-auto (grammar None)"
+      ],
+      "gate_layers": {
+        "semantic": {
+          "status": "pass",
+          "reasons": []
+        },
+        "admission": {
+          "status": "fail",
+          "reasons": [
+            "leaf 'Q29' type 'short_answer' not strict-auto (grammar None)"
+          ]
+        },
+        "provenance": {
+          "status": "pass",
+          "reasons": []
+        },
+        "structural": {
+          "status": "pass",
+          "reasons": []
+        }
+      },
+      "stem": "29. 数列  $ \\{a_n\\} $ 满足  $ a_{n+1} = \\frac{a_n}{a_n^2 + 1} $，n=1, 2, 3,  $ \\cdots $， $ \\{a_n\\} $ 的前 n 项和记为  $ S_n $。\n\n（Ⅰ）当  $ a_{1}=2 $ 时， $ a_{2}= $ ___;\n\n（Ⅱ）数列 $ \\{a_{n}\\} $是否可能为等比数列？证明你的推断；\n\n（Ⅲ）如果  $ a_1 \\ne 0 $，证明： $ S_n = \\frac{a_1 - a_{n+1}}{a_1 a_{n+1}} $.\n",
+      "options": [],
+      "answer": "29.\n\n【考点】数列递推式；数列的求和.\n\n【分析】（Ⅰ）当  $ a_{1}=2 $ 时，代入计算，可得  $ a_{2} $;\n\n（Ⅱ）利用反证法判断数列 $ \\{a_{n}\\} $不可能为等比数列；\n\n（Ⅲ）利用数学归纳法进行证明.\n\n【解答】解：（Ⅰ）当  $ a_1=2 $ 时， $ a_2=\\frac{2}{5} $；\n\n（Ⅱ）设公比为 q，则\n\n $$ \\because a_{n+1}=\\frac{a_{n}}{a_{n}^{2}+1}, $$ \n\n $$ \\therefore\\mathrm{a}_{\\mathrm{n}}2_{+1}=\\frac{1}{\\mathrm{q}}, $$ \n\n$\\therefore q=1$，此时$a_{n}=0$，矛盾\n\n∴数列 $ \\{a_{n}\\} $不可能为等比数列；\n\n（Ⅲ）n=1 时，左边=a₁，右边= $ \\frac{a_1 - a_2}{a_1 a_2} = \\frac{a_1 - \\frac{a_1}{a_1^2 + 1}}{a_1 \\cdot \\frac{a_1}{a_1^2 + 1}} = a_1 $，成立；\n\n假设 n=k 时，结论成立，则  $ S_k = \\frac{a_1 - a_{k+1}}{a_1 a_{k+1}} $，\n\nn=k+1 时，左边  $ = S_k + a_{k+1} = \\frac{a_1 - a_{k+1}}{a_1 a_{k+1}} + a_{k+1} = \\frac{a_1 - a_{k+1} + a_1 a_{k+1}^2}{a_1 a_{k+1}} $\n\n右边= $ \\frac{a_1 - a_{k+2}}{a_1 a_{k+2}} $ =  $ \\frac{a_1 - \\frac{a_{k+1}}{a_{k+1}^2 + 1}}{a_1 \\cdot \\frac{a_{k+1}}{a_{k+1}^2 + 1}} = \\frac{a_1 - a_{k+1} + a_1 a_{k+1}^2}{a_1 a_{k+1}} $\n\n∴左边=右边，\n\n---\n\n综上， $ S_{n}=\\frac{a_{1}-a_{n+1}}{a_{1}a_{n+1}} $\n\n故答案为： $ \\frac{2}{5} $",
+      "explanation": "",
+      "material_info": {
+        "is_composite": false,
+        "unit_type": "standalone_unit",
+        "leaf_count": 1,
+        "leaf_ids": [
+          "Q29"
+        ]
+      },
+      "evidence": [],
+      "raw_lines": [
+        {
+          "line_ref": "P1L178",
+          "text": "29. 数列  $ \\{a_n\\} $ 满足  $ a_{n+1} = \\frac{a_n}{a_n^2 + 1} $，n=1, 2, 3,  $ \\cdots $， $ \\{a_n\\} $ 的前 n 项和记为  $ S_n $。",
+          "page": 1,
+          "line": 178
+        },
+        {
+          "line_ref": "P1L179",
+          "text": "",
+          "page": 1,
+          "line": 179
+        },
+        {
+          "line_ref": "P1L180",
+          "text": "（Ⅰ）当  $ a_{1}=2 $ 时， $ a_{2}= $ ___;",
+          "page": 1,
+          "line": 180
+        },
+        {
+          "line_ref": "P1L181",
+          "text": "",
+          "page": 1,
+          "line": 181
+        },
+        {
+          "line_ref": "P1L182",
+          "text": "（Ⅱ）数列 $ \\{a_{n}\\} $是否可能为等比数列？证明你的推断；",
+          "page": 1,
+          "line": 182
+        },
+        {
+          "line_ref": "P1L183",
+          "text": "",
+          "page": 1,
+          "line": 183
+        },
+        {
+          "line_ref": "P1L184",
+          "text": "（Ⅲ）如果  $ a_1 \\ne 0 $，证明： $ S_n = \\frac{a_1 - a_{n+1}}{a_1 a_{n+1}} $.",
+          "page": 1,
+          "line": 184
+        },
+        {
+          "line_ref": "P1L185",
+          "text": "",
+          "page": 1,
+          "line": 185
+        },
+        {
+          "line_ref": "P1L653",
+          "text": "29.",
+          "page": 1,
+          "line": 653
+        },
+        {
+          "line_ref": "P1L654",
+          "text": "",
+          "page": 1,
+          "line": 654
+        },
+        {
+          "line_ref": "P1L655",
+          "text": "【考点】数列递推式；数列的求和.",
+          "page": 1,
+          "line": 655
+        },
+        {
+          "line_ref": "P1L656",
+          "text": "",
+          "page": 1,
+          "line": 656
+        },
+        {
+          "line_ref": "P1L657",
+          "text": "【分析】（Ⅰ）当  $ a_{1}=2 $ 时，代入计算，可得  $ a_{2} $;",
+          "page": 1,
+          "line": 657
+        },
+        {
+          "line_ref": "P1L658",
+          "text": "",
+          "page": 1,
+          "line": 658
+        },
+        {
+          "line_ref": "P1L659",
+          "text": "（Ⅱ）利用反证法判断数列 $ \\{a_{n}\\} $不可能为等比数列；",
+          "page": 1,
+          "line": 659
+        },
+        {
+          "line_ref": "P1L660",
+          "text": "",
+          "page": 1,
+          "line": 660
+        },
+        {
+          "line_ref": "P1L661",
+          "text": "（Ⅲ）利用数学归纳法进行证明.",
+          "page": 1,
+          "line": 661
+        },
+        {
+          "line_ref": "P1L662",
+          "text": "",
+          "page": 1,
+          "line": 662
+        },
+        {
+          "line_ref": "P1L663",
+          "text": "【解答】解：（Ⅰ）当  $ a_1=2 $ 时， $ a_2=\\frac{2}{5} $；",
+          "page": 1,
+          "line": 663
+        },
+        {
+          "line_ref": "P1L664",
+          "text": "",
+          "page": 1,
+          "line": 664
+        },
+        {
+          "line_ref": "P1L665",
+          "text": "（Ⅱ）设公比为 q，则",
+          "page": 1,
+          "line": 665
+        },
+        {
+          "line_ref": "P1L666",
+          "text": "",
+          "page": 1,
+          "line": 666
+        },
+        {
+          "line_ref": "P1L667",
+          "text": " $$ \\because a_{n+1}=\\frac{a_{n}}{a_{n}^{2}+1}, $$ ",
+          "page": 1,
+          "line": 667
+        },
+        {
+          "line_ref": "P1L668",
+          "text": "",
+          "page": 1,
+          "line": 668
+        },
+        {
+          "line_ref": "P1L669",
+          "text": " $$ \\therefore\\mathrm{a}_{\\mathrm{n}}2_{+1}=\\frac{1}{\\mathrm{q}}, $$ ",
+          "page": 1,
+          "line": 669
+        },
+        {
+          "line_ref": "P1L670",
+          "text": "",
+          "page": 1,
+          "line": 670
+        },
+        {
+          "line_ref": "P1L671",
+          "text": "$\\therefore q=1$，此时$a_{n}=0$，矛盾",
+          "page": 1,
+          "line": 671
+        },
+        {
+          "line_ref": "P1L672",
+          "text": "",
+          "page": 1,
+          "line": 672
+        },
+        {
+          "line_ref": "P1L673",
+          "text": "∴数列 $ \\{a_{n}\\} $不可能为等比数列；",
+          "page": 1,
+          "line": 673
+        },
+        {
+          "line_ref": "P1L674",
+          "text": "",
+          "page": 1,
+          "line": 674
+        }
+      ],
+      "created_at": "2026-10-11 11:33:15.578205+00:00"
+    },
+    {
+      "id": "7b8b9544-411c-4497-a329-3bcd94e86a0c",
+      "unit_type": "standalone_unit",
+      "decision_status": "pending_review",
+      "question_ref": "Q30",
+      "all_refs": [
+        "Q30"
+      ],
+      "gate_reasons": [
+        "leaf 'Q30' type 'short_answer' not strict-auto (grammar None)"
+      ],
+      "gate_layers": {
+        "semantic": {
+          "status": "pass",
+          "reasons": []
+        },
+        "admission": {
+          "status": "fail",
+          "reasons": [
+            "leaf 'Q30' type 'short_answer' not strict-auto (grammar None)"
+          ]
+        },
+        "provenance": {
+          "status": "pass",
+          "reasons": []
+        },
+        "structural": {
+          "status": "pass",
+          "reasons": []
+        }
+      },
+      "stem": "30. 已知函数  $ f(x) = 2ax^2 + bx - a + 1 $，其中  $ a \\in \\mathbb{R} $， $ b \\in \\mathbb{R} $。\n\n（Ⅰ）当 a=b=1 时，f（x）的零点为 ___；\n\n（Ⅱ）当  $ b = \\frac{4}{3} $ 时，如果存在  $ x_0 \\in \\mathbb{R} $，使得  $ f(x_0) < 0 $，试求  $ a $ 的取值范围；\n\n（Ⅲ）如果对于任意  $ x \\in [-1, 1] $，都有  $ f(x) \\geq 0 $ 成立，试求  $ a + b $ 的最大值.\n\n---\n",
+      "options": [],
+      "answer": "30.\n\n【考点】函数零点的判定定理；二次函数的性质.\n\n【分析】(I) 令  $ f(x)=0 $ 解出：\n\n（II）根据 f（x）的函数类型和图象开口讨论，只需  $ f_{\\min}(x)<0 $ 即可；\n\n（III）对函数类型，开口方向，单调性进行讨论，令  $ f_{\\min}(x) \\geqslant 0 $ 列出不等式，根据不等式的性质得出 a+b 的范围.\n\n【解答】解：（I）a=b=1 时， $ f(x)=2x^2+x $，令  $ f(x)=0 $，解得 x=0 或  $ x=-\\frac{1}{2} $。 $ \\therefore f(x) $ 的零点为 0， $ -\\frac{1}{2} $。\n\n（II）当 b= $ \\frac{4}{3} $时，f（x）=2ax $ ^{2} $+ $ \\frac{4}{3} $x - a+1，\n\n①当 a=0 时， $ f(x)=\\frac{4}{3}x+1 $， $ f(x) $ 为 R 上的增函数， $ f\\left(-\\frac{3}{4}\\right)=0 $，∴当  $ x_0<-\\frac{3}{4} $ 时， $ f(x_0)<0 $，符合题意；②当 a<0 时， $ f(x) $ 的图象开口向下，显然存在  $ x_0\\in\\mathbb{R} $，使得  $ f(x_0)<0 $，符合题意；\n\n③当 a>0 时，f（x）的图象开口向上，对称轴为 x=- $ \\frac{1}{3a} $，f $ _{min} $（x）=f（-  $ \\frac{1}{3a} $）=1-a- $ \\frac{2}{9a} $，\n\n令 1-a- $ \\frac{2}{9a} $<0，解得 a> $ \\frac{2}{3} $或 0<a< $ \\frac{1}{3} $.\n\n综上，a 的取值范围是（-∞， $ \\frac{1}{3} $）∪（ $ \\frac{2}{3} $，+∞）.\n\n（III）①若 a=0，f（x）=bx+1，\n\n当 b=0 时，f（x）=1，符合题意，此时，a+b=0，\n\n当 b>0 时，f（x）在[-1，1]上是增函数，∴$f_{min}$（x）=f（-1）=-b+1≥0，∴b≤1，此时，a+b=b≤1。\n\n当 b<0 时，f（x）在[-1，1]上是减函数，∴$f_{min}$（x）=f（1）=b+1≥0，∴-1≤b<0，此时 a+b=b<0。\n\n②若 a>0，f（x）图象开口向上，对称轴为 x=- $ \\frac{b}{4a} $，\n\n当  $ -\\frac{b}{4a} \\leq -1 $ 即  $ 4a - b \\leq 0 $ 时， $ f(x) $ 在  $ [-1, 1] $ 上是增函数， $ f_{\\min}(x) = f(-1) = a - b + 1 \\geq 0 $， $ \\therefore b - a \\leq 1 $。\n\n由  $ \\begin{cases} 4a - b \\leq 0 \\\\ b - a \\leq 1 \\\\ a > 0 \\end{cases} $ 得  $ \\begin{cases} 0 < a \\leq \\frac{1}{3} \\\\ b \\leq \\frac{4}{3} \\end{cases} $， $ \\therefore a + b \\leq \\frac{5}{3} $。\n\n当  $ -\\frac{b}{4a} \\geqslant 1 $ 即  $ 4a + b \\leqslant 0 $ 时， $ f(x) $ 在  $ [-1, 1] $ 上是减函数， $ f_{\\min}(x) = f(1) = a + b + 1 \\geqslant 0 $， $ \\therefore -a - b \\leqslant 1 $。\n\n由$\\begin{cases}4a+b\\leqslant0\\\\-a-b\\leqslant1\\\\a>0\\end{cases}$得$\\begin{cases}0<a\\leqslant\\frac{1}{3}\\\\-\\frac{4}{3}\\leqslant b<0\\end{cases}$，$\\therefore a+b<\\frac{1}{3}$。\n\n---\n\n当  $ -1 < -\\frac{b}{4a} < 1 $ 即  $ -4a < b < 4a $ 时， $ f(x) $ 在  $ [-1, 1] $ 上先减后增， $ f_{\\min}(x) = f\\left(-\\frac{b}{4a}\\right) = -\\frac{b^2}{8a} - a + 1 \\geq 0 $， $ \\therefore \\frac{b^2}{8a} + a \\leq 1 $，\n\n由 -4a < b < 4a 得  $ b^2 < 16a^2 $， $ \\therefore 3a \\leq 1 $， $ \\therefore 0 < a \\leq \\frac{1}{3} $， $ \\therefore a + b < 5a \\leq \\frac{5}{3} $。\n\n③若 a<0，f（x）图象开口向下，对称轴为 x=- $ \\frac{b}{4a} $，\n\n当  $ -\\frac{b}{4a} \\leqslant -1 $ 即  $ 4a - b \\geqslant 0 $ 时， $ f(x) $ 在  $ [-1, 1] $ 上是减函数， $ f_{\\min}(x) = f(1) = a + b + 1 \\geqslant 0 $， $ \\therefore a + b \\geqslant -1 $。\n\n由$\\begin{cases}4a-b\\geqslant0\\\\a+b\\geqslant-1\\\\a<0\\end{cases}$得$-\\frac{1}{5}\\leqslant a<0$，又$\\because b\\leqslant4a$，$\\therefore a+b\\leqslant5a<0$。\n\n当  $ -\\frac{b}{4a} \\geqslant 1 $ 即  $ 4a + b \\geqslant 0 $ 时， $ f(x) $ 在  $ [-1, 1] $ 上是增函数， $ f_{\\min}(x) = f(-1) = a - b + 1 \\geqslant 0 $， $ \\therefore a - b \\geqslant -1 $，由  $ \\begin{cases}4a + b \\geqslant 0 \\\\ a - b \\geqslant -1 \\\\ a < 0\\end{cases} $ 得  $ -\\frac{1}{5} \\leqslant a < 0 $，又  $ \\because b \\leqslant a + 1 $， $ \\therefore a + b \\leqslant 2a + 1 < 1 $。\n\n当 $ -1 < -\\frac{b}{4a} < 1 $即 $ 4a < b < -4a $时， $ f(x) $在 $ [-1,1] $上先增后减，\n\nf（1）=a+b+1≥0. f（-1）=a - b+1≥0，两式相加得 -1≤a<0，∴b≤a+1，∴a+b≤2a+1<1.\n\n综上，a+b 的最大值为  $ \\frac{5}{3} $.",
+      "explanation": "",
+      "material_info": {
+        "is_composite": false,
+        "unit_type": "standalone_unit",
+        "leaf_count": 1,
+        "leaf_ids": [
+          "Q30"
+        ]
+      },
+      "evidence": [],
+      "raw_lines": [
+        {
+          "line_ref": "P1L186",
+          "text": "30. 已知函数  $ f(x) = 2ax^2 + bx - a + 1 $，其中  $ a \\in \\mathbb{R} $， $ b \\in \\mathbb{R} $。",
+          "page": 1,
+          "line": 186
+        },
+        {
+          "line_ref": "P1L187",
+          "text": "",
+          "page": 1,
+          "line": 187
+        },
+        {
+          "line_ref": "P1L188",
+          "text": "（Ⅰ）当 a=b=1 时，f（x）的零点为 ___；",
+          "page": 1,
+          "line": 188
+        },
+        {
+          "line_ref": "P1L189",
+          "text": "",
+          "page": 1,
+          "line": 189
+        },
+        {
+          "line_ref": "P1L190",
+          "text": "（Ⅱ）当  $ b = \\frac{4}{3} $ 时，如果存在  $ x_0 \\in \\mathbb{R} $，使得  $ f(x_0) < 0 $，试求  $ a $ 的取值范围；",
+          "page": 1,
+          "line": 190
+        },
+        {
+          "line_ref": "P1L191",
+          "text": "",
+          "page": 1,
+          "line": 191
+        },
+        {
+          "line_ref": "P1L192",
+          "text": "（Ⅲ）如果对于任意  $ x \\in [-1, 1] $，都有  $ f(x) \\geq 0 $ 成立，试求  $ a + b $ 的最大值.",
+          "page": 1,
+          "line": 192
+        },
+        {
+          "line_ref": "P1L193",
+          "text": "",
+          "page": 1,
+          "line": 193
+        },
+        {
+          "line_ref": "P1L194",
+          "text": "---",
+          "page": 1,
+          "line": 194
+        },
+        {
+          "line_ref": "P1L195",
+          "text": "",
+          "page": 1,
+          "line": 195
+        },
+        {
+          "line_ref": "P1L691",
+          "text": "30.",
+          "page": 1,
+          "line": 691
+        },
+        {
+          "line_ref": "P1L692",
+          "text": "",
+          "page": 1,
+          "line": 692
+        },
+        {
+          "line_ref": "P1L693",
+          "text": "【考点】函数零点的判定定理；二次函数的性质.",
+          "page": 1,
+          "line": 693
+        },
+        {
+          "line_ref": "P1L694",
+          "text": "",
+          "page": 1,
+          "line": 694
+        },
+        {
+          "line_ref": "P1L695",
+          "text": "【分析】(I) 令  $ f(x)=0 $ 解出：",
+          "page": 1,
+          "line": 695
+        },
+        {
+          "line_ref": "P1L696",
+          "text": "",
+          "page": 1,
+          "line": 696
+        },
+        {
+          "line_ref": "P1L697",
+          "text": "（II）根据 f（x）的函数类型和图象开口讨论，只需  $ f_{\\min}(x)<0 $ 即可；",
+          "page": 1,
+          "line": 697
+        },
+        {
+          "line_ref": "P1L698",
+          "text": "",
+          "page": 1,
+          "line": 698
+        },
+        {
+          "line_ref": "P1L699",
+          "text": "（III）对函数类型，开口方向，单调性进行讨论，令  $ f_{\\min}(x) \\geqslant 0 $ 列出不等式，根据不等式的性质得出 a+b 的范围.",
+          "page": 1,
+          "line": 699
+        },
+        {
+          "line_ref": "P1L700",
+          "text": "",
+          "page": 1,
+          "line": 700
+        },
+        {
+          "line_ref": "P1L701",
+          "text": "【解答】解：（I）a=b=1 时， $ f(x)=2x^2+x $，令  $ f(x)=0 $，解得 x=0 或  $ x=-\\frac{1}{2} $。 $ \\therefore f(x) $ 的零点为 0， $ -\\frac{1}{2} $。",
+          "page": 1,
+          "line": 701
+        },
+        {
+          "line_ref": "P1L702",
+          "text": "",
+          "page": 1,
+          "line": 702
+        },
+        {
+          "line_ref": "P1L703",
+          "text": "（II）当 b= $ \\frac{4}{3} $时，f（x）=2ax $ ^{2} $+ $ \\frac{4}{3} $x - a+1，",
+          "page": 1,
+          "line": 703
+        },
+        {
+          "line_ref": "P1L704",
+          "text": "",
+          "page": 1,
+          "line": 704
+        },
+        {
+          "line_ref": "P1L705",
+          "text": "①当 a=0 时， $ f(x)=\\frac{4}{3}x+1 $， $ f(x) $ 为 R 上的增函数， $ f\\left(-\\frac{3}{4}\\right)=0 $，∴当  $ x_0<-\\frac{3}{4} $ 时， $ f(x_0)<0 $，符合题意；②当 a<0 时， $ f(x) $ 的图象开口向下，显然存在  $ x_0\\in\\mathbb{R} $，使得  $ f(x_0)<0 $，符合题意；",
+          "page": 1,
+          "line": 705
+        },
+        {
+          "line_ref": "P1L706",
+          "text": "",
+          "page": 1,
+          "line": 706
+        },
+        {
+          "line_ref": "P1L707",
+          "text": "③当 a>0 时，f（x）的图象开口向上，对称轴为 x=- $ \\frac{1}{3a} $，f $ _{min} $（x）=f（-  $ \\frac{1}{3a} $）=1-a- $ \\frac{2}{9a} $，",
+          "page": 1,
+          "line": 707
+        },
+        {
+          "line_ref": "P1L708",
+          "text": "",
+          "page": 1,
+          "line": 708
+        },
+        {
+          "line_ref": "P1L709",
+          "text": "令 1-a- $ \\frac{2}{9a} $<0，解得 a> $ \\frac{2}{3} $或 0<a< $ \\frac{1}{3} $.",
+          "page": 1,
+          "line": 709
+        },
+        {
+          "line_ref": "P1L710",
+          "text": "",
+          "page": 1,
+          "line": 710
+        }
+      ],
+      "created_at": "2026-10-11 11:33:15.581585+00:00"
+    },
+    {
+      "id": "b4c55d40-fda2-4835-a6a6-67ce6f56f8ba",
+      "unit_type": "standalone_unit",
+      "decision_status": "pending_review",
+      "question_ref": "Q21",
+      "all_refs": [
+        "Q21"
+      ],
+      "gate_reasons": [
+        "leaf 'Q21' type 'fill_in' not strict-auto (grammar None)"
+      ],
+      "gate_layers": {
+        "semantic": {
+          "status": "pass",
+          "reasons": []
+        },
+        "admission": {
+          "status": "fail",
+          "reasons": [
+            "leaf 'Q21' type 'fill_in' not strict-auto (grammar None)"
+          ]
+        },
+        "provenance": {
+          "status": "pass",
+          "reasons": []
+        },
+        "structural": {
+          "status": "pass",
+          "reasons": []
+        }
+      },
+      "stem": "21.如图10所示，一带正电的导体球M放在绝缘支架上，把系在绝缘丝线上的带电小球N挂在横杆上。当小球N静止时，丝线与竖直方向成 $ \\theta $角，由此推断小球N带___电荷（选填“正”或“负”）。现用另一与M完全相同的不带电导体球与M接触后移开，则丝线与竖直方向的夹角 $ \\theta $将___（选填“变大”或“变小”）。\n\n<div style=\"text-align: center;\"><img src=\"../../_imgs/2018北京春季高中会考物理（教师版）(1)/img_in_image_box_877_416_1080_574.jpg\" alt=\"Image\" width=\"17%\" /></div>\n\n\n<div style=\"text-align: center;\">图10</div>\n\n",
+      "options": [],
+      "answer": "<table border=1 style='margin: auto; word-wrap: break-word;'><tr><td style='text-align: center; word-wrap: break-word;'>题号</td><td style='text-align: center; word-wrap: break-word;'>答案</td><td style='text-align: center; word-wrap: break-word;'>分数</td></tr><tr><td rowspan=\"2\">21</td><td style='text-align: center; word-wrap: break-word;'>正</td><td style='text-align: center; word-wrap: break-word;'>2分</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>变小</td><td style='text-align: center; word-wrap: break-word;'>2分</td></tr><tr><td rowspan=\"2\">22</td><td style='text-align: center; word-wrap: break-word;'>$ \\frac{U}{I} $</td><td style='text-align: center; word-wrap: break-word;'>2分</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>$ \\frac{US}{IL} $</td><td style='text-align: center; word-wrap: break-word;'>2分</td></tr><tr><td rowspan=\"2\">23</td><td style='text-align: center; word-wrap: break-word;'>0.72</td><td style='text-align: center; word-wrap: break-word;'>2分</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>打点计时器打下A点时小车的速度、打点计时器打下C点时小车的速度、小车运动的加速度等</td><td style='text-align: center; word-wrap: break-word;'>2分</td></tr></table>",
+      "explanation": "",
+      "material_info": {
+        "is_composite": false,
+        "unit_type": "standalone_unit",
+        "leaf_count": 1,
+        "leaf_ids": [
+          "Q21"
+        ]
+      },
+      "evidence": [],
+      "raw_lines": [
+        {
+          "line_ref": "P1L237",
+          "text": "21.如图10所示，一带正电的导体球M放在绝缘支架上，把系在绝缘丝线上的带电小球N挂在横杆上。当小球N静止时，丝线与竖直方向成 $ \\theta $角，由此推断小球N带___电荷（选填“正”或“负”）。现用另一与M完全相同的不带电导体球与M接触后移开，则丝线与竖直方向的夹角 $ \\theta $将___（选填“变大”或“变小”）。",
+          "page": 1,
+          "line": 237
+        },
+        {
+          "line_ref": "P1L238",
+          "text": "",
+          "page": 1,
+          "line": 238
+        },
+        {
+          "line_ref": "P1L239",
+          "text": "<div style=\"text-align: center;\"><img src=\"../../_imgs/2018北京春季高中会考物理（教师版）(1)/img_in_image_box_877_416_1080_574.jpg\" alt=\"Image\" width=\"17%\" /></div>",
+          "page": 1,
+          "line": 239
+        },
+        {
+          "line_ref": "P1L240",
+          "text": "",
+          "page": 1,
+          "line": 240
+        },
+        {
+          "line_ref": "P1L241",
+          "text": "",
+          "page": 1,
+          "line": 241
+        },
+        {
+          "line_ref": "P1L242",
+          "text": "<div style=\"text-align: center;\">图10</div>",
+          "page": 1,
+          "line": 242
+        },
+        {
+          "line_ref": "P1L243",
+          "text": "",
+          "page": 1,
+          "line": 243
+        },
+        {
+          "line_ref": "P1L244",
+          "text": "",
+          "page": 1,
+          "line": 244
+        },
+        {
+          "line_ref": "P1L363",
+          "text": "<table border=1 style='margin: auto; word-wrap: break-word;'><tr><td style='text-align: center; word-wrap: break-word;'>题号</td><td style='text-align: center; word-wrap: break-word;'>答案</td><td style='text-align: center; word-wrap: break-word;'>分数</td></tr><tr><td rowspan=\"2\">21</td><td style='text-align: center; word-wrap: break-word;'>正</td><td style='text-align: center; word-wrap: break-word;'>2分</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>变小</td><td style='text-align: center; word-wrap: break-word;'>2分</td></tr><tr><td rowspan=\"2\">22</td><td style='text-align: center; word-wrap: break-word;'>$ \\frac{U}{I} $</td><td style='text-align: center; word-wrap: break-word;'>2分</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>$ \\frac{US}{IL} $</td><td style='text-align: center; word-wrap: break-word;'>2分</td></tr><tr><td rowspan=\"2\">23</td><td style='text-align: center; word-wrap: break-word;'>0.72</td><td style='text-align: center; word-wrap: break-word;'>2分</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>打点计时器打下A点时小车的速度、打点计时器打下C点时小车的速度、小车运动的加速度等</td><td style='text-align: center; word-wrap: break-word;'>2分</td></tr></table>",
+          "page": 1,
+          "line": 363
+        }
+      ],
+      "created_at": "2026-10-11 11:33:16.875973+00:00"
+    },
+    {
+      "id": "b219b4f5-0947-4b51-8f0b-5cfa014f8226",
+      "unit_type": "standalone_unit",
+      "decision_status": "pending_review",
+      "question_ref": "Q22",
+      "all_refs": [
+        "Q22"
+      ],
+      "gate_reasons": [
+        "leaf 'Q22' type 'fill_in' not strict-auto (grammar None)"
+      ],
+      "gate_layers": {
+        "semantic": {
+          "status": "pass",
+          "reasons": []
+        },
+        "admission": {
+          "status": "fail",
+          "reasons": [
+            "leaf 'Q22' type 'fill_in' not strict-auto (grammar None)"
+          ]
+        },
+        "provenance": {
+          "status": "pass",
+          "reasons": []
+        },
+        "structural": {
+          "status": "pass",
+          "reasons": []
+        }
+      },
+      "stem": "22.在测量金属电阻率的实验中，根据图11所示电路测量金属丝的电阻。电压表的示数为U，电流表的示数为I，则金属丝电阻的测量值R=___；测得金属丝的长度为L，横截面积为S，则这段金属丝的电阻率 $ \\rho= $___（用U、I、L和S表示）。\n\n<div style=\"text-align: center;\"><img src=\"../../_imgs/2018北京春季高中会考物理（教师版）(1)/img_in_image_box_885_642_1079_728.jpg\" alt=\"Image\" width=\"16%\" /></div>\n\n",
+      "options": [],
+      "answer": "<table border=1 style='margin: auto; word-wrap: break-word;'><tr><td style='text-align: center; word-wrap: break-word;'>题号</td><td style='text-align: center; word-wrap: break-word;'>答案</td><td style='text-align: center; word-wrap: break-word;'>分数</td></tr><tr><td rowspan=\"2\">21</td><td style='text-align: center; word-wrap: break-word;'>正</td><td style='text-align: center; word-wrap: break-word;'>2分</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>变小</td><td style='text-align: center; word-wrap: break-word;'>2分</td></tr><tr><td rowspan=\"2\">22</td><td style='text-align: center; word-wrap: break-word;'>$ \\frac{U}{I} $</td><td style='text-align: center; word-wrap: break-word;'>2分</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>$ \\frac{US}{IL} $</td><td style='text-align: center; word-wrap: break-word;'>2分</td></tr><tr><td rowspan=\"2\">23</td><td style='text-align: center; word-wrap: break-word;'>0.72</td><td style='text-align: center; word-wrap: break-word;'>2分</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>打点计时器打下A点时小车的速度、打点计时器打下C点时小车的速度、小车运动的加速度等</td><td style='text-align: center; word-wrap: break-word;'>2分</td></tr></table>",
+      "explanation": "",
+      "material_info": {
+        "is_composite": false,
+        "unit_type": "standalone_unit",
+        "leaf_count": 1,
+        "leaf_ids": [
+          "Q22"
+        ]
+      },
+      "evidence": [],
+      "raw_lines": [
+        {
+          "line_ref": "P1L245",
+          "text": "22.在测量金属电阻率的实验中，根据图11所示电路测量金属丝的电阻。电压表的示数为U，电流表的示数为I，则金属丝电阻的测量值R=___；测得金属丝的长度为L，横截面积为S，则这段金属丝的电阻率 $ \\rho= $___（用U、I、L和S表示）。",
+          "page": 1,
+          "line": 245
+        },
+        {
+          "line_ref": "P1L246",
+          "text": "",
+          "page": 1,
+          "line": 246
+        },
+        {
+          "line_ref": "P1L247",
+          "text": "<div style=\"text-align: center;\"><img src=\"../../_imgs/2018北京春季高中会考物理（教师版）(1)/img_in_image_box_885_642_1079_728.jpg\" alt=\"Image\" width=\"16%\" /></div>",
+          "page": 1,
+          "line": 247
+        },
+        {
+          "line_ref": "P1L248",
+          "text": "",
+          "page": 1,
+          "line": 248
+        },
+        {
+          "line_ref": "P1L249",
+          "text": "",
+          "page": 1,
+          "line": 249
+        },
+        {
+          "line_ref": "P1L363",
+          "text": "<table border=1 style='margin: auto; word-wrap: break-word;'><tr><td style='text-align: center; word-wrap: break-word;'>题号</td><td style='text-align: center; word-wrap: break-word;'>答案</td><td style='text-align: center; word-wrap: break-word;'>分数</td></tr><tr><td rowspan=\"2\">21</td><td style='text-align: center; word-wrap: break-word;'>正</td><td style='text-align: center; word-wrap: break-word;'>2分</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>变小</td><td style='text-align: center; word-wrap: break-word;'>2分</td></tr><tr><td rowspan=\"2\">22</td><td style='text-align: center; word-wrap: break-word;'>$ \\frac{U}{I} $</td><td style='text-align: center; word-wrap: break-word;'>2分</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>$ \\frac{US}{IL} $</td><td style='text-align: center; word-wrap: break-word;'>2分</td></tr><tr><td rowspan=\"2\">23</td><td style='text-align: center; word-wrap: break-word;'>0.72</td><td style='text-align: center; word-wrap: break-word;'>2分</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>打点计时器打下A点时小车的速度、打点计时器打下C点时小车的速度、小车运动的加速度等</td><td style='text-align: center; word-wrap: break-word;'>2分</td></tr></table>",
+          "page": 1,
+          "line": 363
+        }
+      ],
+      "created_at": "2026-10-11 11:33:16.881664+00:00"
+    },
+    {
+      "id": "df5b0e38-344c-416f-8583-f2ad3ffb3a2e",
+      "unit_type": "standalone_unit",
+      "decision_status": "pending_review",
+      "question_ref": "Q23",
+      "all_refs": [
+        "Q23"
+      ],
+      "gate_reasons": [
+        "leaf 'Q23' type 'fill_in' not strict-auto (grammar None)"
+      ],
+      "gate_layers": {
+        "semantic": {
+          "status": "pass",
+          "reasons": []
+        },
+        "admission": {
+          "status": "fail",
+          "reasons": [
+            "leaf 'Q23' type 'fill_in' not strict-auto (grammar None)"
+          ]
+        },
+        "provenance": {
+          "status": "pass",
+          "reasons": []
+        },
+        "structural": {
+          "status": "pass",
+          "reasons": []
+        }
+      },
+      "stem": "23. 某实验小组利用打点计时器测量小车做匀变速直线运动的速度。该实验小组选取\n\n<div style=\"text-align: center;\">图11</div>\n\n\n了一条点迹清晰的纸带，如图 12 所示。图中 O、A、B、C、D 是按打点先后顺序依次选取的计数点，相邻计数点间的时间间隔 T=0.10s。由图中的数据可知，打点计时器打下 B 点时小车运动的速度  $ v_{B}= $ ___ m/s（保留两位有效数字），除此之外，我们还能测量的物理量有：___（写出一个即可）。\n\n<div style=\"text-align: center;\"><img src=\"../../_imgs/2018北京春季高中会考物理（教师版）(1)/img_in_image_box_162_955_1026_1082.jpg\" alt=\"Image\" width=\"72%\" /></div>\n\n\n<div style=\"text-align: center;\">图 12</div>\n\n\n## 三、 计算论证题（本题共5小题。第24题、第25题各5分，第26题、第27题、第28题各6分，共28分）\n\n## 解题要求：写出必要的文字说明、方程式、演算步骤和答案。有数值计算的题，答案必须明确写出数值和单位。\n",
+      "options": [],
+      "answer": "<table border=1 style='margin: auto; word-wrap: break-word;'><tr><td style='text-align: center; word-wrap: break-word;'>题号</td><td style='text-align: center; word-wrap: break-word;'>答案</td><td style='text-align: center; word-wrap: break-word;'>分数</td></tr><tr><td rowspan=\"2\">21</td><td style='text-align: center; word-wrap: break-word;'>正</td><td style='text-align: center; word-wrap: break-word;'>2分</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>变小</td><td style='text-align: center; word-wrap: break-word;'>2分</td></tr><tr><td rowspan=\"2\">22</td><td style='text-align: center; word-wrap: break-word;'>$ \\frac{U}{I} $</td><td style='text-align: center; word-wrap: break-word;'>2分</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>$ \\frac{US}{IL} $</td><td style='text-align: center; word-wrap: break-word;'>2分</td></tr><tr><td rowspan=\"2\">23</td><td style='text-align: center; word-wrap: break-word;'>0.72</td><td style='text-align: center; word-wrap: break-word;'>2分</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>打点计时器打下A点时小车的速度、打点计时器打下C点时小车的速度、小车运动的加速度等</td><td style='text-align: center; word-wrap: break-word;'>2分</td></tr></table>",
+      "explanation": "",
+      "material_info": {
+        "is_composite": false,
+        "unit_type": "standalone_unit",
+        "leaf_count": 1,
+        "leaf_ids": [
+          "Q23"
+        ]
+      },
+      "evidence": [],
+      "raw_lines": [
+        {
+          "line_ref": "P1L250",
+          "text": "23. 某实验小组利用打点计时器测量小车做匀变速直线运动的速度。该实验小组选取",
+          "page": 1,
+          "line": 250
+        },
+        {
+          "line_ref": "P1L251",
+          "text": "",
+          "page": 1,
+          "line": 251
+        },
+        {
+          "line_ref": "P1L252",
+          "text": "<div style=\"text-align: center;\">图11</div>",
+          "page": 1,
+          "line": 252
+        },
+        {
+          "line_ref": "P1L253",
+          "text": "",
+          "page": 1,
+          "line": 253
+        },
+        {
+          "line_ref": "P1L254",
+          "text": "",
+          "page": 1,
+          "line": 254
+        },
+        {
+          "line_ref": "P1L255",
+          "text": "了一条点迹清晰的纸带，如图 12 所示。图中 O、A、B、C、D 是按打点先后顺序依次选取的计数点，相邻计数点间的时间间隔 T=0.10s。由图中的数据可知，打点计时器打下 B 点时小车运动的速度  $ v_{B}= $ ___ m/s（保留两位有效数字），除此之外，我们还能测量的物理量有：___（写出一个即可）。",
+          "page": 1,
+          "line": 255
+        },
+        {
+          "line_ref": "P1L256",
+          "text": "",
+          "page": 1,
+          "line": 256
+        },
+        {
+          "line_ref": "P1L257",
+          "text": "<div style=\"text-align: center;\"><img src=\"../../_imgs/2018北京春季高中会考物理（教师版）(1)/img_in_image_box_162_955_1026_1082.jpg\" alt=\"Image\" width=\"72%\" /></div>",
+          "page": 1,
+          "line": 257
+        },
+        {
+          "line_ref": "P1L258",
+          "text": "",
+          "page": 1,
+          "line": 258
+        },
+        {
+          "line_ref": "P1L259",
+          "text": "",
+          "page": 1,
+          "line": 259
+        },
+        {
+          "line_ref": "P1L260",
+          "text": "<div style=\"text-align: center;\">图 12</div>",
+          "page": 1,
+          "line": 260
+        },
+        {
+          "line_ref": "P1L261",
+          "text": "",
+          "page": 1,
+          "line": 261
+        },
+        {
+          "line_ref": "P1L262",
+          "text": "",
+          "page": 1,
+          "line": 262
+        },
+        {
+          "line_ref": "P1L263",
+          "text": "## 三、 计算论证题（本题共5小题。第24题、第25题各5分，第26题、第27题、第28题各6分，共28分）",
+          "page": 1,
+          "line": 263
+        },
+        {
+          "line_ref": "P1L264",
+          "text": "",
+          "page": 1,
+          "line": 264
+        },
+        {
+          "line_ref": "P1L265",
+          "text": "## 解题要求：写出必要的文字说明、方程式、演算步骤和答案。有数值计算的题，答案必须明确写出数值和单位。",
+          "page": 1,
+          "line": 265
+        },
+        {
+          "line_ref": "P1L266",
+          "text": "",
+          "page": 1,
+          "line": 266
+        },
+        {
+          "line_ref": "P1L363",
+          "text": "<table border=1 style='margin: auto; word-wrap: break-word;'><tr><td style='text-align: center; word-wrap: break-word;'>题号</td><td style='text-align: center; word-wrap: break-word;'>答案</td><td style='text-align: center; word-wrap: break-word;'>分数</td></tr><tr><td rowspan=\"2\">21</td><td style='text-align: center; word-wrap: break-word;'>正</td><td style='text-align: center; word-wrap: break-word;'>2分</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>变小</td><td style='text-align: center; word-wrap: break-word;'>2分</td></tr><tr><td rowspan=\"2\">22</td><td style='text-align: center; word-wrap: break-word;'>$ \\frac{U}{I} $</td><td style='text-align: center; word-wrap: break-word;'>2分</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>$ \\frac{US}{IL} $</td><td style='text-align: center; word-wrap: break-word;'>2分</td></tr><tr><td rowspan=\"2\">23</td><td style='text-align: center; word-wrap: break-word;'>0.72</td><td style='text-align: center; word-wrap: break-word;'>2分</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>打点计时器打下A点时小车的速度、打点计时器打下C点时小车的速度、小车运动的加速度等</td><td style='text-align: center; word-wrap: break-word;'>2分</td></tr></table>",
+          "page": 1,
+          "line": 363
+        }
+      ],
+      "created_at": "2026-10-11 11:33:16.888900+00:00"
+    },
+    {
+      "id": "5d6d70bb-d98f-47b2-a735-6e61273f99b2",
+      "unit_type": "standalone_unit",
+      "decision_status": "pending_review",
+      "question_ref": "Q24",
+      "all_refs": [
+        "Q24"
+      ],
+      "gate_reasons": [
+        "leaf 'Q24' type 'short_answer' not strict-auto (grammar None)"
+      ],
+      "gate_layers": {
+        "semantic": {
+          "status": "pass",
+          "reasons": []
+        },
+        "admission": {
+          "status": "fail",
+          "reasons": [
+            "leaf 'Q24' type 'short_answer' not strict-auto (grammar None)"
+          ]
+        },
+        "provenance": {
+          "status": "pass",
+          "reasons": []
+        },
+        "structural": {
+          "status": "pass",
+          "reasons": []
+        }
+      },
+      "stem": "24. 如图 13 所示，质量  $ m=2.0 \\, kg $ 的物体置于光滑水平面上。t=0 时刻，在大小为  $ F=6.0 \\, N $ 的水平拉力作用下，物体由静止开始做匀加速直线运动。求：\n\n（1）物体做匀加速直线运动的加速度大小  $ a $;\n\n（2）物体在 t=2.0s 时的速度大小 v。\n\n<div style=\"text-align: center;\"><img src=\"../../_imgs/2018北京春季高中会考物理（教师版）(1)/img_in_image_box_900_1302_1084_1367.jpg\" alt=\"Image\" width=\"15%\" /></div>\n\n\n<div style=\"text-align: center;\">图 13</div>\n\n\n---\n",
+      "options": [],
+      "answer": "<table border=1 style='margin: auto; word-wrap: break-word;'><tr><td style='text-align: center; word-wrap: break-word;'>题号</td><td style='text-align: center; word-wrap: break-word;'>答案</td><td style='text-align: center; word-wrap: break-word;'>分数</td><td style='text-align: center; word-wrap: break-word;'>说明</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>24（5分）</td><td style='text-align: center; word-wrap: break-word;'>解：（1）根据牛顿第二定律 $ a=\\frac{F}{m}=3.0m/s^{2} $(2)t=2.0s时物体的速度大小 $ v=at=6.0m/s $</td><td style='text-align: center; word-wrap: break-word;'>3分2分</td><td style='text-align: center; word-wrap: break-word;'>按其它方法正确解答的，同样得分。可参照本评分标准分，给分。最后结果有单位的，必须写明单位，单位写错、缺单位的扣1分</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>25（5分）</td><td style='text-align: center; word-wrap: break-word;'>解：（1）A、B两点间的电势差 $ U_{AB}=Ed=2.0\\times10^{3}V $(2)该点电荷在A点所受的电场力大小 $ F=qE=2.0\\times10_{4}N $</td><td style='text-align: center; word-wrap: break-word;'>3分2分</td><td style='text-align: center; word-wrap: break-word;'>同第24题说明</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>26（6分）</td><td style='text-align: center; word-wrap: break-word;'>解：（1）书包从A处运动到B处的时间</td><td style='text-align: center; word-wrap: break-word;'>2分</td><td style='text-align: center; word-wrap: break-word;'>同第24题说明</td></tr></table>",
+      "explanation": "",
+      "material_info": {
+        "is_composite": false,
+        "unit_type": "standalone_unit",
+        "leaf_count": 1,
+        "leaf_ids": [
+          "Q24"
+        ]
+      },
+      "evidence": [],
+      "raw_lines": [
+        {
+          "line_ref": "P1L267",
+          "text": "24. 如图 13 所示，质量  $ m=2.0 \\, kg $ 的物体置于光滑水平面上。t=0 时刻，在大小为  $ F=6.0 \\, N $ 的水平拉力作用下，物体由静止开始做匀加速直线运动。求：",
+          "page": 1,
+          "line": 267
+        },
+        {
+          "line_ref": "P1L268",
+          "text": "",
+          "page": 1,
+          "line": 268
+        },
+        {
+          "line_ref": "P1L269",
+          "text": "（1）物体做匀加速直线运动的加速度大小  $ a $;",
+          "page": 1,
+          "line": 269
+        },
+        {
+          "line_ref": "P1L270",
+          "text": "",
+          "page": 1,
+          "line": 270
+        },
+        {
+          "line_ref": "P1L271",
+          "text": "（2）物体在 t=2.0s 时的速度大小 v。",
+          "page": 1,
+          "line": 271
+        },
+        {
+          "line_ref": "P1L272",
+          "text": "",
+          "page": 1,
+          "line": 272
+        },
+        {
+          "line_ref": "P1L273",
+          "text": "<div style=\"text-align: center;\"><img src=\"../../_imgs/2018北京春季高中会考物理（教师版）(1)/img_in_image_box_900_1302_1084_1367.jpg\" alt=\"Image\" width=\"15%\" /></div>",
+          "page": 1,
+          "line": 273
+        },
+        {
+          "line_ref": "P1L274",
+          "text": "",
+          "page": 1,
+          "line": 274
+        },
+        {
+          "line_ref": "P1L275",
+          "text": "",
+          "page": 1,
+          "line": 275
+        },
+        {
+          "line_ref": "P1L276",
+          "text": "<div style=\"text-align: center;\">图 13</div>",
+          "page": 1,
+          "line": 276
+        },
+        {
+          "line_ref": "P1L277",
+          "text": "",
+          "page": 1,
+          "line": 277
+        },
+        {
+          "line_ref": "P1L278",
+          "text": "",
+          "page": 1,
+          "line": 278
+        },
+        {
+          "line_ref": "P1L279",
+          "text": "---",
+          "page": 1,
+          "line": 279
+        },
+        {
+          "line_ref": "P1L280",
+          "text": "",
+          "page": 1,
+          "line": 280
+        },
+        {
+          "line_ref": "P1L368",
+          "text": "<table border=1 style='margin: auto; word-wrap: break-word;'><tr><td style='text-align: center; word-wrap: break-word;'>题号</td><td style='text-align: center; word-wrap: break-word;'>答案</td><td style='text-align: center; word-wrap: break-word;'>分数</td><td style='text-align: center; word-wrap: break-word;'>说明</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>24（5分）</td><td style='text-align: center; word-wrap: break-word;'>解：（1）根据牛顿第二定律 $ a=\\frac{F}{m}=3.0m/s^{2} $(2)t=2.0s时物体的速度大小 $ v=at=6.0m/s $</td><td style='text-align: center; word-wrap: break-word;'>3分2分</td><td style='text-align: center; word-wrap: break-word;'>按其它方法正确解答的，同样得分。可参照本评分标准分，给分。最后结果有单位的，必须写明单位，单位写错、缺单位的扣1分</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>25（5分）</td><td style='text-align: center; word-wrap: break-word;'>解：（1）A、B两点间的电势差 $ U_{AB}=Ed=2.0\\times10^{3}V $(2)该点电荷在A点所受的电场力大小 $ F=qE=2.0\\times10_{4}N $</td><td style='text-align: center; word-wrap: break-word;'>3分2分</td><td style='text-align: center; word-wrap: break-word;'>同第24题说明</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>26（6分）</td><td style='text-align: center; word-wrap: break-word;'>解：（1）书包从A处运动到B处的时间</td><td style='text-align: center; word-wrap: break-word;'>2分</td><td style='text-align: center; word-wrap: break-word;'>同第24题说明</td></tr></table>",
+          "page": 1,
+          "line": 368
+        }
+      ],
+      "created_at": "2026-10-11 11:33:16.896013+00:00"
+    },
+    {
+      "id": "25c87e40-ed66-44f0-b458-0cd33be6c863",
+      "unit_type": "standalone_unit",
+      "decision_status": "pending_review",
+      "question_ref": "Q25",
+      "all_refs": [
+        "Q25"
+      ],
+      "gate_reasons": [
+        "leaf 'Q25' type 'short_answer' not strict-auto (grammar None)"
+      ],
+      "gate_layers": {
+        "semantic": {
+          "status": "pass",
+          "reasons": []
+        },
+        "admission": {
+          "status": "fail",
+          "reasons": [
+            "leaf 'Q25' type 'short_answer' not strict-auto (grammar None)"
+          ]
+        },
+        "provenance": {
+          "status": "pass",
+          "reasons": []
+        },
+        "structural": {
+          "status": "pass",
+          "reasons": []
+        }
+      },
+      "stem": "25.如图14所示，在电场强度  $ E=2.0\\times10^{4}N/C $ 的匀强电场中，A、B两点在同一条电场线上，它们间的距离  $ d=0.10m $。\n\n（1）求A、B两点间的电势差 $ U_{AB} $;\n\n（2）现将电荷量  $ q=+1.0\\times10^{-8}C $ 的点电荷放在电场中的 A 点，求该点电荷在 A 点所受电场力的大小 F。\n\n<div style=\"text-align: center;\"><img src=\"../../_imgs/2018北京春季高中会考物理（教师版）(1)/img_in_image_box_909_93_1079_214.jpg\" alt=\"Image\" width=\"14%\" /></div>\n\n\n<div style=\"text-align: center;\">图14</div>\n\n",
+      "options": [],
+      "answer": "<table border=1 style='margin: auto; word-wrap: break-word;'><tr><td style='text-align: center; word-wrap: break-word;'>题号</td><td style='text-align: center; word-wrap: break-word;'>答案</td><td style='text-align: center; word-wrap: break-word;'>分数</td><td style='text-align: center; word-wrap: break-word;'>说明</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>24（5分）</td><td style='text-align: center; word-wrap: break-word;'>解：（1）根据牛顿第二定律 $ a=\\frac{F}{m}=3.0m/s^{2} $(2)t=2.0s时物体的速度大小 $ v=at=6.0m/s $</td><td style='text-align: center; word-wrap: break-word;'>3分2分</td><td style='text-align: center; word-wrap: break-word;'>按其它方法正确解答的，同样得分。可参照本评分标准分，给分。最后结果有单位的，必须写明单位，单位写错、缺单位的扣1分</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>25（5分）</td><td style='text-align: center; word-wrap: break-word;'>解：（1）A、B两点间的电势差 $ U_{AB}=Ed=2.0\\times10^{3}V $(2)该点电荷在A点所受的电场力大小 $ F=qE=2.0\\times10_{4}N $</td><td style='text-align: center; word-wrap: break-word;'>3分2分</td><td style='text-align: center; word-wrap: break-word;'>同第24题说明</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>26（6分）</td><td style='text-align: center; word-wrap: break-word;'>解：（1）书包从A处运动到B处的时间</td><td style='text-align: center; word-wrap: break-word;'>2分</td><td style='text-align: center; word-wrap: break-word;'>同第24题说明</td></tr></table>",
+      "explanation": "",
+      "material_info": {
+        "is_composite": false,
+        "unit_type": "standalone_unit",
+        "leaf_count": 1,
+        "leaf_ids": [
+          "Q25"
+        ]
+      },
+      "evidence": [],
+      "raw_lines": [
+        {
+          "line_ref": "P1L281",
+          "text": "25.如图14所示，在电场强度  $ E=2.0\\times10^{4}N/C $ 的匀强电场中，A、B两点在同一条电场线上，它们间的距离  $ d=0.10m $。",
+          "page": 1,
+          "line": 281
+        },
+        {
+          "line_ref": "P1L282",
+          "text": "",
+          "page": 1,
+          "line": 282
+        },
+        {
+          "line_ref": "P1L283",
+          "text": "（1）求A、B两点间的电势差 $ U_{AB} $;",
+          "page": 1,
+          "line": 283
+        },
+        {
+          "line_ref": "P1L284",
+          "text": "",
+          "page": 1,
+          "line": 284
+        },
+        {
+          "line_ref": "P1L285",
+          "text": "（2）现将电荷量  $ q=+1.0\\times10^{-8}C $ 的点电荷放在电场中的 A 点，求该点电荷在 A 点所受电场力的大小 F。",
+          "page": 1,
+          "line": 285
+        },
+        {
+          "line_ref": "P1L286",
+          "text": "",
+          "page": 1,
+          "line": 286
+        },
+        {
+          "line_ref": "P1L287",
+          "text": "<div style=\"text-align: center;\"><img src=\"../../_imgs/2018北京春季高中会考物理（教师版）(1)/img_in_image_box_909_93_1079_214.jpg\" alt=\"Image\" width=\"14%\" /></div>",
+          "page": 1,
+          "line": 287
+        },
+        {
+          "line_ref": "P1L288",
+          "text": "",
+          "page": 1,
+          "line": 288
+        },
+        {
+          "line_ref": "P1L289",
+          "text": "",
+          "page": 1,
+          "line": 289
+        },
+        {
+          "line_ref": "P1L290",
+          "text": "<div style=\"text-align: center;\">图14</div>",
+          "page": 1,
+          "line": 290
+        },
+        {
+          "line_ref": "P1L291",
+          "text": "",
+          "page": 1,
+          "line": 291
+        },
+        {
+          "line_ref": "P1L292",
+          "text": "",
+          "page": 1,
+          "line": 292
+        },
+        {
+          "line_ref": "P1L368",
+          "text": "<table border=1 style='margin: auto; word-wrap: break-word;'><tr><td style='text-align: center; word-wrap: break-word;'>题号</td><td style='text-align: center; word-wrap: break-word;'>答案</td><td style='text-align: center; word-wrap: break-word;'>分数</td><td style='text-align: center; word-wrap: break-word;'>说明</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>24（5分）</td><td style='text-align: center; word-wrap: break-word;'>解：（1）根据牛顿第二定律 $ a=\\frac{F}{m}=3.0m/s^{2} $(2)t=2.0s时物体的速度大小 $ v=at=6.0m/s $</td><td style='text-align: center; word-wrap: break-word;'>3分2分</td><td style='text-align: center; word-wrap: break-word;'>按其它方法正确解答的，同样得分。可参照本评分标准分，给分。最后结果有单位的，必须写明单位，单位写错、缺单位的扣1分</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>25（5分）</td><td style='text-align: center; word-wrap: break-word;'>解：（1）A、B两点间的电势差 $ U_{AB}=Ed=2.0\\times10^{3}V $(2)该点电荷在A点所受的电场力大小 $ F=qE=2.0\\times10_{4}N $</td><td style='text-align: center; word-wrap: break-word;'>3分2分</td><td style='text-align: center; word-wrap: break-word;'>同第24题说明</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>26（6分）</td><td style='text-align: center; word-wrap: break-word;'>解：（1）书包从A处运动到B处的时间</td><td style='text-align: center; word-wrap: break-word;'>2分</td><td style='text-align: center; word-wrap: break-word;'>同第24题说明</td></tr></table>",
+          "page": 1,
+          "line": 368
+        }
+      ],
+      "created_at": "2026-10-11 11:33:16.903147+00:00"
+    },
+    {
+      "id": "f35da7b1-9b64-40cf-9f37-740f8f234682",
+      "unit_type": "standalone_unit",
+      "decision_status": "pending_review",
+      "question_ref": "Q26",
+      "all_refs": [
+        "Q26"
+      ],
+      "gate_reasons": [
+        "leaf 'Q26' type 'short_answer' not strict-auto (grammar None)"
+      ],
+      "gate_layers": {
+        "semantic": {
+          "status": "pass",
+          "reasons": []
+        },
+        "admission": {
+          "status": "fail",
+          "reasons": [
+            "leaf 'Q26' type 'short_answer' not strict-auto (grammar None)"
+          ]
+        },
+        "provenance": {
+          "status": "pass",
+          "reasons": []
+        },
+        "structural": {
+          "status": "pass",
+          "reasons": []
+        }
+      },
+      "stem": "26. “平安北京，绿色出行”，地铁已成为北京的主要绿色交通工具之一。图15为地铁安检场景，图16是安检时传送带运行的示意图。某乘客把一书包放在水平传送带的入口A处，书包随传送带匀速运动到出口B处。由于书包与传送带间的动摩擦因数很大，传送带的运行速度很小，可忽略书包的加速时间。已知传送带始终以 $ v=0.20\\,m/s $的速度匀速运行，A、B两处之间的距离 $ L=1.6\\,m $。\n\n<div style=\"text-align: center;\"><img src=\"../../_imgs/2018北京春季高中会考物理（教师版）(1)/img_in_image_box_273_493_574_734.jpg\" alt=\"Image\" width=\"25%\" /></div>\n\n\n<div style=\"text-align: center;\">图15</div>\n\n\n<div style=\"text-align: center;\"><img src=\"../../_imgs/2018北京春季高中会考物理（教师版）(1)/img_in_image_box_644_630_915_719.jpg\" alt=\"Image\" width=\"22%\" /></div>\n\n\n<div style=\"text-align: center;\">图16</div>\n\n\n（1）求书包从 A 处运动到 B 处的时间 t;\n\n（2）有同学认为，书包随传送带匀速运动过程中，始终受到传送带施加的摩擦力作用。你认为这种说法是否正确，请说明理由。\n",
+      "options": [],
+      "answer": "<table border=1 style='margin: auto; word-wrap: break-word;'><tr><td style='text-align: center; word-wrap: break-word;'>题号</td><td style='text-align: center; word-wrap: break-word;'>答案</td><td style='text-align: center; word-wrap: break-word;'>分数</td><td style='text-align: center; word-wrap: break-word;'>说明</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>24（5分）</td><td style='text-align: center; word-wrap: break-word;'>解：（1）根据牛顿第二定律 $ a=\\frac{F}{m}=3.0m/s^{2} $(2)t=2.0s时物体的速度大小 $ v=at=6.0m/s $</td><td style='text-align: center; word-wrap: break-word;'>3分2分</td><td style='text-align: center; word-wrap: break-word;'>按其它方法正确解答的，同样得分。可参照本评分标准分，给分。最后结果有单位的，必须写明单位，单位写错、缺单位的扣1分</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>25（5分）</td><td style='text-align: center; word-wrap: break-word;'>解：（1）A、B两点间的电势差 $ U_{AB}=Ed=2.0\\times10^{3}V $(2)该点电荷在A点所受的电场力大小 $ F=qE=2.0\\times10_{4}N $</td><td style='text-align: center; word-wrap: break-word;'>3分2分</td><td style='text-align: center; word-wrap: break-word;'>同第24题说明</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>26（6分）</td><td style='text-align: center; word-wrap: break-word;'>解：（1）书包从A处运动到B处的时间</td><td style='text-align: center; word-wrap: break-word;'>2分</td><td style='text-align: center; word-wrap: break-word;'>同第24题说明</td></tr></table>\n\n---\n\n\n<table border=1 style='margin: auto; word-wrap: break-word;'><tr><td style='text-align: center; word-wrap: break-word;'></td><td style='text-align: center; word-wrap: break-word;'>$ t=\\frac{L}{V}=8.0s $\\n（2）该同学的观点不正确。\\n因为书包做匀速直线运动，加速度为0，所以合力为0。假设书包受到摩擦力的作用，其合力就不可能为0，因此\\n书包不受摩擦力的作用。</td><td style='text-align: center; word-wrap: break-word;'>4分</td><td style='text-align: center; word-wrap: break-word;'></td></tr><tr><td style='text-align: center; word-wrap: break-word;'>27（6分）</td><td style='text-align: center; word-wrap: break-word;'>解：（1）返回舱加速度的方向竖直向上。\\n根据匀变速直线运动规律\\n $ x=V t_{0}-\\frac{1}{2}a t^{2} $\\n解得  $ a=45m/s^{2} $\\n（2）以航天员为研究对象，根据牛顿第二定律\\n $ F-m g=m a $\\n解得  $ F=3.3 \\times 10^{3} N $</td><td style='text-align: center; word-wrap: break-word;'></td><td style='text-align: center; word-wrap: break-word;'></td></tr><tr><td style='text-align: center; word-wrap: break-word;'>28（6分）</td><td style='text-align: center; word-wrap: break-word;'>解：（1）每秒钟到达B板的电子数为N，电荷量\\n $ Q=N e $\\n根据电流的定义式  $ I=\\frac{Q}{t} $\\n解得  $ N=\\frac{I}{e} $\\n（2）a. 以具有最大动能的电子为研究对象，当其速度减小到0时，电子恰好运动到接近B板，设其最大动能为 $ E_{km} $，根据动能定理\\n $ -e U_{0}=0-E_{km} $\\n解得  $ E_{km}=e U_{0} $\\nb. 这种说法不正确。\\n电子的最大速度为定值，电子的最大动能也是定值。以具有最大动能的电子为研究对象，当移动B板后，设当电压为U时，其速度减小到0，根据动能定理\\n $ -e U=0-E_{km} $\\n结合上一问结果，解得  $ U=U_{0} $，即电子也是恰好运动到接近B板速度减为0，故仍然没有电流。</td><td style='text-align: center; word-wrap: break-word;'>2分\\n2分</td><td style='text-align: center; word-wrap: break-word;'></td></tr></table>",
+      "explanation": "",
+      "material_info": {
+        "is_composite": false,
+        "unit_type": "standalone_unit",
+        "leaf_count": 1,
+        "leaf_ids": [
+          "Q26"
+        ]
+      },
+      "evidence": [],
+      "raw_lines": [
+        {
+          "line_ref": "P1L293",
+          "text": "26. “平安北京，绿色出行”，地铁已成为北京的主要绿色交通工具之一。图15为地铁安检场景，图16是安检时传送带运行的示意图。某乘客把一书包放在水平传送带的入口A处，书包随传送带匀速运动到出口B处。由于书包与传送带间的动摩擦因数很大，传送带的运行速度很小，可忽略书包的加速时间。已知传送带始终以 $ v=0.20\\,m/s $的速度匀速运行，A、B两处之间的距离 $ L=1.6\\,m $。",
+          "page": 1,
+          "line": 293
+        },
+        {
+          "line_ref": "P1L294",
+          "text": "",
+          "page": 1,
+          "line": 294
+        },
+        {
+          "line_ref": "P1L295",
+          "text": "<div style=\"text-align: center;\"><img src=\"../../_imgs/2018北京春季高中会考物理（教师版）(1)/img_in_image_box_273_493_574_734.jpg\" alt=\"Image\" width=\"25%\" /></div>",
+          "page": 1,
+          "line": 295
+        },
+        {
+          "line_ref": "P1L296",
+          "text": "",
+          "page": 1,
+          "line": 296
+        },
+        {
+          "line_ref": "P1L297",
+          "text": "",
+          "page": 1,
+          "line": 297
+        },
+        {
+          "line_ref": "P1L298",
+          "text": "<div style=\"text-align: center;\">图15</div>",
+          "page": 1,
+          "line": 298
+        },
+        {
+          "line_ref": "P1L299",
+          "text": "",
+          "page": 1,
+          "line": 299
+        },
+        {
+          "line_ref": "P1L300",
+          "text": "",
+          "page": 1,
+          "line": 300
+        },
+        {
+          "line_ref": "P1L301",
+          "text": "<div style=\"text-align: center;\"><img src=\"../../_imgs/2018北京春季高中会考物理（教师版）(1)/img_in_image_box_644_630_915_719.jpg\" alt=\"Image\" width=\"22%\" /></div>",
+          "page": 1,
+          "line": 301
+        },
+        {
+          "line_ref": "P1L302",
+          "text": "",
+          "page": 1,
+          "line": 302
+        },
+        {
+          "line_ref": "P1L303",
+          "text": "",
+          "page": 1,
+          "line": 303
+        },
+        {
+          "line_ref": "P1L304",
+          "text": "<div style=\"text-align: center;\">图16</div>",
+          "page": 1,
+          "line": 304
+        },
+        {
+          "line_ref": "P1L305",
+          "text": "",
+          "page": 1,
+          "line": 305
+        },
+        {
+          "line_ref": "P1L306",
+          "text": "",
+          "page": 1,
+          "line": 306
+        },
+        {
+          "line_ref": "P1L307",
+          "text": "（1）求书包从 A 处运动到 B 处的时间 t;",
+          "page": 1,
+          "line": 307
+        },
+        {
+          "line_ref": "P1L308",
+          "text": "",
+          "page": 1,
+          "line": 308
+        },
+        {
+          "line_ref": "P1L309",
+          "text": "（2）有同学认为，书包随传送带匀速运动过程中，始终受到传送带施加的摩擦力作用。你认为这种说法是否正确，请说明理由。",
+          "page": 1,
+          "line": 309
+        },
+        {
+          "line_ref": "P1L310",
+          "text": "",
+          "page": 1,
+          "line": 310
+        },
+        {
+          "line_ref": "P1L368",
+          "text": "<table border=1 style='margin: auto; word-wrap: break-word;'><tr><td style='text-align: center; word-wrap: break-word;'>题号</td><td style='text-align: center; word-wrap: break-word;'>答案</td><td style='text-align: center; word-wrap: break-word;'>分数</td><td style='text-align: center; word-wrap: break-word;'>说明</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>24（5分）</td><td style='text-align: center; word-wrap: break-word;'>解：（1）根据牛顿第二定律 $ a=\\frac{F}{m}=3.0m/s^{2} $(2)t=2.0s时物体的速度大小 $ v=at=6.0m/s $</td><td style='text-align: center; word-wrap: break-word;'>3分2分</td><td style='text-align: center; word-wrap: break-word;'>按其它方法正确解答的，同样得分。可参照本评分标准分，给分。最后结果有单位的，必须写明单位，单位写错、缺单位的扣1分</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>25（5分）</td><td style='text-align: center; word-wrap: break-word;'>解：（1）A、B两点间的电势差 $ U_{AB}=Ed=2.0\\times10^{3}V $(2)该点电荷在A点所受的电场力大小 $ F=qE=2.0\\times10_{4}N $</td><td style='text-align: center; word-wrap: break-word;'>3分2分</td><td style='text-align: center; word-wrap: break-word;'>同第24题说明</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>26（6分）</td><td style='text-align: center; word-wrap: break-word;'>解：（1）书包从A处运动到B处的时间</td><td style='text-align: center; word-wrap: break-word;'>2分</td><td style='text-align: center; word-wrap: break-word;'>同第24题说明</td></tr></table>",
+          "page": 1,
+          "line": 368
+        },
+        {
+          "line_ref": "P1L369",
+          "text": "",
+          "page": 1,
+          "line": 369
+        },
+        {
+          "line_ref": "P1L370",
+          "text": "---",
+          "page": 1,
+          "line": 370
+        },
+        {
+          "line_ref": "P1L371",
+          "text": "",
+          "page": 1,
+          "line": 371
+        },
+        {
+          "line_ref": "P1L372",
+          "text": "",
+          "page": 1,
+          "line": 372
+        },
+        {
+          "line_ref": "P1L373",
+          "text": "<table border=1 style='margin: auto; word-wrap: break-word;'><tr><td style='text-align: center; word-wrap: break-word;'></td><td style='text-align: center; word-wrap: break-word;'>$ t=\\frac{L}{V}=8.0s $\\n（2）该同学的观点不正确。\\n因为书包做匀速直线运动，加速度为0，所以合力为0。假设书包受到摩擦力的作用，其合力就不可能为0，因此\\n书包不受摩擦力的作用。</td><td style='text-align: center; word-wrap: break-word;'>4分</td><td style='text-align: center; word-wrap: break-word;'></td></tr><tr><td style='text-align: center; word-wrap: break-word;'>27（6分）</td><td style='text-align: center; word-wrap: break-word;'>解：（1）返回舱加速度的方向竖直向上。\\n根据匀变速直线运动规律\\n $ x=V t_{0}-\\frac{1}{2}a t^{2} $\\n解得  $ a=45m/s^{2} $\\n（2）以航天员为研究对象，根据牛顿第二定律\\n $ F-m g=m a $\\n解得  $ F=3.3 \\times 10^{3} N $</td><td style='text-align: center; word-wrap: break-word;'></td><td style='text-align: center; word-wrap: break-word;'></td></tr><tr><td style='text-align: center; word-wrap: break-word;'>28（6分）</td><td style='text-align: center; word-wrap: break-word;'>解：（1）每秒钟到达B板的电子数为N，电荷量\\n $ Q=N e $\\n根据电流的定义式  $ I=\\frac{Q}{t} $\\n解得  $ N=\\frac{I}{e} $\\n（2）a. 以具有最大动能的电子为研究对象，当其速度减小到0时，电子恰好运动到接近B板，设其最大动能为 $ E_{km} $，根据动能定理\\n $ -e U_{0}=0-E_{km} $\\n解得  $ E_{km}=e U_{0} $\\nb. 这种说法不正确。\\n电子的最大速度为定值，电子的最大动能也是定值。以具有最大动能的电子为研究对象，当移动B板后，设当电压为U时，其速度减小到0，根据动能定理\\n $ -e U=0-E_{km} $\\n结合上一问结果，解得  $ U=U_{0} $，即电子也是恰好运动到接近B板速度减为0，故仍然没有电流。</td><td style='text-align: center; word-wrap: break-word;'>2分\\n2分</td><td style='text-align: center; word-wrap: break-word;'></td></tr></table>",
+          "page": 1,
+          "line": 373
+        }
+      ],
+      "created_at": "2026-10-11 11:33:16.912241+00:00"
+    },
+    {
+      "id": "a2b0b572-90a2-4322-83a4-23d086439c2f",
+      "unit_type": "standalone_unit",
+      "decision_status": "pending_review",
+      "question_ref": "Q27",
+      "all_refs": [
+        "Q27"
+      ],
+      "gate_reasons": [
+        "leaf 'Q27' type 'short_answer' not strict-auto (grammar None)"
+      ],
+      "gate_layers": {
+        "semantic": {
+          "status": "pass",
+          "reasons": []
+        },
+        "admission": {
+          "status": "fail",
+          "reasons": [
+            "leaf 'Q27' type 'short_answer' not strict-auto (grammar None)"
+          ]
+        },
+        "provenance": {
+          "status": "pass",
+          "reasons": []
+        },
+        "structural": {
+          "status": "pass",
+          "reasons": []
+        }
+      },
+      "stem": "27.如图17所示，“神舟十一号”载人飞船的返回舱在距地面某一高度时，启动降落伞装置，速度减至 $ v=10\\,m/s $时开始匀速降落。在距地面 $ h=1.1\\,m $时，返回舱的缓冲发动机开始向下喷气，舱体再次减速，经过时间 $ t=0.20\\,s $，以某一速度落至地面，此过程可视为竖直方向的匀减速直线运动。取重力加速度 $ g=10\\,m/s^{2} $。求：\n\n\n\n(1)在该0.20s减速阶段，返回舱加速度a的方向和大小；\n\n(2)在该0.20s减速阶段，返回舱对质量 $ m=60~kg $的航天员的作用力大小F。\n\n<div style=\"text-align: center;\"><img src=\"../../_imgs/2018北京春季高中会考物理（教师版）(1)/img_in_image_box_931_1017_1084_1255.jpg\" alt=\"Image\" width=\"12%\" /></div>\n\n\n<div style=\"text-align: center;\">图17</div>\n\n\n---\n",
+      "options": [],
+      "answer": "<table border=1 style='margin: auto; word-wrap: break-word;'><tr><td style='text-align: center; word-wrap: break-word;'></td><td style='text-align: center; word-wrap: break-word;'>$ t=\\frac{L}{V}=8.0s $\\n（2）该同学的观点不正确。\\n因为书包做匀速直线运动，加速度为0，所以合力为0。假设书包受到摩擦力的作用，其合力就不可能为0，因此\\n书包不受摩擦力的作用。</td><td style='text-align: center; word-wrap: break-word;'>4分</td><td style='text-align: center; word-wrap: break-word;'></td></tr><tr><td style='text-align: center; word-wrap: break-word;'>27（6分）</td><td style='text-align: center; word-wrap: break-word;'>解：（1）返回舱加速度的方向竖直向上。\\n根据匀变速直线运动规律\\n $ x=V t_{0}-\\frac{1}{2}a t^{2} $\\n解得  $ a=45m/s^{2} $\\n（2）以航天员为研究对象，根据牛顿第二定律\\n $ F-m g=m a $\\n解得  $ F=3.3 \\times 10^{3} N $</td><td style='text-align: center; word-wrap: break-word;'></td><td style='text-align: center; word-wrap: break-word;'></td></tr><tr><td style='text-align: center; word-wrap: break-word;'>28（6分）</td><td style='text-align: center; word-wrap: break-word;'>解：（1）每秒钟到达B板的电子数为N，电荷量\\n $ Q=N e $\\n根据电流的定义式  $ I=\\frac{Q}{t} $\\n解得  $ N=\\frac{I}{e} $\\n（2）a. 以具有最大动能的电子为研究对象，当其速度减小到0时，电子恰好运动到接近B板，设其最大动能为 $ E_{km} $，根据动能定理\\n $ -e U_{0}=0-E_{km} $\\n解得  $ E_{km}=e U_{0} $\\nb. 这种说法不正确。\\n电子的最大速度为定值，电子的最大动能也是定值。以具有最大动能的电子为研究对象，当移动B板后，设当电压为U时，其速度减小到0，根据动能定理\\n $ -e U=0-E_{km} $\\n结合上一问结果，解得  $ U=U_{0} $，即电子也是恰好运动到接近B板速度减为0，故仍然没有电流。</td><td style='text-align: center; word-wrap: break-word;'>2分\\n2分</td><td style='text-align: center; word-wrap: break-word;'></td></tr></table>",
+      "explanation": "",
+      "material_info": {
+        "is_composite": false,
+        "unit_type": "standalone_unit",
+        "leaf_count": 1,
+        "leaf_ids": [
+          "Q27"
+        ]
+      },
+      "evidence": [],
+      "raw_lines": [
+        {
+          "line_ref": "P1L311",
+          "text": "27.如图17所示，“神舟十一号”载人飞船的返回舱在距地面某一高度时，启动降落伞装置，速度减至 $ v=10\\,m/s $时开始匀速降落。在距地面 $ h=1.1\\,m $时，返回舱的缓冲发动机开始向下喷气，舱体再次减速，经过时间 $ t=0.20\\,s $，以某一速度落至地面，此过程可视为竖直方向的匀减速直线运动。取重力加速度 $ g=10\\,m/s^{2} $。求：",
+          "page": 1,
+          "line": 311
+        },
+        {
+          "line_ref": "P1L312",
+          "text": "",
+          "page": 1,
+          "line": 312
+        },
+        {
+          "line_ref": "P1L313",
+          "text": "",
+          "page": 1,
+          "line": 313
+        },
+        {
+          "line_ref": "P1L314",
+          "text": "",
+          "page": 1,
+          "line": 314
+        },
+        {
+          "line_ref": "P1L315",
+          "text": "(1)在该0.20s减速阶段，返回舱加速度a的方向和大小；",
+          "page": 1,
+          "line": 315
+        },
+        {
+          "line_ref": "P1L316",
+          "text": "",
+          "page": 1,
+          "line": 316
+        },
+        {
+          "line_ref": "P1L317",
+          "text": "(2)在该0.20s减速阶段，返回舱对质量 $ m=60~kg $的航天员的作用力大小F。",
+          "page": 1,
+          "line": 317
+        },
+        {
+          "line_ref": "P1L318",
+          "text": "",
+          "page": 1,
+          "line": 318
+        },
+        {
+          "line_ref": "P1L319",
+          "text": "<div style=\"text-align: center;\"><img src=\"../../_imgs/2018北京春季高中会考物理（教师版）(1)/img_in_image_box_931_1017_1084_1255.jpg\" alt=\"Image\" width=\"12%\" /></div>",
+          "page": 1,
+          "line": 319
+        },
+        {
+          "line_ref": "P1L320",
+          "text": "",
+          "page": 1,
+          "line": 320
+        },
+        {
+          "line_ref": "P1L321",
+          "text": "",
+          "page": 1,
+          "line": 321
+        },
+        {
+          "line_ref": "P1L322",
+          "text": "<div style=\"text-align: center;\">图17</div>",
+          "page": 1,
+          "line": 322
+        },
+        {
+          "line_ref": "P1L323",
+          "text": "",
+          "page": 1,
+          "line": 323
+        },
+        {
+          "line_ref": "P1L324",
+          "text": "",
+          "page": 1,
+          "line": 324
+        },
+        {
+          "line_ref": "P1L325",
+          "text": "---",
+          "page": 1,
+          "line": 325
+        },
+        {
+          "line_ref": "P1L326",
+          "text": "",
+          "page": 1,
+          "line": 326
+        },
+        {
+          "line_ref": "P1L373",
+          "text": "<table border=1 style='margin: auto; word-wrap: break-word;'><tr><td style='text-align: center; word-wrap: break-word;'></td><td style='text-align: center; word-wrap: break-word;'>$ t=\\frac{L}{V}=8.0s $\\n（2）该同学的观点不正确。\\n因为书包做匀速直线运动，加速度为0，所以合力为0。假设书包受到摩擦力的作用，其合力就不可能为0，因此\\n书包不受摩擦力的作用。</td><td style='text-align: center; word-wrap: break-word;'>4分</td><td style='text-align: center; word-wrap: break-word;'></td></tr><tr><td style='text-align: center; word-wrap: break-word;'>27（6分）</td><td style='text-align: center; word-wrap: break-word;'>解：（1）返回舱加速度的方向竖直向上。\\n根据匀变速直线运动规律\\n $ x=V t_{0}-\\frac{1}{2}a t^{2} $\\n解得  $ a=45m/s^{2} $\\n（2）以航天员为研究对象，根据牛顿第二定律\\n $ F-m g=m a $\\n解得  $ F=3.3 \\times 10^{3} N $</td><td style='text-align: center; word-wrap: break-word;'></td><td style='text-align: center; word-wrap: break-word;'></td></tr><tr><td style='text-align: center; word-wrap: break-word;'>28（6分）</td><td style='text-align: center; word-wrap: break-word;'>解：（1）每秒钟到达B板的电子数为N，电荷量\\n $ Q=N e $\\n根据电流的定义式  $ I=\\frac{Q}{t} $\\n解得  $ N=\\frac{I}{e} $\\n（2）a. 以具有最大动能的电子为研究对象，当其速度减小到0时，电子恰好运动到接近B板，设其最大动能为 $ E_{km} $，根据动能定理\\n $ -e U_{0}=0-E_{km} $\\n解得  $ E_{km}=e U_{0} $\\nb. 这种说法不正确。\\n电子的最大速度为定值，电子的最大动能也是定值。以具有最大动能的电子为研究对象，当移动B板后，设当电压为U时，其速度减小到0，根据动能定理\\n $ -e U=0-E_{km} $\\n结合上一问结果，解得  $ U=U_{0} $，即电子也是恰好运动到接近B板速度减为0，故仍然没有电流。</td><td style='text-align: center; word-wrap: break-word;'>2分\\n2分</td><td style='text-align: center; word-wrap: break-word;'></td></tr></table>",
+          "page": 1,
+          "line": 373
+        }
+      ],
+      "created_at": "2026-10-11 11:33:16.918345+00:00"
+    },
+    {
+      "id": "8bec85f9-72d7-44ae-9576-923da0035299",
+      "unit_type": "standalone_unit",
+      "decision_status": "pending_review",
+      "question_ref": "Q28",
+      "all_refs": [
+        "Q28"
+      ],
+      "gate_reasons": [
+        "leaf 'Q28' type 'short_answer' not strict-auto (grammar None)"
+      ],
+      "gate_layers": {
+        "semantic": {
+          "status": "pass",
+          "reasons": []
+        },
+        "admission": {
+          "status": "fail",
+          "reasons": [
+            "leaf 'Q28' type 'short_answer' not strict-auto (grammar None)"
+          ]
+        },
+        "provenance": {
+          "status": "pass",
+          "reasons": []
+        },
+        "structural": {
+          "status": "pass",
+          "reasons": []
+        }
+      },
+      "stem": "28. 实验表明，一些金属受到紫外线照射时会有电子射出。如图 18 所示，真空中一对平行金属板 A 和 B 正对放置，用紫外线持续照射 A 板时，A 板持续射出速度大小不同的电子，且电子的最大速度为定值。为了简化问题，假设射出的电子都垂直于 A 板向 B 板运动，忽略电子之间的相互作用以及电子所受的重力。电子的电荷量为 e。\n\n(1)如图18所示，在A、B板之间接一灵敏电流计。当电流计示数为I时，求每秒钟到达B板的电子个数N。\n\n(2)将两金属板、电压可调的电源、灵敏电流计连接成如图19所示的电路，A板接电源正极，B板接电源负极。逐渐增大两板间的电压，发现电流计示数会随着电压的增大而减小，当电压为 $ U_{0} $时电流计示数刚好为零。\n\na. 求从 A 板射出的电子具有的最大动能  $ E_{km} $;\n\nb. 有同学认为，断开开关，将 B 板向左平移一段距离，使其靠近 A 板后，维持电压  $ U_{0} $ 不变，再次闭合开关，则电路中将再次出现电流。你认为这种说法是否正确，请说明理由。\n\n<div style=\"text-align: center;\"><img src=\"../../_imgs/2018北京春季高中会考物理（教师版）(1)/img_in_image_box_319_587_539_881.jpg\" alt=\"Image\" width=\"18%\" /></div>\n\n\n<div style=\"text-align: center;\">图 18</div>\n\n\n<div style=\"text-align: center;\"><img src=\"../../_imgs/2018北京春季高中会考物理（教师版）(1)/img_in_image_box_627_586_870_905.jpg\" alt=\"Image\" width=\"20%\" /></div>\n\n\n<div style=\"text-align: center;\">图19</div>\n\n\n---\n",
+      "options": [],
+      "answer": "<table border=1 style='margin: auto; word-wrap: break-word;'><tr><td style='text-align: center; word-wrap: break-word;'></td><td style='text-align: center; word-wrap: break-word;'>$ t=\\frac{L}{V}=8.0s $\\n（2）该同学的观点不正确。\\n因为书包做匀速直线运动，加速度为0，所以合力为0。假设书包受到摩擦力的作用，其合力就不可能为0，因此\\n书包不受摩擦力的作用。</td><td style='text-align: center; word-wrap: break-word;'>4分</td><td style='text-align: center; word-wrap: break-word;'></td></tr><tr><td style='text-align: center; word-wrap: break-word;'>27（6分）</td><td style='text-align: center; word-wrap: break-word;'>解：（1）返回舱加速度的方向竖直向上。\\n根据匀变速直线运动规律\\n $ x=V t_{0}-\\frac{1}{2}a t^{2} $\\n解得  $ a=45m/s^{2} $\\n（2）以航天员为研究对象，根据牛顿第二定律\\n $ F-m g=m a $\\n解得  $ F=3.3 \\times 10^{3} N $</td><td style='text-align: center; word-wrap: break-word;'></td><td style='text-align: center; word-wrap: break-word;'></td></tr><tr><td style='text-align: center; word-wrap: break-word;'>28（6分）</td><td style='text-align: center; word-wrap: break-word;'>解：（1）每秒钟到达B板的电子数为N，电荷量\\n $ Q=N e $\\n根据电流的定义式  $ I=\\frac{Q}{t} $\\n解得  $ N=\\frac{I}{e} $\\n（2）a. 以具有最大动能的电子为研究对象，当其速度减小到0时，电子恰好运动到接近B板，设其最大动能为 $ E_{km} $，根据动能定理\\n $ -e U_{0}=0-E_{km} $\\n解得  $ E_{km}=e U_{0} $\\nb. 这种说法不正确。\\n电子的最大速度为定值，电子的最大动能也是定值。以具有最大动能的电子为研究对象，当移动B板后，设当电压为U时，其速度减小到0，根据动能定理\\n $ -e U=0-E_{km} $\\n结合上一问结果，解得  $ U=U_{0} $，即电子也是恰好运动到接近B板速度减为0，故仍然没有电流。</td><td style='text-align: center; word-wrap: break-word;'>2分\\n2分</td><td style='text-align: center; word-wrap: break-word;'></td></tr></table>",
+      "explanation": "",
+      "material_info": {
+        "is_composite": false,
+        "unit_type": "standalone_unit",
+        "leaf_count": 1,
+        "leaf_ids": [
+          "Q28"
+        ]
+      },
+      "evidence": [],
+      "raw_lines": [
+        {
+          "line_ref": "P1L327",
+          "text": "28. 实验表明，一些金属受到紫外线照射时会有电子射出。如图 18 所示，真空中一对平行金属板 A 和 B 正对放置，用紫外线持续照射 A 板时，A 板持续射出速度大小不同的电子，且电子的最大速度为定值。为了简化问题，假设射出的电子都垂直于 A 板向 B 板运动，忽略电子之间的相互作用以及电子所受的重力。电子的电荷量为 e。",
+          "page": 1,
+          "line": 327
+        },
+        {
+          "line_ref": "P1L328",
+          "text": "",
+          "page": 1,
+          "line": 328
+        },
+        {
+          "line_ref": "P1L329",
+          "text": "(1)如图18所示，在A、B板之间接一灵敏电流计。当电流计示数为I时，求每秒钟到达B板的电子个数N。",
+          "page": 1,
+          "line": 329
+        },
+        {
+          "line_ref": "P1L330",
+          "text": "",
+          "page": 1,
+          "line": 330
+        },
+        {
+          "line_ref": "P1L331",
+          "text": "(2)将两金属板、电压可调的电源、灵敏电流计连接成如图19所示的电路，A板接电源正极，B板接电源负极。逐渐增大两板间的电压，发现电流计示数会随着电压的增大而减小，当电压为 $ U_{0} $时电流计示数刚好为零。",
+          "page": 1,
+          "line": 331
+        },
+        {
+          "line_ref": "P1L332",
+          "text": "",
+          "page": 1,
+          "line": 332
+        },
+        {
+          "line_ref": "P1L333",
+          "text": "a. 求从 A 板射出的电子具有的最大动能  $ E_{km} $;",
+          "page": 1,
+          "line": 333
+        },
+        {
+          "line_ref": "P1L334",
+          "text": "",
+          "page": 1,
+          "line": 334
+        },
+        {
+          "line_ref": "P1L335",
+          "text": "b. 有同学认为，断开开关，将 B 板向左平移一段距离，使其靠近 A 板后，维持电压  $ U_{0} $ 不变，再次闭合开关，则电路中将再次出现电流。你认为这种说法是否正确，请说明理由。",
+          "page": 1,
+          "line": 335
+        },
+        {
+          "line_ref": "P1L336",
+          "text": "",
+          "page": 1,
+          "line": 336
+        },
+        {
+          "line_ref": "P1L337",
+          "text": "<div style=\"text-align: center;\"><img src=\"../../_imgs/2018北京春季高中会考物理（教师版）(1)/img_in_image_box_319_587_539_881.jpg\" alt=\"Image\" width=\"18%\" /></div>",
+          "page": 1,
+          "line": 337
+        },
+        {
+          "line_ref": "P1L338",
+          "text": "",
+          "page": 1,
+          "line": 338
+        },
+        {
+          "line_ref": "P1L339",
+          "text": "",
+          "page": 1,
+          "line": 339
+        },
+        {
+          "line_ref": "P1L340",
+          "text": "<div style=\"text-align: center;\">图 18</div>",
+          "page": 1,
+          "line": 340
+        },
+        {
+          "line_ref": "P1L341",
+          "text": "",
+          "page": 1,
+          "line": 341
+        },
+        {
+          "line_ref": "P1L342",
+          "text": "",
+          "page": 1,
+          "line": 342
+        },
+        {
+          "line_ref": "P1L343",
+          "text": "<div style=\"text-align: center;\"><img src=\"../../_imgs/2018北京春季高中会考物理（教师版）(1)/img_in_image_box_627_586_870_905.jpg\" alt=\"Image\" width=\"20%\" /></div>",
+          "page": 1,
+          "line": 343
+        },
+        {
+          "line_ref": "P1L344",
+          "text": "",
+          "page": 1,
+          "line": 344
+        },
+        {
+          "line_ref": "P1L345",
+          "text": "",
+          "page": 1,
+          "line": 345
+        },
+        {
+          "line_ref": "P1L346",
+          "text": "<div style=\"text-align: center;\">图19</div>",
+          "page": 1,
+          "line": 346
+        },
+        {
+          "line_ref": "P1L347",
+          "text": "",
+          "page": 1,
+          "line": 347
+        },
+        {
+          "line_ref": "P1L348",
+          "text": "",
+          "page": 1,
+          "line": 348
+        },
+        {
+          "line_ref": "P1L349",
+          "text": "---",
+          "page": 1,
+          "line": 349
+        },
+        {
+          "line_ref": "P1L350",
+          "text": "",
+          "page": 1,
+          "line": 350
+        },
+        {
+          "line_ref": "P1L373",
+          "text": "<table border=1 style='margin: auto; word-wrap: break-word;'><tr><td style='text-align: center; word-wrap: break-word;'></td><td style='text-align: center; word-wrap: break-word;'>$ t=\\frac{L}{V}=8.0s $\\n（2）该同学的观点不正确。\\n因为书包做匀速直线运动，加速度为0，所以合力为0。假设书包受到摩擦力的作用，其合力就不可能为0，因此\\n书包不受摩擦力的作用。</td><td style='text-align: center; word-wrap: break-word;'>4分</td><td style='text-align: center; word-wrap: break-word;'></td></tr><tr><td style='text-align: center; word-wrap: break-word;'>27（6分）</td><td style='text-align: center; word-wrap: break-word;'>解：（1）返回舱加速度的方向竖直向上。\\n根据匀变速直线运动规律\\n $ x=V t_{0}-\\frac{1}{2}a t^{2} $\\n解得  $ a=45m/s^{2} $\\n（2）以航天员为研究对象，根据牛顿第二定律\\n $ F-m g=m a $\\n解得  $ F=3.3 \\times 10^{3} N $</td><td style='text-align: center; word-wrap: break-word;'></td><td style='text-align: center; word-wrap: break-word;'></td></tr><tr><td style='text-align: center; word-wrap: break-word;'>28（6分）</td><td style='text-align: center; word-wrap: break-word;'>解：（1）每秒钟到达B板的电子数为N，电荷量\\n $ Q=N e $\\n根据电流的定义式  $ I=\\frac{Q}{t} $\\n解得  $ N=\\frac{I}{e} $\\n（2）a. 以具有最大动能的电子为研究对象，当其速度减小到0时，电子恰好运动到接近B板，设其最大动能为 $ E_{km} $，根据动能定理\\n $ -e U_{0}=0-E_{km} $\\n解得  $ E_{km}=e U_{0} $\\nb. 这种说法不正确。\\n电子的最大速度为定值，电子的最大动能也是定值。以具有最大动能的电子为研究对象，当移动B板后，设当电压为U时，其速度减小到0，根据动能定理\\n $ -e U=0-E_{km} $\\n结合上一问结果，解得  $ U=U_{0} $，即电子也是恰好运动到接近B板速度减为0，故仍然没有电流。</td><td style='text-align: center; word-wrap: break-word;'>2分\\n2分</td><td style='text-align: center; word-wrap: break-word;'></td></tr></table>",
+          "page": 1,
+          "line": 373
+        }
+      ],
+      "created_at": "2026-10-11 11:33:16.924059+00:00"
+    },
+    {
+      "id": "3d6960bf-96d6-43ea-83ca-2ece98933a23",
+      "unit_type": "composite_unit",
+      "decision_status": "rejected",
+      "question_ref": "U16-17.sub17",
+      "all_refs": [
+        "U16-17",
+        "U16-17.sub16",
+        "U16-17.sub17"
+      ],
+      "gate_reasons": [
+        "leaf 'U16-17.sub16' has no non-empty stem text",
+        "leaf 'U16-17.sub16' answer span 'sp-U16-17.sub16.answer' overlaps question region at lines ['P1L601'] (role provenance diagnostic)",
+        "leaf 'U16-17.sub17' answer span 'sp-U16-17.sub17.answer' overlaps question region at lines ['P1L601'] (role provenance diagnostic)"
+      ],
+      "gate_layers": {
+        "semantic": {
+          "status": "pass",
+          "reasons": []
+        },
+        "admission": {
+          "status": "fail",
+          "reasons": [
+            "leaf 'U16-17.sub16' has no non-empty stem text",
+            "leaf 'U16-17.sub16' answer span 'sp-U16-17.sub16.answer' overlaps question region at lines ['P1L601'] (role provenance diagnostic)",
+            "leaf 'U16-17.sub17' answer span 'sp-U16-17.sub17.answer' overlaps question region at lines ['P1L601'] (role provenance diagnostic)"
+          ]
+        },
+        "provenance": {
+          "status": "pass",
+          "reasons": [
+            "leaf 'U16-17.sub16' answer span 'sp-U16-17.sub16.answer' overlaps question region at lines ['P1L601'] (role provenance diagnostic)",
+            "leaf 'U16-17.sub17' answer span 'sp-U16-17.sub17.answer' overlaps question region at lines ['P1L601'] (role provenance diagnostic)"
+          ]
+        },
+        "structural": {
+          "status": "fail",
+          "reasons": [
+            "leaf 'U16-17.sub16' has no non-empty stem text"
+          ]
+        }
+      },
+      "stem": "17\\. 北京市征收水资源税的主要目的是\n",
+      "options": [
+        {
+          "label": "A",
+          "text": " 河流频繁改道",
+          "span_id": "sp-U16-17.sub16.option.A"
+        },
+        {
+          "label": "B",
+          "text": " 生产用水被严重污染",
+          "span_id": "sp-U16-17.sub16.option.B"
+        },
+        {
+          "label": "C",
+          "text": " 人均水资源少",
+          "span_id": "sp-U16-17.sub16.option.C"
+        },
+        {
+          "label": "D",
+          "text": " 居民饮用水供应困难",
+          "span_id": "sp-U16-17.sub16.option.D"
+        },
+        {
+          "label": "A",
+          "text": " 增加水资源供应量",
+          "span_id": "sp-U16-17.sub17.option.A"
+        },
+        {
+          "label": "B",
+          "text": " 保证生活供水质量",
+          "span_id": "sp-U16-17.sub17.option.B"
+        },
+        {
+          "label": "C",
+          "text": "促使社会节约用水",
+          "span_id": "sp-U16-17.sub17.option.C"
+        },
+        {
+          "label": "D",
+          "text": "降低工业用水成本",
+          "span_id": "sp-U16-17.sub17.option.D"
+        }
+      ],
+      "answer": "C | C",
+      "explanation": "",
+      "material_info": {
+        "is_composite": true,
+        "unit_type": "composite_unit",
+        "leaf_count": 3,
+        "leaf_ids": [
+          "U16-17",
+          "U16-17.sub16",
+          "U16-17.sub17"
+        ],
+        "material_text": "北京市从 2017 年 12 月开始对洗车等高耗水行业征收水资源税。据此完成 16~17 题。16. 北京市水资源利用方面的主要问题是"
+      },
+      "evidence": [],
+      "raw_lines": [
+        {
+          "line_ref": "P1L134",
+          "text": "",
+          "page": 1,
+          "line": 134
+        },
+        {
+          "line_ref": "P1L135",
+          "text": "A. 河流频繁改道 B. 生产用水被严重污染 C. 人均水资源少 D. 居民饮用水供应困难",
+          "page": 1,
+          "line": 135
+        },
+        {
+          "line_ref": "P1L137",
+          "text": "17\\. 北京市征收水资源税的主要目的是",
+          "page": 1,
+          "line": 137
+        },
+        {
+          "line_ref": "P1L138",
+          "text": "",
+          "page": 1,
+          "line": 138
+        },
+        {
+          "line_ref": "P1L139",
+          "text": "A. 增加水资源供应量 B. 保证生活供水质量",
+          "page": 1,
+          "line": 139
+        },
+        {
+          "line_ref": "P1L141",
+          "text": "C．促使社会节约用水 D．降低工业用水成本",
+          "page": 1,
+          "line": 141
+        },
+        {
+          "line_ref": "P1L601",
+          "text": "<table border=1 style='margin: auto; word-wrap: break-word;'><tr><td style='text-align: center; word-wrap: break-word;'>题号</td><td style='text-align: center; word-wrap: break-word;'>1</td><td style='text-align: center; word-wrap: break-word;'>2</td><td style='text-align: center; word-wrap: break-word;'>3</td><td style='text-align: center; word-wrap: break-word;'>4</td><td style='text-align: center; word-wrap: break-word;'>5</td><td style='text-align: center; word-wrap: break-word;'>6</td><td style='text-align: center; word-wrap: break-word;'>7</td><td style='text-align: center; word-wrap: break-word;'>8</td><td style='text-align: center; word-wrap: break-word;'>9</td><td style='text-align: center; word-wrap: break-word;'>10</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>答案</td><td style='text-align: center; word-wrap: break-word;'>A</td><td style='text-align: center; word-wrap: break-word;'>D</td><td style='text-align: center; word-wrap: break-word;'>B</td><td style='text-align: center; word-wrap: break-word;'>D</td><td style='text-align: center; word-wrap: break-word;'>A</td><td style='text-align: center; word-wrap: break-word;'>A</td><td style='text-align: center; word-wrap: break-word;'>B</td><td style='text-align: center; word-wrap: break-word;'>C</td><td style='text-align: center; word-wrap: break-word;'>A</td><td style='text-align: center; word-wrap: break-word;'>B</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>题号</td><td style='text-align: center; word-wrap: break-word;'>11</td><td style='text-align: center; word-wrap: break-word;'>12</td><td style='text-align: center; word-wrap: break-word;'>13</td><td style='text-align: center; word-wrap: break-word;'>14</td><td style='text-align: center; word-wrap: break-word;'>15</td><td style='text-align: center; word-wrap: break-word;'>16</td><td style='text-align: center; word-wrap: break-word;'>17</td><td style='text-align: center; word-wrap: break-word;'>18</td><td style='text-align: center; word-wrap: break-word;'>19</td><td style='text-align: center; word-wrap: break-word;'>20</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>答案</td><td style='text-align: center; word-wrap: break-word;'>D</td><td style='text-align: center; word-wrap: break-word;'>A</td><td style='text-align: center; word-wrap: break-word;'>C</td><td style='text-align: center; word-wrap: break-word;'>D</td><td style='text-align: center; word-wrap: break-word;'>A</td><td style='text-align: center; word-wrap: break-word;'>C</td><td style='text-align: center; word-wrap: break-word;'>C</td><td style='text-align: center; word-wrap: break-word;'>C</td><td style='text-align: center; word-wrap: break-word;'>A</td><td style='text-align: center; word-wrap: break-word;'>B</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>题号</td><td style='text-align: center; word-wrap: break-word;'>21</td><td style='text-align: center; word-wrap: break-word;'>22</td><td style='text-align: center; word-wrap: break-word;'>23</td><td style='text-align: center; word-wrap: break-word;'>24</td><td style='text-align: center; word-wrap: break-word;'>25</td><td style='text-align: center; word-wrap: break-word;'>26</td><td style='text-align: center; word-wrap: break-word;'>27</td><td style='text-align: center; word-wrap: break-word;'>28</td><td style='text-align: center; word-wrap: break-word;'>29</td><td style='text-align: center; word-wrap: break-word;'>30</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>答案</td><td style='text-align: center; word-wrap: break-word;'>D</td><td style='text-align: center; word-wrap: break-word;'>B</td><td style='text-align: center; word-wrap: break-word;'>C</td><td style='text-align: center; word-wrap: break-word;'>A</td><td style='text-align: center; word-wrap: break-word;'>B</td><td style='text-align: center; word-wrap: break-word;'>C</td><td style='text-align: center; word-wrap: break-word;'>B</td><td style='text-align: center; word-wrap: break-word;'>C</td><td style='text-align: center; word-wrap: break-word;'>B</td><td style='text-align: center; word-wrap: break-word;'>C</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>题号</td><td style='text-align: center; word-wrap: break-word;'>31</td><td style='text-align: center; word-wrap: break-word;'>32</td><td style='text-align: center; word-wrap: break-word;'>33</td><td style='text-align: center; word-wrap: break-word;'>34</td><td style='text-align: center; word-wrap: break-word;'>35</td><td style='text-align: center; word-wrap: break-word;'>36</td><td style='text-align: center; word-wrap: break-word;'>37</td><td style='text-align: center; word-wrap: break-word;'>38</td><td style='text-align: center; word-wrap: break-word;'>39</td><td style='text-align: center; word-wrap: break-word;'>40</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>答案</td><td style='text-align: center; word-wrap: break-word;'>D</td><td style='text-align: center; word-wrap: break-word;'>A</td><td style='text-align: center; word-wrap: break-word;'>D</td><td style='text-align: center; word-wrap: break-word;'>D</td><td style='text-align: center; word-wrap: break-word;'>B</td><td style='text-align: center; word-wrap: break-word;'>A</td><td style='text-align: center; word-wrap: break-word;'>D</td><td style='text-align: center; word-wrap: break-word;'>B</td><td style='text-align: center; word-wrap: break-word;'>C</td><td style='text-align: center; word-wrap: break-word;'>C</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>题号</td><td style='text-align: center; word-wrap: break-word;'>41</td><td style='text-align: center; word-wrap: break-word;'>42</td><td style='text-align: center; word-wrap: break-word;'>43</td><td style='text-align: center; word-wrap: break-word;'>44</td><td style='text-align: center; word-wrap: break-word;'>45</td><td style='text-align: center; word-wrap: break-word;'>46</td><td style='text-align: center; word-wrap: break-word;'>47</td><td style='text-align: center; word-wrap: break-word;'>48</td><td style='text-align: center; word-wrap: break-word;'>49</td><td style='text-align: center; word-wrap: break-word;'>50</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>答案</td><td style='text-align: center; word-wrap: break-word;'>D</td><td style='text-align: center; word-wrap: break-word;'>D</td><td style='text-align: center; word-wrap: break-word;'>C</td><td style='text-align: center; word-wrap: break-word;'>C</td><td style='text-align: center; word-wrap: break-word;'>D</td><td style='text-align: center; word-wrap: break-word;'>B</td><td style='text-align: center; word-wrap: break-word;'>D</td><td style='text-align: center; word-wrap: break-word;'>A</td><td style='text-align: center; word-wrap: break-word;'>C</td><td style='text-align: center; word-wrap: break-word;'>B</td></tr></table>",
+          "page": 1,
+          "line": 601
+        }
+      ],
+      "created_at": "2026-10-11 11:33:18.464201+00:00"
+    },
+    {
+      "id": "0db77229-29bd-4a97-b32a-e673e885eb6f",
+      "unit_type": "composite_unit",
+      "decision_status": "rejected",
+      "question_ref": "U26-29.sub28",
+      "all_refs": [
+        "U26-29",
+        "U26-29.sub26",
+        "U26-29.sub27",
+        "U26-29.sub28",
+        "U26-29.sub29"
+      ],
+      "gate_reasons": [
+        "leaf 'U26-29.sub26' has no non-empty stem text",
+        "leaf 'U26-29.sub26' answer span 'sp-U26-29.sub26.answer' overlaps question region at lines ['P1L601'] (role provenance diagnostic)",
+        "leaf 'U26-29.sub27' answer span 'sp-U26-29.sub27.answer' overlaps question region at lines ['P1L601'] (role provenance diagnostic)",
+        "leaf 'U26-29.sub28' answer span 'sp-U26-29.sub28.answer' overlaps question region at lines ['P1L601'] (role provenance diagnostic)",
+        "leaf 'U26-29.sub29' answer span 'sp-U26-29.sub29.answer' overlaps question region at lines ['P1L601'] (role provenance diagnostic)"
+      ],
+      "gate_layers": {
+        "semantic": {
+          "status": "pass",
+          "reasons": []
+        },
+        "admission": {
+          "status": "fail",
+          "reasons": [
+            "leaf 'U26-29.sub26' has no non-empty stem text",
+            "leaf 'U26-29.sub26' answer span 'sp-U26-29.sub26.answer' overlaps question region at lines ['P1L601'] (role provenance diagnostic)",
+            "leaf 'U26-29.sub27' answer span 'sp-U26-29.sub27.answer' overlaps question region at lines ['P1L601'] (role provenance diagnostic)",
+            "leaf 'U26-29.sub28' answer span 'sp-U26-29.sub28.answer' overlaps question region at lines ['P1L601'] (role provenance diagnostic)",
+            "leaf 'U26-29.sub29' answer span 'sp-U26-29.sub29.answer' overlaps question region at lines ['P1L601'] (role provenance diagnostic)"
+          ]
+        },
+        "provenance": {
+          "status": "pass",
+          "reasons": [
+            "leaf 'U26-29.sub26' answer span 'sp-U26-29.sub26.answer' overlaps question region at lines ['P1L601'] (role provenance diagnostic)",
+            "leaf 'U26-29.sub27' answer span 'sp-U26-29.sub27.answer' overlaps question region at lines ['P1L601'] (role provenance diagnostic)",
+            "leaf 'U26-29.sub28' answer span 'sp-U26-29.sub28.answer' overlaps question region at lines ['P1L601'] (role provenance diagnostic)",
+            "leaf 'U26-29.sub29' answer span 'sp-U26-29.sub29.answer' overlaps question region at lines ['P1L601'] (role provenance diagnostic)"
+          ]
+        },
+        "structural": {
+          "status": "fail",
+          "reasons": [
+            "leaf 'U26-29.sub26' has no non-empty stem text"
+          ]
+        }
+      },
+      "stem": "27\\. 设立北京城市副中心和河北雄安新区的目的有\n\n①疏解北京市非首都功能\n\n②缓解河北省的交通压力\n\n③调整优化京津冀城市布局和空间结构\n\n④根治京津冀城市化进程中的环境问题\n",
+      "options": [
+        {
+          "label": "A",
+          "text": " 西城区大量拆除古老院落",
+          "span_id": "sp-U26-29.sub26.option.A"
+        },
+        {
+          "label": "B",
+          "text": " 东城区扩建物流仓储设施",
+          "span_id": "sp-U26-29.sub26.option.B"
+        },
+        {
+          "label": "C",
+          "text": " 海淀区提升科技创新水平",
+          "span_id": "sp-U26-29.sub26.option.C"
+        },
+        {
+          "label": "D",
+          "text": " 密云山区发展现代制造业",
+          "span_id": "sp-U26-29.sub26.option.D"
+        },
+        {
+          "label": "A",
+          "text": "①②",
+          "span_id": "sp-U26-29.sub27.option.A"
+        },
+        {
+          "label": "B",
+          "text": "①③",
+          "span_id": "sp-U26-29.sub27.option.B"
+        },
+        {
+          "label": "C",
+          "text": "②④",
+          "span_id": "sp-U26-29.sub27.option.C"
+        },
+        {
+          "label": "D",
+          "text": "③④",
+          "span_id": "sp-U26-29.sub27.option.D"
+        },
+        {
+          "label": "A",
+          "text": "①②",
+          "span_id": "sp-U26-29.sub28.option.A"
+        },
+        {
+          "label": "B",
+          "text": "①③",
+          "span_id": "sp-U26-29.sub28.option.B"
+        },
+        {
+          "label": "C",
+          "text": "②④",
+          "span_id": "sp-U26-29.sub28.option.C"
+        },
+        {
+          "label": "D",
+          "text": "③④",
+          "span_id": "sp-U26-29.sub28.option.D"
+        },
+        {
+          "label": "A",
+          "text": " 生物多样性减少",
+          "span_id": "sp-U26-29.sub29.option.A"
+        },
+        {
+          "label": "B",
+          "text": " 河流水质变好",
+          "span_id": "sp-U26-29.sub29.option.B"
+        },
+        {
+          "label": "C",
+          "text": " 灾害性天气增多",
+          "span_id": "sp-U26-29.sub29.option.C"
+        },
+        {
+          "label": "D",
+          "text": " 湿地面积减小",
+          "span_id": "sp-U26-29.sub29.option.D"
+        }
+      ],
+      "answer": "C | B | C | B",
+      "explanation": "",
+      "material_info": {
+        "is_composite": true,
+        "unit_type": "composite_unit",
+        "leaf_count": 5,
+        "leaf_ids": [
+          "U26-29",
+          "U26-29.sub26",
+          "U26-29.sub27",
+          "U26-29.sub28",
+          "U26-29.sub29"
+        ],
+        "material_text": "2017年9月，中共中央国务院发布关于对《北京城市总体规划（2016年—2035年）》的批复，提出首都功能更加优化、深入推进京津冀协同发展等发展目标。读图7“京津冀区域空间格局示意图”，完成26－2926.优化首都功能应采取的措施是"
+      },
+      "evidence": [],
+      "raw_lines": [
+        {
+          "line_ref": "P1L223",
+          "text": "",
+          "page": 1,
+          "line": 223
+        },
+        {
+          "line_ref": "P1L224",
+          "text": "A. 西城区大量拆除古老院落",
+          "page": 1,
+          "line": 224
+        },
+        {
+          "line_ref": "P1L226",
+          "text": "B. 东城区扩建物流仓储设施",
+          "page": 1,
+          "line": 226
+        },
+        {
+          "line_ref": "P1L228",
+          "text": "C. 海淀区提升科技创新水平",
+          "page": 1,
+          "line": 228
+        },
+        {
+          "line_ref": "P1L230",
+          "text": "D. 密云山区发展现代制造业",
+          "page": 1,
+          "line": 230
+        },
+        {
+          "line_ref": "P1L234",
+          "text": "27\\. 设立北京城市副中心和河北雄安新区的目的有",
+          "page": 1,
+          "line": 234
+        },
+        {
+          "line_ref": "P1L235",
+          "text": "",
+          "page": 1,
+          "line": 235
+        },
+        {
+          "line_ref": "P1L236",
+          "text": "①疏解北京市非首都功能",
+          "page": 1,
+          "line": 236
+        },
+        {
+          "line_ref": "P1L237",
+          "text": "",
+          "page": 1,
+          "line": 237
+        },
+        {
+          "line_ref": "P1L238",
+          "text": "②缓解河北省的交通压力",
+          "page": 1,
+          "line": 238
+        },
+        {
+          "line_ref": "P1L239",
+          "text": "",
+          "page": 1,
+          "line": 239
+        },
+        {
+          "line_ref": "P1L240",
+          "text": "③调整优化京津冀城市布局和空间结构",
+          "page": 1,
+          "line": 240
+        },
+        {
+          "line_ref": "P1L241",
+          "text": "",
+          "page": 1,
+          "line": 241
+        },
+        {
+          "line_ref": "P1L242",
+          "text": "④根治京津冀城市化进程中的环境问题",
+          "page": 1,
+          "line": 242
+        },
+        {
+          "line_ref": "P1L243",
+          "text": "",
+          "page": 1,
+          "line": 243
+        },
+        {
+          "line_ref": "P1L244",
+          "text": "A.①②B.①③ C.②④D.③④",
+          "page": 1,
+          "line": 244
+        },
+        {
+          "line_ref": "P1L252",
+          "text": "28. 与衡水市相比，天津市①城市规模小②城市等级高③服务种类少④服务范围大",
+          "page": 1,
+          "line": 252
+        },
+        {
+          "line_ref": "P1L253",
+          "text": "",
+          "page": 1,
+          "line": 253
+        },
+        {
+          "line_ref": "P1L254",
+          "text": "A.①②B.①③ C.②④D.③④",
+          "page": 1,
+          "line": 254
+        },
+        {
+          "line_ref": "P1L256",
+          "text": "29\\. 建设西北部生态涵养区对京津冀地理环境的影响是",
+          "page": 1,
+          "line": 256
+        },
+        {
+          "line_ref": "P1L257",
+          "text": "",
+          "page": 1,
+          "line": 257
+        },
+        {
+          "line_ref": "P1L258",
+          "text": "A. 生物多样性减少 B. 河流水质变好 C. 灾害性天气增多 D. 湿地面积减小",
+          "page": 1,
+          "line": 258
+        },
+        {
+          "line_ref": "P1L601",
+          "text": "<table border=1 style='margin: auto; word-wrap: break-word;'><tr><td style='text-align: center; word-wrap: break-word;'>题号</td><td style='text-align: center; word-wrap: break-word;'>1</td><td style='text-align: center; word-wrap: break-word;'>2</td><td style='text-align: center; word-wrap: break-word;'>3</td><td style='text-align: center; word-wrap: break-word;'>4</td><td style='text-align: center; word-wrap: break-word;'>5</td><td style='text-align: center; word-wrap: break-word;'>6</td><td style='text-align: center; word-wrap: break-word;'>7</td><td style='text-align: center; word-wrap: break-word;'>8</td><td style='text-align: center; word-wrap: break-word;'>9</td><td style='text-align: center; word-wrap: break-word;'>10</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>答案</td><td style='text-align: center; word-wrap: break-word;'>A</td><td style='text-align: center; word-wrap: break-word;'>D</td><td style='text-align: center; word-wrap: break-word;'>B</td><td style='text-align: center; word-wrap: break-word;'>D</td><td style='text-align: center; word-wrap: break-word;'>A</td><td style='text-align: center; word-wrap: break-word;'>A</td><td style='text-align: center; word-wrap: break-word;'>B</td><td style='text-align: center; word-wrap: break-word;'>C</td><td style='text-align: center; word-wrap: break-word;'>A</td><td style='text-align: center; word-wrap: break-word;'>B</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>题号</td><td style='text-align: center; word-wrap: break-word;'>11</td><td style='text-align: center; word-wrap: break-word;'>12</td><td style='text-align: center; word-wrap: break-word;'>13</td><td style='text-align: center; word-wrap: break-word;'>14</td><td style='text-align: center; word-wrap: break-word;'>15</td><td style='text-align: center; word-wrap: break-word;'>16</td><td style='text-align: center; word-wrap: break-word;'>17</td><td style='text-align: center; word-wrap: break-word;'>18</td><td style='text-align: center; word-wrap: break-word;'>19</td><td style='text-align: center; word-wrap: break-word;'>20</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>答案</td><td style='text-align: center; word-wrap: break-word;'>D</td><td style='text-align: center; word-wrap: break-word;'>A</td><td style='text-align: center; word-wrap: break-word;'>C</td><td style='text-align: center; word-wrap: break-word;'>D</td><td style='text-align: center; word-wrap: break-word;'>A</td><td style='text-align: center; word-wrap: break-word;'>C</td><td style='text-align: center; word-wrap: break-word;'>C</td><td style='text-align: center; word-wrap: break-word;'>C</td><td style='text-align: center; word-wrap: break-word;'>A</td><td style='text-align: center; word-wrap: break-word;'>B</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>题号</td><td style='text-align: center; word-wrap: break-word;'>21</td><td style='text-align: center; word-wrap: break-word;'>22</td><td style='text-align: center; word-wrap: break-word;'>23</td><td style='text-align: center; word-wrap: break-word;'>24</td><td style='text-align: center; word-wrap: break-word;'>25</td><td style='text-align: center; word-wrap: break-word;'>26</td><td style='text-align: center; word-wrap: break-word;'>27</td><td style='text-align: center; word-wrap: break-word;'>28</td><td style='text-align: center; word-wrap: break-word;'>29</td><td style='text-align: center; word-wrap: break-word;'>30</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>答案</td><td style='text-align: center; word-wrap: break-word;'>D</td><td style='text-align: center; word-wrap: break-word;'>B</td><td style='text-align: center; word-wrap: break-word;'>C</td><td style='text-align: center; word-wrap: break-word;'>A</td><td style='text-align: center; word-wrap: break-word;'>B</td><td style='text-align: center; word-wrap: break-word;'>C</td><td style='text-align: center; word-wrap: break-word;'>B</td><td style='text-align: center; word-wrap: break-word;'>C</td><td style='text-align: center; word-wrap: break-word;'>B</td><td style='text-align: center; word-wrap: break-word;'>C</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>题号</td><td style='text-align: center; word-wrap: break-word;'>31</td><td style='text-align: center; word-wrap: break-word;'>32</td><td style='text-align: center; word-wrap: break-word;'>33</td><td style='text-align: center; word-wrap: break-word;'>34</td><td style='text-align: center; word-wrap: break-word;'>35</td><td style='text-align: center; word-wrap: break-word;'>36</td><td style='text-align: center; word-wrap: break-word;'>37</td><td style='text-align: center; word-wrap: break-word;'>38</td><td style='text-align: center; word-wrap: break-word;'>39</td><td style='text-align: center; word-wrap: break-word;'>40</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>答案</td><td style='text-align: center; word-wrap: break-word;'>D</td><td style='text-align: center; word-wrap: break-word;'>A</td><td style='text-align: center; word-wrap: break-word;'>D</td><td style='text-align: center; word-wrap: break-word;'>D</td><td style='text-align: center; word-wrap: break-word;'>B</td><td style='text-align: center; word-wrap: break-word;'>A</td><td style='text-align: center; word-wrap: break-word;'>D</td><td style='text-align: center; word-wrap: break-word;'>B</td><td style='text-align: center; word-wrap: break-word;'>C</td><td style='text-align: center; word-wrap: break-word;'>C</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>题号</td><td style='text-align: center; word-wrap: break-word;'>41</td><td style='text-align: center; word-wrap: break-word;'>42</td><td style='text-align: center; word-wrap: break-word;'>43</td><td style='text-align: center; word-wrap: break-word;'>44</td><td style='text-align: center; word-wrap: break-word;'>45</td><td style='text-align: center; word-wrap: break-word;'>46</td><td style='text-align: center; word-wrap: break-word;'>47</td><td style='text-align: center; word-wrap: break-word;'>48</td><td style='text-align: center; word-wrap: break-word;'>49</td><td style='text-align: center; word-wrap: break-word;'>50</td></tr><tr><td style='text-align: center; word-wrap: break-word;'>答案</td><td style='text-align: center; word-wrap: break-word;'>D</td><td style='text-align: center; word-wrap: break-word;'>D</td><td style='text-align: center; word-wrap: break-word;'>C</td><td style='text-align: center; word-wrap: break-word;'>C</td><td style='text-align: center; word-wrap: break-word;'>D</td><td style='text-align: center; word-wrap: break-word;'>B</td><td style='text-align: center; word-wrap: break-word;'>D</td><td style='text-align: center; word-wrap: break-word;'>A</td><td style='text-align: center; word-wrap: break-word;'>C</td><td style='text-align: center; word-wrap: break-word;'>B</td></tr></table>",
+          "page": 1,
+          "line": 601
+        }
+      ],
+      "created_at": "2026-10-11 11:33:18.671604+00:00"
+    }
+  ]
+}

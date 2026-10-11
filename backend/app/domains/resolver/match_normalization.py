@@ -69,8 +69,9 @@ def is_question_start(normalized_line: str) -> str | None:
     仅接受 `\\` 紧跟分隔符——`21\\xxx` / `21\\` 不得误判为题号入口。
     GEO-SUBQ：OCR 分隔符变体 `·`/`，`（实测 `15·`/`20，`）与既有
     `[.．、:]` 同等作为题号分隔，非地理特例。`，` 经 fold_full_width 归一为 `,`。
+    回归护栏：分隔符后紧跟数字（`2·10^3`/`2,3`/`7.5`）是数值表达，不是题号。
     """
-    m = re.match(r"^(\d{1,3})\s*(?:\\[.．、:·,，]|[.．、:·,，]|\s|$)", normalized_line)
+    m = re.match(r"^(\d{1,3})\s*(?:\\[.．、:·,，](?!\d)|[.．、:·,，](?!\d)|\s|$)", normalized_line)
     return m.group(1) if m else None
 
 

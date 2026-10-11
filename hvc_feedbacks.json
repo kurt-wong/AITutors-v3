@@ -1,0 +1,146 @@
+{
+  "25abb720-13dc-4d2e-a674-e20507ad6ac0": {
+    "category": "answer_missing",
+    "conclusion": "needs_correction",
+    "note": "fill_in 类型答案需人工确认",
+    "time": "2026-10-11T12:25:33.087711+00:00",
+    "question_ref": "U-cl1",
+    "decision_status": "pending_review"
+  },
+  "2332659a-a1f3-4044-ab27-3527c0e5b887": {
+    "category": "answer_wrong",
+    "conclusion": "needs_correction",
+    "note": "答案无法表达为 canonical value",
+    "time": "2026-10-11T12:25:33.087711+00:00",
+    "question_ref": "U-cl2",
+    "decision_status": "pending_review"
+  },
+  "ed0dcf50-f530-46d2-9871-496939fd82a7": {
+    "category": "other",
+    "conclusion": "needs_correction",
+    "note": "short_answer 非自动验证类型",
+    "time": "2026-10-11T12:25:33.087711+00:00",
+    "question_ref": "U-cl3",
+    "decision_status": "pending_review"
+  },
+  "888e856f-5d40-4503-802e-a82c7ff72199": {
+    "category": "other",
+    "conclusion": "needs_correction",
+    "note": "short_answer 非自动验证类型",
+    "time": "2026-10-11T12:25:33.087711+00:00",
+    "question_ref": "Q26",
+    "decision_status": "pending_review"
+  },
+  "4d05591d-d1a2-4205-81ab-ccc47939e74a": {
+    "category": "other",
+    "conclusion": "needs_correction",
+    "note": "short_answer 非自动验证类型",
+    "time": "2026-10-11T12:25:33.087711+00:00",
+    "question_ref": "Q27",
+    "decision_status": "pending_review"
+  },
+  "f8d4edd8-b833-4eb9-8f26-724a5a38dc22": {
+    "category": "other",
+    "conclusion": "needs_correction",
+    "note": "short_answer 非自动验证类型",
+    "time": "2026-10-11T12:25:33.087711+00:00",
+    "question_ref": "Q28",
+    "decision_status": "pending_review"
+  },
+  "3b14ade3-e286-40c2-a7de-b0f945395c5e": {
+    "category": "other",
+    "conclusion": "needs_correction",
+    "note": "short_answer 非自动验证类型",
+    "time": "2026-10-11T12:25:33.087711+00:00",
+    "question_ref": "Q29",
+    "decision_status": "pending_review"
+  },
+  "7b8b9544-411c-4497-a329-3bcd94e86a0c": {
+    "category": "other",
+    "conclusion": "needs_correction",
+    "note": "short_answer 非自动验证类型",
+    "time": "2026-10-11T12:25:33.087711+00:00",
+    "question_ref": "Q30",
+    "decision_status": "pending_review"
+  },
+  "b4c55d40-fda2-4835-a6a6-67ce6f56f8ba": {
+    "category": "answer_missing",
+    "conclusion": "needs_correction",
+    "note": "fill_in 类型答案需人工确认",
+    "time": "2026-10-11T12:25:33.087711+00:00",
+    "question_ref": "Q21",
+    "decision_status": "pending_review"
+  },
+  "b219b4f5-0947-4b51-8f0b-5cfa014f8226": {
+    "category": "answer_missing",
+    "conclusion": "needs_correction",
+    "note": "fill_in 类型答案需人工确认",
+    "time": "2026-10-11T12:25:33.087711+00:00",
+    "question_ref": "Q22",
+    "decision_status": "pending_review"
+  },
+  "df5b0e38-344c-416f-8583-f2ad3ffb3a2e": {
+    "category": "answer_missing",
+    "conclusion": "needs_correction",
+    "note": "fill_in 类型答案需人工确认",
+    "time": "2026-10-11T12:25:33.087711+00:00",
+    "question_ref": "Q23",
+    "decision_status": "pending_review"
+  },
+  "5d6d70bb-d98f-47b2-a735-6e61273f99b2": {
+    "category": "other",
+    "conclusion": "needs_correction",
+    "note": "short_answer 非自动验证类型",
+    "time": "2026-10-11T12:25:33.087711+00:00",
+    "question_ref": "Q24",
+    "decision_status": "pending_review"
+  },
+  "25c87e40-ed66-44f0-b458-0cd33be6c863": {
+    "category": "other",
+    "conclusion": "needs_correction",
+    "note": "short_answer 非自动验证类型",
+    "time": "2026-10-11T12:25:33.087711+00:00",
+    "question_ref": "Q25",
+    "decision_status": "pending_review"
+  },
+  "f35da7b1-9b64-40cf-9f37-740f8f234682": {
+    "category": "other",
+    "conclusion": "needs_correction",
+    "note": "short_answer 非自动验证类型",
+    "time": "2026-10-11T12:25:33.087711+00:00",
+    "question_ref": "Q26",
+    "decision_status": "pending_review"
+  },
+  "a2b0b572-90a2-4322-83a4-23d086439c2f": {
+    "category": "other",
+    "conclusion": "needs_correction",
+    "note": "short_answer 非自动验证类型",
+    "time": "2026-10-11T12:25:33.087711+00:00",
+    "question_ref": "Q27",
+    "decision_status": "pending_review"
+  },
+  "8bec85f9-72d7-44ae-9576-923da0035299": {
+    "category": "other",
+    "conclusion": "needs_correction",
+    "note": "short_answer 非自动验证类型",
+    "time": "2026-10-11T12:25:33.087711+00:00",
+    "question_ref": "Q28",
+    "decision_status": "pending_review"
+  },
+  "3d6960bf-96d6-43ea-83ca-2ece98933a23": {
+    "category": "stem_incomplete",
+    "conclusion": "reject",
+    "note": "composite 子题 stem 为空，切分重叠问题",
+    "time": "2026-10-11T12:25:33.087711+00:00",
+    "question_ref": "U16-17.sub17",
+    "decision_status": "rejected"
+  },
+  "0db77229-29bd-4a97-b32a-e673e885eb6f": {
+    "category": "stem_incomplete",
+    "conclusion": "reject",
+    "note": "composite 子题 stem 为空，切分重叠问题",
+    "time": "2026-10-11T12:25:33.087711+00:00",
+    "question_ref": "U26-29.sub28",
+    "decision_status": "rejected"
+  }
+}
