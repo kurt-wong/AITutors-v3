@@ -226,8 +226,8 @@ def collect_validation_problems(node: "IRNode", seen: set[str]) -> list[str]:
     seen.add(node.unit_id)
 
     if node.semantic_status == "unknown":
-        for s in node.sub_questions:
-            collect_validation_problems(s, seen)
+        # 不向调用方 seen 写入后代 id：否则 _validate_node 随后的递归会把
+        # 同一子题误判为 duplicate unit_id（与兄弟共享 seen 语义一致）。
         return problems
 
     canonical = None
@@ -279,9 +279,13 @@ def collect_validation_problems(node: "IRNode", seen: set[str]) -> list[str]:
                 problems.append(f"material_dependency target {r!r} not in shared_components")
             elif sc.span_id is None:
                 problems.append(f"material_dependency target {r!r} span unresolved")
+        # 兄弟子题共享同一 seen 快照：与 _validate_node 递归语义一致，
+        # 同 unit_id 兄弟必须在此被发现（否则父 ready 而子 incomplete）。
         sub_has_problems = False
+        child_seen: set[str] = set(seen)
         for s in node.sub_questions:
-            if collect_validation_problems(s, set(seen)):
+            # 有 problems，或声明为 unknown（M.2：unknown 非 ready）→ 子题未就绪。
+            if collect_validation_problems(s, child_seen) or s.semantic_status == "unknown":
                 sub_has_problems = True
         if node.sub_questions and sub_has_problems:
             problems.append("composite sub_question not ready")  # invariant 7
