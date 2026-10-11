@@ -540,7 +540,11 @@ class TaskExecutor:
             if isinstance(getattr(version, "source_meta", None), dict)
             else None,
         }
-        funnel.set_run_identity(run_id, input_hashes)
+        funnel.set_run_identity(
+            run_id,
+            input_hashes,
+            database=getattr(settings, "database_url", "").rsplit("/", 1)[-1] or None,
+        )
         async with self._session_factory() as s:
             candidates, skipped = await GateService(s).run(
                 source_version_id=version.id,

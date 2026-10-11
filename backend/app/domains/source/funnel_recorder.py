@@ -35,6 +35,7 @@ class FunnelRecorder:
     notes: list[str] = field(default_factory=list)
     run_id: str | None = None
     input_hashes: dict = field(default_factory=dict)
+    database: str | None = None
 
     def set(self, stage: str, n: int) -> None:
         if stage not in self.counts:
@@ -45,10 +46,15 @@ class FunnelRecorder:
         self.set(stage, self.counts[stage] + n)
 
     def set_run_identity(
-        self, run_id: str, input_hashes: dict | None = None
+        self,
+        run_id: str,
+        input_hashes: dict | None = None,
+        *,
+        database: str | None = None,
     ) -> None:
-        """Bind this funnel to one run: run_id + input md/manifest/pdf hashes."""
+        """Bind this funnel to one run: run_id + input hashes + target database."""
         self.run_id = run_id
+        self.database = database
         if input_hashes:
             self.input_hashes = dict(input_hashes)
 
@@ -85,16 +91,21 @@ class FunnelRecorder:
         # pending_review ⊆ ir_ready（候选子集），不得从 input 再扣一次；
         # unexplained_loss = 无失败记录且未就绪的单元。
         explained = self.counts["ir_ready"] + len(self.failures)
+        raw_loss = self.counts["input_units"] - explained
         return {
             "package_id": self.package_id,
             "run_id": self.run_id,
+            "database": self.database,
             "input_hashes": self.input_hashes,
             "started_at": self.started_at,
             "finished_at": datetime.now(timezone.utc).isoformat(),
             "stages": self.counts,
             "failures": self.failures,
             "notes": self.notes,
-            "unexplained_loss": max(0, self.counts["input_units"] - explained),
+            # 保留原始值；负值=阶段计数异常，不静默夹成 0
+            "unexplained_loss_raw": raw_loss,
+            "unexplained_loss": max(0, raw_loss),
+            "unexplained_loss_anomaly": raw_loss < 0,
         }
 
     def write(self, path: Path) -> Path:
