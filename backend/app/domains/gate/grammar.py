@@ -136,6 +136,23 @@ def _clean_answer(answer_text: str) -> str:
     return _LEAD_QN_RE.sub("", answer_text).strip()
 
 
+# 确定性答案边界（会考/高考卷解析块尾部）：故选：X / 故选X / 答案：X
+# 仅当全文**恰好一个**标记且为单字母时抽取；多标记/缺失/冲突 → 不抽取。
+_GU_XUAN_RE = re.compile(r"故选\s*[：:]?\s*([A-Da-d])")
+_DA_AN_RE = re.compile(r"答案\s*[：:]\s*([A-Da-d])")
+
+
+def _extract_unique_choice_marker(cleaned: str) -> str | None:
+    """从解析型 answer 文本中抽唯一明确答案字母；否则 None。"""
+    if not cleaned:
+        return None
+    hits = [m.group(1).upper() for m in _GU_XUAN_RE.finditer(cleaned)]
+    hits += [m.group(1).upper() for m in _DA_AN_RE.finditer(cleaned)]
+    if len(set(hits)) == 1 and len(hits) >= 1:
+        return hits[0]
+    return None
+
+
 def _answer_form_single_choice(cleaned: str) -> str | None:
     """AnswerTokenContract（单选）：返回选项字母；不符合白名单 → None。"""
     m = _SC_FORMS_RE.match(cleaned)
@@ -206,6 +223,9 @@ def verify(
 
     if canonical_type == "single_choice":
         letter = _answer_form_single_choice(cleaned)
+        if letter is None:
+            # 解析块尾部唯一「故选：X / 答案：X」→ 确定性抽取（非 LLM、非猜测）
+            letter = _extract_unique_choice_marker(cleaned)
         if letter is None:
             return None
         return True if letter in labels else None

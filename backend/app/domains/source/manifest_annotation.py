@@ -110,7 +110,12 @@ def bind_units_from_manifest(
         seen_ids.add(unit_id)
 
         ranges = {
-            "stem": _as_range(raw.get("stem_lines"), label="stem_lines", unit_id=unit_id),
+            # stem：无 stem_lines 时用 questions_lines（composite 题干窗，Producer 已声明）
+            "stem": _as_range(
+                raw.get("stem_lines") or raw.get("questions_lines"),
+                label="stem_lines",
+                unit_id=unit_id,
+            ),
             "options": _as_range(
                 raw.get("options_lines"), label="options_lines", unit_id=unit_id
             ),
@@ -255,15 +260,45 @@ def build_annotation_payload_from_bound(
                 bu.ranges["answer"].end,
             ]
 
-        semantic_units.append(
-            {
-                "unit_id": bu.unit_id,  # Producer identity alias — NOT renumbered
-                "unit_type": norm.canonical_unit_type,
-                "question_number": qn,
-                "original_question_type": bu.original_question_type,
-                "content": content,
-            }
-        )
+        # composite_question → composite_unit：material→shared，questions 区间 1:1
+        # 译为单个子题（确定性结构翻译；不猜子题拆分，同 annotation_adapter._build_composite）
+        if norm.canonical_unit_type == "composite_unit":
+            shared: dict[str, Any] = {}
+            if bu.ranges["material"] is not None:
+                shared["material"] = {"role": "material"}
+            semantic_units.append(
+                {
+                    "unit_id": bu.unit_id,
+                    "unit_type": norm.canonical_unit_type,
+                    "question_number": qn,
+                    "question_number_range": (
+                        f"{bu.question_numbers[0]}-{bu.question_numbers[-1]}"
+                        if len(bu.question_numbers) > 1
+                        else None
+                    ),
+                    "original_question_type": bu.original_question_type,
+                    "shared_components": shared,
+                    "sub_questions": [
+                        {
+                            "unit_id": f"{bu.unit_id}.sub",
+                            "unit_type": "standalone_unit",
+                            "question_number": qn,
+                            "original_question_type": bu.original_question_type,
+                            "content": content,
+                        }
+                    ],
+                }
+            )
+        else:
+            semantic_units.append(
+                {
+                    "unit_id": bu.unit_id,  # Producer identity alias — NOT renumbered
+                    "unit_type": norm.canonical_unit_type,
+                    "question_number": qn,
+                    "original_question_type": bu.original_question_type,
+                    "content": content,
+                }
+            )
 
     return {
         "document_metadata_claims": {
