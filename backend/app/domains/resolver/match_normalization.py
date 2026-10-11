@@ -28,9 +28,13 @@ _OCR_NOISE = str.maketrans(
 
 
 def fold_full_width(ch: str) -> str:
-    """全角 ASCII/标点 → 半角（FF01-FF5E），保留其他字符。"""
+    """全角 ASCII/标点 → 半角（FF01-FF5E），保留其他字符。
+
+    例外：`．`（U+FF0E，中文句号）不折叠为 `.`——它是合法题号分隔符，
+    折叠后 `(?!(\\d))` 护栏会误伤 `12．2017年` 等真实题目。
+    """
     code = ord(ch)
-    if 0xFF01 <= code <= 0xFF5E:
+    if 0xFF01 <= code <= 0xFF5E and ch != "．":
         return chr(code - 0xFEE0)
     return ch
 
@@ -69,9 +73,21 @@ def is_question_start(normalized_line: str) -> str | None:
     仅接受 `\\` 紧跟分隔符——`21\\xxx` / `21\\` 不得误判为题号入口。
     GEO-SUBQ：OCR 分隔符变体 `·`/`，`（实测 `15·`/`20，`）与既有
     `[.．、:]` 同等作为题号分隔，非地理特例。`，` 经 fold_full_width 归一为 `,`。
-    回归护栏：分隔符后紧跟数字（`2·10^3`/`2,3`/`7.5`）是数值表达，不是题号。
+    回归护栏：OCR 分隔符 `·`/`,` 后紧跟数字（`2·10^3`/`2,3`）是数值表达，不是题号。
+    `.`/`．`/`、`/`:` 保留既有语义——`．` 是中文句号（题号分隔），`7.5` 由
+    `(?!(\\d))` 拦截（`.` 后紧跟数字是小数），`12．2017年` 不受影响（`．` 无护栏）。
     """
-    m = re.match(r"^(\d{1,3})\s*(?:\\[.．、:·,，](?!\d)|[.．、:·,，](?!\d)|\s|$)", normalized_line)
+    m = re.match(
+        r"^(\d{1,3})\s*(?:"
+        r"\\[·,，](?!\d)|"   # escaped OCR separators: reject digit-after
+        r"\\[.．、:]|"        # escaped traditional separators: always accept
+        r"[·,，](?!\d)|"      # OCR separators: reject digit-after
+        r"[.](?!\d)|"         # ASCII period: reject digit-after (decimal guard)
+        r"[．、:]|"           # Chinese full-stop / enumeration / colon: always accept
+        r"\s|$"
+        r")",
+        normalized_line,
+    )
     return m.group(1) if m else None
 
 
