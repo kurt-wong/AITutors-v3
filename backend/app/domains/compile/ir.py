@@ -281,6 +281,10 @@ def _validate_node(node: IRNode, seen: set[str]) -> IRNode:
                 problems.append(f"material_dependency target {r!r} span unresolved")
         if any(s.semantic_status != "ready" for s in validated_subs):
             problems.append("composite sub_question not ready")  # invariant 7
+        if not validated_subs:
+            # 多题 composite 且子题边界未确定时 sub_questions 为空；
+            # 不得把「无子题」当成 ready（会误产空/假 Question）。
+            problems.append("composite has no sub_questions")
 
     status = "incomplete" if problems else "ready"
     if status not in SEMANTIC_STATUS:  # BUG-V3-018：值域冻结，第三状态 fail-loud

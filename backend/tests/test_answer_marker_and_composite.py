@@ -54,6 +54,6 @@ def test_geo_composite_binds_questions_lines_as_stem():
     u = payload["semantic_units"][0]
     assert u["unit_type"] == "composite_unit"
     assert u["shared_components"].get("material")
-    assert len(u["sub_questions"]) == 1
-    sub = u["sub_questions"][0]
-    assert sub["content"]["stem"]["question_search_lines"] == [2, 5]
+    # 多题：不得生成假单子题（见 test_composite_no_fake_single）
+    assert u["sub_questions"] == []
+    assert u["group_evidence"]["questions_lines"] == [2, 5]

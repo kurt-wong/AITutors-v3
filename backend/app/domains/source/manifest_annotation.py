@@ -260,35 +260,62 @@ def build_annotation_payload_from_bound(
                 bu.ranges["answer"].end,
             ]
 
-        # composite_question → composite_unit：material→shared，questions 区间 1:1
-        # 译为单个子题（确定性结构翻译；不猜子题拆分，同 annotation_adapter._build_composite）
+        # composite_question → composite_unit
+        # - 单题（len(question_numbers)==1）：questions 区间 1:1 译为一个子题。
+        # - 多题（如 1-2）且 Producer 未声明子题边界：**禁止**合成假单题
+        #   （stem 覆盖材料+多题是错误断言）。保留 material + 题组证据，
+        #   sub_questions 留空 → IR 判 incomplete，安全拒绝，不入库。
         if norm.canonical_unit_type == "composite_unit":
             shared: dict[str, Any] = {}
             if bu.ranges["material"] is not None:
                 shared["material"] = {"role": "material"}
-            semantic_units.append(
-                {
-                    "unit_id": bu.unit_id,
-                    "unit_type": norm.canonical_unit_type,
-                    "question_number": qn,
-                    "question_number_range": (
-                        f"{bu.question_numbers[0]}-{bu.question_numbers[-1]}"
-                        if len(bu.question_numbers) > 1
+            n_q = len(bu.question_numbers)
+            subs: list[dict[str, Any]] = []
+            if n_q == 1:
+                subs = [
+                    {
+                        "unit_id": f"{bu.unit_id}.sub",
+                        "unit_type": "standalone_unit",
+                        "question_number": qn,
+                        "original_question_type": bu.original_question_type,
+                        "content": content,
+                    }
+                ]
+            unit_out: dict[str, Any] = {
+                "unit_id": bu.unit_id,
+                "unit_type": norm.canonical_unit_type,
+                "question_number": qn if n_q == 1 else None,
+                "question_number_range": (
+                    f"{bu.question_numbers[0]}-{bu.question_numbers[-1]}"
+                    if n_q > 1
+                    else (qn or None)
+                ),
+                "original_question_type": bu.original_question_type,
+                "shared_components": shared,
+                "sub_questions": subs,
+            }
+            if n_q > 1:
+                # 题组证据（不冒充单题）：行区间 + 题号列表
+                unit_out["group_evidence"] = {
+                    "question_numbers": list(bu.question_numbers),
+                    "questions_lines": (
+                        [bu.ranges["stem"].start, bu.ranges["stem"].end]
+                        if bu.ranges["stem"] is not None
                         else None
                     ),
-                    "original_question_type": bu.original_question_type,
-                    "shared_components": shared,
-                    "sub_questions": [
-                        {
-                            "unit_id": f"{bu.unit_id}.sub",
-                            "unit_type": "standalone_unit",
-                            "question_number": qn,
-                            "original_question_type": bu.original_question_type,
-                            "content": content,
-                        }
-                    ],
+                    "material_lines": (
+                        [bu.ranges["material"].start, bu.ranges["material"].end]
+                        if bu.ranges["material"] is not None
+                        else None
+                    ),
+                    "answer_lines": (
+                        [bu.ranges["answer"].start, bu.ranges["answer"].end]
+                        if bu.ranges["answer"] is not None
+                        else None
+                    ),
+                    "structure": "undetermined_sub_questions",
                 }
-            )
+            semantic_units.append(unit_out)
         else:
             semantic_units.append(
                 {
