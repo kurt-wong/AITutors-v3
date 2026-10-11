@@ -214,22 +214,21 @@ def validate_ir(ir: IR) -> IR:
     return IR(ir.ir_schema, ir.source_version_id, ir.annotation_id, units)
 
 
-def _validate_node(node: IRNode, seen: set[str]) -> IRNode:
+def collect_validation_problems(node: "IRNode", seen: set[str]) -> list[str]:
+    """Return the same problem list _validate_node uses (single source of truth).
+
+    Does not mutate IR. Used by funnel_recorder.ir_skip_reasons so skip reasons
+    cannot drift from the real validator.
+    """
     problems: list[str] = []
     if node.unit_id in seen:
         problems.append("duplicate unit_id")  # invariant 5
     seen.add(node.unit_id)
 
-    # M.2: unknown 已声明则保留，不覆盖为 ready/incomplete。
-    # unknown = semantic state expression; does NOT trigger normal validation.
     if node.semantic_status == "unknown":
-        validated_subs = tuple(_validate_node(s, seen) for s in node.sub_questions)
-        return IRNode(
-            node.unit_id, node.unit_type, node.question_number,
-            node.question_number_range, node.original_question_type,
-            node.content, node.shared_components, validated_subs,
-            node.relations, "unknown",
-        )
+        for s in node.sub_questions:
+            collect_validation_problems(s, seen)
+        return problems
 
     canonical = None
     if node.original_question_type is not None:
@@ -264,8 +263,9 @@ def _validate_node(node: IRNode, seen: set[str]) -> IRNode:
             elif c.span_id is None:
                 problems.append(f"role {c.role} unresolved")
 
-    # invariant 2/3/4/6/7：composite shared + relations（target 存在且 resolved）+ 子题全 ready。
-    validated_subs = tuple(_validate_node(s, seen) for s in node.sub_questions)
+    # invariant 2/3/4/6/7：composite shared + relations + 子题全 ready。
+    # 子题问题不并入父级列表；用子题自身 problems 判定是否 ready
+    # （与 _validate_node 对子题递归后的 semantic_status 等价）。
     if node.unit_type == "composite_unit":
         if not node.shared_components:
             problems.append("composite has no shared component material")
@@ -279,13 +279,34 @@ def _validate_node(node: IRNode, seen: set[str]) -> IRNode:
                 problems.append(f"material_dependency target {r!r} not in shared_components")
             elif sc.span_id is None:
                 problems.append(f"material_dependency target {r!r} span unresolved")
-        if any(s.semantic_status != "ready" for s in validated_subs):
+        sub_has_problems = False
+        for s in node.sub_questions:
+            if collect_validation_problems(s, set(seen)):
+                sub_has_problems = True
+        if node.sub_questions and sub_has_problems:
             problems.append("composite sub_question not ready")  # invariant 7
-        if not validated_subs:
+        if not node.sub_questions:
             # 多题 composite 且子题边界未确定时 sub_questions 为空；
             # 不得把「无子题」当成 ready（会误产空/假 Question）。
             problems.append("composite has no sub_questions")
 
+    return problems
+
+
+def _validate_node(node: IRNode, seen: set[str]) -> IRNode:
+    problems = collect_validation_problems(node, seen)
+
+    # M.2: unknown 已声明则保留，不覆盖为 ready/incomplete。
+    if node.semantic_status == "unknown":
+        validated_subs = tuple(_validate_node(s, seen) for s in node.sub_questions)
+        return IRNode(
+            node.unit_id, node.unit_type, node.question_number,
+            node.question_number_range, node.original_question_type,
+            node.content, node.shared_components, validated_subs,
+            node.relations, "unknown",
+        )
+
+    validated_subs = tuple(_validate_node(s, seen) for s in node.sub_questions)
     status = "incomplete" if problems else "ready"
     if status not in SEMANTIC_STATUS:  # BUG-V3-018：值域冻结，第三状态 fail-loud
         raise AssertionError(f"IR semantic_status {status!r} 不在冻结值域 {SEMANTIC_STATUS!r}")
