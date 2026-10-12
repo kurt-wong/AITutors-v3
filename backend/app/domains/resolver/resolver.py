@@ -188,6 +188,128 @@ def decode_answer_table_cell(raw: str, qn: str) -> tuple[int, int, str] | None:
     return hits[0]
 
 
+_TR_RE = re.compile(r"<tr[^>]*>", re.I)
+_TD_ATTR_RE = re.compile(r"<td([^>]*)>", re.I)
+
+
+def _table_rows_with_cells(raw: str) -> list[list[tuple[int, int, str]]]:
+    """Parse <tr> rows, each as a list of (start, end, inner_text) cells.
+
+    Handles rowspan: when a <td rowspan=N> is seen, the next N-1 rows get
+    an empty placeholder cell at that column position (maintaining alignment).
+    """
+    rows: list[list[tuple[int, int, str]]] = []
+    tr_matches = list(_TR_RE.finditer(raw))
+    # rowspan_remaining[col] = rows still to skip for that column
+    rowspan_remaining: dict[int, int] = {}
+
+    for i, trm in enumerate(tr_matches):
+        row_start = trm.end()
+        row_end = tr_matches[i + 1].start() if i + 1 < len(tr_matches) else len(raw)
+        row_text = raw[row_start:row_end]
+
+        cells: list[tuple[int, int, str]] = []
+        col = 0
+        for td_m in _TD_RE.finditer(row_text):
+            inner = td_m.group(1)
+            tag_start = row_text.rfind("<td", 0, td_m.start(1))
+            attrs = row_text[tag_start:td_m.start(1)] if tag_start >= 0 else ""
+            rs_m = re.search(r'rowspan\s*=\s*["\']?(\d+)', attrs, re.I)
+            rowspan = int(rs_m.group(1)) if rs_m else 1
+
+            visible = re.sub(r"<[^>]+>", "", inner).strip()
+            rel = inner.find(visible) if visible else 0
+            start = row_start + td_m.start(1) + (rel if rel >= 0 else 0)
+
+            # insert placeholders for columns consumed by prior rowspan
+            while col in rowspan_remaining and rowspan_remaining[col] > 0:
+                rowspan_remaining[col] -= 1
+                if rowspan_remaining[col] == 0:
+                    del rowspan_remaining[col]
+                cells.append((row_start, row_start, ""))  # placeholder
+                col += 1
+
+            cells.append((start, start + len(visible), visible))
+            if rowspan > 1:
+                rowspan_remaining[col] = rowspan - 1
+            col += 1
+
+        # trailing placeholders
+        while col in rowspan_remaining and rowspan_remaining[col] > 0:
+            rowspan_remaining[col] -= 1
+            if rowspan_remaining[col] == 0:
+                del rowspan_remaining[col]
+            cells.append((row_start, row_start, ""))
+            col += 1
+
+        rows.append(cells)
+    return rows
+
+
+def decode_answer_table_vertical(raw: str, qn: str) -> tuple[int, int, str] | None:
+    """Vertical-format answer table lookup (题号|答案 as column headers).
+
+    Format:
+        <tr><td>题号</td><td>答案</td><td>分数</td></tr>
+        <tr><td>21</td><td>正</td><td>2分</td></tr>
+        <tr><td></td><td>变小</td><td>2分</td></tr>   ← rowspan continuation
+
+    Also handles header-less continuation tables (second page of answers):
+        <tr><td></td><td>续接内容</td><td>4分</td></tr>
+        <tr><td>27（6分）</td><td>解：...</td><td></td></tr>
+
+    Returns (start, end, answer_text) or None.
+    Deterministic: only matches question-number cell patterns,
+    no last-row / nearest-token guessing.
+    """
+    rows = _table_rows_with_cells(raw)
+    if not rows:
+        return None
+
+    # Find header row: first cell == '题号', second cell == '答案'
+    header_idx = -1
+    for i, cells in enumerate(rows):
+        if len(cells) >= 2 and cells[0][2] == "题号" and cells[1][2] == "答案":
+            header_idx = i
+            break
+
+    # Data rows start after header (or from row 0 if no header)
+    data_start = header_idx + 1 if header_idx >= 0 else 0
+
+    # Question-number cell pattern: "21" or "21（5分）" or "21(5分)"
+    qn_pat = re.compile(rf"^{re.escape(qn)}(?:\s*[（(].*[)）])?\s*$")
+    # Any question-number-like pattern (for detecting next-question boundary)
+    any_qn_pat = re.compile(r"^\d{1,3}(?:\s*[（(].*[)）])?\s*$")
+
+    for i in range(data_start, len(rows)):
+        cells = rows[i]
+        if len(cells) < 2:
+            continue
+        first_text = cells[0][2].strip()
+        if not qn_pat.match(first_text):
+            continue
+
+        # Found question row — answer is second cell
+        ans_start = cells[1][0]
+        ans_end = cells[1][1]
+        parts = [cells[1][2]]
+
+        # Collect rowspan continuation rows (first cell is not a question number)
+        for j in range(i + 1, len(rows)):
+            cont = rows[j]
+            if len(cont) < 2:
+                break
+            cont_first = cont[0][2].strip()
+            if any_qn_pat.match(cont_first):
+                break  # next question
+            parts.append(cont[1][2])
+            ans_end = cont[1][1]
+
+        return (ans_start, ans_end, "\n".join(parts))
+
+    return None
+
+
 # 行内选项标签（bounded，防 "对A项" 误配随机大写；需标签+分隔符）。
 # 全角逗号 `，`：真实卷 `C. 水土流失 D，物种减少`（U44-46）。格式兼容，非 heuristic。
 # GEO-SUBQ：紧凑组合选项 `A.①②B.①④` 的圈号紧贴下一标签；`②` 属 \\w 会挡住
@@ -959,7 +1081,23 @@ class SourceResolver:
                 )
                 return
             if len(refs) > 1:
-                # Multi-line evidence block: the declared range IS the answer
+                # Multi-line evidence block: try vertical-format table parsing
+                # across lines first (P2). If found, bind the specific answer
+                # cell range. Otherwise fall through to range binding.
+                for _lr in refs:
+                    _raw = self._idx.get(_lr).text
+                    _dv = decode_answer_table_vertical(_raw, qn)
+                    if _dv is not None:
+                        _ds, _de, _dt = _dv
+                        out.add_char_span(
+                            unit_id, t, _lr, _ds, _de, "exact",
+                            ("answer evidence range",
+                             f"lines={el[0]}-{el[1]}",
+                             "structured_answer_table_vertical", f"qn={qn}",
+                             f"cell={_dt}"),
+                        )
+                        return
+                # No structured table match: the declared range IS the answer
                 # evidence. Canonical token extraction from a multi-line block
                 # is NOT SPECIFIED (AnswerTokenContract) — bind the range as a
                 # line span and leave token choice to the Contract (likely
@@ -995,6 +1133,18 @@ class SourceResolver:
                     unit_id, t, line_ref, d_start, d_end, "exact",
                     ("answer evidence range", f"lines={el[0]}-{el[1]}",
                      "structured_answer_table", f"qn={qn}",
+                     f"cell={d_val}"),
+                )
+                return
+            # P2: vertical-format table (题号|答案 column headers, one row
+            # per question). Deterministic — no guessing.
+            decoded_v = decode_answer_table_vertical(raw, qn)
+            if decoded_v is not None:
+                d_start, d_end, d_val = decoded_v
+                out.add_char_span(
+                    unit_id, t, line_ref, d_start, d_end, "exact",
+                    ("answer evidence range", f"lines={el[0]}-{el[1]}",
+                     "structured_answer_table_vertical", f"qn={qn}",
                      f"cell={d_val}"),
                 )
                 return
