@@ -17,7 +17,7 @@ LINE_133 = (
 LINE_222 = (
     "2017年9月，中共中央国务院发布关于对《北京城市总体规划（2016年—2035年）》的批复，"
     "提出首都功能更加优化、深入推进京津冀协同发展等发展目标。"
-    "读图7京津冀区域空间格局示意图，完成26－2926.优化首都功能应采取的措施是"
+    "读图7\u201c京津冀区域空间格局示意图\u201d，完成26－2926.优化首都功能应采取的措施是"
 )
 
 
@@ -37,12 +37,20 @@ class TestFindQuestionEntryCol:
         assert LINE_222[col:].startswith("26."), f"got {LINE_222[col:col+10]!r}"
 
     def test_q16_col_exact_offset(self):
-        """Span start must be 47 for Q16 on line 133."""
-        assert _find_question_entry_col(LINE_133, "16") == 47
+        """Span start must point at '16.' in the real source line (dynamic)."""
+        expected = LINE_133.index("16.")
+        assert _find_question_entry_col(LINE_133, "16") == expected
+        assert expected == 47, f"real source offset drifted: {expected}"
 
     def test_q26_col_exact_offset(self):
-        """Span start must be 98 for Q26 on line 222."""
-        assert _find_question_entry_col(LINE_222, "26") == 98
+        """Span start must point at '26.' in the real source line.
+
+        P4 fixture fidelity: offset is derived from content, not hand-coded.
+        Real P1L222 (curly quotes around 京津冀…) puts '26.' at 100.
+        """
+        expected = LINE_222.index("26.")
+        assert _find_question_entry_col(LINE_222, "26") == expected
+        assert expected == 100, f"real source offset drifted: {expected}"
 
     def test_q16_stem_text_clean(self):
         """Stem extracted from col must be clean (no leading 。)."""

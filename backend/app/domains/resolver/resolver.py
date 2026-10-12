@@ -447,6 +447,98 @@ def _option_content_bounds(
     return (start, end)
 
 
+
+# ---------------------------------------------------------------- P4
+# HTML-table option cells (Chemistry Q9/Q19/Q24/Q25).
+# Deterministic cell-to-label mapping. Three layouts only; anything else -> {}.
+# Figures are NOT bound here (figure_refs is unsupported, BUG-V3-020).
+# Q24 figure order is positional (col0->A), never sorted by F number.
+
+_HTML_OPT_LABEL_RE = re.compile(r"^([A-Ha-h])\s*[.．、:，,)）]\s*(.+)$", re.S)
+_HTML_BARE_LABEL_RE = re.compile(r"^([A-Ha-h])$")
+# page footer / section header -- never option content (Rule A hard guard)
+_PAGE_FOOTER_RE = re.compile(r"第\s*\d+\s*页|共\s*\d+\s*页")
+_SECTION_HDR_RE = re.compile(r"^第[一二三四五六七八九十]+[部分章节]")
+
+
+def _html_table_option_cells(raw: str) -> dict[str, tuple[int, int, str]]:
+    """Extract A-D options from a single HTML table line.
+
+    Returns {label: (content_start, content_end, clean_text)}.
+    content_* are char offsets in `raw`. clean_text is for `cell=` evidence.
+
+    Layouts (deterministic, fail-closed):
+      1. horizontal  -- cell text is `A. content` (Q9, Q24)
+      2. row-oriented -- col0 is bare `A`, content = remaining cells (Q25)
+      3. column-oriented -- header row has bare `A`..`D`, content = cells below (Q19)
+    """
+    if "<td" not in raw.lower():
+        return {}
+    rows = _table_rows_with_cells(raw)
+    if not rows:
+        return {}
+
+    # --- layout 1: horizontal, label+content in the same cell ---
+    hits: dict[str, tuple[int, int, str]] = {}
+    for row in rows:
+        for (s, e, text) in row:
+            m = _HTML_OPT_LABEL_RE.match(text)
+            if not m:
+                continue
+            lab = m.group(1).upper()
+            c_start = s + m.start(2)
+            c_end = s + m.end(2)
+            hits.setdefault(lab, (c_start, c_end, text[m.start(2):].strip()))
+    if len(hits) >= 2:
+        return hits
+
+    # --- layout 2: row-oriented, bare label in col0 ---
+    hits = {}
+    for row in rows:
+        if len(row) < 2:
+            continue
+        m = _HTML_BARE_LABEL_RE.match(row[0][2].strip())
+        if not m:
+            continue
+        lab = m.group(1).upper()
+        parts = [c[2] for c in row[1:] if c[2]]
+        if not parts:
+            continue
+        c_start, c_end = row[1][0], row[-1][1]
+        hits.setdefault(lab, (c_start, c_end, " ".join(parts)))
+    if len(hits) >= 2:
+        return hits
+
+    # --- layout 3: column-oriented, bare labels in one header row ---
+    for i, row in enumerate(rows):
+        label_cols: dict[str, int] = {}
+        for j, cell in enumerate(row):
+            m = _HTML_BARE_LABEL_RE.match(cell[2].strip())
+            if m:
+                label_cols[m.group(1).upper()] = j
+        if len(label_cols) < 2:
+            continue
+        hits = {}
+        for lab, col in label_cols.items():
+            vals = [
+                r[col][2] for r in rows[i + 1:]
+                if col < len(r) and r[col][2]
+            ]
+            if not vals:
+                continue
+            first = next(
+                r[col][0] for r in rows[i + 1:]
+                if col < len(r) and r[col][2]
+            )
+            last = next(
+                r[col][1] for r in reversed(rows[i + 1:])
+                if col < len(r) and r[col][2]
+            )
+            hits.setdefault(lab, (first, last, " ".join(vals)))
+        return hits
+    return {}
+
+
 # E owns source-span overlap（material span 不得与子题/其他 material 重叠）。
 _MATERIAL_ROLES = frozenset(
     {"material", "word_bank", "shared_option_pool", "task_instruction"}
@@ -819,6 +911,13 @@ class SourceResolver:
         cursor_seq = self._idx.seq_of(start_ref)
         cursor_ref: str | None = None
         cursor_end = 0
+        # P4: HTML table cell options (Chem Q9/Q19/Q24/Q25). Deterministic
+        # cell-to-label mapping takes priority over line-start search. Any label
+        # not found in the table is marked incomplete (fail-closed) -- Rule A
+        # must NOT fire when a table is present (footer/section misbinding).
+        html_hits = self._html_table_options(labels, start_ref, region_upper)
+        if html_hits is not None:
+            return html_hits
         for lab in labels:
             starts = [
                 l for l in self._idx.lines
@@ -880,6 +979,32 @@ class SourceResolver:
             found[lab] = ("incomplete",)
         return found
 
+    def _html_table_options(self, labels, start_ref, region_upper):
+        """P4: extract options from an HTML table line in the option region.
+
+        Returns {label: entry} if a table with >=2 option labels is found,
+        else None (caller falls through to normal logic).
+        Missing labels -> ("incomplete",) so Rule A cannot misbind.
+        """
+        cursor_seq = self._idx.seq_of(start_ref)
+        for l in self._idx.lines:
+            if l.seq <= cursor_seq:
+                continue
+            if region_upper is not None and l.seq >= region_upper:
+                break
+            cells = _html_table_option_cells(l.text)
+            if len(cells) < 2:
+                continue
+            out: dict[str, tuple] = {}
+            for lab in labels:
+                if lab in cells:
+                    c_start, c_end, clean = cells[lab]
+                    out[lab] = ("cell", l.line_ref, c_start, c_end, clean)
+                else:
+                    out[lab] = ("incomplete",)
+            return out
+        return None
+
     def _trailing_unlabeled_option_line(self, labels, found, cursor_seq, region_upper):
         """Rule A: first option-like content line after last located option with no label token.
 
@@ -913,6 +1038,9 @@ class SourceResolver:
             if not t or len(t) < 4:
                 continue
             if t.startswith("<") or t.startswith("#") or t.startswith("---"):
+                continue
+            # P4 hard guard: page footer / section header is never option content
+            if _PAGE_FOOTER_RE.search(t) or _SECTION_HDR_RE.match(t):
                 continue
             if _LABEL_RE.search(text) or _LABEL_DIGIT_GLUE_RE.search(text):
                 continue
@@ -983,6 +1111,15 @@ class SourceResolver:
         if kind == "inline":
             out.add_char_span(unit_id, t, entry[1], entry[2], entry[3], "exact",
                               (f"option label={t.label} (inline, line_character)",))
+            return
+        if kind == "cell":
+            # P4: HTML table cell -- clean text via cell= evidence (compiler
+            # _slice_span prefers cell= over raw offset slicing).
+            out.add_char_span(
+                unit_id, t, entry[1], entry[2], entry[3], "exact",
+                (f"option label={t.label} (html_table_cell)",
+                 f"cell={entry[4]}"),
+            )
             return
         out.add_unresolved(t, kind if kind in ("ambiguous", "incomplete") else "incomplete",
                            (f"option {t.label}",))
