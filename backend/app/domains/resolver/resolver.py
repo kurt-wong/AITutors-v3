@@ -1060,7 +1060,7 @@ class SourceResolver:
         first_option_seq = None
         for lab, entry in option_hits.items():
             # Task A: content/inline hits also carry a line_ref (entry[1])
-            if entry[0] in ("ok", "content", "inline") and entry[1]:
+            if entry[0] in ("ok", "content", "inline", "cell") and entry[1]:
                 seq = self._idx.seq_of(entry[1])
                 first_option_seq = seq if first_option_seq is None else min(first_option_seq, seq)
         # 显式边界：本 unit 首选项行；否则区界（下一题/表头/material）。
