@@ -75,16 +75,20 @@ def _line_has_question_entry(text: str, qn: str) -> bool:
 
 
 def _find_question_entry_col(text: str, qn: str) -> int | None:
-    """Find column position of question entry for qn in text. None if not found."""
+    """Find column position of question entry for qn in text. None if not found.
+
+    P3-TD: return the offset of the actual question number, not the regex
+    match start (which includes leading anchor/range prefix like 。 or 26－29).
+    """
     if is_question_start(normalize_text(text)) == qn:
         return 0
     qn_esc = re.escape(qn)
     m = re.search(_MID_SENTENCE_QN_RE_T.format(qn=qn_esc), text)
     if m:
-        return m.start()
+        return m.start() + m.group(0).rfind(qn)
     m = re.search(_MID_RANGE_QN_RE_T.format(qn=qn_esc), text)
     if m:
-        return m.start()
+        return m.start() + m.group(0).rfind(qn)
     return None
 
 
