@@ -35,7 +35,16 @@ def _raw_sha256(s: str) -> str:
 
 
 def _slice_span(span: ResolvedSpan, line_by_ref: dict) -> str:
-    """从权威正文 slice（BUG-V3-012 跨行拼接规则与段 E 一致）。"""
+    """从权威正文 slice（BUG-V3-012 跨行拼接规则与段 E 一致）。
+
+    P2-R：vertical table answer spans carry clean cell text in evidence
+    (`cell=...`). Use that instead of raw offset slicing (which would include
+    HTML tags and score cells for multi-row/rowspan answers).
+    """
+    # P2-R: structured vertical table — return clean answer cell text
+    for ev in span.evidence:
+        if ev.startswith("cell="):
+            return ev[5:]
     if (
         span.granularity == "line_character"
         and span.start_offset is not None

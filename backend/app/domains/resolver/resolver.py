@@ -246,6 +246,30 @@ def _table_rows_with_cells(raw: str) -> list[list[tuple[int, int, str]]]:
     return rows
 
 
+def _decode_answer_table_continuation(raw: str) -> str | None:
+    """Detect answer table continuation rows (empty first cell = rowspan overflow).
+
+    For cross-line evidence where a question's answer continues on the next
+    line's table (e.g. Physics Q26 spans lines 368 and 373). Returns the
+    answer cell text from continuation rows, or None if no continuation found.
+    """
+    rows = _table_rows_with_cells(raw)
+    if not rows:
+        return None
+    parts = []
+    for cells in rows:
+        if len(cells) < 2:
+            continue
+        first_text = cells[0][2].strip()
+        # Continuation: empty first cell (rowspan overflow)
+        if first_text:
+            break  # non-empty first cell = new question or header
+        ans_text = cells[1][2].strip()
+        if ans_text:
+            parts.append(ans_text)
+    return "\n".join(parts) if parts else None
+
+
 def decode_answer_table_vertical(raw: str, qn: str) -> tuple[int, int, str] | None:
     """Vertical-format answer table lookup (题号|答案 as column headers).
 
@@ -1082,21 +1106,41 @@ class SourceResolver:
                 return
             if len(refs) > 1:
                 # Multi-line evidence block: try vertical-format table parsing
-                # across lines first (P2). If found, bind the specific answer
-                # cell range. Otherwise fall through to range binding.
+                # with cross-line continuation (P2-R). If found, bind the
+                # specific answer cell range. Otherwise fall through.
+                combined_parts: list[str] = []
+                first_ref = None
                 for _lr in refs:
                     _raw = self._idx.get(_lr).text
                     _dv = decode_answer_table_vertical(_raw, qn)
                     if _dv is not None:
                         _ds, _de, _dt = _dv
-                        out.add_char_span(
-                            unit_id, t, _lr, _ds, _de, "exact",
-                            ("answer evidence range",
-                             f"lines={el[0]}-{el[1]}",
-                             "structured_answer_table_vertical", f"qn={qn}",
-                             f"cell={_dt}"),
-                        )
-                        return
+                        if first_ref is None:
+                            first_ref = _lr
+                        combined_parts.append(_dt)
+                        # Check for continuation on subsequent lines
+                        for _next_lr in refs[refs.index(_lr) + 1:]:
+                            _next_raw = self._idx.get(_next_lr).text
+                            _cont = _decode_answer_table_continuation(_next_raw)
+                            if _cont is not None:
+                                combined_parts.append(_cont)
+                            # Don't break — skip non-continuation lines
+                            # (empty lines, separators) and keep looking
+                        break
+                    # Check if this line starts with a continuation row
+                    _cont = _decode_answer_table_continuation(_raw)
+                    if _cont is not None and combined_parts:
+                        combined_parts.append(_cont)
+                if combined_parts and first_ref is not None:
+                    full_text = "\n".join(combined_parts)
+                    out.add_char_span(
+                        unit_id, t, first_ref, 0, len(full_text), "exact",
+                        ("answer evidence range",
+                         f"lines={el[0]}-{el[1]}",
+                         "structured_answer_table_vertical", f"qn={qn}",
+                         f"cell={full_text}"),
+                    )
+                    return
                 # No structured table match: the declared range IS the answer
                 # evidence. Canonical token extraction from a multi-line block
                 # is NOT SPECIFIED (AnswerTokenContract) — bind the range as a
