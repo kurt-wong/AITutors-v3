@@ -74,6 +74,20 @@ def _line_has_question_entry(text: str, qn: str) -> bool:
     return False
 
 
+def _find_question_entry_col(text: str, qn: str) -> int | None:
+    """Find column position of question entry for qn in text. None if not found."""
+    if is_question_start(normalize_text(text)) == qn:
+        return 0
+    qn_esc = re.escape(qn)
+    m = re.search(_MID_SENTENCE_QN_RE_T.format(qn=qn_esc), text)
+    if m:
+        return m.start()
+    m = re.search(_MID_RANGE_QN_RE_T.format(qn=qn_esc), text)
+    if m:
+        return m.start()
+    return None
+
+
 def _entry_offsets(text: str, qn: str) -> list[int]:
     """raw 行内 qn 条目起点列表（行内多条目如同行多题答案时 >1）。"""
     return [m.start() for m in _ENTRY_RE.finditer(text) if m.group(1) == qn]
@@ -927,10 +941,23 @@ class SourceResolver:
             return
         start_seq = self._idx.seq_of(start_ref)
         # Fourth-cut B: stem must not consume material body lines.
+        # P3: when start_ref is a material line (stem and material share a line),
+        # use char-span binding from the question entry position to avoid overlap.
         exclude = exclude_refs or frozenset()
+        if start_ref in exclude:
+            # Find question entry column on start_ref line
+            raw = self._idx.get(start_ref).text
+            entry_col = _find_question_entry_col(raw, qn)
+            if entry_col is not None:
+                # Char-span from question entry to end of line (or next option)
+                end_col = len(raw)
+                out.add_char_span(unit_id, t, start_ref, entry_col, end_col, "exact",
+                                  ("stem start", start_ref, "material-shared-line",
+                                   f"col={entry_col}", "boundary", "option-or-region-end"))
+                return
         refs = [
             l.line_ref for l in self._idx.between(start_seq, boundary_seq)
-            if l.line_ref not in exclude
+            if l.line_ref not in exclude or l.line_ref == start_ref
         ]
         if not refs:
             out.add_unresolved(t, "incomplete", ("stem span empty",))
@@ -1328,6 +1355,10 @@ class SourceResolver:
             mrefs = frozenset(m.line_refs)
             conflicts = []
             for o in non_mats:
+                # P3: skip char-spans that intentionally share a material line
+                # (stem starts mid-line on material line — char-level, not line-level overlap)
+                if any("material-shared-line" in ev for ev in o.evidence):
+                    continue
                 if frozenset(o.line_refs) & mrefs:
                     conflicts.append(
                         f"overlaps {o.role} span {o.span_id} ({o.line_refs[0]}..{o.line_refs[-1]})"
