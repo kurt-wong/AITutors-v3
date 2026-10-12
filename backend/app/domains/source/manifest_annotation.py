@@ -295,6 +295,11 @@ def build_annotation_payload_from_bound(
             "role": "stem",
             "question_label": qn,
         }
+        # P1: propagate printed_number → question_label_printed for basis=shift
+        # units. Resolver uses this to match source stems with local numbering
+        # (e.g. printed=1 while global=26). No inference — pass through verbatim.
+        if bu.printed_number is not None:
+            stem["question_label_printed"] = str(bu.printed_number)
         if bu.ranges["stem"] is not None:
             # Resolver consumes question_search_lines (1-based inclusive).
             stem["question_search_lines"] = [
