@@ -36,6 +36,9 @@ class ResolveTarget:
     # source-entry form and lookup window. None = not declared.
     question_label_printed: str | None = None
     question_search_lines: tuple[int, int] | None = None
+    # U44-46: declared option-search window (content.options_range).
+    # 1-based inclusive [start, end]. None = not declared (keep current behavior).
+    options_range: tuple[int, int] | None = None
 
 
 @dataclass(frozen=True)
@@ -109,8 +112,15 @@ def _extract_content_targets(
 ) -> None:
     """unit/sub_question 的 content roles → targets（20 §4.5 简写引用形态）。"""
     _stem_target(targets, unit_id, content.get("stem"))
+    opts_range = content.get("options_range")
+    opts_range_tuple = None
+    if isinstance(opts_range, (list, tuple)) and len(opts_range) == 2:
+        try:
+            opts_range_tuple = (int(opts_range[0]), int(opts_range[1]))
+        except (TypeError, ValueError):
+            opts_range_tuple = None
     for opt in content.get("options") or []:
-        _option_target(targets, unit_id, opt)
+        _option_target(targets, unit_id, opt, opts_range_tuple)
     _answer_target(targets, unit_id, content.get("answer"))
     _explanation_target(targets, unit_id, content.get("explanation"))
     # blank/image：20 §4.5 列 blank/option/answer/image 为 content role；完整 JSON 形态未
@@ -200,7 +210,8 @@ def _stem_target(targets: list, unit_id: str, stem) -> None:
     )
 
 
-def _option_target(targets: list, unit_id: str, opt) -> None:
+def _option_target(targets: list, unit_id: str, opt,
+                   options_range: tuple[int, int] | None = None) -> None:
     if not isinstance(opt, dict):
         return
     label = opt.get("label")
@@ -212,6 +223,7 @@ def _option_target(targets: list, unit_id: str, opt) -> None:
             target_id=f"{unit_id}.option.{label}", unit_id=unit_id,
             role="option", kind="option_label", label=str(label),
             question_number=str(qnum) if qnum is not None else None,
+            options_range=options_range,
         )
     )
 

@@ -844,8 +844,11 @@ class SourceResolver:
                     region_upper = ms
         option_hits = {}
         if start_ref:
-            labels = tuple(t.label for t in targets if t.kind == "option_label" and t.label)
-            option_hits = self._locate_options(out, unit_id, labels, start_ref, region_upper)
+            opt_targets = [t for t in targets if t.kind == "option_label" and t.label]
+            labels = tuple(t.label for t in opt_targets)
+            opts_range = opt_targets[0].options_range if opt_targets else None
+            option_hits = self._locate_options(out, unit_id, labels, start_ref,
+                                               region_upper, opts_range)
         for t in targets:
             if t.kind == "instruction_marker":
                 continue  # already resolved in phase 1
@@ -898,7 +901,8 @@ class SourceResolver:
                 return l.seq
         return None
 
-    def _locate_options(self, out, unit_id, labels, start_ref, region_upper):
+    def _locate_options(self, out, unit_id, labels, start_ref, region_upper,
+                        options_range=None):
         """逐 label 定位：优先行首选项；否则前一个选项行上的 bounded inline（单行多选项）。
 
         Task A: 多标签同行时返回 **内容区间**（标签后→下一标签前），不再整行吞并。
@@ -908,6 +912,13 @@ class SourceResolver:
         搜索范围不扩大：仍只在已命中的选项行 / cursor 行上切内容。
         """
         found: dict[str, tuple] = {}
+        # U44-46: tighten option-search window with declared options_range.
+        # Only tightens (min), never expands. options_range=None keeps current behavior.
+        if options_range is not None:
+            _, hi = options_range
+            tightened = hi + 1  # options_range is 1-based inclusive; seq is exclusive upper
+            if region_upper is None or tightened < region_upper:
+                region_upper = tightened
         cursor_seq = self._idx.seq_of(start_ref)
         cursor_ref: str | None = None
         cursor_end = 0
