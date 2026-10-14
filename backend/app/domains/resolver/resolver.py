@@ -138,6 +138,29 @@ def _line_has_question_entry(text: str, qn: str) -> bool:
     return False
 
 
+# Fix A (E2E-007B)：括号式顶层题号仅用于「入口定位」。
+# 不得进入 is_question_start / _region_end —— PHY/CHEM 小问标记 `（1）`
+# 会把题干提前截断（DSH_QUESTION_NUMBER_MECHANISM_AUDIT）。
+# 调用方必须已经限定：具体 qn + 声明窗口 question_search_lines。
+_PAREN_QN_LINE_RE = re.compile(r"^\((\d{1,3})\)(?!\d)")
+
+
+def _line_has_paren_question_entry(text: str, qn: str) -> bool:
+    """括号式入口 `(qn)` / `（qn）`（normalize 已将全角折为半角）。
+
+    仅匹配与声明 qn 完全一致的行首括号题号；`(1, -1)` / `(1.` 不匹配。
+    """
+    m = _PAREN_QN_LINE_RE.match(normalize_text(text))
+    return bool(m) and m.group(1) == qn
+
+
+def _find_paren_question_entry_col(text: str, qn: str) -> int | None:
+    """括号式入口的字符列位。行首入口返回 0（与数字形态 col 语义一致）。"""
+    if _line_has_paren_question_entry(text, qn):
+        return 0
+    return None
+
+
 def _find_question_entry_col(text: str, qn: str) -> int | None:
     """Find column position of question entry for qn in text. None if not found.
 
@@ -153,7 +176,8 @@ def _find_question_entry_col(text: str, qn: str) -> int | None:
     m = re.search(_MID_RANGE_QN_RE_T.format(qn=qn_esc), text)
     if m:
         return m.start() + m.group(0).rfind(qn)
-    return None
+    # Fix A: paren entry column for lines already chosen as the unit entry.
+    return _find_paren_question_entry_col(text, qn)
 
 
 def _entry_offsets(text: str, qn: str) -> list[int]:
@@ -946,12 +970,14 @@ class SourceResolver:
         # Three-priority search: full printed label -> numeric prefix -> global qn.
         search_qn = t.question_label_printed or qn
         lines = self._question_zone()
+        declared_window = False
         if t.question_search_lines:
             lo, hi = t.question_search_lines
             win_refs = self._evidence_line_refs(lo, hi)
             if win_refs is not None:
                 win = frozenset(win_refs)
                 lines = [l for l in lines if l.line_ref in win]
+                declared_window = True
         # Priority 1: full printed label
         hits = [
             l.line_ref for l in lines
@@ -973,6 +999,23 @@ class SourceResolver:
                 l.line_ref for l in lines
                 if _line_has_question_entry(l.text, qn)
             ]
+        # Priority 4 (Fix A, E2E-007B): parenthesized top-level entry `(n)`.
+        # Bounded on purpose:
+        #   - only inside the unit's declared question_search_lines window
+        #   - only for the unit's own declared qn (not "any (n)")
+        #   - only after digit-form priorities failed
+        # Never used by _region_end — sub-question markers must not cut stems.
+        if not hits and declared_window:
+            for cand in {search_qn, qn}:
+                if not cand:
+                    continue
+                hits = [
+                    l.line_ref for l in lines
+                    if _line_has_paren_question_entry(l.text, cand)
+                ]
+                if hits:
+                    search_qn = cand
+                    break
         if len(hits) == 1:
             return hits[0]
         if len(hits) > 1:

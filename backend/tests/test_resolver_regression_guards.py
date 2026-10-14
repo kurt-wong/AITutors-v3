@@ -13,7 +13,12 @@ from app.domains.resolver.match_normalization import (
     is_question_start,
     normalize_text,
 )
-from app.domains.resolver.resolver import _LABEL_RE
+from app.domains.resolver.resolver import (
+    _LABEL_RE,
+    _find_paren_question_entry_col,
+    _find_question_entry_col,
+    _line_has_paren_question_entry,
+)
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -120,3 +125,47 @@ class TestCompactOptionLabels:
         """对A项 / 则A. — 汉字紧贴大写不得误配。"""
         assert list(_LABEL_RE.finditer("对A项")) == []
         assert list(_LABEL_RE.finditer("则A. 正确")) == []
+
+
+# ═══════════════════════════════════════════════════════════════
+# F. MATH 括号题号（E2E-007B Fix A：仅入口定位，不进 is_question_start）
+# ═══════════════════════════════════════════════════════════════
+
+class TestMathParenQuestionNumberBounded:
+    """括号式顶层题号只在声明窗口入口路径识别。
+
+    共享谓词 is_question_start 必须继续拒绝 `(n)` —— PHY/CHEM 小问标记
+    `（1）` 不得被当成顶层题号去截断题干（DSH_QUESTION_NUMBER_MECHANISM_AUDIT）。
+    """
+
+    @pytest.mark.parametrize("line", [
+        "(1) 已知集合  $ A = \\{1,4,5\\} $",
+        "（3）《北京2022年冬奥会》纪念邮票",
+        "(12) 题干正文",
+    ])
+    def test_shared_predicate_rejects_paren(self, line):
+        assert is_question_start(normalize_text(line)) is None, line
+
+    @pytest.mark.parametrize("line,qn", [
+        ("(1) 已知集合  $ A = \\{1,4,5\\} $", "1"),
+        ("（3）《北京2022年冬奥会》纪念邮票", "3"),
+        ("(12) 题干正文", "12"),
+        ("(1)题干紧贴", "1"),
+    ])
+    def test_paren_entry_helper_matches_declared_qn(self, line, qn):
+        assert _line_has_paren_question_entry(line, qn), line
+
+    @pytest.mark.parametrize("line,qn", [
+        ("(1) 已知集合", "2"),          # 声明 qn 不符
+        ("(1, -1) 坐标向量", "1"),      # 逗号后数字 → 数值
+        ("(1.5) 小数", "1"),
+        ("(A) 选项标签", "1"),
+        ("23. 下列说法正确的是", "23"),  # 数字形态，不应走括号 helper
+    ])
+    def test_paren_entry_helper_rejects(self, line, qn):
+        assert not _line_has_paren_question_entry(line, qn), line
+
+    def test_paren_entry_col(self):
+        assert _find_paren_question_entry_col("(1) 题干", "1") == 0
+        assert _find_paren_question_entry_col("(1) 题干", "2") is None
+        assert _find_question_entry_col("(1) 题干", "1") == 0
