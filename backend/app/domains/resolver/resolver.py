@@ -58,6 +58,70 @@ _MID_RANGE_QN_RE_T = (
 )
 
 
+def _extract_printed_numeric_prefix(printed: str) -> str | None:
+    """Extract leading numeric prefix from a printed_number label.
+
+    "14①" -> "14", "7①" -> "7", "15" -> "15", "1-10" -> None,
+    "②" -> None, "abc" -> None.
+
+    Marker-only labels (no digits) must NOT yield a search key.
+    """
+    m = re.match(r"^(\d+)", printed)
+    return m.group(1) if m else None
+
+
+# Scored answer pattern: "17. (BC) 3分; (B) 2分; (C) 2分"
+# Extracts the primary answer bracket only (question number + bracket + letters).
+# Scoring breakdowns like "(A)2分；(C)2分" do NOT match (no question number prefix).
+_SCORED_ANSWER_RE = re.compile(
+    r"^\s*\d+\s*[.．、]\s*[\(（]([A-Da-d]+)[\)）]"
+)
+
+
+def _decode_scored_answer(raw: str, qn: str) -> tuple[int, int, str] | None:
+    """Extract canonical answer from scored answer text.
+
+    Input:  "17. (BC) 3分; (B) 2分; (C) 2分"
+    Output: (start, end, "BC")
+
+    Conservative: requires question number + bracket + continuous letters.
+    Does NOT match scoring breakdowns without question number prefix.
+    """
+    m = _SCORED_ANSWER_RE.match(raw)
+    if not m:
+        return None
+    letters = m.group(1).upper()
+    return (m.start(1), m.end(1), letters)
+
+
+# Circled-number markers used in composite sub-question labels.
+_MARKER_RE = re.compile(r"[①②③④⑤⑥⑦⑧⑨]")
+
+
+def _has_marker(printed: str) -> bool:
+    """True if printed_number label contains a circled-number marker."""
+    return bool(_MARKER_RE.search(printed))
+
+
+def _find_sibling_marker_seq(idx, start_seq: int, upper: int | None,
+                             exclude_marker: str) -> int | None:
+    """Find the seq of the first sibling marker line after start_seq.
+
+    Sibling marker = a line whose text contains a circled-number marker
+    (①②③...) that is different from exclude_marker. Returns the seq of
+    that line, or None if no sibling found within upper bound.
+    """
+    for l in idx.lines:
+        if l.seq <= start_seq:
+            continue
+        if upper is not None and l.seq >= upper:
+            break
+        m = _MARKER_RE.search(l.text)
+        if m and m.group() != exclude_marker:
+            return l.seq
+    return None
+
+
 def _line_has_question_entry(text: str, qn: str) -> bool:
     """该行是否存在题号 qn 的合法入口（行首 / 句末拼接 / 区间拼接）。
 
@@ -150,15 +214,18 @@ def decode_answer_table_cell(raw: str, qn: str) -> tuple[int, int, str] | None:
     if len(cells) < 4:
         return None
 
-    # Collect row sequences: each '题号' starts a number row; each '答案' starts a value row.
+    # Collect row sequences: each '题号' or '选项' starts a number row; each '答案' starts a value row.
     # Tables may repeat the pair for horizontal paging (1-10, 11-20, ...).
+    # '选项' is used in some exam formats as the question-number row header
+    # alongside '答案' (e.g. GEN-CHEM-002 shared answer table).
+    _QN_ROW_HEADERS = frozenset({"题号", "选项"})
     qn_rows: list[list[tuple[int, int, str]]] = []
     ans_rows: list[list[tuple[int, int, str]]] = []
     mode = None
     cur: list[tuple[int, int, str]] = []
     for cell in cells:
         txt = cell[2]
-        if txt == "题号":
+        if txt in _QN_ROW_HEADERS:
             if mode == "a" and cur:
                 ans_rows.append(cur)
             elif mode == "n" and cur:
@@ -842,6 +909,18 @@ class SourceResolver:
             for ms in mat_starts or []:
                 if ms > start_seq and (region_upper is None or ms < region_upper):
                     region_upper = ms
+            # Sibling marker boundary: for marker sub-questions (①②),
+            # end at the next sibling marker to avoid consuming sibling content.
+            if stem_t and stem_t.question_label_printed:
+                printed = stem_t.question_label_printed
+                if _has_marker(printed):
+                    cur_marker = _MARKER_RE.search(printed)
+                    cur_ch = cur_marker.group() if cur_marker else ""
+                    sib_seq = _find_sibling_marker_seq(
+                        self._idx, start_seq, region_upper, cur_ch
+                    )
+                    if sib_seq is not None:
+                        region_upper = sib_seq
         option_hits = {}
         if start_ref:
             opt_targets = [t for t in targets if t.kind == "option_label" and t.label]
@@ -861,25 +940,36 @@ class SourceResolver:
                 self._span_other(out, unit_id, t)
 
     def _locate_question_start(self, out, unit_id, t, qn):
-        # Source-entry form: Producer printed_number when declared (global/local
-        # identity is Producer's fact — bug22_migration / printed_provenance —
-        # not inferred here). Fall back to the declared question_number.
+        # Three-priority search: full printed label -> numeric prefix -> global qn.
         search_qn = t.question_label_printed or qn
         lines = self._question_zone()
-        # Lookup window: Producer questions_lines when declared (1-based inclusive,
-        # same convention as answer_lines → line_ref P1L{n:03d}). Scopes the
-        # search to the unit's own body so printed "1" in Part II does not
-        # collide with Part I / answer-area "1."
         if t.question_search_lines:
             lo, hi = t.question_search_lines
             win_refs = self._evidence_line_refs(lo, hi)
             if win_refs is not None:
                 win = frozenset(win_refs)
                 lines = [l for l in lines if l.line_ref in win]
+        # Priority 1: full printed label
         hits = [
             l.line_ref for l in lines
             if _line_has_question_entry(l.text, search_qn)
         ]
+        # Priority 2: numeric prefix of printed label (e.g. "14①" -> "14")
+        if not hits and t.question_label_printed:
+            prefix = _extract_printed_numeric_prefix(t.question_label_printed)
+            if prefix and prefix != search_qn:
+                hits = [
+                    l.line_ref for l in lines
+                    if _line_has_question_entry(l.text, prefix)
+                ]
+                if hits:
+                    search_qn = prefix
+        # Priority 3: global question_number
+        if not hits and search_qn != qn and t.question_search_lines:
+            hits = [
+                l.line_ref for l in lines
+                if _line_has_question_entry(l.text, qn)
+            ]
         if len(hits) == 1:
             return hits[0]
         if len(hits) > 1:
@@ -988,6 +1078,128 @@ class SourceResolver:
                 cursor_end = 0
                 continue
             found[lab] = ("incomplete",)
+        # V3-IMG-OPTION-001: label-only rows (plain `A.` / `<div>B.</div>`)
+        # rebind to the following image row as the option body.
+        found = self._rebind_image_option_bodies(found, labels, region_upper)
+        # V3-IMG-OPTION-001: image-only option region (PHY Q12) — labels are a
+        # caption row near the figures, bodies are `<img>` rows in order.
+        # V3-IMG-OPTION-002 (DSH §7.1): only fall back to positional image
+        # mapping when EVERY label is still unresolved. A single already-correct
+        # text binding must never be wholesale-replaced by image rows.
+        if labels and all(
+            found.get(lab, ("incomplete",))[0] in ("incomplete", "ambiguous")
+            for lab in labels
+        ):
+            img_hits = self._locate_image_only_options(
+                labels, start_ref, region_upper, options_range
+            )
+            if img_hits is not None:
+                return img_hits
+        return found
+
+    def _locate_image_only_options(
+        self, labels, start_ref, region_upper, options_range=None
+    ):
+        """Positional image-option mapping (V3-IMG-OPTION-001).
+
+        Fires only when the options region is image rows (`<img`) and a nearby
+        caption row exposes the declared labels in order (e.g. `A B C 2/11 D`).
+        Image order ↔ label order is source structure, not a guess. Fail-closed
+        on any mismatch in counts or label sequence.
+        """
+        img_re = re.compile(r"<img\b", re.I)
+        # a label-caption row: each declared label appears as a bare token
+        cursor_seq = self._idx.seq_of(start_ref)
+        upper = region_upper
+        if options_range is not None:
+            _, hi = options_range
+            tightened = hi + 1
+            if upper is None or tightened < upper:
+                upper = tightened
+        # collect image rows in the options window
+        img_refs: list[str] = []
+        window_end = upper if upper is not None else cursor_seq + 30
+        for l in self._idx.lines:
+            if l.seq <= cursor_seq:
+                continue
+            if l.seq >= window_end:
+                break
+            if img_re.search(l.text):
+                img_refs.append(l.line_ref)
+        if len(img_refs) != len(labels):
+            return None
+        # look for a caption row carrying ALL declared labels in sequential
+        # order — search options window first, then a small trailing band
+        # (figure captions sit just under the option figures).
+        caption_seq = None
+        trailing_end = window_end + 8
+        for l in self._idx.lines:
+            if l.seq <= cursor_seq:
+                continue
+            if l.seq >= trailing_end:
+                break
+            found_order: list[str] = []
+            for lab in labels:
+                # bare label token (letter only or letter + punctuation)
+                if re.search(
+                    rf"(?<![A-Za-z0-9]){re.escape(lab)}(?![A-Za-z0-9])",
+                    l.text,
+                ):
+                    if lab not in found_order:
+                        found_order.append(lab)
+            if found_order == list(labels):
+                caption_seq = l.seq
+                break
+        if caption_seq is None:
+            return None
+        out: dict[str, tuple] = {}
+        for lab, ref in zip(labels, img_refs):
+            out[lab] = ("ok", ref)
+        return out
+
+    def _rebind_image_option_bodies(self, found, labels, region_upper):
+        """Rebind label-only option hits to a following `<img>` body row.
+
+        GEO Q8 shape: `A.` / `<div>B.</div>` then `<div><img …/></div>`.
+        Only fires when the label row itself carries no visible body text and
+        exactly one image row follows before the next label/prose. Pad rows
+        (`---`, blanks) between label and image are skipped. Never invents
+        content; count mismatch keeps the original hit.
+        """
+        img_re = re.compile(r"<img\b", re.I)
+        tag_re = re.compile(r"<[^>]+>")
+        pad_re = re.compile(r"^---\s*$")
+
+        def _visible_body(line_text: str, lab: str) -> str:
+            visible = tag_re.sub(" ", line_text).strip()
+            return re.sub(
+                rf"^\s*{re.escape(lab)}\s*[.．、:，,)）]\s*", "", visible
+            ).strip()
+
+        for lab in labels:
+            entry = found.get(lab)
+            if entry is None or entry[0] not in ("ok", "inline", "content"):
+                continue
+            line_ref = entry[1]
+            line = self._idx.get(line_ref)
+            if _visible_body(line.text, lab):
+                continue  # real text body — keep as-is
+            # scan forward for a single image row before the next label/prose
+            img_refs: list[str] = []
+            for nxt in self._idx.lines:
+                if nxt.seq <= line.seq:
+                    continue
+                if region_upper is not None and nxt.seq >= region_upper:
+                    break
+                t = nxt.text.strip()
+                if not t or pad_re.match(t):
+                    continue  # blank / `---` pad between label and image
+                if img_re.search(t):
+                    img_refs.append(nxt.line_ref)
+                    continue
+                break  # next label row or prose stops the search
+            if len(img_refs) == 1:
+                found[lab] = ("ok", img_refs[0])
         return found
 
     def _html_table_options(self, labels, start_ref, region_upper):
@@ -1058,6 +1270,10 @@ class SourceResolver:
             if _LABEL_SPACE_SEP_PROSE.search(text):
                 continue
             if _LABEL_SPACE_SEP_RE.search(text):
+                continue
+            # V3-IMG-OPTION-001: bare multi-label caption rows (`A B C 2/11 D`)
+            # are figure labels, never option body content.
+            if len(re.findall(r"(?<![A-Za-z0-9])[A-Ha-h](?![A-Za-z0-9])", t)) >= 2:
                 continue
             if re.match(r"^\d+\s*[.．、\\]", t):
                 continue
@@ -1320,11 +1536,37 @@ class SourceResolver:
                          f"cell={full_text}"),
                     )
                     return
-                # No structured table match: the declared range IS the answer
-                # evidence. Canonical token extraction from a multi-line block
-                # is NOT SPECIFIED (AnswerTokenContract) — bind the range as a
-                # line span and leave token choice to the Contract (likely
-                # pending_review). Do not invent "last line" / "故选" heuristics.
+                # Try horizontal table format (选项/答案 rows) for multi-line
+                # evidence (e.g. answer table at L431 with continuation at L433).
+                for _lr in refs:
+                    _raw = self._idx.get(_lr).text
+                    _dch = decode_answer_table_cell(_raw, qn)
+                    if _dch is not None:
+                        _ds, _de, _dt = _dch
+                        out.add_char_span(
+                            unit_id, t, _lr, _ds, _de, "exact",
+                            ("answer evidence range",
+                             f"lines={el[0]}-{el[1]}",
+                             "structured_answer_table", f"qn={qn}",
+                             f"cell={_dt}"),
+                        )
+                        return
+                # No structured table match: try scored answer extraction
+                # (e.g. "17. (BC) 3分; (B) 2分; (C) 2分" -> "BC").
+                for _lr in refs:
+                    _raw = self._idx.get(_lr).text
+                    _dsa = _decode_scored_answer(_raw, qn)
+                    if _dsa is not None:
+                        _ds, _de, _dt = _dsa
+                        out.add_char_span(
+                            unit_id, t, _lr, _ds, _de, "exact",
+                            ("answer evidence range",
+                             f"lines={el[0]}-{el[1]}",
+                             "scored_answer", f"qn={qn}",
+                             f"cell={_dt}"),
+                        )
+                        return
+                # Still no match: bind as multi-line block.
                 out.add_span(
                     unit_id, t, refs, "exact",
                     ("answer evidence range",
@@ -1332,10 +1574,19 @@ class SourceResolver:
                      "multi-line block (no token extraction)"),
                 )
                 return
-            # Single-line evidence: keep the existing AnswerTokenContract
-            # char-slice path (qn-entry within the declared line only).
+            # Single-line evidence: try scored answer first (e.g. "17. (BC) 3分"),
+            # then AnswerTokenContract char-slice path (qn-entry within the line).
             line_ref = refs[0]
             raw = self._idx.get(line_ref).text
+            dsa = _decode_scored_answer(raw, qn)
+            if dsa is not None:
+                d_start, d_end, d_val = dsa
+                out.add_char_span(
+                    unit_id, t, line_ref, d_start, d_end, "exact",
+                    ("answer evidence range", f"lines={el[0]}-{el[1]}",
+                     "scored_answer", f"qn={qn}", f"cell={d_val}"),
+                )
+                return
             offs = _entry_offsets(raw, qn)
             if offs:
                 all_off = [m.start() for m in _ENTRY_RE.finditer(raw)]

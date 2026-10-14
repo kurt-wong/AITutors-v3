@@ -234,3 +234,94 @@ class TestBindingIntegration:
         su = payload["semantic_units"][0]
         assert su["sub_questions"] == []
         assert su["group_evidence"]["structure"] == "undetermined_sub_questions"
+
+
+class TestImageOptionExpansion:
+    """V3-IMG-OPTION-001 — image-only options must still expose A–D labels.
+
+    GEO Q8 real shape: `A.` plain line, then `<div>B.</div>` wrappers, each
+    label followed by `<div><img …/></div>` body. Labels live inside HTML
+    layout; images are the option text. Structure must expand; no guessing.
+    """
+
+    def _geo_q8_lines(self) -> list[str]:
+        lines = [""] * 30
+        # shared material + Q7 (text options) + Q8 (image options) + Q9
+        lines[5] = "北京时间2017年8月20日14时，热带风暴生成。据此完成下面小题。"
+        lines[7] = "7. 生成时，东京正值（）"
+        lines[9] = "A. 凌晨 B. 正午 C. 下午 D. 傍晚"
+        lines[11] = "8. 图中表示天气系统的是（）"
+        lines[13] = "A."
+        lines[15] = "---"
+        lines[17] = '<div style="text-align: center;"><img src="a.jpg" alt="Image" /></div>'
+        lines[19] = '<div style="text-align: center;">B.</div>'
+        lines[21] = '<div style="text-align: center;"><img src="b.jpg" alt="Image" /></div>'
+        lines[23] = '<div style="text-align: center;">C.</div>'
+        lines[25] = '<div style="text-align: center;"><img src="c.jpg" alt="Image" /></div>'
+        lines[27] = '<div style="text-align: center;">D.</div>'
+        lines[28] = '<div style="text-align: center;"><img src="d.jpg" alt="Image" /></div>'
+        # answer table
+        lines[29] = (
+            "<table><tr><td>题号</td><td>7</td><td>8</td><td>9</td></tr>"
+            "<tr><td>答案</td><td>C</td><td>C</td><td>A</td></tr></table>"
+        )
+        return lines
+
+    def test_html_wrapped_labels_detected(self):
+        lines = self._geo_q8_lines()
+        r = expand_composite_sub_questions(
+            lines,
+            question_numbers=[8],
+            questions_range=(11, 28),
+            answer_range=(30, 30),
+            original_question_type="single_choice",
+        )
+        assert r.skipped == {}
+        assert [s.question_number for s in r.sub_questions] == [8]
+        assert r.sub_questions[0].option_labels == ("A", "B", "C", "D")
+
+    def test_mixed_plain_and_html_labels_in_composite(self):
+        """Q7 text options + Q8 image options in one composite — both expand."""
+        lines = self._geo_q8_lines()
+        r = expand_composite_sub_questions(
+            lines,
+            question_numbers=[7, 8],
+            questions_range=(7, 28),
+            answer_range=(30, 30),
+            original_question_type="single_choice",
+        )
+        assert r.skipped == {}
+        assert [s.question_number for s in r.sub_questions] == [7, 8]
+        assert r.sub_questions[1].option_labels == ("A", "B", "C", "D")
+
+    def test_truncated_image_labels_still_rejected(self):
+        """Missing D label (image body only) stays fail-closed."""
+        lines = self._geo_q8_lines()
+        # wipe the D label wrapper, leave only its image
+        lines[27] = ""
+        r = expand_composite_sub_questions(
+            lines,
+            question_numbers=[8],
+            questions_range=(11, 28),
+            answer_range=(30, 30),
+            original_question_type="single_choice",
+        )
+        assert 8 not in [s.question_number for s in r.sub_questions]
+        assert 8 in r.skipped
+        assert "option boundary unresolved" in r.skipped[8]
+
+    def test_payload_carries_image_option_labels(self):
+        lines = self._geo_q8_lines()
+        r = expand_composite_sub_questions(
+            lines,
+            question_numbers=[8],
+            questions_range=(11, 28),
+            answer_range=(30, 30),
+            original_question_type="single_choice",
+        )
+        subs = specs_to_payload_subs(
+            "U7-9", r.sub_questions, original_question_type="single_choice"
+        )
+        assert len(subs) == 1
+        opts = subs[0]["content"]["options"]
+        assert [o["label"] for o in opts] == ["A", "B", "C", "D"]

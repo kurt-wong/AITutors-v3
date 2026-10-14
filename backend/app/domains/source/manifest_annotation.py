@@ -61,7 +61,7 @@ class BoundUnit:
     bound_text: str
     bound_text_hash: str
     section: str | None = None
-    printed_number: int | None = None
+    printed_number: str | None = None
     # GEO-SUBQ: deterministic per-question expansion (payload-ready sub entries).
     # Empty when not expandable — never a fake single-question over a multi-q range.
     sub_questions: list[dict] = field(default_factory=list)
@@ -155,11 +155,11 @@ def bind_units_from_manifest(
         qn_raw = raw.get("question_numbers") or []
         qns = [int(x) for x in qn_raw] if isinstance(qn_raw, (list, tuple)) else []
         printed = raw.get("printed_number")
-        printed_i = None
+        printed_label = None
         if isinstance(printed, (list, tuple)) and printed:
-            printed_i = int(printed[0])
-        elif isinstance(printed, int):
-            printed_i = printed
+            printed_label = str(printed[0])
+        elif printed is not None:
+            printed_label = str(printed)
 
         bound.append(
             BoundUnit(
@@ -171,7 +171,7 @@ def bind_units_from_manifest(
                 bound_text=bound_text,
                 bound_text_hash=_sha256_text(bound_text),
                 section=raw.get("section"),
-                printed_number=printed_i,
+                printed_number=printed_label,
             )
         )
         # GEO-SUBQ: deterministic sub-question expansion (fail-closed per sub).
@@ -299,7 +299,7 @@ def build_annotation_payload_from_bound(
         # units. Resolver uses this to match source stems with local numbering
         # (e.g. printed=1 while global=26). No inference — pass through verbatim.
         if bu.printed_number is not None:
-            stem["question_label_printed"] = str(bu.printed_number)
+            stem["question_label_printed"] = bu.printed_number
         if bu.ranges["stem"] is not None:
             # Resolver consumes question_search_lines (1-based inclusive).
             stem["question_search_lines"] = [

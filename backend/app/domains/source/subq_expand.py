@@ -27,6 +27,8 @@ _OPT_LABEL = re.compile(r"([ABCD])\s*[\.．、，,]\s*")
 
 _BLANK_MARK = re.compile(r"^\s*$")
 _IMG_MARK = re.compile(r"^\s*<(div|img|table)|^\s*---\s*$|^\s*#+\s")
+_HTML_TAG_RE = re.compile(r"<[^>]+>")
+_HTML_IMG_RE = re.compile(r"<img\b", re.I)
 
 
 @dataclass(frozen=True)
@@ -52,6 +54,25 @@ class ExpandResult:
 def _is_noise(line: str) -> bool:
     s = line.strip()
     return (not s) or bool(_IMG_MARK.match(s))
+
+
+def _is_trailing_pad(line: str) -> bool:
+    """Only blank / `---` / heading padding — never HTML option bodies.
+
+    V3-IMG-OPTION-001: image-option rows (`<div>B.</div>`, `<div><img/></div>`)
+    are real content; trailing-tighten must not eat them.
+    """
+    s = line.strip()
+    return (not s) or bool(re.match(r"^\s*---\s*$", s)) or bool(re.match(r"^#+\s", s))
+
+
+def _html_text_content(line: str) -> str:
+    """Strip HTML tags; return visible text content (V3-IMG-OPTION-001).
+
+    Lets option labels wrapped in layout markup (`<div>B.</div>`) stay
+    discoverable without treating the whole line as discarded noise.
+    """
+    return _HTML_TAG_RE.sub(" ", line)
 
 
 def _find_sub_starts(
@@ -97,19 +118,31 @@ def _extract_option_labels(text: str) -> list[str]:
 def _sub_option_labels(
     lines: list[str], start: int, end: int, col: int | None
 ) -> list[str]:
-    """Collect ordered option labels within one sub-question body."""
+    """Collect ordered option labels within one sub-question body.
+
+    V3-IMG-OPTION-001: also read labels out of HTML layout wrappers
+    (`<div>B.</div>`) so image-option composites (GEO Q8) expose A–D.
+    Pure image rows (`<div><img …/></div>`) contribute no label.
+    """
     labels: list[str] = []
     for seq in range(start, end + 1):
         raw = lines[seq - 1]
-        if _is_noise(raw):
-            continue
-        frag = raw
-        if seq == start and col is not None:
-            frag = raw[col:]
-            frag = re.sub(rf"^\s*\d{{1,2}}\s*{_SUBQ_SEP}\s*", "", frag)
-        for lab in _extract_option_labels(frag):
-            if lab not in labels:
-                labels.append(lab)
+        candidates: list[str] = []
+        if not _is_noise(raw):
+            frag = raw
+            if seq == start and col is not None:
+                frag = raw[col:]
+                frag = re.sub(rf"^\s*\d{{1,2}}\s*{_SUBQ_SEP}\s*", "", frag)
+            candidates.append(frag)
+        elif raw.strip().startswith("<") and not _HTML_IMG_RE.search(raw):
+            # layout-only wrapper (div/table cell) — read its text content
+            text = _html_text_content(raw).strip()
+            if text:
+                candidates.append(text)
+        for frag in candidates:
+            for lab in _extract_option_labels(frag):
+                if lab not in labels:
+                    labels.append(lab)
     return labels
 
 
@@ -158,8 +191,8 @@ def expand_composite_sub_questions(
         if i + 1 < len(starts):
             nxt = starts[i + 1][0]
             end = nxt - 1 if nxt > seq else seq
-        # tighten trailing noise
-        while end > seq and _is_noise(lines[end - 1]):
+        # tighten trailing pad (blank/`---` only — keep HTML option bodies)
+        while end > seq and _is_trailing_pad(lines[end - 1]):
             end -= 1
 
         labels = _sub_option_labels(lines, seq, end, col)
