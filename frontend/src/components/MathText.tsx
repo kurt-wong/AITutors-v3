@@ -6,6 +6,7 @@
 
 import katex from "katex";
 import "katex/dist/katex.min.css";
+import type { CSSProperties } from "react";
 import { useMemo } from "react";
 
 export type Piece =
@@ -26,6 +27,16 @@ const IMG_WIDTH_RE = /\bwidth\s*=\s*["']([^"']+)["']/i;
 
 /** 语义化换行标签。 */
 const BR_TAGS = new Set(["br", "hr"]);
+
+/**
+ * 图片渲染尺寸策略（V3-IMG-OPTION-004）。
+ *
+ * 源文 `width="N%"` 是纸面版式百分比，放进 shrink-to-fit 容器会塌缩成十几像素。
+ * 统一改为自然尺寸 + 容器宽度上限 + 原始宽高比，窄视口下自适应。
+ */
+export function imageRenderStyle(): CSSProperties {
+  return { width: "auto", height: "auto", maxWidth: "100%" };
+}
 
 // ---------------------------------------------------------------- image src
 /**
@@ -180,13 +191,16 @@ export function MathText({
     <span className={className}>
       {pieces.map((p, i) => {
         if (p.kind === "img") {
+          // V3-IMG-OPTION-004: source width="N%" (paper-layout percentages)
+          // collapses inside shrink-to-fit containers (15-18px). Render at
+          // natural size, capped by container width; keep aspect ratio.
           return (
             <img
               key={i}
               src={p.src}
               alt={p.alt}
-              style={p.width ? { width: p.width, height: "auto" } : undefined}
-              className="inline-block align-middle"
+              style={imageRenderStyle()}
+              className="inline-block align-middle my-1"
               onError={(e) => {
                 // visible broken-image state, never silent swap
                 const el = e.currentTarget;

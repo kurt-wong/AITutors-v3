@@ -3,6 +3,7 @@
  */
 import { describe, expect, it } from "vitest";
 import {
+  imageRenderStyle,
   resolveImageSrc,
   splitHtmlSegments,
   splitPieces,
@@ -158,5 +159,39 @@ describe("splitPieces — regression", () => {
     const pieces = splitPieces(`$E=mc^2$ ${GEO_IMG}`);
     expect(pieces.some((p) => p.kind === "math")).toBe(true);
     expect(pieces.some((p) => p.kind === "img")).toBe(true);
+  });
+});
+
+describe("imageRenderStyle — V3-IMG-OPTION-004 size collapse", () => {
+  it("ignores percentage widths: auto + maxWidth 100% + aspect ratio", () => {
+    const s = imageRenderStyle();
+    expect(s.width).toBe("auto");
+    expect(s.height).toBe("auto");
+    expect(s.maxWidth).toBe("100%");
+  });
+
+  it("does not apply a percentage width (shrink-to-fit safe)", () => {
+    const s = imageRenderStyle();
+    expect(String(s.width)).not.toMatch(/^\d+(\.\d+)?%$/);
+    expect(String(s.height)).not.toMatch(/^\d+(\.\d+)?%$/);
+    // maxWidth % is the responsive cap — allowed and required
+    expect(s.maxWidth).toBe("100%");
+  });
+
+  it("source width attr is captured in Piece but not applied as CSS %", () => {
+    const pieces = splitHtmlSegments(
+      '<img src="../../_imgs/p/i.jpg" width="12%" />',
+    );
+    const img = pieces.find((p) => p.kind === "img") as {
+      kind: string;
+      width: string | null;
+    } | null;
+    expect(img).not.toBeNull();
+    expect(img!.width).toBe("12%"); // source fact preserved
+    expect(imageRenderStyle().width).toBe("auto"); // not used as CSS
+  });
+
+  it("is stable across repeated calls (pure)", () => {
+    expect(imageRenderStyle()).toEqual(imageRenderStyle());
   });
 });
