@@ -816,6 +816,9 @@ class SourceResolver:
         self._svid = source_version_id
         self._idx = _LineIndex(lines)
         self._figures = figures
+        # Declared stem starts (from question_search_lines), set in resolve().
+        # Upper-bound guard: stem must not cross the next declared question start.
+        self._declared_starts: tuple[int, ...] = ()
         # 题目区终点 = 首个 答案/详解/解析 表头 seq（其后为答案/详解区，不得当题号行）。
         self._qzone_end = next(
             (l.seq for l in self._idx.lines
@@ -833,6 +836,18 @@ class SourceResolver:
         by_unit: dict[str, list] = {}
         for t in extract_targets(annotation_payload):
             by_unit.setdefault(t.unit_id, []).append(t)
+        # Fix (E2E-007B KHH2 over-capture): declared stem starts in document order.
+        # Used as an upper bound so a stem cannot swallow later questions'
+        # declared content (option-less fill-in/short-answer especially).
+        declared_starts: list[int] = []
+        for targets in by_unit.values():
+            for t in targets:
+                if t.kind == "question_label" and t.question_search_lines:
+                    lo, _hi = t.question_search_lines
+                    refs = self._evidence_line_refs(lo, lo)
+                    if refs:
+                        declared_starts.append(self._idx.seq_of(refs[0]))
+        self._declared_starts = tuple(sorted(set(declared_starts)))
         # Fourth-cut B: resolve ALL material bodies first so stem boundaries can
         # respect material regions (own-stem and neighbor-stem).
         for unit_id, targets in by_unit.items():
@@ -1360,13 +1375,20 @@ class SourceResolver:
             first_option_seq = cmin if first_option_seq is None else min(first_option_seq, cmin)
         # 显式边界：本 unit 首选项行；否则区界（下一题/表头/material）。
         boundary_seq = first_option_seq if first_option_seq is not None else region_upper
+        start_seq = self._idx.seq_of(start_ref)
+        # Upper bound (E2E-007B KHH2 Q21-Q28): stem must not cross the next
+        # question's DECLARED start (document order + Producer stem_lines).
+        # Only tightens. Not "any (n)" text matching — those remain in _region_end.
+        for ds in getattr(self, "_declared_starts", ()):
+            if ds > start_seq and (boundary_seq is None or ds < boundary_seq):
+                boundary_seq = ds
+                break
         if boundary_seq is None:
             out.add_unresolved(
                 t, "incomplete",
                 ("no explicit end boundary (option/next-question) for stem",),
             )
             return
-        start_seq = self._idx.seq_of(start_ref)
         # Fourth-cut B: stem must not consume material body lines.
         # P3: when start_ref is a material line (stem and material share a line),
         # use char-span binding from the question entry position to avoid overlap.

@@ -204,3 +204,104 @@ class TestSingleLineOptionContentBounds:
         text = "A. 甲 B. 乙 C. 丙"
         spans = [(m.start(), m.group(1)) for m in _LABEL_RE.finditer(text)]
         assert [s[1] for s in spans] == ["A", "B", "C"]
+
+
+# ═══════════════════════════════════════════════════════════════
+# H. 题干上下界断言（E2E-007B KHH2 Q21–Q28 过度捕获）
+# ═══════════════════════════════════════════════════════════════
+
+class TestStemDeclaredBoundary:
+    """下界：声明入口可定位；上界：stem 不跨下一题声明起点。"""
+
+    def _resolve_khh2_like(self):
+        """Minimal two-question payload: option-less fill-ins with paren entries."""
+        from app.domains.resolver.resolver import SourceLineView, SourceResolver
+
+        lines_raw = [
+            "## 二、 填空题",
+            "（21）第一题题干 ___.",
+            "",
+            "（22）第二题题干 ___.",
+            "",
+            "---",
+            "# 参考答案",
+        ]
+        lines = tuple(
+            SourceLineView(
+                line_ref=f"P1L{i:03d}", text=t, seq=i, page_no=1, line_no_in_page=i
+            )
+            for i, t in enumerate(lines_raw, start=1)
+        )
+        payload = {
+            "semantic_units": [
+                {
+                    "unit_id": "Q21",
+                    "unit_type": "standalone_unit",
+                    "question_number": "21",
+                    "content": {
+                        "stem": {
+                            "role": "stem",
+                            "question_label": "21",
+                            "question_search_lines": [2, 2],
+                            "stem_lines": [2, 2],
+                        },
+                        "answer": {
+                            "role": "answer",
+                            "question_label": "21",
+                            "answer_zone": "answer_lines",
+                            "evidence_lines": [7, 7],
+                        },
+                    },
+                },
+                {
+                    "unit_id": "Q22",
+                    "unit_type": "standalone_unit",
+                    "question_number": "22",
+                    "content": {
+                        "stem": {
+                            "role": "stem",
+                            "question_label": "22",
+                            "question_search_lines": [4, 4],
+                            "stem_lines": [4, 4],
+                        },
+                        "answer": {
+                            "role": "answer",
+                            "question_label": "22",
+                            "answer_zone": "answer_lines",
+                            "evidence_lines": [7, 7],
+                        },
+                    },
+                },
+            ]
+        }
+        resolved = SourceResolver(
+            source_version_id="00000000-0000-0000-0000-000000000002",
+            lines=lines,
+            figures=(),
+        ).resolve(payload)
+        return lines_raw, resolved
+
+    def test_lower_bound_entry_located(self):
+        _lines, resolved = self._resolve_khh2_like()
+        stem_ids = [s.span_id for s in resolved.resolved_spans if s.role == "stem"]
+        assert "sp-Q21.stem" in stem_ids, stem_ids
+        assert "sp-Q22.stem" in stem_ids, stem_ids
+
+    def test_upper_bound_stem_does_not_cross_next_declared_start(self):
+        lines_raw, resolved = self._resolve_khh2_like()
+        by_id = {s.span_id: s for s in resolved.resolved_spans}
+        q21 = by_id["sp-Q21.stem"]
+        # Q21 must not include L4 (Q22's declared start)
+        assert "P1L004" not in q21.line_refs, q21.line_refs
+        # and must not swallow the pad / answer header
+        assert "P1L006" not in q21.line_refs
+        assert "P1L007" not in q21.line_refs
+        # Q21 content is its own line only
+        assert q21.line_refs[0] == "P1L002"
+
+    def test_q22_stem_not_empty_and_not_answer(self):
+        _lines, resolved = self._resolve_khh2_like()
+        by_id = {s.span_id: s for s in resolved.resolved_spans}
+        q22 = by_id["sp-Q22.stem"]
+        assert q22.line_refs[0] == "P1L004"
+        assert "P1L007" not in q22.line_refs
