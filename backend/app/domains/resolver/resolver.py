@@ -922,18 +922,21 @@ class SourceResolver:
                     if sib_seq is not None:
                         region_upper = sib_seq
         option_hits = {}
+        option_consumed: set[int] = set()
         if start_ref:
             opt_targets = [t for t in targets if t.kind == "option_label" and t.label]
             labels = tuple(t.label for t in opt_targets)
             opts_range = opt_targets[0].options_range if opt_targets else None
             option_hits = self._locate_options(out, unit_id, labels, start_ref,
-                                               region_upper, opts_range)
+                                               region_upper, opts_range,
+                                               consumed_out=option_consumed)
         for t in targets:
             if t.kind == "instruction_marker":
                 continue  # already resolved in phase 1
             if t.kind == "question_label":
                 self._stem_span(out, unit_id, t, qn, start_ref, option_hits, region_upper,
-                                exclude_refs=mat_lines)
+                                exclude_refs=mat_lines,
+                                consumed_seqs=option_consumed)
             elif t.kind == "option_label":
                 self._option_span(out, unit_id, t, option_hits)
             else:
@@ -992,7 +995,7 @@ class SourceResolver:
         return None
 
     def _locate_options(self, out, unit_id, labels, start_ref, region_upper,
-                        options_range=None):
+                        options_range=None, consumed_out: set | None = None):
         """逐 label 定位：优先行首选项；否则前一个选项行上的 bounded inline（单行多选项）。
 
         Task A: 多标签同行时返回 **内容区间**（标签后→下一标签前），不再整行吞并。
@@ -1080,7 +1083,9 @@ class SourceResolver:
             found[lab] = ("incomplete",)
         # V3-IMG-OPTION-001: label-only rows (plain `A.` / `<div>B.</div>`)
         # rebind to the following image row as the option body.
-        found = self._rebind_image_option_bodies(found, labels, region_upper)
+        found = self._rebind_image_option_bodies(
+            found, labels, region_upper, consumed_out=consumed_out
+        )
         # V3-IMG-OPTION-001: image-only option region (PHY Q12) — labels are a
         # caption row near the figures, bodies are `<img>` rows in order.
         # V3-IMG-OPTION-002 (DSH §7.1): only fall back to positional image
@@ -1157,7 +1162,7 @@ class SourceResolver:
             out[lab] = ("ok", ref)
         return out
 
-    def _rebind_image_option_bodies(self, found, labels, region_upper):
+    def _rebind_image_option_bodies(self, found, labels, region_upper, consumed_out: set | None = None):
         """Rebind label-only option hits to a following `<img>` body row.
 
         GEO Q8 shape: `A.` / `<div>B.</div>` then `<div><img …/></div>`.
@@ -1165,6 +1170,10 @@ class SourceResolver:
         exactly one image row follows before the next label/prose. Pad rows
         (`---`, blanks) between label and image are skipped. Never invents
         content; count mismatch keeps the original hit.
+
+        E2E-006: consumed label rows and pad rows are recorded into
+        `consumed_out` so the stem boundary stops before them — they must
+        never be swallowed into the stem after a rebind.
         """
         img_re = re.compile(r"<img\b", re.I)
         tag_re = re.compile(r"<[^>]+>")
@@ -1199,6 +1208,16 @@ class SourceResolver:
                     continue
                 break  # next label row or prose stops the search
             if len(img_refs) == 1:
+                if consumed_out is not None:
+                    consumed_out.add(line.seq)  # original label row
+                    for nxt in self._idx.lines:
+                        if nxt.seq <= line.seq:
+                            continue
+                        if nxt.line_ref == img_refs[0]:
+                            break
+                        t = nxt.text.strip()
+                        if not t or pad_re.match(t):
+                            consumed_out.add(nxt.seq)  # blank / `---` pad
                 found[lab] = ("ok", img_refs[0])
         return found
 
@@ -1281,7 +1300,8 @@ class SourceResolver:
         return None
 
     def _stem_span(self, out, unit_id, t, qn, start_ref, option_hits, region_upper,
-                   exclude_refs: frozenset | set | None = None):
+                   exclude_refs: frozenset | set | None = None,
+                   consumed_seqs: set[int] | None = None):
         if start_ref is None:
             return  # 已由 _locate_question_start 记录 unresolved
         first_option_seq = None
@@ -1290,6 +1310,11 @@ class SourceResolver:
             if entry[0] in ("ok", "content", "inline", "cell") and entry[1]:
                 seq = self._idx.seq_of(entry[1])
                 first_option_seq = seq if first_option_seq is None else min(first_option_seq, seq)
+        # E2E-006: option label/pad rows consumed by image-rebind must not be
+        # swallowed into the stem — tighten the boundary to the earliest one.
+        if consumed_seqs:
+            cmin = min(consumed_seqs)
+            first_option_seq = cmin if first_option_seq is None else min(first_option_seq, cmin)
         # 显式边界：本 unit 首选项行；否则区界（下一题/表头/material）。
         boundary_seq = first_option_seq if first_option_seq is not None else region_upper
         if boundary_seq is None:
@@ -1318,6 +1343,14 @@ class SourceResolver:
             l.line_ref for l in self._idx.between(start_seq, boundary_seq)
             if l.line_ref not in exclude or l.line_ref == start_ref
         ]
+        # E2E-006: trim trailing structural pads (`---`, blanks) — never stem
+        # content. Only pads are trimmed, not real text like trailing `A.`.
+        pad_re = re.compile(r"^---\s*$")
+        while len(refs) > 1:
+            tail = self._idx.get(refs[-1]).text
+            if tail.strip() and not pad_re.match(tail):
+                break
+            refs.pop()
         if not refs:
             out.add_unresolved(t, "incomplete", ("stem span empty",))
             return
