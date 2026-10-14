@@ -447,7 +447,7 @@ def decode_answer_table_vertical(raw: str, qn: str) -> tuple[int, int, str] | No
 # 全角逗号 `，`：真实卷 `C. 水土流失 D，物种减少`（U44-46）。格式兼容，非 heuristic。
 # GEO-SUBQ：紧凑组合选项 `A.①②B.①④` 的圈号紧贴下一标签；`②` 属 \\w 会挡住
 # `(?<![\w])`，改为仅排除 ASCII 词符 + CJK 汉字（防 `对A`/`则A`），圈号不再误挡。
-_LABEL_RE = re.compile(r"(?<![A-Za-z0-9_一-鿿])([A-Ha-h])\s*[.．、:，,)）]")
+_LABEL_RE = re.compile(r"(?<![A-Za-z0-9_一-鿿])[（(]?([A-Ha-h])\s*[.．、:，,)）]")
 # P1.4-B Rule B：digit-glued `2D.`（数学 Q4）。clean lookbehind `(?<![\w])` 会因
 # 前置 `2` 而漏检，故单独识别。NOT `2\cos…`（字母后无分隔符）。
 _LABEL_DIGIT_GLUE_RE = re.compile(r"(?<![A-Za-z0-9_])(\d)([A-H])\s*[.．、]")

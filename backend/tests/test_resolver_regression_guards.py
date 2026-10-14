@@ -169,3 +169,38 @@ class TestMathParenQuestionNumberBounded:
         assert _find_paren_question_entry_col("(1) 题干", "1") == 0
         assert _find_paren_question_entry_col("(1) 题干", "2") is None
         assert _find_question_entry_col("(1) 题干", "1") == 0
+
+
+# ═══════════════════════════════════════════════════════════════
+# G. 单行多选项内容边界（_LABEL_RE 含前导括号，独立于 Fix A）
+# ═══════════════════════════════════════════════════════════════
+
+class TestSingleLineOptionContentBounds:
+    """`(A) x (B) y` 切分后，上一选项正文不得吞入下一标签的左括号。"""
+
+    def test_label_re_includes_leading_paren_in_token(self):
+        text = "(A) 1 (B) 2 (C) 3"
+        spans = [(m.start(), m.end(), m.group(1)) for m in _LABEL_RE.finditer(text)]
+        assert [s[2] for s in spans] == ["A", "B", "C"]
+        # token start must sit on '(' so content end stops before it
+        assert spans[0][0] == 0
+        assert spans[1][0] == 6  # '(' of (B)
+
+    def test_option_content_excludes_next_label_paren(self):
+        from app.domains.resolver.resolver import _option_content_bounds
+
+        text = "(A)  $ \\{1,2,3\\} $ (B)  $ \\{1,2,3,4\\} $ (C)  X (D)  Y"
+        bounds = {
+            lab: _option_content_bounds(text, lab, boundary_labels=set("ABCD"))
+            for lab in "ABCD"
+        }
+        assert bounds["A"] is not None
+        a = text[bounds["A"][0] : bounds["A"][1]]
+        assert not a.rstrip().endswith("("), a
+        b = text[bounds["B"][0] : bounds["B"][1]]
+        assert not b.rstrip().endswith("("), b
+
+    def test_non_paren_forms_unchanged(self):
+        text = "A. 甲 B. 乙 C. 丙"
+        spans = [(m.start(), m.group(1)) for m in _LABEL_RE.finditer(text)]
+        assert [s[1] for s in spans] == ["A", "B", "C"]
