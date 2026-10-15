@@ -365,8 +365,10 @@ _TD_ATTR_RE = re.compile(r"<td([^>]*)>", re.I)
 
 # \s* not \s+: real corpus has glued form `21-23DBC` / `36-40ADCGF`
 # (no space between range end and letters) — E2E-011 昌平临川.
+# \s*[:：]?\s*: real corpus has colon separator `56—59:CBBA` / `36—40：ABCBA`
+# (fullwidth or halfwidth colon between range and letters) — E2E-012 一七一中.
 _RANGE_KEY_RE = re.compile(
-    r"(?<![\d])(\d{1,3})\s*[－~—–-]\s*(\d{1,3})\s*([A-Za-z]{2,20})"
+    r"(?<![\d])(\d{1,3})\s*[－~—–-]\s*(\d{1,3})\s*[:：]?\s*([A-Za-z]{2,20})"
 )
 
 

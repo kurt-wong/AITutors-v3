@@ -63,3 +63,20 @@ class TestRangeAnswerKey:
 
     def test_glued_length_mismatch_fail_closed(self):
         assert decode_range_answer_key("21-23DB", "21") is None  # 2 letters, 3 qns
+
+    def test_colon_separator_halfwidth(self):
+        """E2E-012: real corpus `56—59:CBBA` — colon between range and letters."""
+        raw = "56—59:CBBA 60—63:ACBC 64—67:CBCD 68—71:CBAD 72—75:DAAC"
+        assert decode_range_answer_key(raw, "56")[2] == "C"
+        assert decode_range_answer_key(raw, "57")[2] == "B"
+        assert decode_range_answer_key(raw, "59")[2] == "A"
+        assert decode_range_answer_key(raw, "60")[2] == "A"
+        assert decode_range_answer_key(raw, "75")[2] == "C"
+
+    def test_colon_separator_fullwidth(self):
+        """E2E-012: real corpus `36—40：ABCBA` — fullwidth colon separator."""
+        raw = "36—40：ABCBA 41—45:DACDB 46—50:BCADD 51—55:CABAC"
+        assert decode_range_answer_key(raw, "36")[2] == "A"
+        assert decode_range_answer_key(raw, "40")[2] == "A"
+        assert decode_range_answer_key(raw, "41")[2] == "D"
+        assert decode_range_answer_key(raw, "55")[2] == "C"
