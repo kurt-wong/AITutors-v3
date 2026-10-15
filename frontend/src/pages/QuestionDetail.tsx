@@ -41,7 +41,22 @@ export function QuestionDetailPage() {
       )
     : [];
   const materials = contents.filter((c) => c.role === "material");
-  const stem = contents.find((c) => c.role === "stem");
+  // FE-COMPOSITE-STEM: render ALL real sub-question stems, not just the first.
+  const allStems = contents.filter((c) => c.role === "stem");
+  // Shared-material questions (七选五/语法/完形): subq expansion may emit material
+  // fragments as stems — don't duplicate the material section as stems.
+  const materialBlob = materials.map((m) => m.text).join("\n");
+  const distinctStems = allStems.filter((s) => !materialBlob.includes(String(s.text ?? "")));
+  // Degenerate option-line artifacts (e.g. "41.A.") are a known residual — keep
+  // first-only display for them so cloze/option-heavy questions don't regress.
+  const looksLikeOptionArtifact = (t: string) => {
+    const s = String(t ?? "").trim();
+    return s.length < 16 && /^\d+[.．、]/.test(s);
+  };
+  const stems =
+    distinctStems.length > 1 && !distinctStems.every((s) => looksLikeOptionArtifact(s.text))
+      ? distinctStems
+      : distinctStems.slice(0, 1);
   const options = contents.filter((c) => c.role === "option");
   const answers = contents.filter((c) => c.role === "answer");
   // E2E-009R7: 未验证答案 → 待审核，与 approved 可作答题区分
@@ -120,17 +135,19 @@ export function QuestionDetailPage() {
           </div>
         )}
 
-        {stem && (
+        {stems.length > 0 && (
           <div className="mb-4">
             <div className="mb-1 text-[13px] font-semibold text-ink-muted">题干</div>
-            <div className="text-[17px] leading-relaxed">
-              <MathText text={stem.text} />
-            </div>
-            {showRaw && (
-              <pre className="mt-2 whitespace-pre-wrap rounded bg-canvas-parchment p-2 text-[12px] text-ink-muted">
-                {stem.text}
-              </pre>
-            )}
+            {stems.map((s, i) => (
+              <div key={s.id ?? i} className="text-[17px] leading-relaxed">
+                <MathText text={s.text} />
+                {showRaw && (
+                  <pre className="mt-2 whitespace-pre-wrap rounded bg-canvas-parchment p-2 text-[12px] text-ink-muted">
+                    {s.text}
+                  </pre>
+                )}
+              </div>
+            ))}
           </div>
         )}
 
@@ -157,7 +174,11 @@ export function QuestionDetailPage() {
           <div className="mb-2">
             <div className="mb-1 text-[13px] font-semibold text-ink-muted">答案</div>
             {answers.map((a) => (
-              <div key={a.id} className="text-[15px]">
+              <div key={a.id} className="flex gap-2 text-[15px]">
+                {/* FE-ANSWER-LABEL: show label like options; skip if text already carries it */}
+                {a.label && !String(a.text ?? "").trimStart().startsWith(a.label) && (
+                  <span className="font-medium">{a.label}.</span>
+                )}
                 <MathText text={a.text} />
                 {showRaw && (
                   <pre className="mt-1 whitespace-pre-wrap rounded bg-canvas-parchment p-2 text-[12px] text-ink-muted">
@@ -169,7 +190,7 @@ export function QuestionDetailPage() {
           </div>
         )}
 
-        {!stem && !options.length && !answers.length && (
+        {!stems.length && !options.length && !answers.length && (
           <p className="text-sm text-ink-muted">无 role contents。</p>
         )}
       </div>
