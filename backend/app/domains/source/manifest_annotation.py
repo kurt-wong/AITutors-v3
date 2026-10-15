@@ -69,6 +69,9 @@ class BoundUnit:
     subq_unit_reason: str | None = None
     # material marker dict for shared_components (resolver needs marker text).
     material_shared: dict = field(default_factory=dict)
+    # Producer-declared option labels (e.g. A–C for 3-option listening items).
+    # Empty → caller may fall back to legacy A–D.
+    option_labels: list[str] = field(default_factory=list)
 
 
 def _sha256_text(text: str) -> str:
@@ -161,6 +164,15 @@ def bind_units_from_manifest(
         elif printed is not None:
             printed_label = str(printed)
 
+        option_labels: list[str] = []
+        raw_opts = raw.get("options")
+        if isinstance(raw_opts, (list, tuple)):
+            for o in raw_opts:
+                if isinstance(o, dict):
+                    lab = o.get("label")
+                    if lab is not None and str(lab).strip():
+                        option_labels.append(str(lab).strip())
+
         bound.append(
             BoundUnit(
                 unit_id=unit_id,
@@ -172,6 +184,7 @@ def bind_units_from_manifest(
                 bound_text_hash=_sha256_text(bound_text),
                 section=raw.get("section"),
                 printed_number=printed_label,
+                option_labels=option_labels,
             )
         )
         # GEO-SUBQ: deterministic sub-question expansion (fail-closed per sub).
@@ -310,13 +323,16 @@ def build_annotation_payload_from_bound(
         content["stem"] = stem
 
         if bu.original_question_type in ("single_choice", "multiple_choice", "true_false"):
+            # Producer-declared labels win (EN listening is A–C, not A–D).
+            # Fall back to legacy A–D only when the manifest declared none.
+            labels = bu.option_labels or [chr(ord("A") + i) for i in range(4)]
             content["options"] = [
                 {
                     "role": "option",
-                    "label": chr(ord("A") + i),
+                    "label": lab,
                     "question_label": qn,
                 }
-                for i in range(4)
+                for lab in labels
             ]
             if bu.ranges["options"] is not None:
                 content["options_range"] = [

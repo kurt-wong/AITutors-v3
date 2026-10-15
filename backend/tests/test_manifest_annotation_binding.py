@@ -113,3 +113,52 @@ class TestRealPackageBinding:
         assert "离子键" in q8.bound_text or "L042" not in q8.bound_text  # real content
         # bound hash is stable
         assert len(q8.bound_text_hash) == 64
+
+
+class TestDeclaredOptionLabels:
+    """E2E-009 EN: 3-option listening items must not get a phantom D."""
+
+    def test_option_labels_from_manifest_not_hardcoded_ad(self):
+        lines = [
+            "1. What will the speakers do?",
+            "A. Go to a concert. B. Do some homework. C. Play some music.",
+            "1 A",
+        ]
+        man = {
+            "units": [
+                {
+                    "unit_id": "Q1",
+                    "unit_type": "standalone_question",
+                    "question_numbers": [1],
+                    "original_question_type": "single_choice",
+                    "stem_lines": [1, 1],
+                    "options_lines": [2, 2],
+                    "answer_lines": [3, 3],
+                    "options": [
+                        {"label": "A", "start_line": 2, "end_line": 2},
+                        {"label": "B", "start_line": 2, "end_line": 2},
+                        {"label": "C", "start_line": 2, "end_line": 2},
+                    ],
+                }
+            ],
+            "identity_version": 2,
+            "source_content_sha256": "a" * 64,
+        }
+        bound = bind_units_from_manifest(man, lines, source_content_sha256="a" * 64)
+        assert bound[0].option_labels == ["A", "B", "C"]
+        payload = build_annotation_payload_from_bound(
+            bound, source_content_sha256="a" * 64, manifest_identity_version=2
+        )
+        opts = payload["semantic_units"][0]["content"]["options"]
+        assert [o["label"] for o in opts] == ["A", "B", "C"]
+
+    def test_legacy_ad_fallback_when_manifest_omits_options(self):
+        lines = _lines(5)
+        man = {"units": [_manifest_unit("Q1")], "identity_version": 2}
+        bound = bind_units_from_manifest(man, lines, source_content_sha256="a" * 64)
+        assert bound[0].option_labels == []
+        payload = build_annotation_payload_from_bound(
+            bound, source_content_sha256="a" * 64, manifest_identity_version=2
+        )
+        opts = payload["semantic_units"][0]["content"]["options"]
+        assert [o["label"] for o in opts] == ["A", "B", "C", "D"]
