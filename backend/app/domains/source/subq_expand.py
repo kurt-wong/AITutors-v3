@@ -22,8 +22,10 @@ _SUBQ_SEP = r"(?:\\?\s*[\.．、·，]|\\\.)"
 _SUBQ_INLINE = re.compile(rf"(?<![\d．.、·，])(\d{{1,2}})\s*{_SUBQ_SEP}(?!\d)")
 _SUBQ_AFTER_RANGE = re.compile(rf"完成\s*(\d{{1,2}})\s*[－—~\-]\s*\d{{1,2}}\s*\1\s*{_SUBQ_SEP}")
 
-# Option labels: A–D + separator (OCR uses . ． 、 ， and glued forms).
-_OPT_LABEL = re.compile(r"([ABCD])\s*[\.．、，,]\s*")
+# Option labels: A–Z + separator (OCR uses . ． 、 ， and glued forms).
+# E2E-009R2: detect the FULL declared label set (A–H matching, A–E) so
+# non-A–D structures fail explicitly instead of silently truncating to A–D.
+_OPT_LABEL = re.compile(r"([A-Z])\s*[\.．、，,]\s*")
 
 _BLANK_MARK = re.compile(r"^\s*$")
 _IMG_MARK = re.compile(r"^\s*<(div|img|table)|^\s*---\s*$|^\s*#+\s")
@@ -153,17 +155,37 @@ def expand_composite_sub_questions(
     questions_range: tuple[int, int] | None,
     answer_range: tuple[int, int] | None,
     original_question_type: str | None,
+    has_declared_options: bool = False,
 ) -> ExpandResult:
     """Deterministically expand a multi-q composite into per-question subs.
 
     Fail-closed per sub: only emit when stem bounds, A–D options, and answer
     evidence are all uniquely determined. short_answer / non-choice → no expand.
+
+    Type scope (E2E-009R1 Owner ruling):
+      - choice types + ``cloze`` always enter expansion
+      - ``reading`` enters only when the manifest declared options
+        (selection-type reading); non-selection reading stays out
+      - essay / fill_in / reading_expression / unknown → out of scope
     """
     result = ExpandResult()
 
-    if original_question_type not in ("single_choice", "multiple_choice", "true_false"):
+    choice_types = ("single_choice", "multiple_choice", "true_false", "cloze")
+    # Owner 2026-10 / E2E-010: 语法填空/选词填空/阅读表达/作文无选项也应入库。
+    # seven_to_five 有共享 A–G，子题不要求各自 A–D。
+    open_text_types = (
+        "fill_in", "reading_expression", "essay",
+        "grammar_fill", "vocabulary_fill", "seven_to_five",
+    )
+    in_scope = (
+        original_question_type in choice_types
+        or original_question_type in open_text_types
+        or (original_question_type == "reading" and has_declared_options)
+    )
+    if not in_scope:
         result.unit_reason = f"type {original_question_type!r} not in scope"
         return result
+    require_ad_options = original_question_type not in open_text_types
     if not question_numbers:
         result.unit_reason = "no question_numbers"
         return result
@@ -182,27 +204,72 @@ def expand_composite_sub_questions(
 
     starts = _find_sub_starts(lines, q_start, q_end, question_numbers)
     found_nums = [s[1] for s in starts]
+    # E2E-009R5 Q30: cloze blank lives in the passage (`night 30 he`) while the
+    # option row was lost in OCR. Recover the blank line as a stem-only sub
+    # so the declared qn is not silently dropped. Mark as passage-blank so the
+    # stem window stays on that line (not until the next option row).
+    passage_blanks: set[int] = set()
+    if original_question_type in ("cloze", "grammar_fill", "vocabulary_fill", "seven_to_five", "fill_in"):
+        for qn in question_numbers:
+            if qn in found_nums:
+                continue
+            # E2E-010: OCR blanks are `$ \underline{N} $` or `N.` or bare N in passage.
+            pats = [
+                re.compile(rf"\\underline\s*{{\s*{qn}\s*}}"),
+                re.compile(rf"(?<!\d){qn}(?!\d)"),
+            ]
+            for seq in range(q_start, q_end + 1):
+                raw = lines[seq - 1]
+                if _is_noise(raw):
+                    continue
+                if _OPT_LABEL.search(raw) and original_question_type != "seven_to_five":
+                    continue
+                hit = None
+                for pat in pats:
+                    hit = pat.search(raw)
+                    if hit:
+                        break
+                if hit:
+                    starts.append((seq, qn, hit.start()))
+                    found_nums.append(qn)
+                    passage_blanks.add(qn)
+                    break
+        starts.sort(key=lambda t: (t[0], t[2]))
     for qn in question_numbers:
         if qn not in found_nums:
             result.skipped[qn] = "question start not found"
 
     for i, (seq, qn, col) in enumerate(starts):
-        end = q_end
-        if i + 1 < len(starts):
-            nxt = starts[i + 1][0]
-            end = nxt - 1 if nxt > seq else seq
+        if qn in passage_blanks:
+            end = seq  # passage blank: stem is the blank line only
+        else:
+            end = q_end
+            if i + 1 < len(starts):
+                nxt = starts[i + 1][0]
+                end = nxt - 1 if nxt > seq else seq
         # tighten trailing pad (blank/`---` only — keep HTML option bodies)
         while end > seq and _is_trailing_pad(lines[end - 1]):
             end -= 1
 
         labels = _sub_option_labels(lines, seq, end, col)
-        if labels != ["A", "B", "C", "D"]:
-            result.skipped[qn] = (
-                f"option boundary unresolved (labels={labels})"
-            )
-            continue
+        if require_ad_options:
+            if labels == [] and original_question_type == "cloze":
+                # Q30: option row missing in OCR — stem-only cloze blank is
+                # still a declared child (answer table has the value).
+                option_labels = ()
+            elif labels != ["A", "B", "C", "D"]:
+                result.skipped[qn] = (
+                    f"option boundary unresolved (labels={labels})"
+                )
+                continue
+            else:
+                option_labels = ("A", "B", "C", "D")
+        else:
+            # open-text (fill_in / reading_expression / essay): options optional.
+            option_labels = tuple(labels) if labels == ["A", "B", "C", "D"] else ()
 
-        # stem must have non-noise content beyond the question marker
+        # stem must have non-noise content beyond the question marker,
+        # except cloze: number + A–D options on one line is the whole item.
         stem_has_text = False
         for s in range(seq, end + 1):
             raw = lines[s - 1]
@@ -215,7 +282,7 @@ def expand_composite_sub_questions(
             if prose:
                 stem_has_text = True
                 break
-        if not stem_has_text:
+        if not stem_has_text and original_question_type != "cloze":
             result.skipped[qn] = "stem empty"
             continue
 
@@ -224,7 +291,7 @@ def expand_composite_sub_questions(
                 question_number=qn,
                 stem_start=seq,
                 stem_end=end,
-                option_labels=("A", "B", "C", "D"),
+                option_labels=option_labels,
                 answer_lines=answer_range,
             )
         )
@@ -268,7 +335,16 @@ def specs_to_payload_subs(
                 "unit_id": f"{unit_id}.sub{qn}",
                 "unit_type": "standalone_unit",
                 "question_number": qn,
-                "original_question_type": original_question_type,
+                # E2E-009R2 contract: an expanded child with declared A–D options
+                # is structurally a single_choice item (cloze blank / reading MC).
+                # Gate STRICT_AUTO_TYPES opens single_choice; keeping cloze/reading
+                # here would strand every composite child in pending forever.
+                # Non-choice parents never reach this path (expand is choice-only).
+                "original_question_type": (
+                    "single_choice"
+                    if tuple(spec.option_labels) == ("A", "B", "C", "D")
+                    else original_question_type
+                ),
                 "content": {
                     "stem": stem,
                     "options": options,

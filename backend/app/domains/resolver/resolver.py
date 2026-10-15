@@ -297,8 +297,136 @@ def decode_answer_table_cell(raw: str, qn: str) -> tuple[int, int, str] | None:
     return hits[0]
 
 
+def decode_answer_table_headerless_horizontal(raw: str, qn: str) -> tuple[int, int, str] | None:
+    """Header-less horizontal answer table (EN 2018 Shape B).
+
+    Layout (no 题号/答案 label cells):
+        <tr><td>1</td><td>2</td>...<td>10</td></tr>
+        <tr><td>A</td><td>C</td>...<td>C</td></tr>
+        <tr><td>11</td>...  (paged block repeats)
+
+    Strict conditions — all must hold or return None:
+      1. cells split into number-rows / answer-rows of equal length pairs;
+      2. number-row cells are 1–3 digit integers only;
+      3. answer-row cells are non-empty;
+      4. `qn` hits exactly one column in a number-row;
+      5. the paired answer-row has a non-empty cell in that column.
+    No header inference, no nearest-token guessing.
+    """
+    if not raw or "<td" not in raw.lower():
+        return None
+    cells = _table_cells_with_offsets(raw)
+    if len(cells) < 4 or len(cells) % 2 != 0:
+        return None
+
+    # Group into rows using <tr> boundaries when present; else split cells in
+    # half only when the first half is all integers (strict page block).
+    tr_parts = _TR_RE.split(raw)
+    rows: list[list[tuple[int, int, str]]] = []
+    if len(tr_parts) > 2:
+        # re-parse per <tr> segment
+        pos = 0
+        ordered = []
+        for seg in re.split(r"(<tr[^>]*>)", raw, flags=re.I):
+            seg_cells = _table_cells_with_offsets(seg)
+            if seg_cells:
+                ordered.append(seg_cells)
+        rows = ordered
+    else:
+        half = len(cells) // 2
+        rows = [cells[:half], cells[half:]]
+
+    # Pair number-row with following answer-row (equal length required).
+    hits: list[tuple[int, int, str]] = []
+    i = 0
+    while i + 1 < len(rows):
+        nrow, arow = rows[i], rows[i + 1]
+        i += 2
+        if len(nrow) != len(arow) or not nrow:
+            return None
+        for col, ncell in enumerate(nrow):
+            if not re.fullmatch(r"\d{1,3}", ncell[2].strip()):
+                return None  # not a number-row — fail closed
+        for col, ncell in enumerate(nrow):
+            if ncell[2].strip() != qn:
+                continue
+            acell = arow[col]
+            if not acell[2].strip():
+                continue
+            hits.append((acell[0], acell[1], acell[2]))
+    if len(hits) != 1:
+        return None
+    return hits[0]
+
+
 _TR_RE = re.compile(r"<tr[^>]*>", re.I)
 _TD_ATTR_RE = re.compile(r"<td([^>]*)>", re.I)
+
+
+_RANGE_KEY_RE = re.compile(
+    r"(?<![\d])(\d{1,3})\s*[－~—–-]\s*(\d{1,3})\s+([A-Za-z]{2,20})"
+)
+
+
+def decode_range_answer_key(raw: str, qn: str) -> tuple[int, int, str] | None:
+    """区间式答案键（E2E-010R1）：`19-23 DABCA` / `39-41 ADC 42-45 ADBB`。
+
+    返回该 qn 对应字母在 raw 中的 (start, end, letter)。
+    fail-closed：区间长度 != 字母串长度 -> None；qn 不在任何区间 -> None。
+    """
+    if not raw:
+        return None
+    try:
+        n = int(qn)
+    except (TypeError, ValueError):
+        return None
+    for m in _RANGE_KEY_RE.finditer(raw):
+        lo, hi = int(m.group(1)), int(m.group(2))
+        letters = m.group(3)
+        if hi < lo:
+            continue
+        span_len = hi - lo + 1
+        if len(letters) != span_len:
+            continue  # fail-closed
+        if lo <= n <= hi:
+            idx = n - lo
+            letter_start = m.start(3) + idx
+            return (letter_start, letter_start + 1, letters[idx])
+    return None
+
+
+def decode_compact_answer_key(
+    raw: str, qn: str, qn_list: list | None
+) -> tuple[int, int, str] | None:
+    """紧凑字母键 `FGDAE`：按声明题号顺序拆分（E2E-010 七选五）。"""
+    if not raw or not qn_list:
+        return None
+    s = re.sub(r"\s+", "", raw)
+    if not re.fullmatch(r"[A-Za-z]+", s):
+        return None
+    if len(s) != len(qn_list):
+        return None
+    try:
+        n = int(qn)
+    except (TypeError, ValueError):
+        return None
+    if n not in qn_list:
+        return None
+    idx = list(qn_list).index(n)
+    start = raw.find(s[0]) if s else 0
+    # map compact index to raw offset (skip whitespace in raw)
+    pos = 0
+    seen = 0
+    for i, ch in enumerate(raw):
+        if ch.isspace():
+            continue
+        if seen == idx:
+            pos = i
+            break
+        seen += 1
+    else:
+        pos = 0
+    return (pos, pos + 1, s[idx])
 
 
 def _table_rows_with_cells(raw: str) -> list[list[tuple[int, int, str]]]:
@@ -962,6 +1090,16 @@ class SourceResolver:
                         region_upper = sib_seq
         option_hits = {}
         option_consumed: set[int] = set()
+        if start_ref is None:
+            # E2E-010 七选五：父单元无题号，但声明了 options_range（A–G 共享选项）。
+            opt_targets0 = [t for t in targets if t.kind == "option_label" and t.label]
+            if opt_targets0 and opt_targets0[0].options_range:
+                ostart, _oend = opt_targets0[0].options_range
+                try:
+                    start_ref = f"P1L{ostart:03d}"
+                    self._idx.get(start_ref)
+                except KeyError:
+                    start_ref = None
         if start_ref:
             opt_targets = [t for t in targets if t.kind == "option_label" and t.label]
             labels = tuple(t.label for t in opt_targets)
@@ -1080,10 +1218,13 @@ class SourceResolver:
         html_hits = self._html_table_options(labels, start_ref, region_upper)
         if html_hits is not None:
             return html_hits
+        # E2E-010: options may begin on the start/options-range line itself
+        # (七选五 A–G). Include start line in the line-start search window.
+        search_from = cursor_seq - 1
         for lab in labels:
             starts = [
                 l for l in self._idx.lines
-                if l.seq > cursor_seq
+                if l.seq > search_from
                 and (region_upper is None or l.seq < region_upper)
                 and lab in option_tokens(normalize_text(l.text), (lab,))
             ]
@@ -1108,23 +1249,30 @@ class SourceResolver:
                 found[lab] = ("ambiguous",)
                 continue
             # 无行首选项：尝试在前一个选项行（同物理行多选项）bounded inline。
-            if cursor_ref is not None:
-                line = self._idx.get(cursor_ref)
+            # BIO Q35: stem_lines==options_lines — options sit on the start/stem
+            # line itself. When no option line has been hit yet, treat start_ref
+            # as the initial cursor line (does not widen search past the window).
+            cursor_line_ref = cursor_ref if cursor_ref is not None else start_ref
+            if cursor_line_ref is not None:
+                line = self._idx.get(cursor_line_ref)
                 bounds = _option_content_bounds(line.text, lab, prefer_offset=cursor_end, boundary_labels=set(labels))
                 if bounds is not None and bounds[1] > bounds[0] and bounds[0] >= cursor_end:
-                    found[lab] = ("content", cursor_ref, bounds[0], bounds[1])
+                    found[lab] = ("content", cursor_line_ref, bounds[0], bounds[1])
                     cursor_end = bounds[1]
+                    cursor_ref = cursor_line_ref
                     continue
                 offs = [o for o in _label_offsets(line.text, lab) if o >= cursor_end]
                 if len(offs) == 1:
                     # content after this label if non-empty, else label-only inline
                     cb = _option_content_bounds(line.text, lab, prefer_offset=offs[0], boundary_labels=set(labels))
                     if cb is not None and cb[1] > cb[0] and cb[0] >= cursor_end:
-                        found[lab] = ("content", cursor_ref, cb[0], cb[1])
+                        found[lab] = ("content", cursor_line_ref, cb[0], cb[1])
                         cursor_end = cb[1]
+                        cursor_ref = cursor_line_ref
                         continue
-                    found[lab] = ("inline", cursor_ref, offs[0], offs[0] + len(lab))
+                    found[lab] = ("inline", cursor_line_ref, offs[0], offs[0] + len(lab))
                     cursor_end = offs[0] + len(lab)
+                    cursor_ref = cursor_line_ref
                     continue
             # P1.4-B Rule A: trailing unlabeled option content after last located
             # option (Chem Q23 `D．` dropped). Source-local only: content line
@@ -1361,6 +1509,19 @@ class SourceResolver:
                    exclude_refs: frozenset | set | None = None,
                    consumed_seqs: set[int] | None = None):
         if start_ref is None:
+            # Owner 2026-10 / Q61 essay: printed number may be absent from the
+            # stem body (书面表达 has no `61.`). Producer-declared
+            # question_search_lines is authoritative — bind that window.
+            qs = getattr(t, "question_search_lines", None)
+            if qs:
+                refs = self._evidence_line_refs(qs[0], qs[1])
+                if refs:
+                    out.add_span(
+                        unit_id, t, refs, "exact",
+                        ("stem start", "declared question_search_lines",
+                         f"lines={qs[0]}-{qs[1]}"),
+                    )
+                    return
             return  # 已由 _locate_question_start 记录 unresolved
         first_option_seq = None
         for lab, entry in option_hits.items():
@@ -1417,6 +1578,27 @@ class SourceResolver:
                 break
             refs.pop()
         if not refs:
+            # BIO Q35 (E2E-009R1): stem and A–D options share one source line.
+            # between(start, first_option_seq) is empty — bind stem as a char-span
+            # from the question entry up to the first option content offset.
+            if start_seq == boundary_seq and boundary_seq is not None:
+                first_off = None
+                for lab, entry in option_hits.items():
+                    if entry[0] in ("content", "inline") and len(entry) >= 3:
+                        off = entry[2]
+                        first_off = off if first_off is None else min(first_off, off)
+                raw = self._idx.get(start_ref).text
+                entry_col = _find_question_entry_col(raw, qn)
+                if entry_col is None:
+                    entry_col = 0
+                end_col = first_off if first_off is not None else len(raw)
+                if end_col > entry_col:
+                    out.add_char_span(
+                        unit_id, t, start_ref, entry_col, end_col, "exact",
+                        ("stem start", start_ref, "same-line-options",
+                         f"col={entry_col}", "boundary", "first-option-offset"),
+                    )
+                    return
             out.add_unresolved(t, "incomplete", ("stem span empty",))
             return
         out.add_span(unit_id, t, refs, "exact",
@@ -1490,6 +1672,28 @@ class SourceResolver:
     def _material_span(self, out, unit_id, t):
         sm = t.start_marker or {}
         em = t.end_marker or {}
+        # E2E-009R5: Producer-declared material_lines is the authoritative
+        # passage range. Marker line alone is a heading/first line — never a
+        # substitute for the passage body.
+        el = getattr(t, "evidence_lines", None)
+        if el is not None:
+            refs = self._evidence_line_refs(el[0], el[1])
+            if refs is None:
+                out.add_unresolved(
+                    t, "incomplete",
+                    ("material evidence range not fully bound to source lines",
+                     f"declared={el[0]}-{el[1]}"),
+                )
+                return
+            q = sm.get("text")
+            st, _hits, extra = self._resolve_marker_cascade(q) if q else ("missing", [], ())
+            status = st if _is_resolved(st) else "exact"
+            out.add_span(
+                unit_id, t, refs, status,
+                ("material evidence range", f"lines={el[0]}-{el[1]}",
+                 f"marker={q!r}", *extra),
+            )
+            return
         granularity = sm.get("granularity")
         if granularity == "multi_line_pair":
             sq, eq = sm.get("text"), em.get("text")
@@ -1649,6 +1853,20 @@ class SourceResolver:
                              f"cell={_dt}"),
                         )
                         return
+                # E2E-009R1: header-less horizontal qn/answer rows (EN Shape B).
+                for _lr in refs:
+                    _raw = self._idx.get(_lr).text
+                    _dhh = decode_answer_table_headerless_horizontal(_raw, qn)
+                    if _dhh is not None:
+                        _ds, _de, _dt = _dhh
+                        out.add_char_span(
+                            unit_id, t, _lr, _ds, _de, "exact",
+                            ("answer evidence range",
+                             f"lines={el[0]}-{el[1]}",
+                             "structured_answer_table_headerless", f"qn={qn}",
+                             f"cell={_dt}"),
+                        )
+                        return
                 # No structured table match: try scored answer extraction
                 # (e.g. "17. (BC) 3分; (B) 2分; (C) 2分" -> "BC").
                 for _lr in refs:
@@ -1664,6 +1882,45 @@ class SourceResolver:
                              f"cell={_dt}"),
                         )
                         return
+                # E2E-010R1: 区间式答案键 `19-23 DABCA 24-28 BDCDA` 逐题取字母
+                for _lr in refs:
+                    _raw = self._idx.get(_lr).text
+                    _rk = decode_range_answer_key(_raw, qn)
+                    if _rk is not None:
+                        _ds, _de, _dt = _rk
+                        out.add_char_span(
+                            unit_id, t, _lr, _ds, _de, "exact",
+                            ("answer evidence range",
+                             f"lines={el[0]}-{el[1]}",
+                             "range_answer_key", f"qn={qn}",
+                             f"cell={_dt}"),
+                        )
+                        return
+                # E2E-009R2: packed per-qn entries on any evidence line
+                # (`1.C 2.B 3.C 4.D` / `5.(1). …`). Without this, every child
+                # of a Chinese composite received the identical whole-block
+                # answer text + hash (U1-5).
+                for _lr in refs:
+                    _raw = self._idx.get(_lr).text
+                    _offs = _entry_offsets(_raw, qn)
+                    if len(_offs) == 1:
+                        all_off = [m.start() for m in _ENTRY_RE.finditer(_raw)]
+                        nxt = next((o for o in all_off if o > _offs[0]), len(_raw))
+                        entry_text = _raw[_offs[0]:nxt]
+                        # Only packed entries with a real value (`1.C` / `10. A`).
+                        # Bare `1.` + multi-line body stays on the block path
+                        # (B3c-A full-range binding).
+                        _val = re.sub(
+                            rf"^\s*{re.escape(qn)}\s*[.．、:·，]?\s*", "", entry_text
+                        ).strip()
+                        if _val:
+                            out.add_char_span(
+                                unit_id, t, _lr, _offs[0], nxt, "exact",
+                                ("answer evidence range",
+                                 f"lines={el[0]}-{el[1]}",
+                                 f"qn={qn}", "multi-line entry"),
+                            )
+                            return
                 # Still no match: bind as multi-line block.
                 out.add_span(
                     unit_id, t, refs, "exact",
@@ -1683,6 +1940,16 @@ class SourceResolver:
                     unit_id, t, line_ref, d_start, d_end, "exact",
                     ("answer evidence range", f"lines={el[0]}-{el[1]}",
                      "scored_answer", f"qn={qn}", f"cell={d_val}"),
+                )
+                return
+            # E2E-010R1: 区间式答案键
+            _rk = decode_range_answer_key(raw, qn)
+            if _rk is not None:
+                _ds, _de, _dt = _rk
+                out.add_char_span(
+                    unit_id, t, line_ref, _ds, _de, "exact",
+                    ("answer evidence range", f"lines={el[0]}-{el[1]}",
+                     "range_answer_key", f"qn={qn}", f"cell={_dt}"),
                 )
                 return
             offs = _entry_offsets(raw, qn)
@@ -1705,6 +1972,19 @@ class SourceResolver:
                     unit_id, t, line_ref, d_start, d_end, "exact",
                     ("answer evidence range", f"lines={el[0]}-{el[1]}",
                      "structured_answer_table", f"qn={qn}",
+                     f"cell={d_val}"),
+                )
+                return
+            # E2E-009R1: EN 2018 Shape B — header-less horizontal qn/answer rows.
+            # Must run BEFORE vertical: vertical's header-less continuation path
+            # mis-reads this shape (Q26 got '27\\nB' instead of 'C').
+            decoded_h = decode_answer_table_headerless_horizontal(raw, qn)
+            if decoded_h is not None:
+                d_start, d_end, d_val = decoded_h
+                out.add_char_span(
+                    unit_id, t, line_ref, d_start, d_end, "exact",
+                    ("answer evidence range", f"lines={el[0]}-{el[1]}",
+                     "structured_answer_table_headerless", f"qn={qn}",
                      f"cell={d_val}"),
                 )
                 return
@@ -1859,6 +2139,10 @@ class SourceResolver:
                 # P3: skip char-spans that intentionally share a material line
                 # (stem starts mid-line on material line — char-level, not line-level overlap)
                 if any("material-shared-line" in ev for ev in o.evidence):
+                    continue
+                # E2E-009R5: composite child stems/options live inside the
+                # shared passage (cloze blanks / reading stems). Not pollution.
+                if ".sub" in (o.span_id or "") and o.role in ("stem", "option"):
                     continue
                 if frozenset(o.line_refs) & mrefs:
                     conflicts.append(

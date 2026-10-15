@@ -129,6 +129,27 @@ class AdmissionService:
         decided = await self._snap._transition_decision(candidate.id, "approved")
         return decided
 
+    async def materialize_for_review(
+        self, *, candidate_id: uuid.UUID
+    ) -> tuple[list[uuid.UUID], list[uuid.UUID]]:
+        """E2E-009R7：pending_review 候选物化为待审核 Question/Instance。
+
+        - decision_status 保持 pending_review（不走 approve/reject）
+        - answer_status.verified_correct 保持 null（未验证）
+        - 不写 admission_event（candidate_id UNIQUE 留给后续 approve）
+        - 不降低 strict-auto；不伪造答案
+        """
+        candidate = await self._snap.lock_candidate(candidate_id)
+        if candidate.decision_status != "pending_review":
+            raise RepositoryError(
+                f"materialize_for_review only from pending_review, "
+                f"got {candidate.decision_status!r}"
+            )
+        gd = candidate.gate_decision or {}
+        if gd.get("decision") == "rejected":
+            raise RepositoryError("cannot materialize rejected candidate")
+        return await self._materialize(candidate, mark_verified=False)
+
     # ------------------------------------------------------------------ reject
     async def reject(
         self,
@@ -226,10 +247,13 @@ class AdmissionService:
 
     # ------------------------------------------------------------------ 物化
     async def _materialize(
-        self, candidate: AdmissionCandidate
+        self, candidate: AdmissionCandidate, *, mark_verified: bool = True
     ) -> tuple[list[uuid.UUID], list[uuid.UUID]]:
         """从冻结 payload 物化 A 域（10 §6）。单事务：所有行同 session，flush 后任一步
         失败由外层不 COMMIT → 整体回滚。
+
+        mark_verified：approved 路径 True（20 §8.3）；pending-review 物化 False
+        （E2E-009R7：答案未经验证不得标 verified_correct=true）。
 
         复用语义（10 §6.1/§6.2 冻结）：Question dedup exact 命中 → REUSE + 仅为其新
         occurrence INSERT 新 Instance；同 (question, source_version, occurrence) 二次导出
@@ -252,17 +276,76 @@ class AdmissionService:
 
         by_unit: dict[str, dict] = {u["unit_id"]: u for u in units}
         roles_by_unit: dict[str, list[dict]] = {}
+        materials_by_unit: dict[str, list[dict]] = {}
         for r in p["compiled_roles"]:
+            if r.get("kind") == "material":
+                materials_by_unit.setdefault(r["unit_id"], []).append(r)
+                continue
             if r["kind"] != "content":
                 continue
             roles_by_unit.setdefault(r["unit_id"], []).append(r)
         answers_by_unit: dict[str, dict] = {a["unit_id"]: a for a in p["answer"]}
         spans_by_id: dict[str, dict] = {s["span_id"]: s for s in p["resolved_spans"]}
 
-        # 逐 leaf 计划：identity 键 + 该 occurrence 是否已物化（复用 → 不重建子行）。
+        # Owner 2026-10: 复合题 = 一道综合题入库（完形/阅读/语法填空等），
+        # 不再把子题拆成多条正式 Question。子题内容聚合成一条 stem/answer。
         plan: list[dict] = []
-        for unit_id in _leaf_units(units):  # D8：parent composite 不物化独立行
+        for unit_id in _materialization_units(units):
             unit = by_unit[unit_id]
+            if unit.get("unit_type") == "composite_unit":
+                roles, stem, answers_extra = _aggregate_composite_roles(
+                    unit, units, roles_by_unit, answers_by_unit, spans_by_id,
+                    materials_by_unit=materials_by_unit,
+                )
+                # E2E-010: 七选五父级 A–G 在 IR content，但 compiler 未写入
+                # compiled_roles —— 从 ir_snapshot 补齐到物化 roles。
+                ir_by_id = {u.get("unit_id"): u for u in (p.get("ir_snapshot") or {}).get("units") or []}
+                parent_ir = ir_by_id.get(unit_id) or {}
+                for c in parent_ir.get("content") or []:
+                    if c.get("role") != "option" or not c.get("label"):
+                        continue
+                    if any(r.get("role") == "option" and r.get("label") == f"P{c['label']}" for r in roles):
+                        continue
+                    sid = c.get("span_id")
+                    span = spans_by_id.get(sid or "") or {}
+                    roles.append({
+                        "kind": "content",
+                        "role": "option",
+                        "unit_id": unit_id,
+                        "label": f"P{c['label']}",
+                        "text": c.get("label") or "",
+                        "text_hash": span.get("text_hash") or "",
+                        "span_id": sid,
+                    })
+                canonical = map_canonical_type(unit.get("original_question_type"))
+                if canonical is None:
+                    raise RepositoryError(
+                        f"composite {unit_id!r} has no canonical type; cannot materialize"
+                    )
+                if stem is None:
+                    # fall back to first content role (e.g. material-only)
+                    stem = _role(roles, "stem") or _role(roles, "material")
+                if stem is None:
+                    raise RepositoryError(f"composite {unit_id!r} missing aggregated stem")
+                span = spans_by_id.get(stem.get("span_id") or "") or {}
+                qn = (
+                    unit.get("question_number_range")
+                    or unit.get("question_number")
+                    or ""
+                )
+                plan.append({
+                    "unit": unit,
+                    "canonical": canonical,
+                    "roles": roles,
+                    "span": span,
+                    "qn": qn,
+                    "dedup_key": _dedup_key(canonical, stem, roles),
+                    "occurrence_key": _occurrence_key(unit_id, qn, span),
+                    "question": None,
+                    "new_instance": False,
+                    "answers_override": answers_extra,
+                })
+                continue
             canonical = map_canonical_type(unit.get("original_question_type"))
             if canonical is None:
                 raise RepositoryError(
@@ -284,6 +367,7 @@ class AdmissionService:
                 "occurrence_key": _occurrence_key(unit_id, qn, span),
                 "question": None,
                 "new_instance": False,
+                "answers_override": None,
             })
 
         created_questions: list[uuid.UUID] = []
@@ -410,22 +494,27 @@ class AdmissionService:
                     source_span=_source_span(r["span_id"], r),
                     answer_status=None,
                 )
-            ans = answers_by_unit.get(unit_id)
-            if ans is not None:
+            answers_list = e.get("answers_override")
+            if answers_list is None:
+                _one = answers_by_unit.get(unit_id)
+                answers_list = [_one] if _one is not None else []
+            for ai, ans in enumerate(answers_list):
+                if ans is None or ans.get("text") is None:
+                    continue
                 await self._content.create_role_content(
                     instance_id=instance.id,
                     role="answer",
-                    role_index=0,
+                    role_index=ai,
                     text=ans["text"],
-                    text_hash=ans["text_hash"],
-                    label=None,
-                    source_span=_source_span(ans["span_id"], ans),
+                    text_hash=ans.get("text_hash") or "",
+                    label=ans.get("label"),
+                    source_span=_source_span(ans.get("span_id"), ans),
                     answer_status={
-                        "source_located": ans["source_located"],
-                        "complete": ans["complete"],
-                        # approved 必经 auto 或人工确认（20 §8.3）；payload 冻结 verified 保持
-                        # 原值，物化侧以 approved 语义置 true（来源记 gate_decision / review）。
-                        "verified_correct": True,
+                        "source_located": bool(ans.get("source_located")),
+                        "complete": bool(ans.get("complete")),
+                        # 20 §8.3: approved materialize → True.
+                        # E2E-009R7: pending-review materialize keeps null.
+                        "verified_correct": True if mark_verified else ans.get("verified_correct"),
                     },
                 )
             for mat, mrole in materials:
@@ -462,6 +551,162 @@ def _leaf_units(units: list[dict]) -> list[str]:
     if units:
         walk(units[0])
     return out
+
+
+def _materialization_units(units: list[dict]) -> list[str]:
+    """Owner 2026-10：复合题物化为 1 条综合 Question；独立题仍逐条。
+
+    composite root → [parent_id]（不拆子题）；standalone root → [self]。
+    """
+    if not units:
+        return []
+    root = units[0]
+    if root.get("unit_type") == "composite_unit":
+        return [root["unit_id"]]
+    return _leaf_units(units)
+
+
+def _child_unit_ids(u: dict) -> list[str]:
+    out: list[str] = []
+
+    def walk(n: dict) -> None:
+        if n.get("unit_type") == "composite_unit":
+            for s in n.get("sub_questions", []) or []:
+                walk(s)
+        else:
+            out.append(n["unit_id"])
+
+    walk(u)
+    return out
+
+
+def _aggregate_composite_roles(
+    root: dict,
+    units: list[dict],
+    roles_by_unit: dict[str, list[dict]],
+    answers_by_unit: dict[str, dict],
+    spans_by_id: dict[str, dict],
+    materials_by_unit: dict[str, list[dict]] | None = None,
+) -> tuple[list[dict], dict | None, list[dict]]:
+    """Composite → 可验证结构（E2E-009R5）。
+
+    - material：完整正文（resolver evidence range）
+    - 每个子题 stem 独立 role 行（role_index 区分）
+    - 每个选项保留标签，label=qn+字母（避免 canonical A–D 重复）
+    - 每个子题答案独立 role 行，label=题号，text/span/hash 与该子题一致
+    - verified_correct 不默认 True
+    """
+    child_ids = _child_unit_ids(root)
+    roles: list[dict] = []
+    answers: list[dict] = []
+    stem_meta: dict | None = None
+
+    # 1) shared material = full passage (kind=material compiled roles)
+    for r in (materials_by_unit or {}).get(root["unit_id"], []):
+        if r.get("text"):
+            roles.append(dict(r))
+    for r in roles_by_unit.get(root["unit_id"], []):
+        if r.get("role") == "material":
+            roles.append(dict(r))
+        elif r.get("role") == "option" and r.get("text"):
+            # 七选五：共享 A–G 选项挂在父单元
+            lab = str(r.get("label") or "")
+            roles.append({
+                **r,
+                "role": "option",
+                "label": f"P{lab}" if lab else f"P{len(roles)}",
+                "text": r["text"],
+            })
+
+    # 2) per-child stems + options
+    for cid in child_ids:
+        c_stem = None
+        child_qn = ""
+        # Prefer stem.question_label; then unit_id suffix; never leave empty
+        # when uniquifying option labels (two children must not share A–D).
+        for r in roles_by_unit.get(cid, []):
+            if r.get("role") == "stem":
+                c_stem = r
+                child_qn = str(r.get("question_number") or child_qn)
+                break
+        if not child_qn and ".sub" in cid:
+            child_qn = cid.rsplit(".sub", 1)[-1]
+        if not child_qn:
+            child_qn = cid
+        for r in roles_by_unit.get(cid, []):
+            if r.get("role") == "stem" and r.get("text"):
+                if c_stem is None:
+                    c_stem = r
+            elif r.get("role") == "option" and r.get("text"):
+                lab = str(r.get("label") or "")
+                qn = str(r.get("question_number") or child_qn)
+                # unique label for identity; text keeps CONTENT only so the
+                # UI does not show `41A. A. …` (E2E-009R7 double-label).
+                uniq = f"{qn}{lab}" if lab else f"{qn}#{len(roles)}"
+                opt_text = r["text"]
+                if lab:
+                    opt_text = re.sub(
+                        rf"^\s*{re.escape(lab)}\s*[.．、，,]\s*", "", opt_text
+                    )
+                roles.append({
+                    **r,
+                    "role": "option",
+                    "label": uniq,
+                    "text": opt_text,
+                })
+        if c_stem is not None:
+            if stem_meta is None:
+                stem_meta = c_stem
+            roles.append(dict(c_stem))
+
+        ans = answers_by_unit.get(cid)
+        if ans is not None and ans.get("text") is not None:
+            qn = str(ans.get("question_number") or child_qn)
+            answers.append({
+                "role": "answer",
+                "unit_id": root["unit_id"],
+                "label": qn,
+                "text": ans["text"],
+                "text_hash": ans.get("text_hash") or "",
+                "span_id": ans.get("span_id"),
+                "source_located": bool(ans.get("source_located")),
+                "complete": bool(ans.get("complete")),
+                # E2E-009R5: never default verified_correct to True
+                "verified_correct": ans.get("verified_correct"),
+            })
+
+    # E2E-010 七选五：答案键为紧凑字母串 `FGDAE`，按子题顺序拆到各空
+    if answers and len(answers) > 1:
+        texts = [a.get("text", "").strip() for a in answers]
+        if len(set(texts)) == 1 and re.fullmatch(r"[A-Ga-g]+", texts[0] or "") and len(texts[0]) == len(answers):
+            key = texts[0]
+            for i, a in enumerate(answers):
+                a["text"] = key[i]
+                a["label"] = a.get("label") or str(i)
+        else:
+            # E2E-010R1: 区间键 `19-23 DABCA …` 逐题取字母（共享整段时）
+            from app.domains.resolver.resolver import decode_range_answer_key
+            shared = texts[0] if len(set(texts)) == 1 else None
+            if shared and any(a.get("label") for a in answers):
+                new_texts = []
+                ok = True
+                for a in answers:
+                    lab = str(a.get("label") or "")
+                    rk = decode_range_answer_key(shared, lab)
+                    if rk is None:
+                        ok = False
+                        break
+                    new_texts.append(rk[2])
+                if ok:
+                    for a, nt in zip(answers, new_texts):
+                        a["text"] = nt
+
+    # synthetic stem header for display if we have children
+    if stem_meta is not None:
+        # keep first child stem meta for span provenance of the header only
+        pass
+
+    return roles, stem_meta, answers
 
 
 def _role(roles: list[dict], role: str) -> dict | None:

@@ -179,8 +179,15 @@ async def test_fill_in_pending_review_not_auto(session):
     assert len(candidates) == 1
     cand = candidates[0]
     assert cand.gate_decision["decision"] == "pending_review"
-    assert cand.decision_status == "pending_review"  # 不自动；等人工 review_trail
-    assert (await _count(session, QuestionInstance)) == 0  # 未物化
+    assert cand.decision_status == "pending_review"  # 不自动批准；等人工 review_trail
+    # E2E-009R7: pending 也可物化为待审核 Question（用户可见内容）；
+    # verified_correct 保持 null，decision_status 仍 pending_review。
+    assert (await _count(session, QuestionInstance)) == 1
+    n_unverified = (await session.execute(
+        select(func.count()).select_from(InstanceRoleContent)
+        .where(InstanceRoleContent.role == "answer")
+    )).scalar()
+    assert n_unverified >= 1
 
 
 async def test_composite_auto_materializes_group_and_material(session):
@@ -193,13 +200,13 @@ async def test_composite_auto_materializes_group_and_material(session):
     assert cand.unit_type == "composite_unit"
     assert cand.gate_decision["decision"] == "auto_approve"
     assert cand.decision_status == "approved"
-    # material 只出一次；unit_group 一个含两个 member；两个 instance 无父 answer
+    # E2E-009R5/R6 product model: 复合题 = 1 道综合 Question / 1 Instance。
+    # 子题内容聚合进该 Instance 的 stem/option/answer role_contents；
+    # 不再拆成 2 个 child Instance（D8 leaf 物化让位于 Owner「一题一综合」）。
     assert (await _count(session, Material)) == 1
-    assert (await _count(session, MaterialLink)) == 2  # 每 child 链同一 material
-    assert (await _count(session, QuestionInstance)) == 2
-    assert (await _count(session, UnitGroup)) == 1
-    assert (await _count(session, UnitGroupMember)) == 2
-    # 父 composite 无独立 answer role（D8）——answer role_content 只属两个 child instance
+    assert (await _count(session, MaterialLink)) >= 1  # 材料挂到综合题 instance
+    assert (await _count(session, QuestionInstance)) == 1
+    # 每个子题一条 answer role（label=题号），不是父级空 answer
     n_answer = (await session.execute(
         select(func.count()).select_from(InstanceRoleContent)
         .where(InstanceRoleContent.role == "answer"))).scalar()
@@ -208,6 +215,11 @@ async def test_composite_auto_materializes_group_and_material(session):
     stems = (await session.execute(
         select(InstanceRoleContent.text).where(InstanceRoleContent.role == "stem"))).scalars().all()
     assert all("材料" not in s for s in stems)
+    # 选项标签按子题唯一化，不出现重复 A/B/C
+    opt_labels = (await session.execute(
+        select(InstanceRoleContent.label).where(InstanceRoleContent.role == "option")
+    )).scalars().all()
+    assert len(opt_labels) == len(set(opt_labels)), opt_labels
 
 
 async def test_reannotation_same_occurrence_is_idempotent_no_dup_rows(session):

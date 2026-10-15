@@ -207,7 +207,8 @@ class GateService:
             # EB-008 §5.1：事件落库移到 candidate 解析后（需 candidate_id）；
             # reference_ids 链接 ValidationEvent → EvidenceReference（Critical 3）。
             payload = build_payload(
-                root=root, ir=ir, compiled=compiled, resolved_run=resolved_run
+                root=root, ir=ir, compiled=compiled, resolved_run=resolved_run,
+                source_lines=lines,
             )
             build_versions = self._build_versions(ann)
             input_identity = self._input_identity(
@@ -268,6 +269,16 @@ class GateService:
                     candidate_id=candidate.id, provenance={"source": "auto_gate"}
                 )
 
+        await self._snap.flush()
+        # E2E-009R7: pending_review 候选也物化为待审核 Question/Instance，
+        # 让用户能看到完整题目内容；verified_correct 保持 null，decision 不变。
+        for c in candidates:
+            if c.decision_status == "pending_review":
+                try:
+                    await self._admission.materialize_for_review(candidate_id=c.id)
+                except Exception as exc:  # fail-soft: 候选仍在，不吞掉其它单元
+                    if funnel is not None:
+                        funnel.set(f"materialize_pending_error_{c.id}", str(exc)[:120])
         await self._snap.flush()
         if funnel is not None:
             funnel.set("candidates", len(candidates))

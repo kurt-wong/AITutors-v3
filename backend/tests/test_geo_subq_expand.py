@@ -325,3 +325,128 @@ class TestImageOptionExpansion:
         assert len(subs) == 1
         opts = subs[0]["content"]["options"]
         assert [o["label"] for o in opts] == ["A", "B", "C", "D"]
+
+
+class TestCompositeTypeGate:
+    """E2E-009R1: cloze + selection-type reading enter expansion; others stay out."""
+
+    def _reading_lines(self) -> list[str]:
+        # Q1-2 selection reading (A-D), answer table at end
+        lines = [""] * 20
+        lines[2] = "1. What will the speakers do?"
+        lines[4] = "A. Go to a concert. B. Do some homework. C. Play some music. D. Stay home"
+        lines[6] = "2. Where does the conversation take place?"
+        lines[8] = "A. In a hotel B. At airport C. In a shop D. At school"
+        lines[18] = (
+            "<table><tr><td>题号</td><td>1</td><td>2</td></tr>"
+            "<tr><td>答案</td><td>A</td><td>C</td></tr></table>"
+        )
+        return lines
+
+    def _cloze_lines(self) -> list[str]:
+        # number + A-D on one line (EN 2018 listening-style cloze options)
+        lines = [""] * 12
+        lines[2] = "26. A. happiest B. shortest C. weakest D. youngest"
+        lines[4] = "27. A. reached B. held C. waved D. crossed"
+        lines[10] = (
+            "<table><tr><td>题号</td><td>26</td><td>27</td></tr>"
+            "<tr><td>答案</td><td>A</td><td>B</td></tr></table>"
+        )
+        return lines
+
+    def test_reading_with_declared_options_enters_scope(self):
+        r = expand_composite_sub_questions(
+            self._reading_lines(),
+            question_numbers=[1, 2],
+            questions_range=(3, 9),
+            answer_range=(19, 19),
+            original_question_type="reading",
+            has_declared_options=True,
+        )
+        assert r.unit_reason is None
+        assert [s.question_number for s in r.sub_questions] == [1, 2]
+
+    def test_reading_without_options_stays_out_of_scope(self):
+        r = expand_composite_sub_questions(
+            self._reading_lines(),
+            question_numbers=[1, 2],
+            questions_range=(3, 9),
+            answer_range=(19, 19),
+            original_question_type="reading",
+            has_declared_options=False,
+        )
+        assert r.unit_reason is not None
+        assert "not in scope" in r.unit_reason
+        assert r.sub_questions == []
+
+    def test_open_text_types_enter_scope_without_ad(self):
+        """Owner 2026-10: fill_in / reading_expression / essay 入库不因无选项受阻。"""
+        lines = [""] * 12
+        lines[2] = "21. Gladys"
+        lines[4] = "22. 808-7754"
+        lines[10] = "21. Gladys 22. 808-7754"
+        for t in ("fill_in", "reading_expression", "essay"):
+            r = expand_composite_sub_questions(
+                lines,
+                question_numbers=[21, 22],
+                questions_range=(3, 5),
+                answer_range=(11, 11),
+                original_question_type=t,
+                has_declared_options=False,
+            )
+            assert r.unit_reason is None, t
+            assert [s.question_number for s in r.sub_questions] == [21, 22]
+            for s in r.sub_questions:
+                assert s.option_labels == ()  # no forced A-D
+
+    def test_unknown_type_stays_out_of_scope(self):
+        r = expand_composite_sub_questions(
+            self._reading_lines(),
+            question_numbers=[1],
+            questions_range=(3, 5),
+            answer_range=(19, 19),
+            original_question_type="short_answer",
+            has_declared_options=True,
+        )
+        assert r.unit_reason is not None
+        assert "not in scope" in r.unit_reason
+
+    def test_cloze_number_plus_options_line_expands(self):
+        r = expand_composite_sub_questions(
+            self._cloze_lines(),
+            question_numbers=[26, 27],
+            questions_range=(3, 5),
+            answer_range=(11, 11),
+            original_question_type="cloze",
+        )
+        assert r.unit_reason is None
+        assert [s.question_number for s in r.sub_questions] == [26, 27]
+        # each sub keeps A-D option integrity
+        for s in r.sub_questions:
+            assert s.option_labels == ("A", "B", "C", "D")
+
+    def test_cloze_missing_option_label_fails_closed(self):
+        lines = self._cloze_lines()
+        lines[4] = "27. A. reached B. held C. waved"  # D missing
+        r = expand_composite_sub_questions(
+            lines,
+            question_numbers=[26, 27],
+            questions_range=(3, 5),
+            answer_range=(11, 11),
+            original_question_type="cloze",
+        )
+        assert 26 in [s.question_number for s in r.sub_questions]
+        assert 27 in r.skipped
+        assert "option boundary unresolved" in r.skipped[27]
+
+    def test_no_duplicate_or_cross_capture(self):
+        r = expand_composite_sub_questions(
+            self._reading_lines(),
+            question_numbers=[1, 2, 1, 2],
+            questions_range=(3, 9),
+            answer_range=(19, 19),
+            original_question_type="reading",
+            has_declared_options=True,
+        )
+        nums = [s.question_number for s in r.sub_questions]
+        assert nums == [1, 2]

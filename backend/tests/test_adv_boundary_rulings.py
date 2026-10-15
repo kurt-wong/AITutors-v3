@@ -174,16 +174,18 @@ class TestCompositePathReal:
             select(QuestionInstance).where(QuestionInstance.source_version_id == sv.id)
         )).scalars().all()
         print(f"[COMPOSITE] instances={len(insts)}")
-        assert len(insts) == 2
-        for inst in insts:
-            rows = (await session.execute(
-                select(InstanceRoleContent).where(
-                    InstanceRoleContent.instance_id == inst.id,
-                    InstanceRoleContent.role == "answer",
-                )
-            )).scalars().all()
-            print(f"[COMPOSITE] inst={inst.id} answers={[(r.role_index, r.text) for r in rows]}")
-            assert len(rows) == 1 and rows[0].role_index == 0
+        # E2E-009R5/R6: 复合题 = 1 综合 Instance，子题答案 role_index 0,1
+        assert len(insts) == 1
+        rows = (await session.execute(
+            select(InstanceRoleContent).where(
+                InstanceRoleContent.instance_id == insts[0].id,
+                InstanceRoleContent.role == "answer",
+            )
+        )).scalars().all()
+        print(f"[COMPOSITE] answers={[(r.role_index, r.label, r.text) for r in rows]}")
+        assert len(rows) == 2
+        assert [r.role_index for r in rows] == [0, 1]
+        assert len({r.label for r in rows}) == 2
 
 
 class TestNValuesAbsent:

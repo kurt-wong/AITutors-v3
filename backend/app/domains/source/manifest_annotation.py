@@ -119,6 +119,11 @@ def bind_units_from_manifest(
             raise ManifestBindingError("duplicate unit_id", unit_id=unit_id)
         seen_ids.add(unit_id)
 
+        # Owner 2026-10: 英语听力题无配套音频，一律不入库。
+        section = str(raw.get("section") or "")
+        if "听力" in section:
+            continue
+
         ranges = {
             # stem：无 stem_lines 时用 questions_lines（composite 题干窗，Producer 已声明）
             "stem": _as_range(
@@ -199,23 +204,46 @@ def _bind_material_marker(bu: "BoundUnit", source_lines: list[str]) -> None:
 
     Resolver's _material_span resolves a marker text to a line span. For
     multi-line material, multi_line_pair takes the EXCLUSIVE interior (markers
-    themselves are excluded) — wrong for inclusive manifest ranges. Use the
-    first non-empty material line as a single-line marker instead: the shared
+    themselves are excluded) — wrong for inclusive manifest ranges. Use a
+    non-empty material line as a single-line marker instead: the shared
     component then resolves deterministically without inventing boundaries.
+
+    E2E-009R2 U45-48: the first material line may be a short heading like
+    `## B` that substring-matches several later headings (`## Beauty…`,
+    `## Blocks…`) — resolver then returns ambiguous and the whole composite
+    is IR-incomplete (silent drop). Prefer the first material line whose text
+    is a unique source hit; fall back to the first non-empty line.
     """
     rng = bu.ranges.get("material")
     if rng is None:
         return
     n = len(source_lines)
+    candidates: list[str] = []
     for i in range(rng.start, rng.end + 1):
         if 1 <= i <= n:
             text = source_lines[i - 1].strip()
             if text:
-                bu.material_shared = {
-                    "role": "material",
-                    "start_marker": {"text": text, "granularity": "line"},
-                }
-                return
+                candidates.append(text)
+    if not candidates:
+        return
+
+    def _hit_count(needle: str) -> int:
+        return sum(1 for line in source_lines if needle in line)
+
+    for text in candidates:
+        if _hit_count(text) == 1:
+            bu.material_shared = {
+                "role": "material",
+                "start_marker": {"text": text, "granularity": "line"},
+                # E2E-009R5: full declared passage, not just the marker line.
+                "evidence_lines": [rng.start, rng.end],
+            }
+            return
+    bu.material_shared = {
+        "role": "material",
+        "start_marker": {"text": candidates[0], "granularity": "line"},
+        "evidence_lines": [rng.start, rng.end],
+    }
 
 
 def _expand_subs(bu: "BoundUnit", source_lines: list[str]) -> None:
@@ -242,6 +270,7 @@ def _expand_subs(bu: "BoundUnit", source_lines: list[str]) -> None:
         questions_range=q_range,
         answer_range=a_range,
         original_question_type=bu.original_question_type,
+        has_declared_options=bool(bu.option_labels),
     )
     bu.subq_unit_reason = result.unit_reason
     bu.subq_skipped = dict(result.skipped)
@@ -322,8 +351,10 @@ def build_annotation_payload_from_bound(
             stem["stem_lines"] = [bu.ranges["stem"].start, bu.ranges["stem"].end]
         content["stem"] = stem
 
-        if bu.original_question_type in ("single_choice", "multiple_choice", "true_false"):
-            # Producer-declared labels win (EN listening is A–C, not A–D).
+        if bu.original_question_type in (
+            "single_choice", "multiple_choice", "true_false", "seven_to_five",
+        ):
+            # Producer-declared labels win (EN listening is A–C; 七选五 is A–G).
             # Fall back to legacy A–D only when the manifest declared none.
             labels = bu.option_labels or [chr(ord("A") + i) for i in range(4)]
             content["options"] = [
@@ -389,6 +420,11 @@ def build_annotation_payload_from_bound(
                 "shared_components": shared,
                 "sub_questions": subs,
             }
+            # E2E-010: 七选五共享 A–G 选项挂在父 content，便于聚合/展示
+            if content.get("options"):
+                unit_out["content"] = {"options": content["options"]}
+                if content.get("options_range"):
+                    unit_out["content"]["options_range"] = content["options_range"]
             if n_q > 1 and not subs:
                 # 题组证据（不冒充单题）：行区间 + 题号列表
                 unit_out["group_evidence"] = {

@@ -210,6 +210,7 @@ def verify(
     - 其它 / 无法表达 → None（不开放，pending_review）。
 
     本函数只验**表示形式合法性**，不判语义对错。
+    E2E-009R5: 撤销 open-text「非空即通过」——非空答案 ≠ 已验证正确。
     """
     if canonical_type not in STRICT_AUTO_TYPES:
         return None

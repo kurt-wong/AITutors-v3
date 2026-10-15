@@ -111,3 +111,35 @@ class TestE2EContentSpan:
         assert set(labels) <= {"A", "B", "C", "D"}, labels
         assert "O" in d["B"] or ":" in d["B"], d["B"]
         assert "H:" not in d["B"] or d["B"].strip().startswith("H") is False or "O" in d["B"]
+
+
+class TestSameLineStemOptions:
+    """BIO Q35 (E2E-009R1): stem_lines==options_lines - all A-D on the stem line."""
+
+    def test_q35_all_options_on_stem_line(self):
+        d = _resolve_option_texts(_payload("Q35", "35"), [
+            "35. A. 选项甲 B. 选项乙 C. 选项丙 D. 选项丁",
+        ])
+        assert set(d) == {"A", "B", "C", "D"}, sorted(d)
+        assert d["A"].strip() == "选项甲", d["A"]
+        assert d["B"].strip() == "选项乙", d["B"]
+        assert d["C"].strip() == "选项丙", d["C"]
+        assert d["D"].strip() == "选项丁", d["D"]
+
+    def test_q35_english_packed(self):
+        d = _resolve_option_texts(_payload("Q35", "35"), [
+            "35. A. Go home B. Stay here C. Call back D. Wait more",
+        ])
+        assert set(d) == {"A", "B", "C", "D"}, sorted(d)
+        assert "Go home" in d["A"]
+        assert "Wait more" in d["D"]
+        assert "B." not in d["A"]
+        assert "Stay" not in d["A"]
+
+    def test_stem_on_prior_line_options_next_line_unchanged(self):
+        d = _resolve_option_texts(_payload("Q6", "6"), [
+            "6.下列说法正确的是",
+            "A. 甲 B. 乙 C. 丙 D. 丁",
+        ])
+        assert set(d) == {"A", "B", "C", "D"}
+        assert d["A"].strip() == "甲"

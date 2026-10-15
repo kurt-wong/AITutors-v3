@@ -257,13 +257,15 @@ class TestODR01Claims:
         assert "blank" in src
         print("\n[OD-R-01d] blank appears in ir.py as unsupported role")
 
-    def test_admission_answer_role_index_fixed_zero(self):
+    def test_admission_answer_role_index_sequential(self):
+        """OD-R-01e (E2E-009R6): answers use sequential role_index (0,1,2…),
+        not a hard-coded zero — composite children each get their own answer row.
+        Single-answer leaves still start at 0 (ai=0)."""
         import inspect
         from app.domains.gate import admission
         src = inspect.getsource(admission)
         assert 'role="answer"' in src or "role='answer'" in src
-        # answer create uses role_index=0
-        idx = src.find('role="answer"')
-        snippet = src[idx:idx+250]
-        print(f"\n[OD-R-01e] admission answer materialize snippet: {snippet[:200]!r}")
-        assert "role_index=0" in snippet or "role_index=0" in src[idx:idx+300]
+        # answer create uses a role index variable (or literal 0 for single)
+        assert "role_index=ai" in src or "role_index=0" in src
+        # must iterate answers (composite multi-answer), not only one slot
+        assert "for ai, ans in enumerate" in src

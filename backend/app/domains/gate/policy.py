@@ -301,7 +301,11 @@ def evaluate(
 
 
 def _leaf_grammar(leaf: CompiledLeaf) -> tuple[bool, str] | None:
-    """单 leaf strict-auto grammar 判定。canonical 不在开放集 → None（pending）。"""
+    """单 leaf strict-auto grammar 判定。canonical 不在开放集 → None（pending）。
+
+    E2E-009R5: 撤销 open-text 放量。仅 STRICT_AUTO_TYPES 走自动准入；
+    其它类型 → None（pending_review），即使答案文本非空。
+    """
     if leaf.canonical_question_type not in STRICT_AUTO_TYPES:
         return None
     if leaf.answer is None or not leaf.answer.text:

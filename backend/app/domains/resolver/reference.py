@@ -68,6 +68,18 @@ def extract_targets(payload: dict) -> tuple[ResolveTarget, ...]:
             for sub in _iter_sub_questions(unit):
                 sub_id = _sub_id(unit, sub)
                 _extract_content_targets(targets, sub_id, sub.get("content") or {})
+            # E2E-010: 七选五共享 A–G 选项挂在父 content
+            parent_content = unit.get("content") or {}
+            if parent_content.get("options"):
+                opts_range = parent_content.get("options_range")
+                opts_range_tuple = None
+                if isinstance(opts_range, (list, tuple)) and len(opts_range) == 2:
+                    try:
+                        opts_range_tuple = (int(opts_range[0]), int(opts_range[1]))
+                    except (TypeError, ValueError):
+                        opts_range_tuple = None
+                for opt in parent_content.get("options") or []:
+                    _option_target(targets, u_id, opt, opts_range_tuple)
         else:
             _extract_content_targets(targets, u_id, unit.get("content") or {})
     return tuple(targets)
@@ -104,6 +116,12 @@ def _material_target(unit_id: str, role: str, val: dict) -> ResolveTarget:
         kind="instruction_marker",
         start_marker=val.get("start_marker"),
         end_marker=val.get("end_marker"),
+        evidence_lines=(
+            tuple(val["evidence_lines"])
+            if isinstance(val.get("evidence_lines"), (list, tuple))
+            and len(val.get("evidence_lines") or []) == 2
+            else None
+        ),
     )
 
 

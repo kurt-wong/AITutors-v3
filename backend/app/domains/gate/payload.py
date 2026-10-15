@@ -50,6 +50,7 @@ def build(
     ir: IR,
     compiled: CompiledSnapshot,
     resolved_run: ResolvedRun,
+    source_lines: tuple | list | None = None,
 ) -> dict:
     """组装 candidate payload dict（10 §5.3）。root 须是该 candidate 的 top-level unit。"""
     resolved: dict[str, ResolvedSpan] = {s.span_id: s for s in resolved_run.resolved_spans}
@@ -58,13 +59,61 @@ def build(
     return {
         "ir_snapshot": _ir_snapshot(root, ir),
         "resolved_spans": _resolved_spans(leaves, materials, resolved),
-        "compiled_roles": _compiled_roles(leaves, materials),
+        "compiled_roles": _compiled_roles(leaves, materials)
+        + (
+            _parent_content_roles(root, resolved, source_lines)
+            if root.unit_type == "composite_unit"
+            else []
+        ),
         "answer": _answers(leaves),
         "figure_refs": [],
         "knowledge_links": [],
         "evidence": _evidence(resolved_run, leaves, materials, resolved),
         "display_hint": _display_hint(root, leaves),
     }
+
+
+def _parent_content_roles(
+    root: IRNode, resolved: dict[str, ResolvedSpan], source_lines=None
+) -> list[dict]:
+    """E2E-010: composite 父级 content（七选五 A–G）写入 compiled_roles。"""
+    out: list[dict] = []
+    line_map = {}
+    if source_lines:
+        line_map = {getattr(l, "line_ref", None): l for l in source_lines}
+    for c in root.content:
+        if not c.span_id or c.unsupported:
+            continue
+        span = resolved.get(c.span_id)
+        if span is None:
+            continue
+        text = ""
+        # line-level slice
+        refs = list(span.line_refs or [])
+        if refs and refs[0] in line_map:
+            ln = line_map[refs[0]]
+            raw = getattr(ln, "text", "") or ""
+            if (
+                span.start_offset is not None
+                and span.end_offset is not None
+                and span.end_offset > span.start_offset
+            ):
+                text = raw[span.start_offset : span.end_offset]
+            else:
+                text = raw
+        if not text:
+            text = c.label or ""
+        out.append({
+            "role": c.role,
+            "span_id": c.span_id,
+            "line_refs": refs,
+            "text": text,
+            "text_hash": span.text_hash,
+            "label": c.label,
+            "unit_id": root.unit_id,
+            "kind": "content",
+        })
+    return out
 
 
 def _ir_snapshot(root: IRNode, ir: IR) -> dict:
