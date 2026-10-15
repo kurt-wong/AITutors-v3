@@ -40,3 +40,26 @@ class TestRangeAnswerKey:
         seen = [decode_range_answer_key(raw, str(n))[2] for n in range(19, 24)]
         assert seen == ["D", "A", "B", "C", "A"]
         assert len(set(seen)) >= 2  # not all the same full string
+
+    def test_glued_range_no_space(self):
+        """E2E-011: real corpus `21-23DBC` — letters glued to range end."""
+        raw = "阅读：21-23DBC 24-27ABBD 28-31CBDC 32-35CBAA 36-40ADCGF"
+        assert decode_range_answer_key(raw, "21")[2] == "D"
+        assert decode_range_answer_key(raw, "22")[2] == "B"
+        assert decode_range_answer_key(raw, "23")[2] == "C"
+        assert decode_range_answer_key(raw, "24")[2] == "A"
+        assert decode_range_answer_key(raw, "27")[2] == "D"
+        assert decode_range_answer_key(raw, "36")[2] == "A"
+        assert decode_range_answer_key(raw, "39")[2] == "G"
+        assert decode_range_answer_key(raw, "40")[2] == "F"
+
+    def test_glued_multi_range_chain(self):
+        """`11-15BABCC16-20BACBC` — consecutive glued ranges on one line."""
+        raw = "11-15BABCC16-20BACBC"
+        assert decode_range_answer_key(raw, "11")[2] == "B"
+        assert decode_range_answer_key(raw, "15")[2] == "C"
+        assert decode_range_answer_key(raw, "16")[2] == "B"
+        assert decode_range_answer_key(raw, "20")[2] == "C"
+
+    def test_glued_length_mismatch_fail_closed(self):
+        assert decode_range_answer_key("21-23DB", "21") is None  # 2 letters, 3 qns
