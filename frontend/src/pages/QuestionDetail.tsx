@@ -8,6 +8,7 @@ import { FeedbackForm } from "../components/FeedbackForm";
 import { MathText } from "../components/MathText";
 
 const ROLE_ORDER: Record<string, number> = {
+  material: -1,
   stem: 0,
   option: 1,
   answer: 2,
@@ -39,9 +40,14 @@ export function QuestionDetailPage() {
           (a.label ?? "").localeCompare(b.label ?? ""),
       )
     : [];
+  const materials = contents.filter((c) => c.role === "material");
   const stem = contents.find((c) => c.role === "stem");
   const options = contents.filter((c) => c.role === "option");
   const answers = contents.filter((c) => c.role === "answer");
+  // E2E-009R7: 未验证答案 → 待审核，与 approved 可作答题区分
+  const isPendingReview =
+    answers.length > 0 &&
+    answers.every((a) => (a.answer_status as { verified_correct?: boolean } | null)?.verified_correct !== true);
 
   return (
     <div className="space-y-4">
@@ -55,6 +61,11 @@ export function QuestionDetailPage() {
         <span className="rounded-pill bg-canvas-parchment px-2 py-0.5 text-[12px] font-medium text-ink-muted">
           {q.canonical_question_type}
         </span>
+        {isPendingReview && (
+          <span className="rounded-pill bg-amber-100 px-2 py-0.5 text-[12px] font-medium text-amber-800">
+            待审核
+          </span>
+        )}
       </div>
 
       {/* identity + metadata */}
@@ -96,6 +107,19 @@ export function QuestionDetailPage() {
       </div>
 
       <div className="rounded-lg border border-hairline bg-white p-6">
+        {materials.length > 0 && (
+          <div className="mb-4">
+            <div className="mb-1 text-[13px] font-semibold text-ink-muted">材料正文</div>
+            <div className="space-y-2 text-[15px] leading-relaxed">
+              {materials.map((m, i) => (
+                <div key={m.id ?? i}>
+                  <MathText text={m.text} />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {stem && (
           <div className="mb-4">
             <div className="mb-1 text-[13px] font-semibold text-ink-muted">题干</div>
