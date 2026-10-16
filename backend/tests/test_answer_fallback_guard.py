@@ -1,0 +1,85 @@
+# -*- coding: utf-8 -*-
+"""E2E-013 data-safety: answer-zone fallback must not force-bind when
+manifest declares answer_evidence.type=absent AND a validation issue exists."""
+from __future__ import annotations
+
+from app.domains.source.manifest_annotation import (
+    bind_units_from_manifest,
+    build_annotation_payload_from_bound,
+)
+
+
+def _make_manifest(units: list, validation_issues: list | None = None) -> dict:
+    return {
+        "units": units,
+        "annotation_meta": {"validation_issues": validation_issues or []},
+    }
+
+
+def _make_unit(uid: str, qns: list, *, answer_evidence: dict | None = None) -> dict:
+    return {
+        "unit_id": uid,
+        "unit_type": "standalone_question",
+        "question_numbers": qns,
+        "original_question_type": "vocabulary_fill",
+        "stem_lines": [1, 1],
+        "answer_lines": None,
+        "answer_evidence": answer_evidence,
+    }
+
+
+SOURCE = [
+    "56. upset",
+    "57. recognize",
+    "58. destroyed",
+    "参考答案",
+    "56. upset 57. recognize 58. destroyed",
+]
+
+
+class TestAnswerFallbackBlocked:
+    def test_absent_plus_validation_issue_blocks_fallback(self):
+        """U53-like: absent + validation issue → answer_zone must be None."""
+        man = _make_manifest(
+            [_make_unit("U53", [53], answer_evidence={"type": "absent", "lines": None, "value": None})],
+            validation_issues=["U53: 无 answer_lines（题号 [53]）"],
+        )
+        bound = bind_units_from_manifest(man, SOURCE, source_content_sha256="x")
+        assert len(bound) == 1
+        assert bound[0].answer_fallback_blocked is True
+
+        payload = build_annotation_payload_from_bound(
+            bound, source_content_sha256="x", manifest_identity_version=2
+        )
+        ans = payload["semantic_units"][0]["content"]["answer"]
+        assert ans.get("answer_zone") is None
+
+    def test_absent_without_validation_issue_allows_fallback(self):
+        """absent but NO validation issue → keep existing fallback behavior."""
+        man = _make_manifest(
+            [_make_unit("U54", [54], answer_evidence={"type": "absent", "lines": None, "value": None})],
+            validation_issues=[],
+        )
+        bound = bind_units_from_manifest(man, SOURCE, source_content_sha256="x")
+        assert bound[0].answer_fallback_blocked is False
+
+        payload = build_annotation_payload_from_bound(
+            bound, source_content_sha256="x", manifest_identity_version=2
+        )
+        ans = payload["semantic_units"][0]["content"]["answer"]
+        assert ans.get("answer_zone") is not None
+
+    def test_normal_answer_evidence_not_blocked(self):
+        """Normal answer evidence (not absent) → fallback always allowed."""
+        man = _make_manifest(
+            [_make_unit("U55", [55], answer_evidence={"type": "answer_lines", "lines": [4, 4], "value": "58. destroyed"})],
+            validation_issues=["U55: some other issue"],
+        )
+        bound = bind_units_from_manifest(man, SOURCE, source_content_sha256="x")
+        assert bound[0].answer_fallback_blocked is False
+
+    def test_no_answer_evidence_key_not_blocked(self):
+        """Legacy manifest without answer_evidence → fallback allowed."""
+        man = _make_manifest([_make_unit("U56", [56], answer_evidence=None)], validation_issues=[])
+        bound = bind_units_from_manifest(man, SOURCE, source_content_sha256="x")
+        assert bound[0].answer_fallback_blocked is False

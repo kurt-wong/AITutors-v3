@@ -72,6 +72,9 @@ class BoundUnit:
     # Producer-declared option labels (e.g. A–C for 3-option listening items).
     # Empty → caller may fall back to legacy A–D.
     option_labels: list[str] = field(default_factory=list)
+    # E2E-013 data-safety: manifest declares answer_evidence.type=absent AND
+    # a validation issue exists → block answer-zone fallback binding.
+    answer_fallback_blocked: bool = False
 
 
 def _sha256_text(text: str) -> str:
@@ -178,6 +181,15 @@ def bind_units_from_manifest(
                     if lab is not None and str(lab).strip():
                         option_labels.append(str(lab).strip())
 
+        # E2E-013 data-safety: when manifest declares answer_evidence.type=absent
+        # AND a validation issue references this unit, block the answer-zone
+        # fallback scan from force-binding unrelated answer-section text.
+        ae = raw.get("answer_evidence") if isinstance(raw.get("answer_evidence"), dict) else {}
+        ae_absent = ae.get("type") == "absent"
+        v_issues = (manifest.get("annotation_meta") or {}).get("validation_issues") or []
+        has_v_issue = any(unit_id in str(issue) for issue in v_issues)
+        answer_fallback_blocked = ae_absent and has_v_issue
+
         bound.append(
             BoundUnit(
                 unit_id=unit_id,
@@ -190,6 +202,7 @@ def bind_units_from_manifest(
                 section=raw.get("section"),
                 printed_number=printed_label,
                 option_labels=option_labels,
+                answer_fallback_blocked=answer_fallback_blocked,
             )
         )
         # GEO-SUBQ: deterministic sub-question expansion (fail-closed per sub).
@@ -373,7 +386,9 @@ def build_annotation_payload_from_bound(
         content["answer"] = {
             "role": "answer",
             "question_label": qn,
-            "answer_zone": "answer_table",
+            "answer_zone": (
+                "answer_table" if not bu.answer_fallback_blocked else None
+            ),
         }
         if bu.ranges["answer"] is not None:
             content["answer"]["answer_lines"] = [
