@@ -185,6 +185,31 @@ def _entry_offsets(text: str, qn: str) -> list[int]:
     return [m.start() for m in _ENTRY_RE.finditer(text) if m.group(1) == qn]
 
 
+def _entry_content_bounds(raw: str, entry_start: int, entry_end: int) -> tuple[int, int]:
+    """Entry content bounds after stripping the `N.` / `N\\.` question-number prefix.
+
+    Given the full entry slice [entry_start, entry_end), locate the `_ENTRY_RE`
+    match at entry_start and return (content_start, content_end) covering only
+    the answer content. Returns a zero-width span when content is empty (bare
+    `N.` with no value).
+    """
+    m = next((m for m in _ENTRY_RE.finditer(raw) if m.start() == entry_start), None)
+    if m is None:
+        return entry_start, entry_end
+    cs = m.end()
+    while cs < entry_end and raw[cs].isspace():
+        cs += 1
+    ce = entry_end
+    while ce > cs and raw[ce - 1].isspace():
+        ce -= 1
+    return cs, ce
+
+
+def _block_entry_nums(text: str) -> set[str]:
+    """Distinct question-number tokens found in an answer-block text."""
+    return {m.group(1) for m in _ENTRY_RE.finditer(text)}
+
+
 # ------------------------------------------------------------------ B3c-B
 # Structured Answer Table Evidence Consumption (Owner ruling 2026-09).
 # When answer_lines points at an HTML/table line that self-describes
@@ -885,6 +910,31 @@ class _Out:
             UnresolvedReference(
                 reference_id=t.target_id, role=t.role,
                 resolution_status=status, evidence=tuple(evidence),
+            )
+        )
+
+    def add_empty_answer(self, t, evidence):
+        """Bind an empty answer span so the unit stays IR-ready without fabricating content.
+
+        E2E-013 fallback-guard pattern: point at the conventional blank line
+        P1L002 so the compiled answer text is "" and the unit goes to pending
+        review instead of being dropped or given a wrong answer.
+        """
+        _absent_ref = "P1L002"
+        self.resolved.append(
+            ResolvedSpan(
+                span_id=f"sp-{t.target_id}",
+                source_version_id=self.svid,
+                role=t.role,
+                start_line_ref=_absent_ref,
+                end_line_ref=_absent_ref,
+                line_refs=(_absent_ref,),
+                granularity="line",
+                start_offset=None,
+                end_offset=None,
+                text_hash=_raw_sha256(""),
+                resolution_status="exact",
+                evidence=tuple(evidence),
             )
         )
 
@@ -1910,22 +1960,34 @@ class SourceResolver:
                     if len(_offs) == 1:
                         all_off = [m.start() for m in _ENTRY_RE.finditer(_raw)]
                         nxt = next((o for o in all_off if o > _offs[0]), len(_raw))
-                        entry_text = _raw[_offs[0]:nxt]
+                        # Strip `N.` / `N\\.` prefix: bind only answer content.
+                        _cs, _ce = _entry_content_bounds(_raw, _offs[0], nxt)
                         # Only packed entries with a real value (`1.C` / `10. A`).
                         # Bare `1.` + multi-line body stays on the block path
                         # (B3c-A full-range binding).
-                        _val = re.sub(
-                            rf"^\s*{re.escape(qn)}\s*[.．、:·，]?\s*", "", entry_text
-                        ).strip()
-                        if _val:
+                        if _cs < _ce:
                             out.add_char_span(
-                                unit_id, t, _lr, _offs[0], nxt, "exact",
+                                unit_id, t, _lr, _cs, _ce, "exact",
                                 ("answer evidence range",
                                  f"lines={el[0]}-{el[1]}",
                                  f"qn={qn}", "multi-line entry"),
                             )
                             return
-                # Still no match: bind as multi-line block.
+                # Answer-binding safety (E2E-014): if the block carries local
+                # numbered entries that do not include this unit's question
+                # number, the block cannot be this unit's answer (local vs
+                # global numbering). Do not copy it whole.
+                _combined = "\n".join(self._idx.get(r).text for r in refs)
+                _block_nums = _block_entry_nums(_combined)
+                if _block_nums and qn not in _block_nums:
+                    out.add_empty_answer(t, (
+                        "answer block local numbering not mappable to this unit",
+                        f"qn={qn}",
+                        f"block_entries={sorted(_block_nums, key=int)}",
+                    ))
+                    return
+                # Still no match: bind as multi-line block (no local numbering,
+                # or bare `qn.` multi-line body — B3c-A full-range).
                 out.add_span(
                     unit_id, t, refs, "exact",
                     ("answer evidence range",
@@ -1960,12 +2022,15 @@ class SourceResolver:
             if offs:
                 all_off = [m.start() for m in _ENTRY_RE.finditer(raw)]
                 nxt = next((o for o in all_off if o > offs[0]), len(raw))
-                out.add_char_span(
-                    unit_id, t, line_ref, offs[0], nxt, "exact",
-                    ("answer evidence range", f"lines={el[0]}-{el[1]}",
-                     f"qn={qn}", "single-line entry"),
-                )
-                return
+                # Strip `N.` / `N\\.` prefix: bind only answer content.
+                _cs, _ce = _entry_content_bounds(raw, offs[0], nxt)
+                if _cs < _ce:
+                    out.add_char_span(
+                        unit_id, t, line_ref, _cs, _ce, "exact",
+                        ("answer evidence range", f"lines={el[0]}-{el[1]}",
+                         f"qn={qn}", "single-line entry"),
+                    )
+                    return
             # No qn token on the declared line: try B3c-B structured table
             # consumption (self-describing 题号/答案 rows). Deterministic
             # same-column lookup only — any failure falls through, no guessing.
@@ -2005,7 +2070,16 @@ class SourceResolver:
                 )
                 return
             # No qn token on the declared line: the declared line itself is
-            # the evidence (e.g. bare answer cell). Bind the full line.
+            # the evidence (e.g. bare answer cell). Bind the full line —
+            # unless it carries local numbering that does not map to this unit.
+            _line_nums = _block_entry_nums(raw)
+            if _line_nums and qn not in _line_nums:
+                out.add_empty_answer(t, (
+                    "answer line local numbering not mappable to this unit",
+                    f"qn={qn}",
+                    f"line_entries={sorted(_line_nums, key=int)}",
+                ))
+                return
             out.add_span(
                 unit_id, t, [line_ref], "exact",
                 ("answer evidence range", f"lines={el[0]}-{el[1]}",
@@ -2057,7 +2131,10 @@ class SourceResolver:
                 # 同行多题答案：本 qn 切片止于本行下一个任意 qn 条目（或无则行尾）。
                 all_off = [m.start() for m in _ENTRY_RE.finditer(l.text)]
                 nxt = next((o for o in all_off if o > offs[0]), len(l.text))
-                entries.append((l.line_ref, offs[0], nxt))
+                # Strip `N.` / `N\\.` prefix: bind only answer content.
+                _cs, _ce = _entry_content_bounds(l.text, offs[0], nxt)
+                if _cs < _ce:
+                    entries.append((l.line_ref, _cs, _ce))
         if not entries:
             out.add_unresolved(t, "missing", (f"answer row qn={qn} not found",))
             return

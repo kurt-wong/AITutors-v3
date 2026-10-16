@@ -80,8 +80,8 @@ class TestChinesePerChildAnswers:
         raw = views[9].text
         t1 = raw[a1.start_offset:a1.end_offset]
         t2 = raw[a2.start_offset:a2.end_offset]
-        assert t1.strip().startswith("1."), t1
-        assert t2.strip().startswith("2."), t2
+        assert t1 == "C", t1
+        assert t2 == "B", t2
         assert "2." not in t1
         assert "1." not in t2
 

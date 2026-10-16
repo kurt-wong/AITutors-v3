@@ -373,8 +373,8 @@ async def test_prefix_collision_answer_explanation_not_cross():
     run = resolver(lines).resolve(payload)
     a = next(s for s in run.resolved_spans if s.span_id == "sp-Q1.answer")
     e = next(s for s in run.resolved_spans if s.span_id == "sp-Q1.explanation")
-    # 答案表 "1. A" 在 P1L010（【答案】在 P1L009）
-    assert a.start_line_ref == "P1L010" and a.start_offset == 0
+    # 答案表 "1. A" 在 P1L010（【答案】在 P1L009）；entry 前缀剥离后内容从 'A' 开始
+    assert a.start_line_ref == "P1L010" and a.start_offset == 3
     # 详解 "1. 因为甲" 在 P1L015；不得含 10/11/12 的详解行
     assert e.line_refs == ("P1L015",)
     # 反向：Q10/Q11/Q12 的 explanation 不得被 Q1 吞（无多余 unresolved 或错配）
@@ -483,9 +483,9 @@ async def test_answer_shared_line_multi_qn():
     a2 = next(s for s in run.resolved_spans if s.span_id == "sp-Q2.answer")
     assert a1.line_refs == ("P1L006",) and a1.granularity == "line_character"
     assert a2.line_refs == ("P1L006",) and a2.granularity == "line_character"
-    # qn1 切片不得含 qn2 内容；qn2 切片含 "2. B"
+    # qn1 切片不得含 qn2 内容；qn2 切片为纯答案 'B'（前缀已剥离）
     assert "2" not in lines[5].text[a1.start_offset:a1.end_offset]
-    assert lines[5].text[a2.start_offset:a2.end_offset].startswith("2")
+    assert lines[5].text[a2.start_offset:a2.end_offset] == "B"
 
 
 # ------------------------------------------------------------------ B3c-A evidence transport
@@ -533,8 +533,8 @@ async def test_answer_evidence_lines_single_line_keeps_qn_char_span():
     a2 = next(s for s in run.resolved_spans if s.span_id == "sp-Q2.answer")
     assert a1.granularity == "line_character" and a1.line_refs == ("P1L006",)
     assert a2.granularity == "line_character" and a2.line_refs == ("P1L006",)
-    assert lines[5].text[a1.start_offset:a1.end_offset].startswith("1")
-    assert lines[5].text[a2.start_offset:a2.end_offset].startswith("2")
+    assert lines[5].text[a1.start_offset:a1.end_offset] == "A"
+    assert lines[5].text[a2.start_offset:a2.end_offset] == "B"
 
 
 async def test_answer_evidence_lines_scoped_not_other_unit_block():

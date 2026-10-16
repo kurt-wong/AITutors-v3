@@ -102,11 +102,11 @@ class TestA2ActualTextReachingGrammar:
         assert captured, "grammar.verify 未被调用——pipeline 路径可能断裂"
         return captured[0], d["decision"]
 
-    def test_a2_grammar_receives_qn_prefixed_span_not_bare_token(self):
-        """E 从题号条目起点切片 → grammar 必然收到带题号前缀的文本。"""
+    def test_a2_answer_binding_strips_qn_prefix(self):
+        """入口式答案绑定剥离题号前缀 → grammar 收到干净答案文本。"""
         text, decision = self._capture_verify_input("1. A")
-        assert text.startswith("1."), (
-            f"实验假设「grammar 收到带题号前缀的文本」不成立，实际收到 {text!r}"
+        assert text == "A", (
+            f"入口式绑定应剥离题号前缀，实际收到 {text!r}"
         )
         assert decision == "auto_approve"
 
