@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -184,10 +185,12 @@ def bind_units_from_manifest(
         # E2E-013 data-safety: when manifest declares answer_evidence.type=absent
         # AND a validation issue references this unit, block the answer-zone
         # fallback scan from force-binding unrelated answer-section text.
+        # Match unit_id as complete identifier (Q1 must not match Q10).
         ae = raw.get("answer_evidence") if isinstance(raw.get("answer_evidence"), dict) else {}
         ae_absent = ae.get("type") == "absent"
         v_issues = (manifest.get("annotation_meta") or {}).get("validation_issues") or []
-        has_v_issue = any(unit_id in str(issue) for issue in v_issues)
+        _uid_re = re.compile(rf"^{re.escape(unit_id)}(?:[:：\s]|$)")
+        has_v_issue = any(_uid_re.match(str(issue).lstrip("! ")) for issue in v_issues)
         answer_fallback_blocked = ae_absent and has_v_issue
 
         bound.append(
@@ -386,9 +389,8 @@ def build_annotation_payload_from_bound(
         content["answer"] = {
             "role": "answer",
             "question_label": qn,
-            "answer_zone": (
-                "answer_table" if not bu.answer_fallback_blocked else None
-            ),
+            "answer_zone": "answer_table",
+            "fallback_blocked": bu.answer_fallback_blocked,
         }
         if bu.ranges["answer"] is not None:
             content["answer"]["answer_lines"] = [

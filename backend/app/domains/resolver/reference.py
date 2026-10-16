@@ -39,6 +39,9 @@ class ResolveTarget:
     # U44-46: declared option-search window (content.options_range).
     # 1-based inclusive [start, end]. None = not declared (keep current behavior).
     options_range: tuple[int, int] | None = None
+    # E2E-013 data-safety: manifest declared answer_evidence.type=absent AND
+    # a validation issue exists → answer-zone fallback must not force-bind.
+    answer_fallback_blocked: bool = False
 
 
 @dataclass(frozen=True)
@@ -280,6 +283,7 @@ def _answer_target(targets: list, unit_id: str, answer) -> None:
                 str(answer["question_label"]) if answer.get("question_label") else None
             ),
             evidence_lines=evidence,
+            answer_fallback_blocked=bool(answer.get("fallback_blocked")),
         )
     )
 

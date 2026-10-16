@@ -2013,6 +2013,33 @@ class SourceResolver:
             )
             return
 
+        # E2E-013 data-safety: when manifest declared answer_evidence.type=absent
+        # AND a validation issue exists, the answer-zone fallback must not
+        # force-bind unrelated answer-section text. Bind an empty (absent)
+        # answer span so the unit stays IR-ready without fabricating answers.
+        if getattr(t, "answer_fallback_blocked", False):
+            # Bind to an empty source line so the answer text is "" (absent),
+            # not any real content. P1L002 is conventionally the blank line
+            # after the document title in real OCR markdown.
+            _absent_ref = "P1L002"
+            out.resolved.append(
+                ResolvedSpan(
+                    span_id=f"sp-{t.target_id}",
+                    source_version_id=out.svid,
+                    role=t.role,
+                    start_line_ref=_absent_ref,
+                    end_line_ref=_absent_ref,
+                    line_refs=(_absent_ref,),
+                    granularity="line",
+                    start_offset=None,
+                    end_offset=None,
+                    text_hash=_raw_sha256(""),
+                    resolution_status="exact",
+                    evidence=("answer absent: fallback blocked (absent + validation issue)",),
+                )
+            )
+            return
+
         # Fallback (no declared evidence range): scan answer zone for the
         # qn-bounded entry. Retained for hand-written annotations / tests.
         entries: list[tuple[str, int, int]] = []
