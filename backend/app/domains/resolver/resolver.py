@@ -46,7 +46,7 @@ def _raw_sha256(s: str) -> str:
 # 行内条目形态：题号 token + 分隔符（bounded，防 qn=1 误配 "10."）。offset 基于 raw text。
 # 兼容 Markdown escaped-dot（`27\\. A` ≡ `27. A`），与 is_question_start v1.2 同界。
 # GEO-SUBQ：OCR 分隔符变体 `·`/`，`（实测 `15·`/`20，`）同等对待。
-_ENTRY_RE = re.compile(r"(?<![\d@-])(\d{1,3})\s*(?:\\[.．、:·，]|[.．、:·，])")
+_ENTRY_RE = re.compile(r"(?<![\d@-])(\d{1,3})\s*(?:\\[.．、:·，]|[.．、:·，])(?!\d)")
 
 # 行中题号入口（真实卷拼接形态）：
 #   …完成 16~17 题。16. 北京…     —— 句号后紧接题号
@@ -206,8 +206,27 @@ def _entry_content_bounds(raw: str, entry_start: int, entry_end: int) -> tuple[i
 
 
 def _block_entry_nums(text: str) -> set[str]:
-    """Distinct question-number tokens found in an answer-block text."""
-    return {m.group(1) for m in _ENTRY_RE.finditer(text)}
+    """Distinct question-number tokens in an answer-block text.
+
+    Only returns numbers that form a plausible local numbering sequence:
+    ≥1 (not 0) and at least one consecutive pair (n, n+1 both present).
+    Isolated digits from decimals / versions / quantities are excluded.
+    """
+    nums = {int(m.group(1)) for m in _ENTRY_RE.finditer(text) if int(m.group(1)) >= 1}
+    if len(nums) < 2:
+        return set()
+    if not any((n + 1) in nums for n in nums):
+        return set()
+    return {str(n) for n in nums}
+
+
+def _block_entry_range(text: str) -> tuple[int, int] | None:
+    """(min, max) of plausible entry numbers, or None if no numbering sequence."""
+    nums = _block_entry_nums(text)
+    if not nums:
+        return None
+    ints = sorted(int(n) for n in nums)
+    return (ints[0], ints[-1])
 
 
 # ------------------------------------------------------------------ B3c-B
@@ -1997,13 +2016,26 @@ class SourceResolver:
                     _combined = "\n".join(self._idx.get(r).text for r in refs)
                     _block_nums = _block_entry_nums(_combined)
                     if _block_nums and qn not in _block_nums:
-                        out.add_empty_answer(t, (
-                            "answer block local numbering not mappable to this unit",
-                            f"qn={qn}",
-                            f"block_entries={sorted(_block_nums, key=int)}",
-                            f"shared_lines={el[0]}-{el[1]}",
-                        ))
-                        return
+                        _er = _block_entry_range(_combined)
+                        _qn_int = None
+                        try:
+                            _qn_int = int(qn)
+                        except (TypeError, ValueError):
+                            pass
+                        # Only clear when qn is outside the block's numbering
+                        # range (different numbering system). If qn falls
+                        # within [min, max] the entry exists but may be
+                        # OCR-malformed (e.g. `68 but`) — keep the block.
+                        if _qn_int is not None and _er and _er[0] <= _qn_int <= _er[1]:
+                            pass  # same numbering range — do not clear
+                        else:
+                            out.add_empty_answer(t, (
+                                "answer block local numbering not mappable to this unit",
+                                f"qn={qn}",
+                                f"block_entries={sorted(_block_nums, key=int)}",
+                                f"shared_lines={el[0]}-{el[1]}",
+                            ))
+                            return
                 # Still no match: bind as multi-line block (no local numbering,
                 # or bare `qn.` multi-line body — B3c-A full-range).
                 out.add_span(
@@ -2094,13 +2126,22 @@ class SourceResolver:
             if el in self._shared_answer_ranges:
                 _line_nums = _block_entry_nums(raw)
                 if _line_nums and qn not in _line_nums:
-                    out.add_empty_answer(t, (
-                        "answer line local numbering not mappable to this unit",
-                        f"qn={qn}",
-                        f"line_entries={sorted(_line_nums, key=int)}",
-                        f"shared_lines={el[0]}-{el[1]}",
-                    ))
-                    return
+                    _er = _block_entry_range(raw)
+                    _qn_int = None
+                    try:
+                        _qn_int = int(qn)
+                    except (TypeError, ValueError):
+                        pass
+                    if _qn_int is not None and _er and _er[0] <= _qn_int <= _er[1]:
+                        pass  # same numbering range — do not clear
+                    else:
+                        out.add_empty_answer(t, (
+                            "answer line local numbering not mappable to this unit",
+                            f"qn={qn}",
+                            f"line_entries={sorted(_line_nums, key=int)}",
+                            f"shared_lines={el[0]}-{el[1]}",
+                        ))
+                        return
             out.add_span(
                 unit_id, t, [line_ref], "exact",
                 ("answer evidence range", f"lines={el[0]}-{el[1]}",

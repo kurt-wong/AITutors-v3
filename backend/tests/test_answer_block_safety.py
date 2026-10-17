@@ -22,6 +22,7 @@ from app.domains.resolver.resolver import (
     _ENTRY_RE,
     _entry_content_bounds,
     _block_entry_nums,
+    _block_entry_range,
 )
 from app.domains.resolver.span import SourceLineView
 
@@ -135,28 +136,20 @@ class TestPerUnitLocalNumberingPreserved:
     """
 
     def test_req_style_per_unit_block_not_cleared(self):
-        """U-req1..6 pattern: 6 units, each with own block starting `N. `."""
-        # Each unit has its own answer_lines pointing to its own block.
-        req_blocks = {
-            "26": (5, 6),   # U-req1: `1. answer-for-req1`
-            "27": (8, 9),   # U-req2: `2. answer-for-req2`
-            "28": (11, 12),  # U-req3: `3. answer-for-req3`
-        }
+        """U-req1..6 pattern: per-unit blocks with local number labels."""
         lines = _mk(
             "",
             "",
             "26. chem question 1",
             "27. chem question 2",
             "28. chem question 3",
-            "1.（3分）Mg | TiCl4 | 1",   # P1L006
+            "1.（3分）Mg | TiCl4 | 1",
             "",
-            "2.（3分）answer content 2",  # P1L008
+            "2.（3分）answer content 2",
             "",
-            "3.（3分）answer content 3",  # P1L010
+            "3.（3分）answer content 3",
             "",
         )
-        # Fix line numbers — blocks at P1L006, P1L008, P1L010
-        # Actually, let me just use distinct ranges.
         payload = {"semantic_units": [
             {"unit_id": "U-req1", "content": {
                 "stem": {"question_label": "26"},
@@ -172,17 +165,19 @@ class TestPerUnitLocalNumberingPreserved:
                            "answer_lines": [10, 10]}}},
         ]}
         run = _resolve(lines, payload)
-        # Each unit's answer must NOT be empty.
-        for uid, expect_snippet in [
-            ("U-req1", "Mg"),
+        for uid, expected_content in [
+            ("U-req1", "Mg | TiCl4"),
             ("U-req2", "answer content 2"),
             ("U-req3", "answer content 3"),
         ]:
             a = next(s for s in run.resolved_spans if s.span_id == f"sp-{uid}.answer")
             assert a.text_hash != _sha(""), f"{uid} was cleared!"
-            raw = "\n".join(lines[i].text for i in range(len(lines)))
-            # The answer text should contain the unit's own content.
-            assert a.granularity == "line" or a.text_hash != _sha("")
+            raw = "\n".join(l.text for l in lines)
+            # Bind own block — content must be present and specific.
+            full = "\n".join(l.text for l in lines if l.line_ref in a.line_refs)
+            assert expected_content in full, (
+                f"{uid}: expected {expected_content!r} in bound text {full!r}"
+            )
 
     def test_per_unit_multiline_block_with_local_label_not_cleared(self):
         """Multi-line per-unit block starting with `N. ` — not shared → keep."""
@@ -300,11 +295,28 @@ class TestEntryFalsePositives:
         assert a.text_hash != _sha(""), "U68 essay with email was wrongly cleared!"
 
     def test_version_number_not_entry(self):
-        """`v1.2.` / `item-3.` should not create false entries."""
-        assert _block_entry_nums("version v1.2 released") == set() or \
-               "2" not in _block_entry_nums("version v1.2 released")
-        assert "3" not in _block_entry_nums("item-3. done")
-        assert "1" not in _block_entry_nums("error-1. occurred")
+        """Decimals / versions / quantities must NOT produce numbered entries."""
+        assert _block_entry_nums("version v1.2 released") == set()
+        assert _block_entry_nums("0.72") == set()
+        assert _block_entry_nums("3.0m/s") == set()
+        assert _block_entry_nums("5.0") == set()
+        assert _block_entry_nums("2.0s") == set()
+        assert _block_entry_nums("item-3. done") == set()
+        assert _block_entry_nums("error-1. occurred") == set()
+        assert _block_entry_nums("value is -1.") == set()
+        assert _block_entry_nums("email: lihua@163.com") == set()
+
+    def test_real_numbering_still_detected(self):
+        """Real answer numbering sequences must still be recognized."""
+        assert _block_entry_nums("61. started 62. who 63. for") == {"61", "62", "63"}
+        assert _block_entry_nums("1. achievements 2. courage") == {"1", "2"}
+        assert _block_entry_nums("21\\. C 22\\. B 23\\. A") == {"21", "22", "23"}
+        assert _block_entry_nums("1.C 2.B 3.C 4.D") == {"1", "2", "3", "4"}
+        # Near-complete sequence with a gap (68 missing due to OCR `68 but`).
+        assert _block_entry_nums(
+            "61. started 62. who 63. for 64. because 65. making "
+            "66. fifth 67. difficulty 68 but 69. patiently 70. an"
+        ) == {"61", "62", "63", "64", "65", "66", "67", "69", "70"}
 
 
 # ===========================================================================
@@ -448,3 +460,21 @@ class TestHelpers:
         # False positives rejected.
         assert _block_entry_nums("value is -1.") == set()
         assert _block_entry_nums("email: lihua@163.com") == set()
+
+    def test_block_entry_range(self):
+        assert _block_entry_range("1. a 2. b 10. c") == (1, 10)
+        assert _block_entry_range("61. x 62. y 70. z") == (61, 70)
+        assert _block_entry_range("no entries") is None
+        assert _block_entry_range("0.72") is None
+        assert _block_entry_range("5.0") is None
+
+    def test_block_entry_nums_sequence_filter(self):
+        """Isolated non-consecutive digits are NOT a numbering sequence."""
+        # Single number is not a sequence.
+        assert _block_entry_nums("21.") == set()
+        # Non-consecutive set is not a sequence.
+        assert _block_entry_nums("1. x 5. y 9. z") == set()
+        # Consecutive pair forms a sequence.
+        assert _block_entry_nums("1. x 2. y") == {"1", "2"}
+        # Near-consecutive with gap still has consecutive pairs.
+        assert _block_entry_nums("1. x 2. y 5. z 6. w") == {"1", "2", "5", "6"}
