@@ -46,7 +46,7 @@ def _raw_sha256(s: str) -> str:
 # 行内条目形态：题号 token + 分隔符（bounded，防 qn=1 误配 "10."）。offset 基于 raw text。
 # 兼容 Markdown escaped-dot（`27\\. A` ≡ `27. A`），与 is_question_start v1.2 同界。
 # GEO-SUBQ：OCR 分隔符变体 `·`/`，`（实测 `15·`/`20，`）同等对待。
-_ENTRY_RE = re.compile(r"(?<![\d])(\d{1,3})\s*(?:\\[.．、:·，]|[.．、:·，])")
+_ENTRY_RE = re.compile(r"(?<![\d@-])(\d{1,3})\s*(?:\\[.．、:·，]|[.．、:·，])")
 
 # 行中题号入口（真实卷拼接形态）：
 #   …完成 16~17 题。16. 北京…     —— 句号后紧接题号
@@ -1001,6 +1001,8 @@ class SourceResolver:
         # Declared stem starts (from question_search_lines), set in resolve().
         # Upper-bound guard: stem must not cross the next declared question start.
         self._declared_starts: tuple[int, ...] = ()
+        # Answer evidence ranges shared by ≥2 units, set in resolve().
+        self._shared_answer_ranges: frozenset[tuple[int, int]] = frozenset()
         # 题目区终点 = 首个 答案/详解/解析 表头 seq（其后为答案/详解区，不得当题号行）。
         self._qzone_end = next(
             (l.seq for l in self._idx.lines
@@ -1018,6 +1020,19 @@ class SourceResolver:
         by_unit: dict[str, list] = {}
         for t in extract_targets(annotation_payload):
             by_unit.setdefault(t.unit_id, []).append(t)
+        # E2E-014 answer-binding safety: pre-compute which answer evidence
+        # ranges are shared by ≥2 units. Only shared ranges are eligible for
+        # the "unmappable local numbering" fail-closed guard; per-unit ranges
+        # are that unit's own answer and must not be cleared.
+        _range_owners: dict[tuple[int, int], int] = {}
+        for _targets in by_unit.values():
+            for _t in _targets:
+                if _t.kind == "answer_zone" and _t.evidence_lines is not None:
+                    _r = (_t.evidence_lines[0], _t.evidence_lines[1])
+                    _range_owners[_r] = _range_owners.get(_r, 0) + 1
+        self._shared_answer_ranges = frozenset(
+            r for r, n in _range_owners.items() if n >= 2
+        )
         # Fix (E2E-007B KHH2 over-capture): declared stem starts in document order.
         # Used as an upper bound so a stem cannot swallow later questions'
         # declared content (option-less fill-in/short-answer especially).
@@ -1973,19 +1988,22 @@ class SourceResolver:
                                  f"qn={qn}", "multi-line entry"),
                             )
                             return
-                # Answer-binding safety (E2E-014): if the block carries local
-                # numbered entries that do not include this unit's question
-                # number, the block cannot be this unit's answer (local vs
-                # global numbering). Do not copy it whole.
-                _combined = "\n".join(self._idx.get(r).text for r in refs)
-                _block_nums = _block_entry_nums(_combined)
-                if _block_nums and qn not in _block_nums:
-                    out.add_empty_answer(t, (
-                        "answer block local numbering not mappable to this unit",
-                        f"qn={qn}",
-                        f"block_entries={sorted(_block_nums, key=int)}",
-                    ))
-                    return
+                # Answer-binding safety (E2E-014, narrowed): only clear when
+                # the evidence range is SHARED by ≥2 units AND carries local
+                # numbering that does not include this unit's question number.
+                # Per-unit ranges are that unit's own answer (possibly labeled
+                # with a local number) and must NOT be cleared.
+                if el in self._shared_answer_ranges:
+                    _combined = "\n".join(self._idx.get(r).text for r in refs)
+                    _block_nums = _block_entry_nums(_combined)
+                    if _block_nums and qn not in _block_nums:
+                        out.add_empty_answer(t, (
+                            "answer block local numbering not mappable to this unit",
+                            f"qn={qn}",
+                            f"block_entries={sorted(_block_nums, key=int)}",
+                            f"shared_lines={el[0]}-{el[1]}",
+                        ))
+                        return
                 # Still no match: bind as multi-line block (no local numbering,
                 # or bare `qn.` multi-line body — B3c-A full-range).
                 out.add_span(
@@ -2071,15 +2089,18 @@ class SourceResolver:
                 return
             # No qn token on the declared line: the declared line itself is
             # the evidence (e.g. bare answer cell). Bind the full line —
-            # unless it carries local numbering that does not map to this unit.
-            _line_nums = _block_entry_nums(raw)
-            if _line_nums and qn not in _line_nums:
-                out.add_empty_answer(t, (
-                    "answer line local numbering not mappable to this unit",
-                    f"qn={qn}",
-                    f"line_entries={sorted(_line_nums, key=int)}",
-                ))
-                return
+            # unless it is a SHARED range with local numbering that does not
+            # map to this unit.
+            if el in self._shared_answer_ranges:
+                _line_nums = _block_entry_nums(raw)
+                if _line_nums and qn not in _line_nums:
+                    out.add_empty_answer(t, (
+                        "answer line local numbering not mappable to this unit",
+                        f"qn={qn}",
+                        f"line_entries={sorted(_line_nums, key=int)}",
+                        f"shared_lines={el[0]}-{el[1]}",
+                    ))
+                    return
             out.add_span(
                 unit_id, t, [line_ref], "exact",
                 ("answer evidence range", f"lines={el[0]}-{el[1]}",
