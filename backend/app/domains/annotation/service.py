@@ -29,6 +29,31 @@ from app.repositories.snapshot_repository import SnapshotRepository
 _STAGE = "ann"
 
 
+def _payload_semantic_hash(payload: dict) -> str:
+    """确定性 payload 语义哈希（P2-AID）。
+
+    覆盖影响题目结果的确定性语义：semantic_units / document_metadata_claims / sections。
+    剔除 semantic_units 各 unit 顶层的 confidence + line_refs（与
+    gate/service._annotation_identity_projection 一致）。
+    排除 producer_boundary（含 llm_unit_checks 等非确定性诊断）。
+    """
+    units = payload.get("semantic_units")
+    projected_units = (
+        [
+            ({k: v for k, v in u.items() if k not in ("confidence", "line_refs")}
+             if isinstance(u, dict) else u)
+            for u in units
+        ]
+        if isinstance(units, list)
+        else units
+    )
+    return sha256_hex({
+        "semantic_units": projected_units,
+        "document_metadata_claims": payload.get("document_metadata_claims"),
+        "sections": payload.get("sections"),
+    })
+
+
 class AnnotationService:
     def __init__(self, session, llm_executor: LLMExecutor) -> None:
         self._repo = SnapshotRepository(session)
@@ -144,6 +169,10 @@ class AnnotationService:
         the authoritative unit source. Same LE hash / validation / persist rules
         as annotate(); no LLM call is made.
         """
+        # P2-AID: include deterministic payload semantics in identity so that
+        # manifest metadata changes (e.g. subject null→物理) produce a new
+        # annotation instead of silently reusing a stale one.
+        payload_hash = _payload_semantic_hash(payload)
         le_hash = logical_execution_hash(
             task_type=task_type,
             stage=_STAGE,
@@ -152,7 +181,10 @@ class AnnotationService:
                 "prompt_version": prompt_version,
                 "model_config_hash": model_config_hash,
             },
-            input_domain={"source_version_id": str(source_version_id)},
+            input_domain={
+                "source_version_id": str(source_version_id),
+                "payload_semantic_hash": payload_hash,
+            },
         )
         existing = await self._repo.find_annotation_by_le_hash(
             logical_execution_stage=_STAGE, logical_execution_hash=le_hash

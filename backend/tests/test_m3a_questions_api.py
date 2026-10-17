@@ -156,5 +156,8 @@ def test_grade_subject_from_rel_path_owner_rules():
     assert grade == "五年级"
     assert subject == "数学"
     assert "fallback" not in src
-    # 无法分辨 → 兜底 高三
-    assert g("某地/化学/卷.md") == ("高三", "化学", "fallback")
+    # 无法分辨 → grade 不兜底写高三（P2: 保留 None）
+    grade, subject, src = g("某地/化学/卷.md")
+    assert grade is None
+    assert subject == "化学"
+    assert src == "fallback"
