@@ -98,6 +98,9 @@ def _manifest(units: list[ManifestUnit], **kw) -> Manifest:
         source_content_sha256=kw.pop("source_content_sha256", SHA_OK),
         identity_version=kw.pop("identity_version", 2),
         sections=kw.pop("sections", ()),
+        subject=kw.pop("subject", None),
+        grade=kw.pop("grade", None),
+        grade_source=kw.pop("grade_source", None),
     )
 
 
@@ -617,3 +620,65 @@ class TestEndToEnd:
         codes = {g["code"] for g in out["producer_boundary"]["known_gaps"]}
         assert GAP_OPTION_LABEL_SPAN_UNAVAILABLE in codes
         assert "options" not in out["semantic_units"][0]["content"]
+
+
+class TestDocumentMetadataClaimsPassthrough:
+    """P2 — annotation_adapter 不得静默清空 manifest 已有 subject/grade。
+
+    此前 adapter 硬编码 subject=None / grade=None，用旧 runner 重跑会静默
+    清空 manifest 中已有的学科和年级（触碰底线 2：不得静默降级）。
+    """
+
+    def test_subject_grade_passed_from_manifest(self):
+        m = _manifest(
+            [_unit("Q1", "standalone_question", stem_lines=(1, 1), answer_lines=(2, 2))],
+            subject="物理", grade="高一",
+        )
+        out = manifest_to_annotation_payload(m)
+        claims = out["document_metadata_claims"]
+        assert claims["subject"] == "物理"
+        assert claims["grade"] == "高一"
+
+    def test_missing_subject_grade_stay_none(self):
+        m = _manifest(
+            [_unit("Q1", "standalone_question", stem_lines=(1, 1), answer_lines=(2, 2))],
+        )
+        out = manifest_to_annotation_payload(m)
+        claims = out["document_metadata_claims"]
+        assert claims["subject"] is None
+        assert claims["grade"] is None
+
+    def test_grade_source_passed_from_manifest(self):
+        m = _manifest(
+            [_unit("Q1", "standalone_question", stem_lines=(1, 1), answer_lines=(2, 2))],
+            subject="英语", grade="高一", grade_source="path_keyword:高一",
+        )
+        out = manifest_to_annotation_payload(m)
+        assert out["document_metadata_claims"]["grade_source"] == "path_keyword:高一"
+
+    def test_round_trip_preserves_subject_grade(self, tmp_path):
+        raw = {
+            "source_file": "D:/synthetic/source.md",
+            "model": "synthetic-model",
+            "identity_version": 2,
+            "source_content_sha256": SHA_OK,
+            "subject": "化学",
+            "grade": "高一",
+            "grade_source": "path_keyword:会考/合格考/学业水平考试",
+            "annotation_meta": {"prompt_version": "synthetic-v1",
+                                "validation_issues": [], "warnings": []},
+            "units": [{
+                "unit_id": "Q1", "unit_type": "standalone_question",
+                "question_numbers": [1], "original_question_type": "short_answer",
+                "stem_lines": [1, 2], "answer_lines": [3, 4],
+            }],
+        }
+        p = tmp_path / "synthetic.manifest.json"
+        p.write_text(json.dumps(raw, ensure_ascii=False), encoding="utf-8")
+        m = load_manifest(p)
+        assert m.subject == "化学"
+        assert m.grade == "高一"
+        assert m.grade_source == "path_keyword:会考/合格考/学业水平考试"
+        out = manifest_to_annotation_payload(m)
+        assert out["document_metadata_claims"]["subject"] == "化学"
+        assert out["document_metadata_claims"]["grade"] == "高一"

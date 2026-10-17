@@ -72,6 +72,10 @@ class Manifest:
     source_content_sha256: str | None = None
     identity_version: int | str | None = None
     sections: tuple[ManifestSection, ...] = field(default_factory=tuple)
+    # ── document metadata（Producer 路径映射，verbatim 透传）──
+    subject: str | None = None
+    grade: str | None = None
+    grade_source: str | None = None
 
 
 def _pair(v) -> tuple[int, int] | None:
@@ -136,6 +140,9 @@ def load_manifest(path: Path) -> Manifest:
         source_content_sha256=raw.get("source_content_sha256"),
         identity_version=raw.get("identity_version"),
         sections=sections,
+        subject=raw.get("subject"),
+        grade=raw.get("grade"),
+        grade_source=raw.get("grade_source"),
     )
 
 

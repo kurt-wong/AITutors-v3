@@ -492,10 +492,13 @@ def manifest_to_annotation_payload(manifest: Manifest) -> dict:
 
     return {
         "document_metadata_claims": {
-            "subject": None,
-            "grade": None,
+            # Producer manifest 权威映射；缺失 → None（unknown）。
+            # 此前硬编码 None 会静默清空 manifest 已有值（触碰底线 2）。
+            "subject": manifest.subject,
+            "grade": manifest.grade,
             "year": None,
             "school": None,
+            "grade_source": manifest.grade_source,
         },
         "sections": [],
         "semantic_units": semantic_units,
