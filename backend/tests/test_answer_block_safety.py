@@ -398,6 +398,49 @@ class TestEntryPrefixStripped:
 
 
 # ===========================================================================
+# Answer slicing (U21-25 real corpus: 22.808-7754 must slice correctly)
+# ===========================================================================
+
+class TestAnswerSlicing:
+    def test_phone_number_entry_slices_correctly(self):
+        """`22.808-7754` — `22.` is a real entry; answer is `808-7754`."""
+        lines = _mk(
+            "",
+            "",
+            "21. name", "22. phone", "23. city", "24. airport", "25. day",
+            "【答案】",
+            "21.Gladys 22.808-7754 23.Lake 24.Flying 25.Friday",
+        )
+        payload = {"semantic_units": [
+            {"unit_id": f"Q{qn}", "content": {
+                "stem": {"question_label": str(qn)},
+                "answer": {"answer_zone": "answer_table", "question_label": str(qn),
+                           "answer_lines": [9, 9]}}}
+            for qn in (21, 22, 23, 24, 25)
+        ]}
+        run = _resolve(lines, payload)
+        by = {s.span_id: s for s in run.resolved_spans}
+        raw = lines[8].text
+        expected = {21: "Gladys", 22: "808-7754", 23: "Lake", 24: "Flying", 25: "Friday"}
+        for qn, exp in expected.items():
+            a = by[f"sp-Q{qn}.answer"]
+            content = raw[a.start_offset:a.end_offset]
+            assert content == exp, f"Q{qn}: expected {exp!r}, got {content!r}"
+
+    def test_entry_re_matches_digit_followed_separator(self):
+        """_ENTRY_RE must match `22.` even when followed by digits (slicing)."""
+        nums = [m.group(1) for m in _ENTRY_RE.finditer("22.808-7754")]
+        assert "22" in nums, f"22. must match in 22.808-7754, got {nums}"
+
+    def test_block_entry_nums_filters_digits_from_slicing(self):
+        """Even though _ENTRY_RE matches `0.` in `0.72`, the guard must not
+        treat it as a numbered entry (single / non-sequence → filtered)."""
+        assert _block_entry_nums("0.72") == set()
+        assert _block_entry_nums("3.0m/s") == set()
+        assert _block_entry_nums("v1.2") == set()
+
+
+# ===========================================================================
 # Legitimate whole-block scenarios (regression locks)
 # ===========================================================================
 

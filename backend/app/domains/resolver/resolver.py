@@ -46,7 +46,7 @@ def _raw_sha256(s: str) -> str:
 # 行内条目形态：题号 token + 分隔符（bounded，防 qn=1 误配 "10."）。offset 基于 raw text。
 # 兼容 Markdown escaped-dot（`27\\. A` ≡ `27. A`），与 is_question_start v1.2 同界。
 # GEO-SUBQ：OCR 分隔符变体 `·`/`，`（实测 `15·`/`20，`）同等对待。
-_ENTRY_RE = re.compile(r"(?<![\d@-])(\d{1,3})\s*(?:\\[.．、:·，]|[.．、:·，])(?!\d)")
+_ENTRY_RE = re.compile(r"(?<![\d@-])(\d{1,3})\s*(?:\\[.．、:·，]|[.．、:·，])")
 
 # 行中题号入口（真实卷拼接形态）：
 #   …完成 16~17 题。16. 北京…     —— 句号后紧接题号
