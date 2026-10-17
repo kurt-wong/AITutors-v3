@@ -1982,14 +1982,22 @@ class SourceResolver:
                 for _lr in refs:
                     _raw = self._idx.get(_lr).text
                     _dch = decode_answer_table_cell(_raw, qn)
+                    _dch_printed = False
+                    if _dch is None and self._current_printed and self._current_printed != qn:
+                        _dch = decode_answer_table_cell(_raw, self._current_printed)
+                        _dch_printed = _dch is not None
                     if _dch is not None:
                         _ds, _de, _dt = _dch
+                        _ev = [
+                            "answer evidence range",
+                            f"lines={el[0]}-{el[1]}",
+                            "structured_answer_table", f"qn={qn}",
+                            f"cell={_dt}",
+                        ]
+                        if _dch_printed:
+                            _ev.append(f"matched_by=printed({qn}->{self._current_printed})")
                         out.add_char_span(
-                            unit_id, t, _lr, _ds, _de, "exact",
-                            ("answer evidence range",
-                             f"lines={el[0]}-{el[1]}",
-                             "structured_answer_table", f"qn={qn}",
-                             f"cell={_dt}"),
+                            unit_id, t, _lr, _ds, _de, "exact", tuple(_ev),
                         )
                         return
                 # E2E-009R1: header-less horizontal qn/answer rows (EN Shape B).
@@ -2136,13 +2144,21 @@ class SourceResolver:
             # consumption (self-describing 题号/答案 rows). Deterministic
             # same-column lookup only — any failure falls through, no guessing.
             decoded = decode_answer_table_cell(raw, qn)
+            _used_printed_cell = False
+            if decoded is None and self._current_printed and self._current_printed != qn:
+                decoded = decode_answer_table_cell(raw, self._current_printed)
+                _used_printed_cell = decoded is not None
             if decoded is not None:
                 d_start, d_end, d_val = decoded
+                _ev = [
+                    "answer evidence range", f"lines={el[0]}-{el[1]}",
+                    "structured_answer_table", f"qn={qn}",
+                    f"cell={d_val}",
+                ]
+                if _used_printed_cell:
+                    _ev.append(f"matched_by=printed({qn}->{self._current_printed})")
                 out.add_char_span(
-                    unit_id, t, line_ref, d_start, d_end, "exact",
-                    ("answer evidence range", f"lines={el[0]}-{el[1]}",
-                     "structured_answer_table", f"qn={qn}",
-                     f"cell={d_val}"),
+                    unit_id, t, line_ref, d_start, d_end, "exact", tuple(_ev),
                 )
                 return
             # E2E-009R1: EN 2018 Shape B — header-less horizontal qn/answer rows.

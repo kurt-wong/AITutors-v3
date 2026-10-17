@@ -798,3 +798,102 @@ class TestStemGateBlocksHeuristicFallback:
         stem = next(s for s in run.resolved_spans if s.span_id == "sp-Q2.stem")
         raw = "\n".join(l.text for l in lines if l.line_ref in stem.line_refs)
         assert "what color" in raw
+
+
+# ===========================================================================
+# Horizontal table printed fallback (008_phy Q14a/Q14b/Q15a/Q15b)
+# ===========================================================================
+
+class TestHorizontalTablePrintedFallback:
+    """decode_answer_table_cell + printed-number fallback for sub-question
+    labels like 14①, 14②, 15①, 15②."""
+
+    TABLE = (
+        "<table border=1>"
+        "<tr><td>题号</td><td>1</td><td>14①</td><td>14②</td>"
+        "<td>15①</td><td>15②</td></tr>"
+        "<tr><td>答案</td><td>D</td><td>B</td><td>B</td>"
+        "<td>C</td><td>C</td></tr>"
+        "</table>"
+    )
+
+    def test_printed_label_14a(self):
+        from app.domains.resolver.resolver import decode_answer_table_cell
+        result = decode_answer_table_cell(self.TABLE, "14①")
+        assert result is not None
+        assert result[2] == "B"
+
+    def test_printed_label_14b(self):
+        from app.domains.resolver.resolver import decode_answer_table_cell
+        result = decode_answer_table_cell(self.TABLE, "14②")
+        assert result is not None
+        assert result[2] == "B"
+
+    def test_printed_label_15a(self):
+        from app.domains.resolver.resolver import decode_answer_table_cell
+        result = decode_answer_table_cell(self.TABLE, "15①")
+        assert result is not None
+        assert result[2] == "C"
+
+    def test_printed_label_15b(self):
+        from app.domains.resolver.resolver import decode_answer_table_cell
+        result = decode_answer_table_cell(self.TABLE, "15②")
+        assert result is not None
+        assert result[2] == "C"
+
+    def test_global_qn_does_not_match_sub_label(self):
+        """Global qn '14' does NOT match table entry '14①'."""
+        from app.domains.resolver.resolver import decode_answer_table_cell
+        assert decode_answer_table_cell(self.TABLE, "14") is None
+
+    def test_production_path_printed_fallback_horizontal(self):
+        """Resolver uses printed fallback for horizontal table sub-labels."""
+        lines = _mk(
+            "", "",
+            "14. sub-question a",
+            "15. sub-question b",
+            self.TABLE,
+        )
+        payload = {"semantic_units": [
+            {"unit_id": "Q14a", "content": {
+                "stem": {"question_label": "14", "question_label_printed": "14①"},
+                "answer": {"answer_zone": "answer_table", "question_label": "14",
+                           "answer_lines": [5, 5]}}},
+            {"unit_id": "Q15a", "content": {
+                "stem": {"question_label": "15", "question_label_printed": "15①"},
+                "answer": {"answer_zone": "answer_table", "question_label": "15",
+                           "answer_lines": [5, 5]}}},
+        ]}
+        run = _resolve(lines, payload)
+        by = {s.span_id: s for s in run.resolved_spans}
+        a14 = by["sp-Q14a.answer"]
+        a15 = by["sp-Q15a.answer"]
+        raw = lines[4].text
+        assert raw[a14.start_offset:a14.end_offset] == "B"
+        assert raw[a15.start_offset:a15.end_offset] == "C"
+        ev14 = " | ".join(a14.evidence)
+        ev15 = " | ".join(a15.evidence)
+        assert "matched_by=printed" in ev14
+        assert "matched_by=printed" in ev15
+
+    def test_global_number_direct_match_unaffected(self):
+        """Global qn that matches directly (e.g. '1') uses no fallback."""
+        lines = _mk(
+            "", "",
+            "1. first question",
+            self.TABLE,
+        )
+        payload = {"semantic_units": [{
+            "unit_id": "Q1",
+            "content": {
+                "stem": {"question_label": "1", "question_label_printed": "1"},
+                "answer": {"answer_zone": "answer_table", "question_label": "1",
+                           "answer_lines": [4, 4]},
+            },
+        }]}
+        run = _resolve(lines, payload)
+        a = next(s for s in run.resolved_spans if s.span_id == "sp-Q1.answer")
+        raw = lines[3].text
+        assert raw[a.start_offset:a.end_offset] == "D"
+        ev = " | ".join(a.evidence)
+        assert "matched_by=printed" not in ev  # direct match, no fallback
