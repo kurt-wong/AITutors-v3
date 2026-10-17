@@ -245,12 +245,12 @@ async def test_reannotation_same_occurrence_is_idempotent_no_dup_rows(session):
     c2, skipped = await svc.run(source_version_id=sv.id, annotation_id=ann2.id)
     await session.flush()
     assert skipped == []
-    assert len(c2) == 1 and c2[0].id != c1[0].id
+    assert len(c2) == 1 and c2[0].id == c1[0].id  # P2-CANDIDATE-DEDUP: same semantics → reuse
     assert c2[0].decision_status == "approved"  # 全量复用：正常 approved，不崩溃
     assert (await _count(session, Question)) == 1
     assert (await _count(session, QuestionInstance)) == 1
     assert (await _count(session, UnitGroup)) == 1  # 全复用不建空 group
-    assert (await _count(session, AdmissionEvent)) == 2  # 每 candidate 一条物化记录
+    assert (await _count(session, AdmissionEvent)) == 1  # P2-CANDIDATE-DEDUP: Candidate 复用，不新增
 
 
 async def test_option_source_span_keeps_own_line_refs(session):
@@ -319,8 +319,8 @@ def test_admission_question_dedup_matches_compiler_key():
 
 
 async def test_compile_le_hash_uses_minimal_domain(session):
-    """BUG-V3-022：compile LE hash 只含 contract 4 项 + input 3 项（含 unit_id），
-    不含 prompt_version/model_config_hash/source_version 等存储字段。"""
+    """BUG-V3-022 + P2-CANDIDATE-DEDUP：compile LE hash 只含 contract 4 项 + input 2 项
+    （annotation_payload_hash + unit_id），不含 annotation_id/prompt/model_config/source。"""
     from app.domains.gate import service as gate_service
     sv, ann = await _seed(session)
     candidates, _ = await GateService(session).run(
@@ -336,8 +336,9 @@ async def test_compile_le_hash_uses_minimal_domain(session):
             "gate_policy_version": gate_service.GATE_POLICY_VERSION,
         },
         input_domain={
-            "annotation_id": str(ann.id),
-            "annotation_payload_hash": sha256_hex(ann.payload),
+            "annotation_payload_hash": sha256_hex(
+                gate_service._candidate_semantic_projection(ann.payload)
+            ),
             "unit_id": "Q1",
         },
     )
@@ -352,11 +353,12 @@ def test_compile_contract_domain_exact_field_set():
 
 
 def test_compile_input_domain_exact_field_set():
-    """BUG-V3-022：input_domain 恰 3 项（不含派生指纹 source_version_id/resolver/compiler hash）。"""
+    """BUG-V3-022 + P2-CANDIDATE-DEDUP：input_domain 恰 2 项（annotation_payload_hash + unit_id），
+    不含 annotation_id（外键非判定依据）或派生指纹。"""
     from types import SimpleNamespace
     ann = SimpleNamespace(payload={"semantic_units": []})
     input_domain = GateService._compile_input_domain(uuid.uuid4(), ann, "Q1")
-    assert set(input_domain) == {"annotation_id", "annotation_payload_hash", "unit_id"}
+    assert set(input_domain) == {"annotation_payload_hash", "unit_id"}
 
 
 async def test_compile_le_insensitive_to_ann_build_metadata(session):

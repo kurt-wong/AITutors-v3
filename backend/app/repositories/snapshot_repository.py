@@ -237,6 +237,24 @@ class SnapshotRepository(BaseRepository):
         """读 annotation（物化取 document_metadata_claims.subject/grade，BUG-V3-021 M1）。"""
         return await self._session.get(SemanticAnnotation, annotation_id)
 
+    async def find_latest_annotation_by_source_version(
+        self, source_version_id: uuid.UUID
+    ) -> SemanticAnnotation | None:
+        """按 source_version_id 读最新 valid annotation（P2-CANDIDATE-DEDUP）。
+
+        Admission 物化取 claims 时用最新 annotation，而非 Candidate 绑定的
+        旧 annotation——subject/grade claims 补齐后能正确到达 Question。
+        """
+        from sqlalchemy import select
+        stmt = (
+            select(SemanticAnnotation)
+            .where(SemanticAnnotation.source_version_id == source_version_id)
+            .where(SemanticAnnotation.status == "valid")
+            .order_by(SemanticAnnotation.logical_execution_hash.desc())
+            .limit(1)
+        )
+        return (await self._session.execute(stmt)).scalar_one_or_none()
+
     async def append_review_trail(
         self, candidate_id: uuid.UUID, entry: dict
     ) -> AdmissionCandidate:

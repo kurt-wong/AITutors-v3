@@ -73,6 +73,7 @@ class AdmissionService:
         *,
         candidate_id: uuid.UUID,
         provenance: dict,
+        annotation_id: uuid.UUID | None = None,
     ) -> AdmissionCandidate:
         """唯一 approved 入口：物化事务（10 §5.4）。
 
@@ -83,7 +84,10 @@ class AdmissionService:
         source = provenance.get("source")
         candidate = await self._snap.lock_candidate(candidate_id)
         if candidate.decision_status == "approved":
-            return candidate  # 防双物化：重复 approve no-op
+            # P2-CANDIDATE-DEDUP: 防双物化 no-op，但元数据仍需收敛
+            # （subject/grade claims 补齐后要到达 Question）。
+            await self._converge_candidate_metadata(candidate, annotation_id=annotation_id)
+            return candidate
         if candidate.decision_status != "pending_review":
             raise RepositoryError(
                 f"approve only from pending_review, got {candidate.decision_status!r}"
@@ -119,7 +123,7 @@ class AdmissionService:
             await self._record_human_review(candidate, review_result="validated")
         await self._require_evidence_authority(candidate)
 
-        created_questions, created_instances = await self._materialize(candidate)
+        created_questions, created_instances = await self._materialize(candidate, annotation_id=annotation_id)
 
         await self._snap.create_admission_event(
             candidate_id=candidate.id,
@@ -130,7 +134,7 @@ class AdmissionService:
         return decided
 
     async def materialize_for_review(
-        self, *, candidate_id: uuid.UUID
+        self, *, candidate_id: uuid.UUID, annotation_id: uuid.UUID | None = None
     ) -> tuple[list[uuid.UUID], list[uuid.UUID]]:
         """E2E-009R7：pending_review 候选物化为待审核 Question/Instance。
 
@@ -148,7 +152,7 @@ class AdmissionService:
         gd = candidate.gate_decision or {}
         if gd.get("decision") == "rejected":
             raise RepositoryError("cannot materialize rejected candidate")
-        return await self._materialize(candidate, mark_verified=False)
+        return await self._materialize(candidate, mark_verified=False, annotation_id=annotation_id)
 
     # ------------------------------------------------------------------ reject
     async def reject(
@@ -245,9 +249,36 @@ class AdmissionService:
                 f"authority={state!r}; approval forbidden (EB-008)"
             )
 
+    # ------------------------------------------------------------------ 元数据收敛
+    async def _converge_candidate_metadata(
+        self, candidate: AdmissionCandidate, *, annotation_id: uuid.UUID | None = None,
+    ) -> None:
+        """P2-CANDIDATE-DEDUP: 已 approved 的 Candidate 重跑时收敛 subject/grade。
+
+        只更新 Question/Material 的 subject/grade（NULL → known 补写），不重建物化行。
+        """
+        ann = await self._snap.find_annotation_by_id(annotation_id or candidate.annotation_id)
+        claims = (ann.payload or {}).get("document_metadata_claims", {}) if ann else {}
+        subject = claims.get("subject")
+        grade = claims.get("grade")
+        if subject is None and grade is None:
+            return
+        from sqlalchemy import select
+        from app.models.snapshot import AdmissionEvent
+        from app.models.content import Question
+        events = (await self._snap._session.execute(
+            select(AdmissionEvent).where(AdmissionEvent.candidate_id == candidate.id)
+        )).scalars().all()
+        for ev in events:
+            for qid in (ev.created_question_ids or []):
+                q = await self._snap._session.get(Question, qid)
+                if q is not None:
+                    await self._content.converge_subject_grade(q, subject=subject, grade=grade)
+
     # ------------------------------------------------------------------ 物化
     async def _materialize(
-        self, candidate: AdmissionCandidate, *, mark_verified: bool = True
+        self, candidate: AdmissionCandidate, *, mark_verified: bool = True,
+        annotation_id: uuid.UUID | None = None,
     ) -> tuple[list[uuid.UUID], list[uuid.UUID]]:
         """从冻结 payload 物化 A 域（10 §6）。单事务：所有行同 session，flush 后任一步
         失败由外层不 COMMIT → 整体回滚。
@@ -269,7 +300,7 @@ class AdmissionService:
             raise RepositoryError(
                 f"source_version {candidate.source_version_id} not found"
             )
-        ann = await self._snap.find_annotation_by_id(candidate.annotation_id)
+        ann = await self._snap.find_annotation_by_id(annotation_id or candidate.annotation_id)
         claims = (ann.payload or {}).get("document_metadata_claims", {}) if ann else {}
         subject = claims.get("subject")  # BUG-V3-021 终裁：claim 直接映射；缺失 → None（unknown）
         grade = claims.get("grade")

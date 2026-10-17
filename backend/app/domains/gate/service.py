@@ -96,6 +96,26 @@ def _confidence_only_projection(payload: object) -> object:
     return {**payload, "semantic_units": projected_units}
 
 
+def _candidate_semantic_projection(payload: object) -> object:
+    """Candidate identity projection（P2-CANDIDATE-DEDUP）。
+
+    只取 semantic_units（剔除 confidence + line_refs），排除
+    document_metadata_claims / sections / producer_boundary。
+    判定依据 = 题目语义内容；subject/grade claims 不影响 Candidate 判定。
+    """
+    if not isinstance(payload, dict):
+        return payload
+    units = payload.get("semantic_units")
+    if not isinstance(units, list):
+        return {"semantic_units": units}
+    projected_units = [
+        ({k: v for k, v in u.items() if k not in ("confidence", "line_refs")}
+         if isinstance(u, dict) else u)
+        for u in units
+    ]
+    return {"semantic_units": projected_units}
+
+
 class GateService:
     def __init__(self, session) -> None:
         self._session = session
@@ -266,7 +286,8 @@ class GateService:
             elif gate.get("decision") == "auto_approve":
                 # 自动路径：approve 只消费冻结 candidate snapshot（不重跑 E/F/G）。
                 await self._admission.approve(
-                    candidate_id=candidate.id, provenance={"source": "auto_gate"}
+                    candidate_id=candidate.id, provenance={"source": "auto_gate"},
+                    annotation_id=annotation_id,
                 )
 
         await self._snap.flush()
@@ -275,7 +296,7 @@ class GateService:
         for c in candidates:
             if c.decision_status == "pending_review":
                 try:
-                    await self._admission.materialize_for_review(candidate_id=c.id)
+                    await self._admission.materialize_for_review(candidate_id=c.id, annotation_id=annotation_id)
                 except Exception as exc:  # fail-soft: 候选仍在，不吞掉其它单元
                     if funnel is not None:
                         funnel.set(f"materialize_pending_error_{c.id}", str(exc)[:120])
@@ -317,19 +338,19 @@ class GateService:
 
     @staticmethod
     def _compile_input_domain(annotation_id: uuid.UUID, ann, unit_id: str) -> dict:
-        """compile LE input_domain（30 §16 / BUG-V3-022）：3 项（含 unit_id 多 unit 区分）。
+        """compile LE input_domain（30 §16 / BUG-V3-022 + P2-CANDIDATE-DEDUP）。
 
-        不含 source_version_id / resolver_input_hash / compiler_input_hash——它们是存储列
-        （input_identity）派生指纹，annotation_payload_hash 已唯一决定 resolved/compiled
-        结果；重复纳入会漂移 execution identity。
+        P2-CANDIDATE-DEDUP：不含 annotation_id。annotation_id 是外键，不是判定依据。
+        语义内容不变时，即使 annotation 身份变化（如 subject claims 补齐），也不应
+        产生等价 Candidate。
 
-        hash 输入经 _annotation_identity_projection（BUG-V3-039）：诊断元数据 confidence
-        不进 identity。
+        annotation_payload_hash 经 _candidate_semantic_projection：只取
+        semantic_units（剔除 confidence + line_refs），排除 document_metadata_claims
+        等不影响 Candidate 判定的字段。
         """
         return {
-            "annotation_id": str(annotation_id),
             "annotation_payload_hash": sha256_hex(
-                _annotation_identity_projection(ann.payload)
+                _candidate_semantic_projection(ann.payload)
             ),
             "unit_id": unit_id,
         }
