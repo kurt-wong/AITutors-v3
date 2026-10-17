@@ -1047,6 +1047,8 @@ class SourceResolver:
         self._shared_answer_ranges: frozenset[tuple[int, int]] = frozenset()
         # Printed number of the current unit (set in _resolve_unit).
         self._current_printed: str | None = None
+        # Whether stem location produced an unresolved (ambiguous/missing).
+        self._stem_had_unresolved: bool = False
         # 题目区终点 = 首个 答案/详解/解析 表头 seq（其后为答案/详解区，不得当题号行）。
         self._qzone_end = next(
             (l.seq for l in self._idx.lines
@@ -1208,8 +1210,18 @@ class SourceResolver:
                         region_upper = sib_seq
         option_hits = {}
         option_consumed: set[int] = set()
+        # Track whether stem location already produced an unresolved
+        # (ambiguous/missing) — heuristic stem fallbacks must NOT upgrade
+        # it to an approvable stem.
+        _stem_id = f"{unit_id}.stem"
+        _stem_had_unresolved = any(
+            u.reference_id == _stem_id for u in out.unresolved
+        )
+        self._stem_had_unresolved = _stem_had_unresolved
         if start_ref is None:
             # E2E-010 七选五：父单元无题号，但声明了 options_range（A–G 共享选项）。
+            # Also used for option location when stem is unresolved — but the
+            # stem itself must NOT be heuristic-upgraded (see _stem_span).
             opt_targets0 = [t for t in targets if t.kind == "option_label" and t.label]
             if opt_targets0 and opt_targets0[0].options_range:
                 ostart, _oend = opt_targets0[0].options_range
@@ -1626,10 +1638,11 @@ class SourceResolver:
     def _stem_span(self, out, unit_id, t, qn, start_ref, option_hits, region_upper,
                    exclude_refs: frozenset | set | None = None,
                    consumed_seqs: set[int] | None = None):
-        if start_ref is None:
-            # Owner 2026-10 / Q61 essay: printed number may be absent from the
-            # stem body (书面表达 has no `61.`). Producer-declared
-            # question_search_lines is authoritative — bind that window.
+        if start_ref is None or getattr(self, "_stem_had_unresolved", False):
+            # Owner 2026-01 / Q6 safety: when stem location already produced
+            # an unresolved (ambiguous/missing), do NOT use heuristic fallbacks
+            # (same-line-options / first-option-offset / options_range start).
+            # Producer-declared question_search_lines is authoritative.
             qs = getattr(t, "question_search_lines", None)
             if qs:
                 refs = self._evidence_line_refs(qs[0], qs[1])
@@ -1928,8 +1941,10 @@ class SourceResolver:
                 for _lr in refs:
                     _raw = self._idx.get(_lr).text
                     _dv = decode_answer_table_vertical(_raw, qn)
+                    _dv_printed = False
                     if _dv is None and self._current_printed and self._current_printed != qn:
                         _dv = decode_answer_table_vertical(_raw, self._current_printed)
+                        _dv_printed = _dv is not None
                     if _dv is not None:
                         _ds, _de, _dt = _dv
                         if first_ref is None:
@@ -1950,12 +1965,16 @@ class SourceResolver:
                         combined_parts.append(_cont)
                 if combined_parts and first_ref is not None:
                     full_text = "\n".join(combined_parts)
+                    _ev = [
+                        "answer evidence range",
+                        f"lines={el[0]}-{el[1]}",
+                        "structured_answer_table_vertical", f"qn={qn}",
+                        f"cell={full_text}",
+                    ]
+                    if _dv_printed:
+                        _ev.append(f"matched_by=printed({qn}->{self._current_printed})")
                     out.add_char_span(
-                        unit_id, t, first_ref, 0, len(full_text), "exact",
-                        ("answer evidence range",
-                         f"lines={el[0]}-{el[1]}",
-                         "structured_answer_table_vertical", f"qn={qn}",
-                         f"cell={full_text}"),
+                        unit_id, t, first_ref, 0, len(full_text), "exact", tuple(_ev),
                     )
                     return
                 # Try horizontal table format (选项/答案 rows) for multi-line
@@ -2142,15 +2161,21 @@ class SourceResolver:
             # P2: vertical-format table (题号|答案 column headers, one row
             # per question). Deterministic — no guessing.
             decoded_v = decode_answer_table_vertical(raw, qn)
+            _used_printed = False
             if decoded_v is None and self._current_printed and self._current_printed != qn:
                 decoded_v = decode_answer_table_vertical(raw, self._current_printed)
+                _used_printed = decoded_v is not None
             if decoded_v is not None:
                 d_start, d_end, d_val = decoded_v
+                _ev = [
+                    "answer evidence range", f"lines={el[0]}-{el[1]}",
+                    "structured_answer_table_vertical", f"qn={qn}",
+                    f"cell={d_val}",
+                ]
+                if _used_printed:
+                    _ev.append(f"matched_by=printed({qn}->{self._current_printed})")
                 out.add_char_span(
-                    unit_id, t, line_ref, d_start, d_end, "exact",
-                    ("answer evidence range", f"lines={el[0]}-{el[1]}",
-                     "structured_answer_table_vertical", f"qn={qn}",
-                     f"cell={d_val}"),
+                    unit_id, t, line_ref, d_start, d_end, "exact", tuple(_ev),
                 )
                 return
             # No qn token on the declared line: the declared line itself is
