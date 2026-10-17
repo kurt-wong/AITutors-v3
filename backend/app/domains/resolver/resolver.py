@@ -206,13 +206,29 @@ def _entry_content_bounds(raw: str, entry_start: int, entry_end: int) -> tuple[i
 
 
 def _block_entry_nums(text: str) -> set[str]:
-    """Distinct question-number tokens in an answer-block text.
+    """Distinct question-number tokens in an answer-block text (guard-level).
 
-    Only returns numbers that form a plausible local numbering sequence:
-    ≥1 (not 0) and at least one consecutive pair (n, n+1 both present).
-    Isolated digits from decimals / versions / quantities are excluded.
+    Filters decimal/quantity/version false positives: if every _ENTRY_RE match
+    is immediately followed by a digit (e.g. ``3.0m/s``, ``2.0s``, ``v1.2``),
+    the text has no real entry labels — return empty. If at least one match is
+    entry-like (followed by non-digit), include all ≥1 numbers that form a
+    sequence (≥2 with a consecutive pair). This keeps ``22.808-7754`` in a
+    sequence like ``21.Gladys 22.808-7754 23.Lake`` while rejecting isolated
+    or paired decimals.
     """
-    nums = {int(m.group(1)) for m in _ENTRY_RE.finditer(text) if int(m.group(1)) >= 1}
+    entry_like: set[int] = set()
+    all_nums: set[int] = set()
+    for m in _ENTRY_RE.finditer(text):
+        num = int(m.group(1))
+        if num < 1:
+            continue
+        after = text[m.end():m.end() + 1] if m.end() < len(text) else ""
+        all_nums.add(num)
+        if not after.isdigit():
+            entry_like.add(num)
+    if not entry_like:
+        return set()
+    nums = all_nums
     if len(nums) < 2:
         return set()
     if not any((n + 1) in nums for n in nums):
@@ -575,48 +591,55 @@ def decode_answer_table_vertical(raw: str, qn: str) -> tuple[int, int, str] | No
     if not rows:
         return None
 
-    # Find header row: first cell == '题号', second cell == '答案'
+    # Find header row and column layout.
+    # Standard 3-col:   题号 | 答案 | 分数
+    # Dual-block 6-col: 题号 | 答案 | 分数 | 题号 | 答案 | 分数
     header_idx = -1
+    qn_col, ans_col = 0, 1  # left block columns
     for i, cells in enumerate(rows):
         if len(cells) >= 2 and cells[0][2] == "题号" and cells[1][2] == "答案":
             header_idx = i
+            if len(cells) >= 5 and cells[3][2] == "题号" and cells[4][2] == "答案":
+                # six-column dual-block: try left first, then right
+                pass  # will handle both blocks below
             break
 
-    # Data rows start after header (or from row 0 if no header)
     data_start = header_idx + 1 if header_idx >= 0 else 0
 
-    # Question-number cell pattern: "21" or "21（5分）" or "21(5分)"
     qn_pat = re.compile(rf"^{re.escape(qn)}(?:\s*[（(].*[)）])?\s*$")
-    # Any question-number-like pattern (for detecting next-question boundary)
     any_qn_pat = re.compile(r"^\d{1,3}(?:\s*[（(].*[)）])?\s*$")
 
-    for i in range(data_start, len(rows)):
-        cells = rows[i]
-        if len(cells) < 2:
-            continue
-        first_text = cells[0][2].strip()
-        if not qn_pat.match(first_text):
-            continue
+    # Scan one block (qn_col → ans_col); return (start, end, text) or None.
+    def _scan_block(qc: int, ac: int):
+        for i in range(data_start, len(rows)):
+            cells = rows[i]
+            if len(cells) <= max(qc, ac):
+                continue
+            first_text = cells[qc][2].strip()
+            if not qn_pat.match(first_text):
+                continue
+            ans_start = cells[ac][0]
+            ans_end = cells[ac][1]
+            parts = [cells[ac][2]]
+            for j in range(i + 1, len(rows)):
+                cont = rows[j]
+                if len(cont) <= max(qc, ac):
+                    break
+                cont_first = cont[qc][2].strip()
+                if any_qn_pat.match(cont_first):
+                    break
+                parts.append(cont[ac][2])
+                ans_end = cont[ac][1]
+            return (ans_start, ans_end, "\n".join(parts))
+        return None
 
-        # Found question row — answer is second cell
-        ans_start = cells[1][0]
-        ans_end = cells[1][1]
-        parts = [cells[1][2]]
-
-        # Collect rowspan continuation rows (first cell is not a question number)
-        for j in range(i + 1, len(rows)):
-            cont = rows[j]
-            if len(cont) < 2:
-                break
-            cont_first = cont[0][2].strip()
-            if any_qn_pat.match(cont_first):
-                break  # next question
-            parts.append(cont[1][2])
-            ans_end = cont[1][1]
-
-        return (ans_start, ans_end, "\n".join(parts))
-
-    return None
+    # Left block (standard 3-col layout).
+    result = _scan_block(0, 1)
+    if result is not None:
+        return result
+    # Right block (six-column dual-block layout).
+    result = _scan_block(3, 4)
+    return result
 
 
 # 行内选项标签（bounded，防 "对A项" 误配随机大写；需标签+分隔符）。
@@ -1022,6 +1045,8 @@ class SourceResolver:
         self._declared_starts: tuple[int, ...] = ()
         # Answer evidence ranges shared by ≥2 units, set in resolve().
         self._shared_answer_ranges: frozenset[tuple[int, int]] = frozenset()
+        # Printed number of the current unit (set in _resolve_unit).
+        self._current_printed: str | None = None
         # 题目区终点 = 首个 答案/详解/解析 表头 seq（其后为答案/详解区，不得当题号行）。
         self._qzone_end = next(
             (l.seq for l in self._idx.lines
@@ -1153,6 +1178,11 @@ class SourceResolver:
     ) -> None:
         stem_t = next((t for t in targets if t.kind == "question_label"), None)
         qn = stem_t.question_number if stem_t else None
+        # Printed number (source-entry form) — used by table decoders when
+        # the answer table uses local numbering (e.g. printed=1, global=19).
+        self._current_printed = (
+            stem_t.question_label_printed if stem_t else None
+        )
         start_ref: str | None = None
         region_upper: int | None = None
         if qn:
@@ -1898,6 +1928,8 @@ class SourceResolver:
                 for _lr in refs:
                     _raw = self._idx.get(_lr).text
                     _dv = decode_answer_table_vertical(_raw, qn)
+                    if _dv is None and self._current_printed and self._current_printed != qn:
+                        _dv = decode_answer_table_vertical(_raw, self._current_printed)
                     if _dv is not None:
                         _ds, _de, _dt = _dv
                         if first_ref is None:
@@ -2110,6 +2142,8 @@ class SourceResolver:
             # P2: vertical-format table (题号|答案 column headers, one row
             # per question). Deterministic — no guessing.
             decoded_v = decode_answer_table_vertical(raw, qn)
+            if decoded_v is None and self._current_printed and self._current_printed != qn:
+                decoded_v = decode_answer_table_vertical(raw, self._current_printed)
             if decoded_v is not None:
                 d_start, d_end, d_val = decoded_v
                 out.add_char_span(

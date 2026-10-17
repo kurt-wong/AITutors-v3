@@ -44,6 +44,24 @@ def _resolve(lines, payload):
     return SourceResolver(source_version_id=SVID, lines=lines).resolve(payload)
 
 
+def _mk_shared_payload(qns: list[str], lines_range):
+    """Multiple units sharing the SAME answer_lines range."""
+    return {"semantic_units": [
+        {
+            "unit_id": f"Q{qn}",
+            "content": {
+                "stem": {"question_label": qn},
+                "answer": {
+                    "answer_zone": "answer_table",
+                    "question_label": qn,
+                    "answer_lines": list(lines_range),
+                },
+            },
+        }
+        for qn in qns
+    ]}
+
+
 # ===========================================================================
 # Case 1 — E2E-014: shared block with local numbering, global qn → EMPTY
 # ===========================================================================
@@ -318,6 +336,36 @@ class TestEntryFalsePositives:
             "66. fifth 67. difficulty 68 but 69. patiently 70. an"
         ) == {"61", "62", "63", "64", "65", "66", "67", "69", "70"}
 
+    def test_paired_decimals_not_entry_sequence(self):
+        """`3.0m/s 2.0s 6.0m/s` — consecutive-looking decimals are NOT entries."""
+        assert _block_entry_nums("3.0m/s 2.0s 6.0m/s") == set()
+        assert _block_entry_nums("0.72 3.0m/s 5.0") == set()
+        assert _block_entry_nums("2.0s 3.0m/s 4.0") == set()
+
+    def test_phone_number_in_sequence_kept(self):
+        """`22.808-7754` inside a real entry sequence → digit-followed separator
+        is tolerated because sibling entries are entry-like."""
+        assert _block_entry_nums(
+            "21.Gladys 22.808-7754 23.Lake 24.Flying 25.Friday"
+        ) == {"21", "22", "23", "24", "25"}
+
+    def test_production_path_shared_block_with_decimals_not_cleared(self):
+        """Production path: shared block containing only decimals/quantities
+        must NOT trigger the fail-closed guard (no real numbering sequence)."""
+        lines = _mk(
+            "",
+            "",
+            "21. physics",
+            "22. physics",
+            "3.0m/s 2.0s 6.0m/s 5.0",
+        )
+        payload = _mk_shared_payload(["21", "22"], (5, 5))
+        run = _resolve(lines, payload)
+        for qn in ("21", "22"):
+            a = next(s for s in run.resolved_spans if s.span_id == f"sp-Q{qn}.answer")
+            # Should NOT be empty (guard did not fire — decimals filtered).
+            assert a.text_hash != _sha(""), f"Q{qn} was wrongly cleared by decimal guard"
+
 
 # ===========================================================================
 # Entry-prefix stripping (preserved from f009ab2)
@@ -395,6 +443,86 @@ class TestEntryPrefixStripped:
         raw = lines[4].text
         assert raw[by["sp-Q19.answer"].start_offset:by["sp-Q19.answer"].end_offset] == "D"
         assert raw[by["sp-Q23.answer"].start_offset:by["sp-Q23.answer"].end_offset] == "A"
+
+
+# ===========================================================================
+# Six-column dual-block vertical table (008_phy fill-in answers)
+# ===========================================================================
+
+class TestSixColumnDualBlockTable:
+    """008_phy L444: 题号|答案|分数 ×2 side-by-side blocks."""
+
+    TABLE = (
+        "<table border=1>"
+        "<tr><td>题号</td><td>答案</td><td>分数</td>"
+        "<td>题号</td><td>答案</td><td>分数</td></tr>"
+        "<tr><td rowspan='2'>1</td><td>&gt;</td><td>2分</td>"
+        "<td rowspan='2'>3</td><td>等于</td><td>2分</td></tr>"
+        "<tr><td>&gt;</td><td>2分</td><td>等于</td><td>2分</td></tr>"
+        "<tr><td rowspan='2'>2</td><td>0.04</td><td>2分</td>"
+        "<td rowspan='2'>4</td><td>匀加速直线</td><td>2分</td></tr>"
+        "<tr><td></td><td>2分</td><td>5.0</td><td>2分</td></tr>"
+        "</table>"
+    )
+
+    def test_left_block_qn1(self):
+        from app.domains.resolver.resolver import decode_answer_table_vertical
+        result = decode_answer_table_vertical(self.TABLE, "1")
+        assert result is not None
+        assert "&gt;" in result[2]
+
+    def test_left_block_qn2(self):
+        from app.domains.resolver.resolver import decode_answer_table_vertical
+        result = decode_answer_table_vertical(self.TABLE, "2")
+        assert result is not None
+        assert "0.04" in result[2]
+
+    def test_right_block_qn3(self):
+        from app.domains.resolver.resolver import decode_answer_table_vertical
+        result = decode_answer_table_vertical(self.TABLE, "3")
+        assert result is not None
+        assert "等于" in result[2]
+
+    def test_right_block_qn4(self):
+        from app.domains.resolver.resolver import decode_answer_table_vertical
+        result = decode_answer_table_vertical(self.TABLE, "4")
+        assert result is not None
+        assert "匀加速直线" in result[2]
+
+    def test_global_qn_not_in_table(self):
+        """Global numbering (19) does not match local table (1-4)."""
+        from app.domains.resolver.resolver import decode_answer_table_vertical
+        assert decode_answer_table_vertical(self.TABLE, "19") is None
+
+    def test_production_path_printed_fallback(self):
+        """Resolver uses question_label_printed when global qn fails."""
+        lines = _mk(
+            "", "",
+            "19. fill-in question",
+            "20. fill-in question",
+            self.TABLE,
+        )
+        payload = {"semantic_units": [
+            {"unit_id": "Q19", "content": {
+                "stem": {"question_label": "19", "question_label_printed": "1"},
+                "answer": {"answer_zone": "answer_table", "question_label": "19",
+                           "answer_lines": [5, 5]}}},
+            {"unit_id": "Q20", "content": {
+                "stem": {"question_label": "20", "question_label_printed": "2"},
+                "answer": {"answer_zone": "answer_table", "question_label": "20",
+                           "answer_lines": [5, 5]}}},
+        ]}
+        run = _resolve(lines, payload)
+        by = {s.span_id: s for s in run.resolved_spans}
+        a19 = by["sp-Q19.answer"]
+        a20 = by["sp-Q20.answer"]
+        # Q19 (printed=1) should get the table cell for local qn 1, not the whole table.
+        assert a19.granularity == "line_character", (
+            f"Q19 got whole-line binding: {a19.evidence}"
+        )
+        assert a20.granularity == "line_character", (
+            f"Q20 got whole-line binding: {a20.evidence}"
+        )
 
 
 # ===========================================================================
