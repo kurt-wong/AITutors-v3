@@ -649,3 +649,152 @@ class TestHelpers:
         assert _block_entry_nums("1. x 2. y") == {"1", "2"}
         # Near-consecutive with gap still has consecutive pairs.
         assert _block_entry_nums("1. x 2. y 5. z 6. w") == {"1", "2", "5", "6"}
+
+
+# ===========================================================================
+# Stem gate: heuristic fallback blocked when stem location is unresolved
+# ===========================================================================
+
+class TestStemGateBlocksHeuristicFallback:
+    """9e5b607: unresolved stem (ambiguous/missing) must not be upgraded
+    by same-line-options / first-option-offset to a pseudo-stem like 'A.'.
+    Producer-declared question_search_lines remains authoritative."""
+
+    def _mk_source_with_duplicate_qn(self):
+        """Q6-like: question number appears twice (ambiguity), options follow."""
+        return _mk(
+            "",
+            "",
+            "6. What is the force on the object?",      # P1L003 — full qn
+            "",                                             # P1L004
+            "6. What is the force on",                      # P1L005 — partial dup
+            "",                                             # P1L006
+            "the object?",                                  # P1L007
+            "",                                             # P1L008
+            "A. gravity only",                              # P1L009
+            "B. gravity and support",                       # P1L010
+        )
+
+    def test_ambiguous_qn_uses_declared_window_not_pseudo_stem(self):
+        """Ambiguous qn (appears twice) + declared window → window bound,
+        NOT 'A.' pseudo-stem via same-line-options."""
+        lines = self._mk_source_with_duplicate_qn()
+        payload = {"semantic_units": [{
+            "unit_id": "Q6",
+            "content": {
+                "stem": {
+                    "question_label": "6",
+                    "question_search_lines": [3, 7],
+                    "question_label_printed": "6",
+                },
+                "options": [
+                    {"label": "A", "question_label": "6"},
+                    {"label": "B", "question_label": "6"},
+                ],
+                "answer": {"answer_zone": "answer_table", "question_label": "6",
+                           "answer_lines": [9, 9]},
+                "options_range": [9, 10],
+            },
+        }]}
+        run = _resolve(lines, payload)
+        stem = next(s for s in run.resolved_spans if s.span_id == "sp-Q6.stem")
+        # Must NOT be the pseudo-stem "A." at P1L009.
+        assert "P1L009" not in stem.line_refs, (
+            f"pseudo-stem at option line: {stem.line_refs}"
+        )
+        # Must use declared window (P1L003-P1L007).
+        assert stem.line_refs[0] == "P1L003"
+        assert "declared question_search_lines" in str(stem.evidence)
+        # Unresolved ambiguity recorded.
+        unresolved_ids = [u.reference_id for u in run.unresolved_references]
+        assert "Q6.stem" in unresolved_ids
+
+    def test_missing_qn_uses_declared_window_not_heuristic(self):
+        """qn not found in source + declared window → window bound, not heuristic."""
+        lines = _mk(
+            "",
+            "",
+            "Essay: write a composition about...",       # P1L003 — no qn prefix
+            "",
+            "A. option one",
+            "B. option two",
+        )
+        payload = {"semantic_units": [{
+            "unit_id": "Q99",
+            "content": {
+                "stem": {
+                    "question_label": "99",
+                    "question_search_lines": [3, 3],
+                    "question_label_printed": "99",
+                },
+                "options": [
+                    {"label": "A", "question_label": "99"},
+                    {"label": "B", "question_label": "99"},
+                ],
+                "answer": {"answer_zone": "answer_table", "question_label": "99",
+                           "answer_lines": [5, 5]},
+                "options_range": [5, 6],
+            },
+        }]}
+        run = _resolve(lines, payload)
+        stem = next(s for s in run.resolved_spans if s.span_id == "sp-Q99.stem")
+        assert "P1L005" not in stem.line_refs, (
+            f"heuristic stem at option line: {stem.line_refs}"
+        )
+        assert "declared question_search_lines" in str(stem.evidence)
+
+    def test_legitimate_same_line_options_still_works(self):
+        """No unresolved → same-line-options heuristic is allowed."""
+        lines = _mk(
+            "",
+            "",
+            "1. which fruit A. apple B. banana C. car D. table",
+            "【答案】",
+            "1. A",
+        )
+        payload = {"semantic_units": [{
+            "unit_id": "Q1",
+            "content": {
+                "stem": {"question_label": "1"},
+                "options": [
+                    {"label": "A", "question_label": "1"},
+                    {"label": "B", "question_label": "1"},
+                    {"label": "C", "question_label": "1"},
+                    {"label": "D", "question_label": "1"},
+                ],
+                "answer": {"answer_zone": "answer_table", "question_label": "1",
+                           "answer_lines": [5, 5]},
+            },
+        }]}
+        run = _resolve(lines, payload)
+        stem = next(s for s in run.resolved_spans if s.span_id == "sp-Q1.stem")
+        ev = str(stem.evidence)
+        assert "same-line-options" in ev or "boundary" in ev
+        raw = "\n".join(l.text for l in lines if l.line_ref in stem.line_refs)
+        assert "which fruit" in raw
+
+    def test_legitimate_first_option_offset_still_works(self):
+        """No unresolved → first-option-offset heuristic is allowed."""
+        lines = _mk(
+            "",
+            "",
+            "2. what color A. red B. blue",
+            "【答案】",
+            "2. B",
+        )
+        payload = {"semantic_units": [{
+            "unit_id": "Q2",
+            "content": {
+                "stem": {"question_label": "2"},
+                "options": [
+                    {"label": "A", "question_label": "2"},
+                    {"label": "B", "question_label": "2"},
+                ],
+                "answer": {"answer_zone": "answer_table", "question_label": "2",
+                           "answer_lines": [5, 5]},
+            },
+        }]}
+        run = _resolve(lines, payload)
+        stem = next(s for s in run.resolved_spans if s.span_id == "sp-Q2.stem")
+        raw = "\n".join(l.text for l in lines if l.line_ref in stem.line_refs)
+        assert "what color" in raw
