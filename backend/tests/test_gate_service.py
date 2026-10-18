@@ -319,8 +319,8 @@ def test_admission_question_dedup_matches_compiler_key():
 
 
 async def test_compile_le_hash_uses_minimal_domain(session):
-    """BUG-V3-022 + P2-CANDIDATE-DEDUP：compile LE hash 只含 contract 4 项 + input 2 项
-    （annotation_payload_hash + unit_id），不含 annotation_id/prompt/model_config/source。"""
+    """BUG-V3-022 + P2-CANDIDATE-DEDUP：compile LE hash 含 contract 4 项 + input 3 项
+    （annotation_payload_hash + unit_id + source_version_id），不含 annotation_id。"""
     from app.domains.gate import service as gate_service
     sv, ann = await _seed(session)
     candidates, _ = await GateService(session).run(
@@ -340,6 +340,7 @@ async def test_compile_le_hash_uses_minimal_domain(session):
                 gate_service._candidate_semantic_projection(ann.payload)
             ),
             "unit_id": "Q1",
+            "source_version_id": str(sv.id),
         },
     )
     assert cand.logical_execution_hash == expected
@@ -353,12 +354,13 @@ def test_compile_contract_domain_exact_field_set():
 
 
 def test_compile_input_domain_exact_field_set():
-    """BUG-V3-022 + P2-CANDIDATE-DEDUP：input_domain 恰 2 项（annotation_payload_hash + unit_id），
+    """BUG-V3-022 + P2-CANDIDATE-DEDUP：input_domain 含 annotation_payload_hash + unit_id + source_version_id，
     不含 annotation_id（外键非判定依据）或派生指纹。"""
     from types import SimpleNamespace
     ann = SimpleNamespace(payload={"semantic_units": []})
-    input_domain = GateService._compile_input_domain(uuid.uuid4(), ann, "Q1")
-    assert set(input_domain) == {"annotation_payload_hash", "unit_id"}
+    sv = uuid.uuid4()
+    input_domain = GateService._compile_input_domain(ann, "Q1", sv)
+    assert set(input_domain) == {"annotation_payload_hash", "unit_id", "source_version_id"}
 
 
 async def test_compile_le_insensitive_to_ann_build_metadata(session):

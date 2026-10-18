@@ -240,7 +240,7 @@ class GateService:
                 task_type=task_type,
                 stage=_STAGE,
                 contract_domain=self._compile_contract_domain(),
-                input_domain=self._compile_input_domain(annotation_id, ann, root.unit_id),
+                input_domain=self._compile_input_domain(ann, root.unit_id, source_version_id),
             )
             candidate = await self._snap.find_candidate_by_le_hash(
                 logical_execution_stage=_STAGE, logical_execution_hash=le_hash
@@ -337,23 +337,25 @@ class GateService:
         }
 
     @staticmethod
-    def _compile_input_domain(annotation_id: uuid.UUID, ann, unit_id: str) -> dict:
+    def _compile_input_domain(ann, unit_id: str, source_version_id: uuid.UUID | None = None) -> dict:
         """compile LE input_domain（30 §16 / BUG-V3-022 + P2-CANDIDATE-DEDUP）。
 
-        P2-CANDIDATE-DEDUP：不含 annotation_id。annotation_id 是外键，不是判定依据。
-        语义内容不变时，即使 annotation 身份变化（如 subject claims 补齐），也不应
-        产生等价 Candidate。
+        P2-CANDIDATE-DEDUP：不含 annotation_id（外键，非判定依据）。
+        含 source_version_id：不同 source_version 即使语义相同也不共用 Candidate。
 
         annotation_payload_hash 经 _candidate_semantic_projection：只取
         semantic_units（剔除 confidence + line_refs），排除 document_metadata_claims
         等不影响 Candidate 判定的字段。
         """
-        return {
+        d = {
             "annotation_payload_hash": sha256_hex(
                 _candidate_semantic_projection(ann.payload)
             ),
             "unit_id": unit_id,
         }
+        if source_version_id is not None:
+            d["source_version_id"] = str(source_version_id)
+        return d
 
     def _input_identity(self, sv: uuid.UUID, ann_id: uuid.UUID, ann, resolved_run) -> dict:
         """input_identity（10 §9 / BUG-V3-022 M1 + OQ-1 Gate A）：对什么输入构建。

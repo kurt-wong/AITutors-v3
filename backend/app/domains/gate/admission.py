@@ -253,9 +253,10 @@ class AdmissionService:
     async def _converge_candidate_metadata(
         self, candidate: AdmissionCandidate, *, annotation_id: uuid.UUID | None = None,
     ) -> None:
-        """P2-CANDIDATE-DEDUP: 已 approved 的 Candidate 重跑时收敛 subject/grade。
+        """P2-CANDIDATE-DEDUP + P2-MATERIAL-METADATA: 已 approved 的 Candidate 重跑时收敛 subject/grade。
 
-        只更新 Question/Material 的 subject/grade（NULL → known 补写），不重建物化行。
+        覆盖 Question 和 Material（NULL → known 补写），不重建物化行。
+        Material 从 Candidate payload 的 compiled_roles 定位（与 _materialize 同源）。
         """
         ann = await self._snap.find_annotation_by_id(annotation_id or candidate.annotation_id)
         claims = (ann.payload or {}).get("document_metadata_claims", {}) if ann else {}
@@ -265,7 +266,7 @@ class AdmissionService:
             return
         from sqlalchemy import select
         from app.models.snapshot import AdmissionEvent
-        from app.models.content import Question
+        from app.models.content import Question, Material
         events = (await self._snap._session.execute(
             select(AdmissionEvent).where(AdmissionEvent.candidate_id == candidate.id)
         )).scalars().all()
@@ -274,6 +275,19 @@ class AdmissionService:
                 q = await self._snap._session.get(Question, qid)
                 if q is not None:
                     await self._content.converge_subject_grade(q, subject=subject, grade=grade)
+        # P2-MATERIAL-METADATA: 从 payload compiled_roles 定位 Material 并收敛
+        p = candidate.payload or {}
+        for m in p.get("compiled_roles", []):
+            if m.get("kind") != "material":
+                continue
+            mdedup = identity_hash(
+                {"material_type": m["role"], "text": normalize_identity(m["text"])}
+            )
+            mat = await self._content.find_material_by_dedup(
+                source_version_id=candidate.source_version_id, dedup_key=mdedup
+            )
+            if mat is not None:
+                await self._content.converge_subject_grade(mat, subject=subject, grade=grade)
 
     # ------------------------------------------------------------------ 物化
     async def _materialize(
@@ -434,6 +448,20 @@ class AdmissionService:
 
         if not any_new_instance:
             # 全量复用：candidate 的 occurrence 均已物化，无新 A 域行（不建 group）。
+            # P2-MATERIAL-METADATA: 仍需收敛关联 Material 的 subject/grade。
+            for m in p["compiled_roles"]:
+                if m["kind"] != "material":
+                    continue
+                mdedup = identity_hash(
+                    {"material_type": m["role"], "text": normalize_identity(m["text"])}
+                )
+                mat = await self._content.find_material_by_dedup(
+                    source_version_id=candidate.source_version_id, dedup_key=mdedup
+                )
+                if mat is not None:
+                    await self._content.converge_subject_grade(
+                        mat, subject=subject, grade=grade
+                    )
             return created_questions, created_instances
 
         # composite：shared material 只建一次（20 #4）；同 sv 重标注按 dedup 复用既有行
