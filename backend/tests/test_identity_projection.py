@@ -53,7 +53,7 @@ def test_confidence_float_does_not_break_compile_identity() -> None:
     assert len(sha256_hex(_annotation_identity_projection(p))) == 64
 
     ann = SimpleNamespace(payload=p)
-    domain = GateService._compile_input_domain(ann, "Q1")
+    domain = GateService._compile_input_domain(ann, "Q1", uuid.uuid4())
     assert len(domain["annotation_payload_hash"]) == 64
 
     # _input_identity 无 self 状态依赖，绕过 __init__（需 session）直接验证第三处 hash。
@@ -69,8 +69,8 @@ def test_confidence_change_does_not_change_compile_identity() -> None:
     a = SimpleNamespace(payload=_payload(_unit(confidence=0.98)))
     b = SimpleNamespace(payload=_payload(_unit(confidence=0.97)))
     ann_id, unit_id = uuid.uuid4(), "Q1"
-    da = GateService._compile_input_domain(a, unit_id)
-    db = GateService._compile_input_domain(b, unit_id)
+    da = GateService._compile_input_domain(a, unit_id, uuid.uuid4())
+    db = GateService._compile_input_domain(b, unit_id, uuid.uuid4())
     assert da["annotation_payload_hash"] == db["annotation_payload_hash"]
 
     sv = uuid.uuid4()
@@ -95,8 +95,8 @@ def test_semantic_change_still_changes_identity() -> None:
     a = SimpleNamespace(payload=_payload(_unit(confidence=0.98)))
     b = SimpleNamespace(payload=_payload_stem_changed(confidence=0.98))
     ann_id = uuid.uuid4()
-    ha = GateService._compile_input_domain(a, "Q1")["annotation_payload_hash"]
-    hb = GateService._compile_input_domain(b, "Q1")["annotation_payload_hash"]
+    ha = GateService._compile_input_domain(a, "Q1", uuid.uuid4())["annotation_payload_hash"]
+    hb = GateService._compile_input_domain(b, "Q1", uuid.uuid4())["annotation_payload_hash"]
     assert ha != hb
 
 
@@ -170,8 +170,8 @@ def test_line_refs_change_does_not_change_semantic_identity() -> None:
     a = SimpleNamespace(payload=_payload(_unit(line_refs=["P1L002", "P1L003"])))
     b = SimpleNamespace(payload=_payload(_unit(line_refs=["P1L050", "P1L051"])))
     ann_id, unit_id = uuid.uuid4(), "Q1"
-    ha = GateService._compile_input_domain(a, unit_id)["annotation_payload_hash"]
-    hb = GateService._compile_input_domain(b, unit_id)["annotation_payload_hash"]
+    ha = GateService._compile_input_domain(a, unit_id, uuid.uuid4())["annotation_payload_hash"]
+    hb = GateService._compile_input_domain(b, unit_id, uuid.uuid4())["annotation_payload_hash"]
     assert ha == hb, "line_refs 变化不应改变 Semantic Identity（annotation_payload_hash）"
 
 
@@ -206,8 +206,8 @@ def test_semantic_change_with_same_line_refs_still_changes_identity() -> None:
     a = SimpleNamespace(payload=_payload(_unit(line_refs=["P1L002"])))
     b = SimpleNamespace(payload=_payload_stem_changed(line_refs=["P1L002"]))
     ann_id = uuid.uuid4()
-    ha = GateService._compile_input_domain(a, "Q1")["annotation_payload_hash"]
-    hb = GateService._compile_input_domain(b, "Q1")["annotation_payload_hash"]
+    ha = GateService._compile_input_domain(a, "Q1", uuid.uuid4())["annotation_payload_hash"]
+    hb = GateService._compile_input_domain(b, "Q1", uuid.uuid4())["annotation_payload_hash"]
     assert ha != hb, "语义变化必须改变 Semantic Identity，即使 line_refs 相同"
 
 

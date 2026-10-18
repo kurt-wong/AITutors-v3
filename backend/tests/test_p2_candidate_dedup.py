@@ -163,7 +163,7 @@ class TestMaterialConvergence:
         """A: Candidate 复用时，Question 与关联 Material 的 subject/grade 均收敛。"""
         from tests.test_gate_service import _seed, COMPOSITE_LINES, _composite_units
         from app.domains.gate.service import GateService
-        from app.models.content import Question, Material
+        from app.models.content import Question, Material, QuestionInstance
         from sqlalchemy import select
 
         sv, ann = await _seed(
@@ -175,8 +175,12 @@ class TestMaterialConvergence:
         await svc.run(source_version_id=sv.id, annotation_id=ann.id)
         await session.flush()
 
-        q = (await session.execute(select(Question))).scalars().first()
-        assert q.subject is None
+        # Scope: only Questions from THIS source_version
+        q = (await session.execute(
+            select(Question).join(QuestionInstance, QuestionInstance.question_id == Question.id)
+            .where(QuestionInstance.source_version_id == sv.id)
+        )).scalars().first()
+        assert q is not None and q.subject is None
         mats = (await session.execute(select(Material))).scalars().all()
         assert len(mats) > 0, "composite should have materials"
         for m in mats:
@@ -186,10 +190,15 @@ class TestMaterialConvergence:
         await svc.run(source_version_id=sv.id, annotation_id=ann2.id)
         await session.flush()
 
-        q = (await session.execute(select(Question))).scalars().first()
+        q = (await session.execute(
+            select(Question).join(QuestionInstance, QuestionInstance.question_id == Question.id)
+            .where(QuestionInstance.source_version_id == sv.id)
+        )).scalars().first()
         assert q.subject == "生物"
         assert q.grade == "高一"
-        mats = (await session.execute(select(Material))).scalars().all()
+        mats = (await session.execute(
+            select(Material).where(Material.source_version_id == sv.id)
+        )).scalars().all()
         for m in mats:
             assert m.subject == "生物", f"Material {m.id} subject not converged"
             assert m.grade == "高一"
@@ -198,7 +207,7 @@ class TestMaterialConvergence:
         """B: 不存在 Material 关联时，原流程正常。"""
         from tests.test_gate_service import _seed, _reannotate
         from app.domains.gate.service import GateService
-        from app.models.content import Question
+        from app.models.content import Question, QuestionInstance
         from sqlalchemy import select
 
         sv, ann = await _seed(session, claims={})
@@ -210,8 +219,11 @@ class TestMaterialConvergence:
         await svc.run(source_version_id=sv.id, annotation_id=ann2.id)
         await session.flush()
 
-        q = (await session.execute(select(Question))).scalars().first()
-        assert q.subject == "数学"
+        q = (await session.execute(
+            select(Question).join(QuestionInstance, QuestionInstance.question_id == Question.id)
+            .where(QuestionInstance.source_version_id == sv.id)
+        )).scalars().first()
+        assert q is not None and q.subject == "数学"
 
     async def test_material_conflict_fails_loud(self, session):
         """C: 已有非空 Material subject 与新来源冲突 → RepositoryError，不静默覆盖。"""

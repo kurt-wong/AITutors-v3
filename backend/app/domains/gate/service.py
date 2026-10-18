@@ -337,25 +337,23 @@ class GateService:
         }
 
     @staticmethod
-    def _compile_input_domain(ann, unit_id: str, source_version_id: uuid.UUID | None = None) -> dict:
+    def _compile_input_domain(ann, unit_id: str, source_version_id: uuid.UUID) -> dict:
         """compile LE input_domain（30 §16 / BUG-V3-022 + P2-CANDIDATE-DEDUP）。
 
         P2-CANDIDATE-DEDUP：不含 annotation_id（外键，非判定依据）。
-        含 source_version_id：不同 source_version 即使语义相同也不共用 Candidate。
+        含 source_version_id（必填）：不同 source_version 即使语义相同也不共用 Candidate。
 
         annotation_payload_hash 经 _candidate_semantic_projection：只取
         semantic_units（剔除 confidence + line_refs），排除 document_metadata_claims
         等不影响 Candidate 判定的字段。
         """
-        d = {
+        return {
             "annotation_payload_hash": sha256_hex(
                 _candidate_semantic_projection(ann.payload)
             ),
             "unit_id": unit_id,
+            "source_version_id": str(source_version_id),
         }
-        if source_version_id is not None:
-            d["source_version_id"] = str(source_version_id)
-        return d
 
     def _input_identity(self, sv: uuid.UUID, ann_id: uuid.UUID, ann, resolved_run) -> dict:
         """input_identity（10 §9 / BUG-V3-022 M1 + OQ-1 Gate A）：对什么输入构建。
