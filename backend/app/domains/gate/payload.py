@@ -37,6 +37,7 @@ COMPILED_ROLE_FIELDS = ("role", "span_id", "line_refs", "text", "text_hash", "la
 ANSWER_FIELDS = (
     "span_id", "line_refs", "text", "text_hash",
     "source_located", "complete", "verified_correct",
+    "ownership", "binding_evidence", "candidate_text", "official_text",
 )
 
 

@@ -438,12 +438,32 @@ class TestFailureOccursAtBoundary:
                 assert forbidden not in ln, f"boundary.py must not import {forbidden}: {ln}"
 
     def test_enforcement_is_not_reimplemented_inside_app(self):
-        """判定不得在 V3 IR / Compiler / Gate（或任何 app 域）内重复实现。"""
+        """判定不得在 V3 IR / Compiler / Gate（或任何 app 域）内重复实现。
+
+        R16c note: the sole authority is app/domains/source/identity_scope.py
+        (migrated from scripts boundary.py). Other app modules may IMPORT and
+        CALL the authority, but must not redefine its rules or entry points.
+        """
+        authority = "app/domains/source/identity_scope.py"
+        rule_redefs = (
+            "def normalize_interface_identity",
+            "def enforce_interface_scope",
+            "_SHA256_LOWER_HEX =",
+            "_INTERFACE_IDENTITY_VERSIONS =",
+        )
         hits = []
         for p in (_BACKEND / "app").rglob("*.py"):
+            rel = str(p.relative_to(_BACKEND)).replace("\\", "/")
+            if rel == authority:
+                continue
             text = p.read_text(encoding="utf-8")
-            if "enforce_interface_scope" in text or "normalize_interface_identity" in text:
-                hits.append(str(p.relative_to(_BACKEND)))
+            if "enforce_interface_scope" not in text and "normalize_interface_identity" not in text:
+                continue
+            # Delegation is legal (import + call). Redefining rules is not.
+            for token in rule_redefs:
+                for i, line in enumerate(text.splitlines(), 1):
+                    if token in line and not line.strip().startswith(("#", "*", '"', "'")):
+                        hits.append(f"{rel}:{i}:{token}")
         assert hits == [], f"second identity validation system detected: {hits}"
 
 
@@ -467,16 +487,31 @@ class TestSingleAuthorityEntry:
             assert "enforce_interface_scope" in self._read(rel), rel
 
     def test_normalize_interface_identity_has_one_production_call_site(self):
-        """判定逻辑只有一处调用（`enforce_interface_scope` 内），无平行实现。"""
+        """判定逻辑只有一处调用（`enforce_interface_scope` 内），无平行实现。
+
+        R16c note: authority migrated from scripts/preprocessing_consumer/boundary.py
+        to app/domains/source/identity_scope.py (module header records the move).
+        The single-call-site contract is unchanged; the search covers both the
+        current authority and any residual scripts/ copy.
+        """
         call_sites = []
-        for p in sorted((_BACKEND / "scripts").rglob("*.py")):
-            for i, line in enumerate(p.read_text(encoding="utf-8").splitlines(), 1):
-                if line.strip().startswith(("def ", "#", "*", '"', "'")):
-                    continue  # 定义行 / 注释 / docstring
-                if "normalize_interface_identity(" in line:
-                    call_sites.append(f"{p.name}:{i}")
+        search_roots = [
+            _BACKEND / "app" / "domains" / "source",
+            _BACKEND / "scripts",
+        ]
+        for root in search_roots:
+            if not root.exists():
+                continue
+            for p in sorted(root.rglob("*.py")):
+                for i, line in enumerate(p.read_text(encoding="utf-8").splitlines(), 1):
+                    if line.strip().startswith(("def ", "#", "*", '"', "'")):
+                        continue  # 定义行 / 注释 / docstring
+                    if "normalize_interface_identity(" in line:
+                        rel = p.relative_to(_BACKEND)
+                        call_sites.append(f"{rel}:{i}")
         assert len(call_sites) == 1, f"single authority call site required: {call_sites}"
-        assert call_sites[0].startswith("boundary.py:"), call_sites
+        # The sole call must live inside the authority module's enforce entry.
+        assert "identity_scope.py" in call_sites[0], call_sites
 
     def test_interface_scope_gate_runs_before_semantic_consumption_in_runner_b2(self):
         """源码顺序：边界闸门先于 `_run_full_chain`（IR/Compiler/Gate 在其内）。"""

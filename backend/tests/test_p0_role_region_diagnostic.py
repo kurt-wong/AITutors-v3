@@ -1,8 +1,14 @@
 # -*- coding: utf-8 -*-
-"""P0-A regression: role_region overlap is diagnostic-only, not an auto blocker.
+"""P0-R3 regression: role_region overlap MUST block auto_approve.
 
-Locks the authority level so a future change cannot silently re-promote
-diagnostic evidence into auto eligibility.
+Owner 2026-10 ruling: fabricated / wrong-region provenance cannot pass Gate.
+This file previously locked "diagnostic-only, auto still allowed" — that was
+the defect. It now locks the correct authority level:
+
+  answer span overlapping question/stem or explanation region
+    -> auto_allowed=False -> pending_review (not terminal rejected)
+
+Also locks: value-only answers (no source line_refs) cannot auto_approve.
 """
 import uuid
 
@@ -56,9 +62,9 @@ def _pipeline(lines, payload, root_unit_id="Q1"):
     return root, ir, compiled, run
 
 
-class TestRoleRegionDiagnosticOnly:
-    def test_overlap_keeps_diagnostic_but_allows_auto(self):
-        """P0-A core: overlap → reason present, decision stays auto_approve."""
+class TestRoleRegionBlocksAuto:
+    def test_overlap_blocks_auto_pending_review(self):
+        """P0-R3 core: overlap -> pending_review, diagnostic retained."""
         lines = _single_lines("A")
         root0, ir0, compiled0, base_run = _pipeline(lines, _single_payload())
         answer_span = next(s for s in base_run.resolved_spans if s.role == "answer")
@@ -77,20 +83,17 @@ class TestRoleRegionDiagnosticOnly:
             structural_regions=base_run.structural_regions + (overlap_region,),
         )
         d = evaluate(root=root0, ir=ir0, compiled=compiled0, resolved_run=new_run)
-        assert d["decision"] == "auto_approve", (
-            f"role_region must not block auto after P0-A, got {d['decision']}"
+        assert d["decision"] == "pending_review", (
+            f"role_region overlap must block auto, got {d['decision']}"
         )
-        # diagnostic retained
         prov = d["layers"]["provenance"]
-        assert prov["auto_allowed"] is True
+        assert prov["auto_allowed"] is False
         diags = prov.get("role_region_diagnostics") or []
-        assert any("overlaps" in x or "role provenance" in x for x in diags), (
+        assert any("overlaps" in x for x in diags), (
             f"diagnostic reason must be retained, got {diags}"
         )
-        # and visible in reasons (audit)
-        assert any("overlaps" in r or "role provenance" in r for r in d["reasons"]) or diags
 
-    def test_question_region_overlap_also_diagnostic_only(self):
+    def test_question_region_overlap_blocks_auto(self):
         lines = _single_lines("A")
         root0, ir0, compiled0, base_run = _pipeline(lines, _single_payload())
         answer_span = next(s for s in base_run.resolved_spans if s.role == "answer")
@@ -107,14 +110,13 @@ class TestRoleRegionDiagnosticOnly:
             structural_regions=base_run.structural_regions + (overlap_region,),
         )
         d = evaluate(root=root0, ir=ir0, compiled=compiled0, resolved_run=new_run)
-        assert d["decision"] == "auto_approve"
-        assert d["layers"]["provenance"]["auto_allowed"] is True
+        assert d["decision"] == "pending_review"
+        assert d["layers"]["provenance"]["auto_allowed"] is False
 
     def test_byte_proven_still_blocks_auto(self):
-        """P0-A must not weaken byte-proven — that blocker remains."""
+        """Byte-proven blocker remains: contextual resolution -> pending."""
         lines = _single_lines("A")
         root0, ir0, compiled0, base_run = _pipeline(lines, _single_payload())
-        # mutate a span resolution to contextual (not byte-proven)
         bad = []
         for s in base_run.resolved_spans:
             if s.role == "answer":
@@ -152,3 +154,35 @@ class TestRoleRegionDiagnosticOnly:
         d = evaluate(root=root, ir=ir, compiled=compiled, resolved_run=run)
         assert d["decision"] == "pending_review"
         assert any("not strict-auto" in r for r in d["reasons"])
+
+    def test_value_only_answer_not_auto(self):
+        """P0-R3: answer_value without source line_refs cannot auto_approve."""
+        lines = _mk(
+            "1. which fruit",
+            "A. apple", "B. banana", "C. car", "D. table",
+            "答案",
+            "1. B",
+        )
+        payload = {"semantic_units": [
+            {"unit_id": "Q1", "unit_type": "standalone_unit",
+             "original_question_type": "single_choice",
+             "content": {
+                 "stem": {"question_label": "1"},
+                 "options": [{"label": l} for l in "ABCD"],
+                 "answer": {
+                     "answer_zone": "answer_table",
+                     "question_label": "1",
+                     "answer_value": "B",
+                 },
+             }}]}
+        root, ir, compiled, run = _pipeline(lines, payload)
+        d = evaluate(root=root, ir=ir, compiled=compiled, resolved_run=run)
+        assert d["decision"] == "pending_review", (
+            f"value-only answer must not auto_approve, got {d['decision']}"
+        )
+        assert d["layers"]["provenance"]["auto_allowed"] is False
+        # Must NOT fabricate question-region line_refs
+        ans_span = next(s for s in run.resolved_spans if s.role == "answer")
+        assert "P1L001" not in ans_span.line_refs, (
+            f"value-only must not fabricate P1L001, got {ans_span.line_refs}"
+        )

@@ -22,12 +22,18 @@ def test_extract_rejects_ambiguous_or_missing():
 
 
 def test_verify_single_choice_from_explanation_block():
-    # 全文不匹配白名单，但含唯一故选
+    # P0-answer: explanation block must NOT be auto_approved even if it
+    # contains "故选：D". The stored answer field must be a clean answer token.
     text = (
         "【考点】三角函数.\n【分析】……\n【解答】解：……\n故选：D."
     )
-    assert verify("single_choice", text, resolved_option_labels={"A", "B", "C", "D"}) is True
-    assert verify("single_choice", text, resolved_option_labels={"A", "B", "C"}) is None
+    # Explanation text → must NOT be auto_approved
+    assert verify("single_choice", text, resolved_option_labels={"A", "B", "C", "D"}) is None, \
+        "explanation text must not be auto_approved even with 故选：D"
+    # Clean answer token → should be approved
+    assert verify("single_choice", "D", resolved_option_labels={"A", "B", "C", "D"}) is True
+    assert verify("single_choice", "D.", resolved_option_labels={"A", "B", "C", "D"}) is True
+    assert verify("single_choice", "【答案】D", resolved_option_labels={"A", "B", "C", "D"}) is True
 
 
 def test_geo_composite_binds_questions_lines_as_stem():

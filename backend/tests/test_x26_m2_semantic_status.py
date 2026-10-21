@@ -66,6 +66,8 @@ class _FakeSpan:
     start_offset = None
     end_offset = None
     line_refs = ("P1L001",)
+    evidence = ()
+    resolution_status = "exact"
 
 
 class _FakeLine:

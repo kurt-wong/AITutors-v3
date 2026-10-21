@@ -329,7 +329,11 @@ def _leaf_content(unit: ManifestUnit) -> dict:
     printed = _printed_qn(unit)
     if printed is not None:
         stem["question_label_printed"] = printed
-    ql = unit.questions_lines
+    # R3: consume declared source-location windows.
+    # questions_lines is the preferred stem search window (composite units).
+    # stem_lines is the fallback (standalone units — same declared evidence,
+    # different Producer field name). Both map to question_search_lines.
+    ql = unit.questions_lines or unit.stem_lines
     if ql and len(ql) == 2 and int(ql[0]) >= 1 and int(ql[1]) >= int(ql[0]):
         stem["question_search_lines"] = [int(ql[0]), int(ql[1])]
     content["stem"] = stem
@@ -361,12 +365,16 @@ def _leaf_content(unit: ManifestUnit) -> dict:
             expl["explanation_lines"] = [int(xl[0]), int(xl[1])]
         content["explanation"] = expl
     # options: per-label declaration when producer provides per-option spans.
-    # Fall back to gap registration when only options_lines range is available.
+    # R3: also consume options_lines as options_range (declared option-search
+    # window). The resolver tightens option search with this range.
     if unit.options:
         content["options"] = [
             {"role": "option", "label": opt.label}
             for opt in unit.options
         ]
+    ol = unit.options_lines
+    if ol and len(ol) == 2 and int(ol[0]) >= 1 and int(ol[1]) >= int(ol[0]):
+        content["options_range"] = [int(ol[0]), int(ol[1])]
     return content
 
 

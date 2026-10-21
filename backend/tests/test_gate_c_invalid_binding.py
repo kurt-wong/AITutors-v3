@@ -71,15 +71,16 @@ async def test_resolver_structural_validity():
 
 
 async def test_resolver_no_semantic_validation():
-    # Resolver does NOT validate semantic content
+    # Resolver does NOT validate semantic content (P0-answer: explanation
+    # prefixes are now rejected — that's a structural safety guard, not
+    # semantic validation).
     invalid_contents = [
         "1. 【考点】fruit classification",
         "1. ---",
-        "1. 【解答】This is a solution",
         "1. 2",
         "1. This is not an answer format",
     ]
-    
+
     for invalid_content in invalid_contents:
         lines = mk(
             "1. Which is fruit?",
@@ -104,13 +105,56 @@ async def test_resolver_no_semantic_validation():
             ]
         }
         run = resolver(lines).resolve(payload)
-        
+
         answer_spans = [s for s in run.resolved_spans if s.role == "answer"]
-        assert len(answer_spans) == 1,             f"Resolver should resolve answer span for '{invalid_content[:20]}...'"
-        assert answer_spans[0].resolution_status == "exact",             f"Answer span should be exact for '{invalid_content[:20]}...'"
-        
+        assert len(answer_spans) == 1, \
+            f"Resolver should resolve answer span for '{invalid_content[:20]}...'"
+        assert answer_spans[0].resolution_status == "exact", \
+            f"Answer span should be exact for '{invalid_content[:20]}...'"
+
         # KEY: Resolver does NOT validate semantic content
         # It only checks structural validity
+
+
+async def test_resolver_rejects_explanation_text():
+    # P0-answer: answer-zone fallback must NOT bind explanation-looking text
+    # as the answer (MATH-001 root cause).
+    expl_contents = [
+        "1. 【分析】直接利用复数代数形式的乘除运算化简得答案.",
+        "1. 【解答】This is a solution",
+        "1. 【解析】Because of reasons",
+        "1. 【详解】Step by step",
+    ]
+    for expl_content in expl_contents:
+        lines = mk(
+            "1. Which is fruit?",
+            "A. Apple",
+            "B. Banana",
+            "C. Car",
+            "D. Table",
+            "答案",
+            expl_content,
+        )
+        payload = {
+            "semantic_units": [
+                {
+                    "unit_id": "Q1",
+                    "question_number": "1",
+                    "content": {
+                        "stem": {"question_label": "1"},
+                        "options": [{"label": "A"}, {"label": "B"}, {"label": "C"}, {"label": "D"}],
+                        "answer": {"answer_zone": "inline_answer", "question_label": "1"},
+                    },
+                }
+            ]
+        }
+        run = resolver(lines).resolve(payload)
+        answer_spans = [s for s in run.resolved_spans if s.role == "answer"]
+        assert len(answer_spans) == 0, \
+            f"Explanation text should NOT be bound as answer: '{expl_content[:30]}...'"
+        unresolved = [u for u in run.unresolved_references if u.role == "answer"]
+        assert len(unresolved) == 1, \
+            f"Answer should be unresolved for '{expl_content[:30]}...'"
 
 
 # ---------------------------------------------------------------------------

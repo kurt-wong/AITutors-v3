@@ -380,6 +380,8 @@ async def test_m2_ready_still_produces_leaves():
         start_offset = None
         end_offset = None
         line_refs = ("P1L001",)
+        evidence = ()
+        resolution_status = "exact"
 
     class _FakeLine:
         text = "test content"

@@ -23,7 +23,12 @@ class CompiledRole:
 
 @dataclass(frozen=True)
 class CompiledAnswer:
-    """answer role：正文 + answer_status 三字段独立（verified_correct 由 G 处理，F 置 None）。"""
+    """answer role（P0 CONTRACT-FINAL）：
+
+    - `text` / `candidate_text`: 绑定阶段候选原文（审核用）。
+    - `official_text`: 正式答案；未获发布授权时必须为空（由 _publish_decision 生成）。
+    - `ownership`: match|foreign|unknown（local_proven 空集）；绑定后冻结。
+    """
 
     span_id: str
     line_refs: tuple[str, ...]
@@ -32,6 +37,10 @@ class CompiledAnswer:
     source_located: bool
     complete: bool
     verified_correct: bool | None = None
+    ownership: str = "unknown"
+    binding_evidence: str = ""
+    candidate_text: str = ""
+    official_text: str = ""
 
 
 @dataclass(frozen=True)

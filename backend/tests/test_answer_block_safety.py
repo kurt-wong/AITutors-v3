@@ -114,7 +114,8 @@ class TestSharedLocalNumberingBlockCleared:
         ev = " | ".join(a.evidence)
         assert "local numbering" in ev
         assert "shared_lines" in ev
-        assert a.line_refs == ("P1L002",)
+        # P0-R3: empty answer has NO fabricated line_refs (was P1L002)
+        assert a.line_refs == (), f"empty answer must not carry fake line_refs, got {a.line_refs}"
 
     def test_shared_block_local_numbering_cleared_for_all(self):
         lines = _mk("", "", *["86. q"] * 10, *self.BLOCK_LINES)
@@ -123,7 +124,8 @@ class TestSharedLocalNumberingBlockCleared:
         for qn in qns:
             a = next(s for s in run.resolved_spans if s.span_id == f"sp-Q{qn}.answer")
             assert a.text_hash == _sha(""), f"Q{qn} should be empty"
-            assert a.line_refs == ("P1L002",), f"Q{qn} should still exist"
+            # P0-R3: empty answer exists but carries no fabricated source line
+            assert a.line_refs == (), f"Q{qn} empty answer must have empty line_refs, got {a.line_refs}"
 
     def test_shared_block_mappable_entry_not_cleared(self):
         """If qn IS among the block entries, entry extraction handles it."""

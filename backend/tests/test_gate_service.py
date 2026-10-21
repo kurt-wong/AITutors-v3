@@ -42,7 +42,8 @@ def _single_units():
          "original_question_type": "single_choice",
          "content": {"stem": {"question_label": "1"},
                      "options": [{"label": l} for l in "ABCD"],
-                     "answer": {"answer_zone": "answer_table", "question_label": "1"}}}
+                     "answer": {"answer_zone": "answer_table", "question_label": "1",
+                                "answer_lines": [6, 7]}}}
     ]
 
 
@@ -51,6 +52,18 @@ def _fillin_units():
         {"unit_id": "Q1", "unit_type": "standalone_unit",
          "original_question_type": "fill_in",
          "content": {"stem": {"question_label": "1"},
+                     "answer": {"answer_zone": "answer_table", "question_label": "1",
+                                "answer_lines": [3, 3]}}}
+    ]
+
+
+def _no_answer_lines_units():
+    """P0-R5: legitimate upstream input with NO answer_lines and NO answer_value."""
+    return [
+        {"unit_id": "Q1", "unit_type": "standalone_unit",
+         "original_question_type": "single_choice",
+         "content": {"stem": {"question_label": "1"},
+                     "options": [{"label": l} for l in "ABCD"],
                      "answer": {"answer_zone": "answer_table", "question_label": "1"}}}
     ]
 
@@ -61,7 +74,8 @@ def _composite_units():
                 "original_question_type": "single_choice",
                 "content": {"stem": {"question_label": qlabel},
                             "options": [{"label": l} for l in "ABC"],
-                            "answer": {"answer_zone": "answer_table", "question_label": qn}}}
+                            "answer": {"answer_zone": "answer_table", "question_label": qn,
+                                       "answer_lines": [13, 14]}}}
     return [
         {"unit_id": "U1-1", "unit_type": "composite_unit",
          "original_question_type": "single_choice",
@@ -80,7 +94,8 @@ def _foo_units():
          "original_question_type": "foo",
          "content": {"stem": {"question_label": "1"},
                      "options": [{"label": l} for l in "ABCD"],
-                     "answer": {"answer_zone": "answer_table", "question_label": "1"}}}
+                     "answer": {"answer_zone": "answer_table", "question_label": "1",
+                                "answer_lines": [6, 7]}}}
     ]
 
 
@@ -188,6 +203,45 @@ async def test_fill_in_pending_review_not_auto(session):
         .where(InstanceRoleContent.role == "answer")
     )).scalar()
     assert n_unverified >= 1
+
+
+async def test_missing_answer_lines_gate_end_to_end(session):
+    """P0-R5: no answer_lines / no answer_value through the real Gate path.
+
+    Must not auto_approve; answer must not be a trusted standard answer;
+    verified_correct must not be True.
+    """
+    # answer zone exists but the only entry is explanation text (no bindable answer)
+    texts = (
+        "1. 下列哪个是水果",
+        "A. 苹果", "B. 香蕉", "C. 汽车", "D. 桌子",
+        "【答案】",
+        "1. 【分析】没有直接答案，只有解析。",
+    )
+    sv, ann = await _seed(session, texts=texts, units=_no_answer_lines_units())
+    candidates, skipped = await GateService(session).run(
+        source_version_id=sv.id, annotation_id=ann.id)
+    # Either the unit is skipped (incomplete) or enters as non-auto — never approved
+    for cand in candidates:
+        assert cand.gate_decision["decision"] != "auto_approve", (
+            f"missing answer must not auto_approve: {cand.gate_decision}"
+        )
+        assert cand.decision_status != "approved"
+        # provenance must not claim verified source when answer is absent/unreliable
+        prov = cand.gate_decision.get("layers", {}).get("provenance", {})
+        if prov:
+            assert prov.get("status") != "pass" or cand.gate_decision["decision"] != "auto_approve"
+    # If materialized, answer must not be trusted
+    rows = (await session.execute(
+        select(InstanceRoleContent).where(InstanceRoleContent.role == "answer")
+    )).scalars().all()
+    for r in rows:
+        status = r.answer_status or {}
+        assert status.get("verified_correct") is not True
+        # explanation body must not be presented as the standard answer
+        assert "【分析】没有直接答案" not in (r.text or ""), (
+            f"explanation body leaked into answer field: {r.text!r}"
+        )
 
 
 async def test_composite_auto_materializes_group_and_material(session):

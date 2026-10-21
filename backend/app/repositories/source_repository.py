@@ -81,6 +81,7 @@ class SourceRepository(BaseRepository):
         logical_execution_stage: str | None = None,
         logical_execution_hash: str | None = None,
         attempt_id: uuid.UUID | None = None,
+        id: uuid.UUID | None = None,
     ) -> DocumentSourceVersion:
         """幂等写（H-1/BUG-V3-007 终裁）：锚 UNIQUE(stage,hash) ON CONFLICT DO NOTHING。
 
@@ -95,6 +96,7 @@ class SourceRepository(BaseRepository):
         stmt = (
             pg_insert(DocumentSourceVersion)
             .values(
+                **({"id": id} if id else {}),
                 document_id=document_id,
                 artifact_kind=artifact_kind,
                 role=role,
@@ -112,11 +114,12 @@ class SourceRepository(BaseRepository):
                 logical_execution_hash=logical_execution_hash,
                 attempt_id=attempt_id,
             )
-            .on_conflict_do_nothing(
-                index_elements=["logical_execution_stage", "logical_execution_hash"]
-            )
             .returning(DocumentSourceVersion)
         )
+        if not id:
+            stmt = stmt.on_conflict_do_nothing(
+                index_elements=["logical_execution_stage", "logical_execution_hash"]
+            )
         row = (await self._session.execute(stmt)).scalars().first()
         if row is not None:
             return row

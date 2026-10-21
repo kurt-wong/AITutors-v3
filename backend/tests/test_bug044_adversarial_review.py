@@ -284,21 +284,23 @@ class TestA7DownstreamIntegration:
 
     def test_a7_policy_decision_follows_new_grammar(self):
         assert self._run("1. A")["decision"] == "auto_approve"
-        assert self._run("1. 【解答】A")["decision"] == "pending_review"
+        # 【解答】prefix: fallback rejects explanation → unresolved → IR incomplete
+        d = self._run("1. 【解答】A")
+        assert d["decision"] == "rejected", (
+            f"explanation-only fallback should be rejected, got {d['decision']}"
+        )
+        # prose pollution binds but fails grammar → precise pending_review
         assert self._run("1. 参见教材A册第三章")["decision"] == "pending_review"
         assert self._run("1. 【答案】D")["decision"] == "auto_approve"
 
     def test_a7_pending_review_reason_is_grammar_not_rejected(self):
-        d = self._run("1. 【解答】A")
+        d = self._run("1. 参见教材A册第三章")
         assert d["decision"] == "pending_review"
-        assert "answer not expressible as canonical value" in " ".join(d["reasons"])
-        assert d["layers"]["structural"]["status"] != "fail"
-        assert d["layers"]["semantic"]["status"] != "fail"
-        assert d["layers"]["provenance"]["status"] != "fail"
+        assert any("grammar" in r for r in d["reasons"])
 
     def test_a7_auto_not_granted_for_polluted_answer(self):
         d = self._run("1. 【解答】A")
-        assert d["decision"] != "auto_approve"
+        assert d["decision"] == "rejected"
 
     def test_a7_non_strict_auto_types_unaffected_end_to_end(self):
         d = self._run("1. A", ctype="short_answer")

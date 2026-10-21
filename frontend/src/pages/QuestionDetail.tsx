@@ -6,6 +6,7 @@ import { getQuestion } from "../api/client";
 import type { QuestionDetail as QDetail } from "../api/types";
 import { FeedbackForm } from "../components/FeedbackForm";
 import { MathText } from "../components/MathText";
+import { AnswerSection, computeIsPendingReview } from "../components/AnswerSection";
 
 const ROLE_ORDER: Record<string, number> = {
   material: -1,
@@ -60,9 +61,7 @@ export function QuestionDetailPage() {
   const options = contents.filter((c) => c.role === "option");
   const answers = contents.filter((c) => c.role === "answer");
   // E2E-009R7: 未验证答案 → 待审核，与 approved 可作答题区分
-  const isPendingReview =
-    answers.length > 0 &&
-    answers.every((a) => (a.answer_status as { verified_correct?: boolean } | null)?.verified_correct !== true);
+  const isPendingReview = computeIsPendingReview(answers);
 
   return (
     <div className="space-y-4">
@@ -71,7 +70,7 @@ export function QuestionDetailPage() {
           ← Questions
         </Link>
         <h1 className="font-display text-xl font-semibold tracking-tight">
-          Question {inst?.question_number ?? q.id.slice(0, 8)}
+          Question
         </h1>
         <span className="rounded-pill bg-canvas-parchment px-2 py-0.5 text-[12px] font-medium text-ink-muted">
           {q.canonical_question_type}
@@ -170,25 +169,7 @@ export function QuestionDetailPage() {
           </div>
         )}
 
-        {answers.length > 0 && (
-          <div className="mb-2">
-            <div className="mb-1 text-[13px] font-semibold text-ink-muted">答案</div>
-            {answers.map((a) => (
-              <div key={a.id} className="flex gap-2 text-[15px]">
-                {/* FE-ANSWER-LABEL: show label like options; skip if text already carries it */}
-                {a.label && !String(a.text ?? "").trimStart().startsWith(a.label) && (
-                  <span className="font-medium">{a.label}.</span>
-                )}
-                <MathText text={a.text} />
-                {showRaw && (
-                  <pre className="mt-1 whitespace-pre-wrap rounded bg-canvas-parchment p-2 text-[12px] text-ink-muted">
-                    {a.text}
-                  </pre>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+        <AnswerSection answers={answers} showRaw={showRaw} />
 
         {!stems.length && !options.length && !answers.length && (
           <p className="text-sm text-ink-muted">无 role contents。</p>
@@ -205,7 +186,7 @@ export function QuestionDetailPage() {
       <FeedbackForm
         questionId={q.id}
         instanceId={inst?.id}
-        questionLabel={`Question ${inst?.question_number ?? q.id.slice(0, 8)}（${q.id.slice(0, 8)}…）`}
+        questionLabel={`Question（${q.id.slice(0, 8)}…）`}
       />
     </div>
   );

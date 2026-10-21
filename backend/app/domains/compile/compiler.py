@@ -55,6 +55,27 @@ def _slice_span(span: ResolvedSpan, line_by_ref: dict) -> str:
     return "\n".join(line_by_ref[r].text for r in span.line_refs)
 
 
+
+
+def _parse_answer_ownership(span) -> tuple[str, str]:
+    """Extract ownership= and binding_evidence= from ResolvedSpan.evidence.
+
+    Missing ownership ⇒ unknown (fail-closed). Never invent local_proven.
+    """
+    own = "unknown"
+    bev = ""
+    if span is not None:
+        for e in span.evidence or ():
+            s = str(e)
+            if s.startswith("ownership="):
+                own = s.split("=", 1)[1].strip() or "unknown"
+            elif s.startswith("binding_evidence="):
+                bev = s.split("=", 1)[1]
+    if own not in ("match", "foreign", "unknown"):
+        own = "unknown"
+    return own, bev
+
+
 class Compiler:
     def __init__(
         self,
@@ -144,10 +165,23 @@ class Compiler:
         answer = None
         if ans_item is not None and ans_item.span_id:
             cr = self._compile_role("answer", None, ans_item.span_id)
+            span = self._span_by_id.get(ans_item.span_id)
+            # P0-R3: value-only / unlocated answers are NOT source_located.
+            # Fabricating True would let Gate treat them as byte-proven.
+            located = bool(cr.line_refs) and (
+                span is None or span.resolution_status != "value_only"
+            )
+            ownership, binding_evidence = _parse_answer_ownership(span)
+            cand = cr.text
+            # official_text is NOT a copy of candidate: only publish path fills it.
             answer = CompiledAnswer(
-                span_id=cr.span_id, line_refs=cr.line_refs, text=cr.text,
-                text_hash=cr.text_hash, source_located=True,
-                complete=bool(cr.text.strip()), verified_correct=None,
+                span_id=cr.span_id, line_refs=cr.line_refs, text=cand,
+                text_hash=cr.text_hash, source_located=located,
+                complete=bool(cand.strip()), verified_correct=None,
+                ownership=ownership,
+                binding_evidence=binding_evidence,
+                candidate_text=cand,
+                official_text="",
             )
         expl_item = self._role_by(node, "explanation")
         explanation = None

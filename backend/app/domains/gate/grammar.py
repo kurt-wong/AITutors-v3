@@ -225,9 +225,11 @@ def verify(
     if canonical_type == "single_choice":
         letter = _answer_form_single_choice(cleaned)
         if letter is None:
-            # 解析块尾部唯一「故选：X / 答案：X」→ 确定性抽取（非 LLM、非猜测）
-            letter = _extract_unique_choice_marker(cleaned)
-        if letter is None:
+            # P0-answer: do NOT rescue explanation/stem text via _extract_unique_choice_marker.
+            # If the answer field content is not a clean answer token (bare letter,
+            # parenthesized letter, etc.), it must NOT be auto-approved — even if
+            # "故选：C" appears inside. The stored answer field must be correct,
+            # not just inferrable from the text.
             return None
         return True if letter in labels else None
 

@@ -253,9 +253,10 @@ def expand_composite_sub_questions(
 
         labels = _sub_option_labels(lines, seq, end, col)
         if require_ad_options:
-            if labels == [] and original_question_type == "cloze":
-                # Q30: option row missing in OCR — stem-only cloze blank is
-                # still a declared child (answer table has the value).
+            if labels == [] and original_question_type in ("cloze", "reading"):
+                # P2-fix-3: stem-only sub within cloze/reading — no A-D options
+                # (e.g. fill-in blanks inside a reading passage).  Still a
+                # declared child; answer evidence has the value.  No guessing.
                 option_labels = ()
             elif labels != ["A", "B", "C", "D"]:
                 result.skipped[qn] = (

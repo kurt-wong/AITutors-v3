@@ -561,11 +561,18 @@ class TestSingleAuthorityPreserved:
         assert hits == [], f"第二套 identity scope 规则出现在: {hits}"
 
     def test_malformed_form_is_judged_only_inside_normalize(self):
-        """形态白名单判定只在权威函数内，决策层不复制、runners 不复制。"""
-        src = (_BACKEND / "scripts" / "preprocessing_consumer" / "boundary.py").read_text(
+        """形态白名单判定只在权威函数内，决策层不复制、runners 不复制。
+
+        R16c note: authority lives in app/domains/source/identity_scope.py.
+        boundary.py re-exports; runners must not contain the rule tables.
+        """
+        src = (_BACKEND / "app" / "domains" / "source" / "identity_scope.py").read_text(
             encoding="utf-8"
         )
-        assert src.count("_IDENTITY_VERSION_ACCEPTED_TYPES") == 2  # 定义 + 一处使用
+        # definition + one use inside enforce_interface_scope
+        assert src.count("_IDENTITY_VERSION_ACCEPTED_TYPES") == 2, (
+            "type whitelist must be defined once and used once in the authority"
+        )
 
         for rel in ("runner.py", "runner_b2.py"):
             text = (_BACKEND / "scripts" / "preprocessing_consumer" / rel).read_text(

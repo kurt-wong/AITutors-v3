@@ -76,6 +76,11 @@ class BoundUnit:
     # E2E-013 data-safety: manifest declares answer_evidence.type=absent AND
     # a validation issue exists → block answer-zone fallback binding.
     answer_fallback_blocked: bool = False
+    # R3-D: option labels detected in extra_lines → {label: line_number}
+    extra_opt_lines: dict[str, int] = field(default_factory=dict)
+    # P0-answer: manifest answer_evidence.value (declared answer when
+    # answer_lines is None). Used directly — never inferred from explanation.
+    answer_evidence_value: str | None = None
 
 
 def _sha256_text(text: str) -> str:
@@ -147,6 +152,10 @@ def bind_units_from_manifest(
             "material": _as_range(
                 raw.get("material_lines"), label="material_lines", unit_id=unit_id
             ),
+            # P2-fix-2: layout-drifted images/tables/continuation
+            "extra": _as_range(
+                raw.get("extra_lines"), label="extra_lines", unit_id=unit_id
+            ),
         }
         for label, rng in ranges.items():
             if rng is not None:
@@ -181,6 +190,23 @@ def bind_units_from_manifest(
                     lab = o.get("label")
                     if lab is not None and str(lab).strip():
                         option_labels.append(str(lab).strip())
+        # Fix D: scan extra_lines for option-pattern content with MISSING labels
+        # (e.g. BIO Q8 "D. $O_2$" drifted into extra_lines).  Only add sequential
+        # labels (next letter after current max), never arbitrary letters.
+        _extra_rng = ranges.get("extra")
+        _extra_opt_line: dict[str, int] = {}  # label → line number in extras
+        if _extra_rng is not None and option_labels:
+            max_lab = max(option_labels, key=lambda x: x.upper() if len(x) == 1 else "")
+            if len(max_lab) == 1 and max_lab.isalpha():
+                next_lab = chr(ord(max_lab.upper()) + 1)
+                _opt_pat = re.compile(
+                    rf"(?:^|>)\s*{re.escape(next_lab)}\s*[.．。:：、]")
+                for ln in range(_extra_rng.start, _extra_rng.end + 1):
+                    if 1 <= ln <= len(source_lines):
+                        if _opt_pat.search(source_lines[ln - 1]):
+                            option_labels.append(next_lab)
+                            _extra_opt_line[next_lab] = ln
+                            break
 
         # E2E-013 data-safety: when manifest declares answer_evidence.type=absent
         # AND a validation issue references this unit, block the answer-zone
@@ -188,6 +214,10 @@ def bind_units_from_manifest(
         # Match unit_id as complete identifier (Q1 must not match Q10).
         ae = raw.get("answer_evidence") if isinstance(raw.get("answer_evidence"), dict) else {}
         ae_absent = ae.get("type") == "absent"
+        # P0-answer: capture declared answer value (e.g. "B", "1/6").
+        # Used when answer_lines is None — never inferred from explanation.
+        ae_value = ae.get("value")
+        ae_value_str = str(ae_value).strip() if ae_value is not None and str(ae_value).strip() else None
         v_issues = (manifest.get("annotation_meta") or {}).get("validation_issues") or []
         _uid_re = re.compile(rf"^{re.escape(unit_id)}(?:[:：\s]|$)")
         has_v_issue = any(_uid_re.match(str(issue).lstrip("! ")) for issue in v_issues)
@@ -206,6 +236,8 @@ def bind_units_from_manifest(
                 printed_number=printed_label,
                 option_labels=option_labels,
                 answer_fallback_blocked=answer_fallback_blocked,
+                extra_opt_lines=_extra_opt_line,
+                answer_evidence_value=ae_value_str,
             )
         )
         # GEO-SUBQ: deterministic sub-question expansion (fail-closed per sub).
@@ -365,6 +397,10 @@ def build_annotation_payload_from_bound(
                 bu.ranges["stem"].end,
             ]
             stem["stem_lines"] = [bu.ranges["stem"].start, bu.ranges["stem"].end]
+        # P2-fix-2: map extra_lines into stem content so resolver can bind
+        # layout-drifted images/tables/continuation (was silently dropped).
+        if bu.ranges.get("extra") is not None:
+            stem["extra_lines"] = [bu.ranges["extra"].start, bu.ranges["extra"].end]
         content["stem"] = stem
 
         if bu.original_question_type in (
@@ -373,15 +409,23 @@ def build_annotation_payload_from_bound(
             # Producer-declared labels win (EN listening is A–C; 七选五 is A–G).
             # Fall back to legacy A–D only when the manifest declared none.
             labels = bu.option_labels or [chr(ord("A") + i) for i in range(4)]
-            content["options"] = [
-                {
+            content["options"] = []
+            for lab in labels:
+                opt_dict = {
                     "role": "option",
                     "label": lab,
                     "question_label": qn,
                 }
-                for lab in labels
-            ]
+                # R3-D: option found in extra_lines gets direct evidence_lines
+                # so resolver can bind it without expanding options_range.
+                if lab in (bu.extra_opt_lines or {}):
+                    opt_dict["evidence_lines"] = [
+                        bu.extra_opt_lines[lab], bu.extra_opt_lines[lab],
+                    ]
+                content["options"].append(opt_dict)
             if bu.ranges["options"] is not None:
+                # R3-D: do NOT unconditionally expand options_range into extras
+                # (respects next-unit boundary; avoids Q9 options bleeding into Q8).
                 content["options_range"] = [
                     bu.ranges["options"].start,
                     bu.ranges["options"].end,
@@ -397,6 +441,23 @@ def build_annotation_payload_from_bound(
                 bu.ranges["answer"].start,
                 bu.ranges["answer"].end,
             ]
+        elif bu.answer_evidence_value is not None:
+            # P0-answer: answer_lines=None but manifest declared the answer
+            # in answer_evidence.value. Pass it directly — resolver must NOT
+            # scan explanation text to find the answer.
+            content["answer"]["answer_value"] = bu.answer_evidence_value
+        # P2-fix-1: map explanation_lines into content (was computed in ranges
+        # but never assigned — explanations were lost for all subjects).
+        if bu.ranges["explanation"] is not None:
+            content["explanation"] = {
+                "role": "explanation",
+                "question_label": qn,
+                "explanation_zone": "inline_explanation",
+                "explanation_lines": [
+                    bu.ranges["explanation"].start,
+                    bu.ranges["explanation"].end,
+                ],
+            }
 
         # composite_question → composite_unit
         # - 单题（len(question_numbers)==1）：questions 区间 1:1 译为一个子题。
@@ -442,8 +503,27 @@ def build_annotation_payload_from_bound(
                 unit_out["content"] = {"options": content["options"]}
                 if content.get("options_range"):
                     unit_out["content"]["options_range"] = content["options_range"]
-            if n_q > 1 and not subs:
-                # 题组证据（不冒充单题）：行区间 + 题号列表
+            # Fix C: composite explanation must enter unit_out (was only in local
+            # content dict, never written for composite branch).
+            if content.get("explanation"):
+                unit_out.setdefault("content", {})
+                unit_out["content"]["explanation"] = content["explanation"]
+            if n_q > 1:
+                # WP7-B: always persist expansion evidence for multi-q composites.
+                # Previously only written when NOT subs — partial expansion lost
+                # skipped-question records (CHN-001 Q5/Q12/Q13/Q16).
+                expanded_nums = sorted(
+                    int(s["question_number"])
+                    for s in subs
+                    if s.get("question_number") is not None
+                )
+                skipped_map = {str(k): v for k, v in bu.subq_skipped.items()}
+                if not subs:
+                    structure = "undetermined_sub_questions"
+                elif skipped_map or len(expanded_nums) < n_q:
+                    structure = "partial_sub_questions"
+                else:
+                    structure = "expanded_sub_questions"
                 unit_out["group_evidence"] = {
                     "question_numbers": list(bu.question_numbers),
                     "questions_lines": (
@@ -461,9 +541,14 @@ def build_annotation_payload_from_bound(
                         if bu.ranges["answer"] is not None
                         else None
                     ),
-                    "structure": "undetermined_sub_questions",
+                    "structure": structure,
                     "subq_unit_reason": bu.subq_unit_reason,
-                    "subq_skipped": {str(k): v for k, v in bu.subq_skipped.items()},
+                    "subq_skipped": skipped_map,
+                    # WP7-B: actual expanded coverage — do not confuse with
+                    # question_number_range (which is the full printed range).
+                    "expanded_question_numbers": expanded_nums,
+                    "declared_question_count": n_q,
+                    "expanded_question_count": len(expanded_nums),
                 }
             semantic_units.append(unit_out)
         else:

@@ -42,6 +42,12 @@ class ResolveTarget:
     # E2E-013 data-safety: manifest declared answer_evidence.type=absent AND
     # a validation issue exists → answer-zone fallback must not force-bind.
     answer_fallback_blocked: bool = False
+    # P0-answer: declared answer value (answer_evidence.value) when answer_lines
+    # is None. Resolver binds this directly — never infers from explanation.
+    answer_value: str | None = None
+    # P2-fix-2: Producer extra_lines (layout-drifted images/tables/continuation).
+    # 1-based inclusive [start, end]. None = not declared.
+    extra_lines: tuple[int, int] | None = None
 
 
 @dataclass(frozen=True)
@@ -83,6 +89,10 @@ def extract_targets(payload: dict) -> tuple[ResolveTarget, ...]:
                         opts_range_tuple = None
                 for opt in parent_content.get("options") or []:
                     _option_target(targets, u_id, opt, opts_range_tuple)
+            # R3-C: composite parent explanation must become a ResolveTarget
+            # (was only in payload content, never extracted → never resolved).
+            if parent_content.get("explanation"):
+                _explanation_target(targets, u_id, parent_content["explanation"])
         else:
             _extract_content_targets(targets, u_id, unit.get("content") or {})
     return tuple(targets)
@@ -221,12 +231,20 @@ def _stem_target(targets: list, unit_id: str, stem) -> None:
             search_lines = (int(sl[0]), int(sl[1]))
         except (TypeError, ValueError):
             search_lines = None
+    extra = None
+    el = stem.get("extra_lines")
+    if isinstance(el, (list, tuple)) and len(el) == 2:
+        try:
+            extra = (int(el[0]), int(el[1]))
+        except (TypeError, ValueError):
+            extra = None
     targets.append(
         ResolveTarget(
             target_id=f"{unit_id}.stem", unit_id=unit_id, role="stem",
             kind="question_label", question_number=str(qnum),
             question_label_printed=str(printed) if printed is not None else None,
             question_search_lines=search_lines,
+            extra_lines=extra,
         )
     )
 
@@ -239,12 +257,21 @@ def _option_target(targets: list, unit_id: str, opt,
     qnum = opt.get("question_label")
     if label is None:
         return
+    # R3-D: option may carry direct evidence_lines (e.g. D in extra_lines)
+    ev = opt.get("evidence_lines")
+    evidence = None
+    if isinstance(ev, (list, tuple)) and len(ev) == 2:
+        try:
+            evidence = (int(ev[0]), int(ev[1]))
+        except (TypeError, ValueError):
+            evidence = None
     targets.append(
         ResolveTarget(
             target_id=f"{unit_id}.option.{label}", unit_id=unit_id,
             role="option", kind="option_label", label=str(label),
             question_number=str(qnum) if qnum is not None else None,
             options_range=options_range,
+            evidence_lines=evidence,
         )
     )
 
@@ -275,6 +302,10 @@ def _answer_target(targets: list, unit_id: str, answer) -> None:
                 f"unit {unit_id!r} content.answer.answer_lines invalid range {s}..{e}"
             )
         evidence = (s, e)
+    # P0-answer: declared answer value (answer_evidence.value) when answer_lines
+    # is None. Resolver must bind this directly — never infer from explanation.
+    answer_value = answer.get("answer_value")
+    answer_value_str = str(answer_value).strip() if answer_value is not None and str(answer_value).strip() else None
     targets.append(
         ResolveTarget(
             target_id=f"{unit_id}.answer", unit_id=unit_id, role="answer",
@@ -284,6 +315,7 @@ def _answer_target(targets: list, unit_id: str, answer) -> None:
             ),
             evidence_lines=evidence,
             answer_fallback_blocked=bool(answer.get("fallback_blocked")),
+            answer_value=answer_value_str,
         )
     )
 

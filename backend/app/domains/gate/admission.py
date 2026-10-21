@@ -33,6 +33,11 @@ import uuid
 from datetime import datetime, timezone
 
 from app.domains.compile import map_canonical_type
+from app.domains.gate.binding_fact import (
+    fact_matches_answer_text,
+    resolve_trusted_binding_fact,
+)
+from app.domains.gate.publish_seal import issue_publish_seal, verify_publish_seal
 from app.domains.compile.identity_normalization import (
     canonical_options_input,
     identity_hash,
@@ -123,7 +128,16 @@ class AdmissionService:
             await self._record_human_review(candidate, review_result="validated")
         await self._require_evidence_authority(candidate)
 
-        created_questions, created_instances = await self._materialize(candidate, annotation_id=annotation_id)
+        created_questions, created_instances = await self._materialize(
+            candidate,
+            annotation_id=annotation_id,
+            grant=source or "none",
+            review_evidence={
+                "reviewer_id": provenance.get("reviewer_id") or "",
+                "confirmed_fields": list(provenance.get("confirmed_fields") or []),
+                "source": source or "",
+            },
+        )
 
         await self._snap.create_admission_event(
             candidate_id=candidate.id,
@@ -152,7 +166,13 @@ class AdmissionService:
         gd = candidate.gate_decision or {}
         if gd.get("decision") == "rejected":
             raise RepositoryError("cannot materialize rejected candidate")
-        return await self._materialize(candidate, mark_verified=False, annotation_id=annotation_id)
+        return await self._materialize(
+            candidate,
+            mark_verified=False,
+            annotation_id=annotation_id,
+            grant="none",
+            review_evidence=None,
+        )
 
     # ------------------------------------------------------------------ reject
     async def reject(
@@ -293,6 +313,8 @@ class AdmissionService:
     async def _materialize(
         self, candidate: AdmissionCandidate, *, mark_verified: bool = True,
         annotation_id: uuid.UUID | None = None,
+        grant: str = "none",
+        review_evidence: dict | None = None,
     ) -> tuple[list[uuid.UUID], list[uuid.UUID]]:
         """从冻结 payload 物化 A 域（10 §6）。单事务：所有行同 session，flush 后任一步
         失败由外层不 COMMIT → 整体回滚。
@@ -443,8 +465,21 @@ class AdmissionService:
                 source_version_id=candidate.source_version_id,
                 occurrence_key=e["occurrence_key"],
             )
+            e["existing_instance"] = instance
             e["new_instance"] = instance is None
             any_new_instance = any_new_instance or instance is None
+
+        # WP7-C: reused instances (from materialize_for_review) must have their
+        # answer_status.verified_correct updated when mark_verified=True (approve).
+        # Previously the reuse path silently left verified_correct=null after
+        # approve, leaving Candidate=approved but Instance showing 待审核.
+        if mark_verified:
+            for e in plan:
+                inst = e.get("existing_instance")
+                if inst is not None:
+                    await self._content.update_answer_verified_correct(
+                        instance_id=inst.id, verified_correct=True
+                    )
 
         if not any_new_instance:
             # 全量复用：candidate 的 occurrence 均已物化，无新 A 域行（不建 group）。
@@ -560,12 +595,71 @@ class AdmissionService:
             for ai, ans in enumerate(answers_list):
                 if ans is None or ans.get("text") is None:
                     continue
+                # P0-R12: ownership comes from the INDEPENDENT binding fact
+                # (registry-backed, derived at resolve time). Transport payload
+                # ownership is never a trust input.
+                _fact = resolve_trusted_binding_fact(
+                    source_version_id=str(candidate.source_version_id),
+                    span_id=str(ans.get("span_id") or "")
+                )
+                _cand = (
+                    ans.get("candidate_text")
+                    if ans.get("candidate_text") is not None
+                    else ans.get("text")
+                    or ""
+                )
+                if _fact is None:
+                    _trust_own = "unknown"
+                    _fact_id = ""
+                    _ans_h = ""
+                else:
+                    _trust_own = _fact.ownership or "unknown"
+                    _fact_id = _fact.fact_id
+                    _ans_h = _fact.answer_text_hash
+                    # P0-R15: fact must belong to THIS unit (question identity).
+                    # unit_id is the authoritative identity; question_number
+                    # is auxiliary only (same qn can appear on different units).
+                    # Transport-payload question_number is NOT trusted.
+                    _ans_unit = str(ans.get("unit_id") or "") or str(
+                        e.get("unit_id") or unit.get("unit_id") or ""
+                    )
+                    if _fact.span_id != str(ans.get("span_id") or ""):
+                        _trust_own = "unknown"
+                    elif _ans_unit and _fact.unit_id and _fact.unit_id != _ans_unit:
+                        _trust_own = "unknown"
+                    # P0-R15: auxiliary qn check.
+                    # For composite: answer qn is from IR (child unit) → use it.
+                    # For leaf: use e["qn"] (IR unit qn), NOT transport
+                    # ans["question_number"] (can be forged).
+                    if e.get("answers_override") is not None:
+                        _check_qn = str(ans.get("question_number") or "") or str(qn or "")
+                    else:
+                        _check_qn = str(qn or "")
+                    if _check_qn and _fact.question_number and _fact.question_number != _check_qn:
+                        _trust_own = "unknown"
+                    elif not fact_matches_answer_text(_fact, _cand):
+                        _trust_own = "unknown"
+                official_text, publish, write_nonempty = _publish_decision(
+                    ownership=_trust_own,
+                    candidate_text=_cand,
+                    grant=grant,
+                    review_evidence=review_evidence,
+                    content_ok=bool(ans.get("complete")),
+                    source_ok=bool(ans.get("source_located")),
+                )
+                if not write_nonempty:
+                    official_text = ""
+                _seal = issue_publish_seal(
+                    fact=_fact,
+                    official_text=official_text,
+                    publish=publish,
+                )
                 await self._content.create_role_content(
                     instance_id=instance.id,
                     role="answer",
                     role_index=ai,
-                    text=ans["text"],
-                    text_hash=ans.get("text_hash") or "",
+                    text=official_text,
+                    text_hash=_raw_sha256(official_text),
                     label=ans.get("label"),
                     source_span=_source_span(ans.get("span_id"), ans),
                     answer_status={
@@ -574,6 +668,17 @@ class AdmissionService:
                         # 20 §8.3: approved materialize → True.
                         # E2E-009R7: pending-review materialize keeps null.
                         "verified_correct": True if mark_verified else ans.get("verified_correct"),
+                        "ownership": _trust_own,
+                        "binding_evidence": _fact.evidence_kind if _fact else "",
+                        "binding_fact_id": _fact_id,
+                        "binding_unit_id": _fact.unit_id if _fact else "",
+                        "binding_question_number": _fact.question_number if _fact else "",
+                        "answer_text_hash": _ans_h,
+                        "publish_grant": grant,
+                        "publish": publish,
+                        "publish_seal": _seal,
+                        # R2: candidate_text lives ONLY in review payload,
+                        # never in the official answer_status row.
                     },
                 )
             for mat, mrole in materials:
@@ -676,6 +781,9 @@ def _aggregate_composite_roles(
                 "label": f"P{lab}" if lab else f"P{len(roles)}",
                 "text": r["text"],
             })
+        elif r.get("role") == "explanation" and r.get("text"):
+            # R3-C: composite parent explanation (was silently dropped)
+            roles.append(dict(r))
 
     # 2) per-child stems + options
     for cid in child_ids:
@@ -723,11 +831,12 @@ def _aggregate_composite_roles(
             qn = str(ans.get("question_number") or child_qn)
             answers.append({
                 "role": "answer",
-                "unit_id": root["unit_id"],
+                "unit_id": cid,  # P0-R15: child unit_id, not parent root
                 "label": qn,
                 "text": ans["text"],
                 "text_hash": ans.get("text_hash") or "",
                 "span_id": ans.get("span_id"),
+                "question_number": qn,  # P0-R15: preserve child qn
                 "source_located": bool(ans.get("source_located")),
                 "complete": bool(ans.get("complete")),
                 # E2E-009R5: never default verified_correct to True
@@ -819,7 +928,68 @@ def _instance_order(page_no: int, line_no: int) -> int:
 
 
 def _source_span(span_id: str, span: dict) -> dict:
-    return {"span_id": span_id, "line_refs": span.get("line_refs", [])}
+    return {
+        "span_id": span_id,
+        "line_refs": span.get("line_refs", []),
+        # P1-B: real unit identity for Repository cross-check (JSONB, no schema change).
+        "unit_id": span.get("unit_id") or "",
+    }
+
+
+def _raw_sha256(s: str) -> str:
+    import hashlib
+
+    return hashlib.sha256((s or "").encode("utf-8")).hexdigest()
+
+
+def _publish_decision(
+    *,
+    ownership: str,
+    candidate_text: str,
+    grant: str,
+    review_evidence: dict | None,
+    content_ok: bool,
+    source_ok: bool,
+) -> tuple[str, str, bool]:
+    """P0 CONTRACT-FINAL publish predicate.
+
+    Returns (official_text, publish, write_nonempty).
+    - foreign: never non-empty official.
+    - unknown: only human/golden + valid review evidence (content+belongs_to).
+    - match/local_proven: auto_gate|human|golden may publish.
+    ownership is never rewritten here.
+    """
+    own = (ownership or "unknown").strip()
+    grant = (grant or "none").strip()
+    cand = candidate_text or ""
+
+    def _review_ok(need_belongs_to: bool) -> bool:
+        if not review_evidence:
+            return False
+        rid = (review_evidence.get("reviewer_id") or "").strip()
+        fields = set(review_evidence.get("confirmed_fields") or [])
+        if not rid or "content" not in fields:
+            return False
+        if need_belongs_to and "belongs_to" not in fields:
+            return False
+        return True
+
+    if own == "foreign":
+        return "", "withheld_review", False
+
+    if own == "unknown":
+        if grant in ("human", "golden") and _review_ok(need_belongs_to=True):
+            return cand, "official", bool(cand)
+        return "", "withheld_review", False
+
+    # match / local_proven
+    if grant == "auto_gate":
+        if content_ok and source_ok:
+            return cand, "official", bool(cand)
+        return "", "withheld_review", False
+    if grant in ("human", "golden") and _review_ok(need_belongs_to=False):
+        return cand, "official", bool(cand)
+    return "", "withheld_review", False
 
 
 def _has_human_approve(review_trail: list | None) -> bool:

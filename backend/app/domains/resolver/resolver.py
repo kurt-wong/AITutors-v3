@@ -74,7 +74,7 @@ def _extract_printed_numeric_prefix(printed: str) -> str | None:
 # Extracts the primary answer bracket only (question number + bracket + letters).
 # Scoring breakdowns like "(A)2分；(C)2分" do NOT match (no question number prefix).
 _SCORED_ANSWER_RE = re.compile(
-    r"^\s*\d+\s*[.．、]\s*[\(（]([A-Da-d]+)[\)）]"
+    r"^\s*(\d{1,3})\s*[.．、]\s*[\(（]([A-Da-d]+)[\)）]"
 )
 
 
@@ -84,14 +84,18 @@ def _decode_scored_answer(raw: str, qn: str) -> tuple[int, int, str] | None:
     Input:  "17. (BC) 3分; (B) 2分; (C) 2分"
     Output: (start, end, "BC")
 
-    Conservative: requires question number + bracket + continuous letters.
-    Does NOT match scoring breakdowns without question number prefix.
+    P0-R4: the matched question number MUST equal the target qn.
+    Previously the regex ignored qn, so `12. (A)` was extracted as Q1's
+    answer (DSH bypass). Conservative: requires question number + bracket +
+    continuous letters, and the number must be the target question.
     """
     m = _SCORED_ANSWER_RE.match(raw)
     if not m:
         return None
-    letters = m.group(1).upper()
-    return (m.start(1), m.end(1), letters)
+    if m.group(1) != qn:
+        return None
+    letters = m.group(2).upper()
+    return (m.start(2), m.end(2), letters)
 
 
 # Circled-number markers used in composite sub-question labels.
@@ -183,6 +187,148 @@ def _find_question_entry_col(text: str, qn: str) -> int | None:
 def _entry_offsets(text: str, qn: str) -> list[int]:
     """raw 行内 qn 条目起点列表（行内多条目如同行多题答案时 >1）。"""
     return [m.start() for m in _ENTRY_RE.finditer(text) if m.group(1) == qn]
+
+
+# ---------------------------------------------------------------------------
+# P0 unified ownership (CONTRACT-FINAL v2): only match / foreign / unknown.
+# local_proven is an EMPTY set — no L1/L2/L3, no text-shape heuristics.
+# ---------------------------------------------------------------------------
+
+OWNERSHIP_MATCH = "match"
+OWNERSHIP_FOREIGN = "foreign"
+OWNERSHIP_UNKNOWN = "unknown"
+# legacy aliases used by older call sites / tests
+LEGACY_BARE = "bare"
+LEGACY_FOREIGN = "foreign_question"
+LEGACY_LOCAL = "local_index"
+
+
+def _entry_nums_of(texts: list[str]) -> set[int]:
+    nums: set[int] = set()
+    for raw in texts:
+        for m in _ENTRY_RE.finditer(raw):
+            try:
+                n = int(m.group(1))
+            except ValueError:
+                continue
+            if n < 1:
+                continue
+            nums.add(n)
+    return nums
+
+
+def classify_answer_ownership(texts: list[str], qn: str) -> str:
+    """Return OWNERSHIP_MATCH | OWNERSHIP_FOREIGN | OWNERSHIP_UNKNOWN.
+
+    - match: some entry token equals the target question number.
+    - foreign: entry tokens name other global question numbers
+      (not the ambiguous local-label band).
+    - unknown: bare (no entry), or ambiguous small-entry vs high-target
+      (cannot prove local, cannot prove foreign). local_proven is empty.
+
+    NEVER infers ownership from answer-token shape or text morphology.
+    """
+    entry_nums = _entry_nums_of(texts)
+    try:
+        target = int(qn)
+    except (TypeError, ValueError):
+        for raw in texts:
+            for m in _ENTRY_RE.finditer(raw):
+                if m.group(1) == str(qn):
+                    return OWNERSHIP_MATCH
+        return OWNERSHIP_UNKNOWN if not entry_nums else OWNERSHIP_FOREIGN
+
+    if not entry_nums:
+        return OWNERSHIP_UNKNOWN
+    if target in entry_nums:
+        return OWNERSHIP_MATCH
+    # Ambiguous local-label band: small entries vs high target.
+    # Not local_proven (no structure evidence) — unknown, never auto-publish.
+    if all(e <= 10 for e in entry_nums) and target > 10:
+        return OWNERSHIP_UNKNOWN
+    return OWNERSHIP_FOREIGN
+
+
+def bind_answer_text(texts: list[str], qn: str) -> tuple[str, str]:
+    """Sole ownership decision used by every answer emit path.
+
+    Returns (ownership, binding_evidence).
+    """
+    own = classify_answer_ownership(texts, qn)
+    nums = sorted(_entry_nums_of(texts))
+    ev = f"entries={nums};qn={qn};rule=p0-unified"
+    return own, ev
+
+
+def _entry_ownership(
+    texts: list[str],
+    qn: str,
+    *,
+    allow_local_index: bool = False,
+) -> str:
+    """Legacy-compatible wrapper over classify_answer_ownership.
+
+    Returns historical tokens (match / bare / foreign_question / local_index)
+    so older unit tests keep working; `local_index` is returned only for the
+    ambiguous band and does NOT mean proven local ownership. Production bind
+    paths must use bind_answer_text() / classify_answer_ownership().
+    """
+    own = classify_answer_ownership(texts, qn)
+    if own == OWNERSHIP_MATCH:
+        return "match"
+    if own == OWNERSHIP_UNKNOWN:
+        if not _entry_nums_of(texts):
+            return "bare"
+        return "local_index" if allow_local_index else "foreign_question"
+    return "foreign_question"
+
+def _is_local_body_content(content: str) -> bool:
+    """True when content is a multi-part local answer body (not a simple cell).
+
+    Evidence for local_index: `（3分）Mg | TiCl4 | 1` style — score + parts,
+    pipe separators, or multiple （n） sub-sections. A bare letter / TF token /
+    short fill-in (`A`, `正确`, `砖红色沉淀`) is NOT local-body evidence.
+    """
+    if not content or not content.strip():
+        return False
+    t = content.strip()
+    if "|" in t or "｜" in t:
+        return True
+    if re.match(r"^[（(]\s*\d+\s*分\s*[)）]", t) and len(t) > 12:
+        return True
+    if len(re.findall(r"[（(]\s*\d+\s*[)）]", t)) >= 2:
+        return True
+    # substantial multi-clause body
+    if len(t) >= 24 and ("；" in t or "。" in t or ";" in t):
+        return True
+    return False
+
+
+def _is_local_prose_body(content: str) -> bool:
+    """True for a prose/worded local body, never for a short simple cell.
+
+    A batch of simple cells (`1. A`, `2. B`) must not become a local 1..k
+    sequence; a per-unit local block with worded bodies (`1. answer-one`) is
+    still evidence.
+    """
+    t = content.strip()
+    if not t:
+        return False
+    if _is_local_body_content(t):
+        return True
+    if len(t) < 8:
+        return False
+    return len(re.findall(r"[A-Za-z\u4e00-\u9fff]", t)) >= 4
+
+
+def _clean_answer_for_conflict(text: str) -> str:
+    """Normalize answer-ish text for conflict comparison (strip qn prefix + noise)."""
+    if not text:
+        return ""
+    t = text.strip()
+    t = re.sub(r"^\s*[0-9]{1,3}\s*(?:\\[.．、:]|[.．、:)])*\s*", "", t)
+    t = t.strip().strip("（）()【】[]").strip()
+    return t.upper() if len(t) <= 4 else t
 
 
 def _entry_content_bounds(raw: str, entry_start: int, entry_end: int) -> tuple[int, int]:
@@ -904,13 +1050,121 @@ class _Out:
         self.resolved: list[ResolvedSpan] = []
         self.unresolved: list[UnresolvedReference] = []
 
+    def _seal_answer_ownership(self, t, evidence, texts, role=None, answer_text=""):
+        """Attach ownership= to answer evidence; force foreign to empty later.
+
+        Every answer emit MUST pass through here so no branch can skip
+        ownership classification (CONTRACT-FINAL: sole binding exit).
+
+        P0-R16: registers BindingFact with source_version_id + decode_loc.
+        """
+        ev = tuple(evidence)
+        role_v = role or getattr(t, "role", "")
+        if role_v != "answer":
+            return ev
+        qn = str(getattr(t, "question_number", "") or "")
+        _lines = [x for x in (texts or ()) if x is not None]
+        _span_id = f"sp-{t.target_id}" if getattr(t, "target_id", "") else ""
+        _unit_id = str(getattr(t, "unit_id", "") or "")
+        _ans = answer_text if answer_text is not None else ""
+        _svid = str(self.svid)
+
+        # Extract existing ownership + structural evidence from evidence tags.
+        _existing_own = None
+        _existing_bev = ""
+        _decode_parts = []
+        for e in ev:
+            s = str(e)
+            if s.startswith("ownership="):
+                _existing_own = s.split("=", 1)[1]
+            elif s.startswith("binding_evidence="):
+                _existing_bev = s.split("=", 1)[1]
+            elif s.startswith("cell="):
+                _decode_parts.append(f"cell:{s.split('=', 1)[1]}")
+            elif s.startswith("qn="):
+                _decode_parts.append(f"qn:{s.split('=', 1)[1].strip()}")
+            elif s.startswith("qns="):
+                _decode_parts.append(f"qns:{s.split('=', 1)[1].strip()}")
+            elif s.startswith("range="):
+                _decode_parts.append(f"range:{s.split('=', 1)[1].strip()}")
+        _decode_loc = "|".join(_decode_parts)
+
+        # R16c: BindingFact is the single ownership authority. Register it
+        # from real source lines, then write fact.ownership back onto span
+        # evidence so Compiler/Gate see the same conclusion (fixes
+        # fact=match vs compiled=unknown divergence).
+        _fact_own = None
+        _fact_bev = ""
+        if _span_id and _svid:
+            try:
+                from app.domains.gate.binding_fact import (
+                    derive_binding_fact,
+                    register_trusted_binding_fact,
+                )
+                _fact = derive_binding_fact(
+                    span_id=_span_id,
+                    source_version_id=_svid,
+                    unit_id=_unit_id,
+                    question_number=qn,
+                    source_lines=_lines,
+                    answer_text=str(_ans),
+                    evidence_kind=_existing_bev or "",
+                    decode_loc=_decode_loc,
+                )
+                register_trusted_binding_fact(_fact)
+                _fact_own = _fact.ownership or "unknown"
+                _fact_bev = (
+                    f"fact:{_fact.evidence_kind}"
+                    if _fact.evidence_kind
+                    else "fact"
+                )
+            except Exception:
+                # Registration failure → force unknown (fail closed).
+                _fact_own = "unknown"
+                _fact_bev = "registration_failed"
+        else:
+            # No span/svid (defensive): fall back to local classify only.
+            own, bev = bind_answer_text(_lines, qn)
+            _fact_own = own
+            _fact_bev = bev or "p0-unified"
+
+        # Single write-back: strip any prior ownership/binding tags and
+        # stamp the fact conclusion.
+        cleaned = tuple(
+            e
+            for e in ev
+            if not str(e).startswith("ownership=")
+            and not str(e).startswith("binding_evidence=")
+        )
+        return cleaned + (
+            f"ownership={_fact_own}",
+            f"binding_evidence={_fact_bev}",
+        )
+
     def add_span(self, unit_id: str, t, refs, status, evidence, role_hint=None):
         text = self._slice(refs)
+        role_v = role_hint or t.role
+        try:
+            raw_lines = [self._idx.get(r).text for r in refs]
+        except Exception:
+            raw_lines = [text]
+        evidence = self._seal_answer_ownership(t, evidence, raw_lines or [text], role=role_v, answer_text=text)
+        # foreign / never-publish-bind: keep span empty when ownership is foreign
+        own = next(
+            (str(e).split("=", 1)[1] for e in evidence if str(e).startswith("ownership=")),
+            None,
+        )
+        if role_v == "answer" and own == OWNERSHIP_FOREIGN:
+            self.add_empty_answer(
+                t,
+                tuple(evidence) + (f"foreign_source_text={text[:80]}",),
+            )
+            return
         self.resolved.append(
             ResolvedSpan(
                 span_id=f"sp-{t.target_id}",
                 source_version_id=self.svid,
-                role=role_hint or t.role,
+                role=role_v,
                 start_line_ref=refs[0],
                 end_line_ref=refs[-1],
                 line_refs=tuple(refs),
@@ -936,13 +1190,27 @@ class _Out:
                 )
             )
             return
+        _slice_text = raw[start:end]
+        # Classify ownership from the RAW LINE (may carry the N. entry token),
+        # not from the stripped answer cell — otherwise `1. B` → text `B` is bare.
+        evidence = self._seal_answer_ownership(t, evidence, [raw], answer_text=_slice_text)
+        own = next(
+            (str(e).split("=", 1)[1] for e in evidence if str(e).startswith("ownership=")),
+            None,
+        )
+        if t.role == "answer" and own == OWNERSHIP_FOREIGN:
+            self.add_empty_answer(
+                t,
+                tuple(evidence) + (f"foreign_source_text={_slice_text[:80]}",),
+            )
+            return
         self.resolved.append(
             ResolvedSpan(
                 span_id=f"sp-{t.target_id}", source_version_id=self.svid,
                 role=t.role, start_line_ref=line_ref, end_line_ref=line_ref,
                 line_refs=(line_ref,), granularity="line_character",
                 start_offset=start, end_offset=end,
-                text_hash=_raw_sha256(raw[start:end]),
+                text_hash=_raw_sha256(_slice_text),
                 resolution_status=status, evidence=tuple(evidence),
             )
         )
@@ -955,28 +1223,65 @@ class _Out:
             )
         )
 
-    def add_empty_answer(self, t, evidence):
-        """Bind an empty answer span so the unit stays IR-ready without fabricating content.
+    def add_value_only_answer(self, t, value, evidence):
+        """Bind a declared answer_value with NO fabricated source location.
 
-        E2E-013 fallback-guard pattern: point at the conventional blank line
-        P1L002 so the compiled answer text is "" and the unit goes to pending
-        review instead of being dropped or given a wrong answer.
+        P0-R3: when the manifest carries answer_value but no reliable
+        answer_lines, the honest representation is value-only. Do NOT invent
+        line_refs (e.g. P1L001) — fabricated provenance must never look
+        byte-proven. resolution_status='value_only' is outside
+        {exact, normalized}, so Gate auto_allowed stays False.
         """
-        _absent_ref = "P1L002"
+        evidence = self._seal_answer_ownership(t, evidence, [value], answer_text=value) + (
+            f"cell={value}",
+            "ownership=unknown",  # value_only cannot prove line ownership
+        ) if t.role == "answer" else tuple(evidence) + (f"cell={value}",)
+        # ensure single ownership= tag (classifier may have added one)
+        if t.role == "answer" and not any(str(e).startswith("ownership=") for e in evidence[: -2]):
+            pass
+        # force unknown for value_only even if classifier said otherwise
+        evidence = tuple(
+            e if not str(e).startswith("ownership=") else "ownership=unknown"
+            for e in evidence
+        ) if t.role == "answer" else evidence
         self.resolved.append(
             ResolvedSpan(
                 span_id=f"sp-{t.target_id}",
                 source_version_id=self.svid,
                 role=t.role,
-                start_line_ref=_absent_ref,
-                end_line_ref=_absent_ref,
-                line_refs=(_absent_ref,),
-                granularity="line",
+                start_line_ref="VALUE-ONLY",
+                end_line_ref="VALUE-ONLY",
+                line_refs=(),
+                granularity="value_only",
+                start_offset=None,
+                end_offset=None,
+                text_hash=_raw_sha256(value),
+                resolution_status="value_only",
+                evidence=tuple(evidence),
+            )
+        )
+
+    def add_empty_answer(self, t, evidence):
+        """Bind an empty answer span so the unit stays IR-ready without fabricating content.
+
+        E2E-013 fallback-guard pattern. P0-R3: force text="" via cell= evidence
+        so compilation cannot pick up an unrelated P1L002 line (test fixtures
+        and real docs differ on whether P1L002 is blank).
+        """
+        self.resolved.append(
+            ResolvedSpan(
+                span_id=f"sp-{t.target_id}",
+                source_version_id=self.svid,
+                role=t.role,
+                start_line_ref="ABSENT",
+                end_line_ref="ABSENT",
+                line_refs=(),
+                granularity="absent",
                 start_offset=None,
                 end_offset=None,
                 text_hash=_raw_sha256(""),
-                resolution_status="exact",
-                evidence=tuple(evidence),
+                resolution_status="absent",
+                evidence=tuple(evidence) + ("cell=",),
             )
         )
 
@@ -1044,7 +1349,10 @@ class SourceResolver:
         # Upper-bound guard: stem must not cross the next declared question start.
         self._declared_starts: tuple[int, ...] = ()
         # Answer evidence ranges shared by ≥2 units, set in resolve().
-        self._shared_answer_ranges: frozenset[tuple[int, int]] = frozenset()
+        # Maps (start, end) → ordered qn list for compact key splitting.
+        self._shared_answer_ranges: dict[tuple[int, int], list[str]] = {}
+        self._local_body_units: set[str] = set()
+        self._local_seq_units: set[str] = set()
         # Printed number of the current unit (set in _resolve_unit).
         self._current_printed: str | None = None
         # Whether stem location produced an unresolved (ambiguous/missing).
@@ -1071,25 +1379,89 @@ class SourceResolver:
         # the "unmappable local numbering" fail-closed guard; per-unit ranges
         # are that unit's own answer and must not be cleared.
         _range_owners: dict[tuple[int, int], int] = {}
-        for _targets in by_unit.values():
+        _range_qns: dict[tuple[int, int], list[str]] = {}
+        for uid, _targets in by_unit.items():
             for _t in _targets:
                 if _t.kind == "answer_zone" and _t.evidence_lines is not None:
                     _r = (_t.evidence_lines[0], _t.evidence_lines[1])
                     _range_owners[_r] = _range_owners.get(_r, 0) + 1
-        self._shared_answer_ranges = frozenset(
-            r for r, n in _range_owners.items() if n >= 2
-        )
+                    _qn_str = str(_t.question_number or "")
+                    if _qn_str:
+                        _range_qns.setdefault(_r, []).append(_qn_str)
+        self._shared_answer_ranges = {
+            r: sorted(qns, key=lambda x: int(x) if x.isdigit() else 0)
+            for r, qns in _range_qns.items()
+            if _range_owners.get(r, 0) >= 2
+        }
+        # P0-R5b: units with positive local-numbering evidence. A local
+        # sub-index label (`1.` for unit 26) is allowed ONLY when:
+        # (a) the entry content is a multi-part local body, OR
+        # (b) multiple units in this batch form a local label sequence
+        #     (1., 2., 3., …) while their question numbers are all > 10.
+        self._local_body_units: set[str] = set()
+        self._local_seq_units: set[str] = set()
+        _entry_no_by_unit: dict[str, int] = {}
+        _qn_by_unit: dict[str, int] = {}
+        for uid, targets in by_unit.items():
+            for t in targets:
+                if t.kind == "question_label" and getattr(t, "question_number", None):
+                    try:
+                        _qn_by_unit[uid] = int(t.question_number)
+                    except (TypeError, ValueError):
+                        pass
+                if t.kind == "answer_zone" and t.evidence_lines is not None:
+                    refs = self._evidence_line_refs(
+                        t.evidence_lines[0], t.evidence_lines[1]
+                    )
+                    if not refs:
+                        continue
+                    raw = self._idx.get(refs[0]).text
+                    rest = "\n".join(self._idx.get(r).text for r in refs[1:])
+                    for m in _ENTRY_RE.finditer(raw):
+                        try:
+                            _entry_no_by_unit[uid] = int(m.group(1))
+                        except ValueError:
+                            pass
+                        cs, ce = _entry_content_bounds(raw, m.start(), len(raw))
+                        body = raw[cs:ce].strip()
+                        if rest.strip():
+                            body = (body + "\n" + rest).strip()
+                        if _is_local_body_content(body) or _is_local_prose_body(body):
+                            self._local_body_units.add(uid)
+                        break
+        # multi-unit local label sequence: entries 1..k, qns all > 10
+        _seq_entries = {
+            uid: e for uid, e in _entry_no_by_unit.items()
+            if e <= 10 and _qn_by_unit.get(uid, 0) > 10
+        }
+        if len(_seq_entries) >= 2:
+            _vals = sorted(_seq_entries.values())
+            # P0-R5b: a batch sequence is local evidence only when it starts
+            # at 1 and is consecutive. A pair `5.A / 6.B` is another
+            # question's answers, not a local 1..k sequence.
+            if _vals[0] == 1 and all(
+                uid in self._local_body_units for uid in _seq_entries
+            ) and _vals == list(range(_vals[0], _vals[0] + len(_vals))):
+                self._local_seq_units.update(_seq_entries.keys())
         # Fix (E2E-007B KHH2 over-capture): declared stem starts in document order.
         # Used as an upper bound so a stem cannot swallow later questions'
         # declared content (option-less fill-in/short-answer especially).
         declared_starts: list[int] = []
-        for targets in by_unit.values():
+        self._declared_stem_ranges: dict[str, tuple[int, int]] = {}
+        for uid, targets in by_unit.items():
             for t in targets:
                 if t.kind == "question_label" and t.question_search_lines:
-                    lo, _hi = t.question_search_lines
-                    refs = self._evidence_line_refs(lo, lo)
-                    if refs:
-                        declared_starts.append(self._idx.seq_of(refs[0]))
+                    lo, hi = t.question_search_lines
+                    refs_lo = self._evidence_line_refs(lo, lo)
+                    if refs_lo:
+                        declared_starts.append(self._idx.seq_of(refs_lo[0]))
+                    # Track full stem ranges for extra_lines ownership filtering
+                    refs_hi = self._evidence_line_refs(hi, hi)
+                    if refs_lo and refs_hi:
+                        self._declared_stem_ranges[uid] = (
+                            self._idx.seq_of(refs_lo[0]),
+                            self._idx.seq_of(refs_hi[0]),
+                        )
         self._declared_starts = tuple(sorted(set(declared_starts)))
         # Fourth-cut B: resolve ALL material bodies first so stem boundaries can
         # respect material regions (own-stem and neighbor-stem).
@@ -1635,6 +2007,43 @@ class SourceResolver:
             return l.line_ref
         return None
 
+    def _extra_owned_refs(self, t, unit_id: str,
+                          exclude_refs: frozenset | set | None = None) -> list[str]:
+        """Fix A: return extra_lines refs owned by THIS unit only.
+
+        Filters out any line that falls within ANOTHER unit's declared stem range
+        (prevents cross-unit pollution, e.g. PHY Q19 extras swallowing Q21/Q22 stems).
+        Also excludes option-pattern lines (e.g. BIO Q8 "D. $O_2$") — those belong
+        in options, not stem.
+        """
+        extra = getattr(t, "extra_lines", None)
+        if not extra:
+            return []
+        exclude = exclude_refs or frozenset()
+        e_lo, e_hi = extra
+        # Option pattern: "X." at line start OR inside HTML (e.g. <div>D. ...</div>)
+        _opt_line_re = re.compile(r"(?:^|>)\s*[A-Ha-h]\s*[.．。:：、]")
+        out_refs: list[str] = []
+        for l in self._idx.between_incl(e_lo, e_hi):
+            seq = l.seq
+            # Skip if this line is within another unit's declared stem range
+            polluted = False
+            for other_uid, (o_lo, o_hi) in getattr(self, "_declared_stem_ranges", {}).items():
+                if other_uid == unit_id:
+                    continue
+                if o_lo <= seq <= o_hi:
+                    polluted = True
+                    break
+            if polluted:
+                continue
+            # Fix D: option-pattern lines are options, not stem content
+            if _opt_line_re.search(l.text):
+                continue
+            if l.line_ref not in exclude:
+                out_refs.append(l.line_ref)
+        out_refs.sort(key=lambda r: self._idx.seq_of(r))
+        return out_refs
+
     def _stem_span(self, out, unit_id, t, qn, start_ref, option_hits, region_upper,
                    exclude_refs: frozenset | set | None = None,
                    consumed_seqs: set[int] | None = None):
@@ -1647,10 +2056,14 @@ class SourceResolver:
             if qs:
                 refs = self._evidence_line_refs(qs[0], qs[1])
                 if refs:
+                    # Fix B: also merge owned extra_lines in the fallback path.
+                    extra_refs = self._extra_owned_refs(t, unit_id, exclude_refs)
+                    merged = list(refs) + [r for r in extra_refs if r not in refs]
+                    merged.sort(key=lambda r: self._idx.seq_of(r))
                     out.add_span(
-                        unit_id, t, refs, "exact",
+                        unit_id, t, merged, "exact",
                         ("stem start", "declared question_search_lines",
-                         f"lines={qs[0]}-{qs[1]}"),
+                         f"lines={qs[0]}-{qs[1]}", "extra_merged"),
                     )
                     return
             return  # 已由 _locate_question_start 记录 unresolved
@@ -1675,6 +2088,17 @@ class SourceResolver:
             if ds > start_seq and (boundary_seq is None or ds < boundary_seq):
                 boundary_seq = ds
                 break
+        # WP7-A: tighten to Producer-declared stem end (question_search_lines /
+        # stem_lines [start, end]). Only tightens — never expands past the
+        # declared stem content range.  between() is exclusive of hi, so use
+        # seq(end)+1 to include the declared last stem line.
+        qs = getattr(t, "question_search_lines", None)
+        if qs and qs[1] is not None:
+            hi_refs = self._evidence_line_refs(qs[1], qs[1])
+            if hi_refs:
+                declared_end_seq = self._idx.seq_of(hi_refs[0]) + 1
+                if boundary_seq is None or declared_end_seq < boundary_seq:
+                    boundary_seq = declared_end_seq
         if boundary_seq is None:
             out.add_unresolved(
                 t, "incomplete",
@@ -1700,6 +2124,11 @@ class SourceResolver:
             l.line_ref for l in self._idx.between(start_seq, boundary_seq)
             if l.line_ref not in exclude or l.line_ref == start_ref
         ]
+        # Fix A+B: include ownership-filtered extra_lines as UNION.
+        extra_refs = self._extra_owned_refs(t, unit_id, exclude)
+        if extra_refs:
+            refs.extend(r for r in extra_refs if r not in refs)
+            refs.sort(key=lambda r: self._idx.seq_of(r))
         # E2E-006: trim trailing structural pads (`---`, blanks) — never stem
         # content. Only pads are trimmed, not real text like trailing `A.`.
         pad_re = re.compile(r"^---\s*$")
@@ -1736,6 +2165,16 @@ class SourceResolver:
                      ("stem start", start_ref, "boundary", "option-or-region-end"))
 
     def _option_span(self, out, unit_id, t, option_hits):
+        # R3-D: option with direct evidence_lines (e.g. D in extra_lines) binds
+        # without searching — avoids options_range expansion / cross-unit bleed.
+        ev = getattr(t, "evidence_lines", None)
+        if ev:
+            refs = self._evidence_line_refs(ev[0], ev[1])
+            if refs:
+                out.add_span(unit_id, t, refs, "exact",
+                             (f"option label={t.label} (evidence_lines)",
+                              f"lines={ev[0]}-{ev[1]}"))
+                return
         entry = option_hits.get(t.label or "", ("incomplete",))
         kind = entry[0]
         if kind == "ok":
@@ -1919,11 +2358,29 @@ class SourceResolver:
             out.add_unresolved(t, "incomplete", ("answer needs question_label",))
             return
 
+        # P0-answer: when answer_lines is None but manifest declared
+        # answer_evidence.value, bind it as VALUE-ONLY. NEVER scan explanation
+        # or answer-zone text to infer the answer. NEVER fabricate line_refs
+        # (P0-R3: fake P1L001 provenance must not look byte-proven).
+        el = getattr(t, "evidence_lines", None)
+        av = getattr(t, "answer_value", None)
+        if el is None and av is not None:
+            out.add_value_only_answer(
+                t, av,
+                ("answer_value_only", "no declared answer_lines", f"cell={av}"),
+            )
+            return
+
         # B3c-A evidence transport: declared Producer answer_lines is the
         # authoritative answer-evidence range. Do not re-scan the whole
         # answer_zone to guess which line holds the answer (defects A/C).
-        el = getattr(t, "evidence_lines", None)
         if el is not None:
+            def _conflict_with_declared_value(extracted: str) -> bool:
+                """P0-R3: answer_value vs extractable answer_lines content must agree."""
+                if av is None:
+                    return False
+                return _clean_answer_for_conflict(extracted) != _clean_answer_for_conflict(av)
+
             refs = self._evidence_line_refs(el[0], el[1])
             if refs is None:
                 out.add_unresolved(
@@ -1932,6 +2389,114 @@ class SourceResolver:
                      f"declared={el[0]}-{el[1]}"),
                 )
                 return
+
+            # P0-R5d: shared ranges must NOT bypass ownership for a single
+            # entry, including a multi-line shared range whose only entry is
+            # `1. A` (plus blank/continuation). Multi-entry blocks/tables keep
+            # their existing shared-range handling below.
+            if el in self._shared_answer_ranges:
+                _shared_all = "\n".join(self._idx.get(r).text for r in refs)
+                _shared_entries = list(_ENTRY_RE.finditer(_shared_all))
+                if (
+                    len(_shared_entries) == 1
+                    and _shared_entries[0].group(1) != str(qn)
+                ):
+                    out.add_empty_answer(t, (
+                        "answer source line belongs to a different question",
+                        f"qn={qn}",
+                        f"evidence_lines={el[0]}-{el[1]}",
+                        f"evidence_text={_shared_all.strip()[:80]}",
+                        "ownership=foreign_question (shared single-entry)",
+                    ))
+                    return
+
+            # P0-R5 ownership PRE-GUARD (number relationship, not token shape):
+            # runs BEFORE scored/table/packed/full-line extractors. Any line
+            # whose entry numbering identifies ANOTHER question must never
+            # reach an extractor, and must NEVER leak the foreign full text
+            # into this question's answer field.
+            if el not in self._shared_answer_ranges:
+                _raw_texts = [self._idx.get(r).text for r in refs]
+                # P0-R5b: local_index only with positive evidence
+                # (multi-part local body OR multi-unit local label sequence).
+                _local_ok = False
+                if unit_id in self._local_body_units or unit_id in self._local_seq_units:
+                    _local_ok = True
+                else:
+                    # P0-R5b: a multi-line declared range is local evidence ONLY
+                    # when the first entry is the local label `1.` and either
+                    # (i) it is a bare `1.` + continuation body, or
+                    # (ii) the combined block is a multi-part local body.
+                    # A foreign `5. A` + blank line is NOT local.
+                    if len(refs) > 1:
+                        _first = _raw_texts[0]
+                        _m0 = next(_ENTRY_RE.finditer(_first), None)
+                        if _m0 is not None and _m0.group(1) == "1":
+                            _block = "\n".join(_raw_texts)
+                            if _is_local_body_content(_block) or _is_local_prose_body(
+                                _block
+                            ):
+                                _local_ok = True
+                    for _raw in _raw_texts:
+                        for _m in _ENTRY_RE.finditer(_raw):
+                            _cs, _ce = _entry_content_bounds(
+                                _raw, _m.start(), len(_raw)
+                            )
+                            if _is_local_body_content(_raw[_cs:_ce].strip()):
+                                _local_ok = True
+                                break
+                self._last_local_ok = _local_ok
+                _own = _entry_ownership(
+                    _raw_texts, qn, allow_local_index=_local_ok
+                )
+                if _own == "foreign_question":
+                    _first = _raw_texts[0].strip()[:80] if _raw_texts else ""
+                    if av is not None:
+                        out.add_empty_answer(t, (
+                            "answer_lines/answer_value conflict: source line "
+                            "belongs to a different question",
+                            f"qn={qn}",
+                            f"declared_answer_value={av}",
+                            f"evidence_lines={el[0]}-{el[1]}",
+                            f"evidence_text={_first}",
+                            "ownership=foreign_question",
+                        ))
+                    else:
+                        out.add_empty_answer(t, (
+                            "answer source line belongs to a different question",
+                            f"qn={qn}",
+                            f"evidence_lines={el[0]}-{el[1]}",
+                            f"evidence_text={_first}",
+                            "ownership=foreign_question",
+                        ))
+                    return
+                # P0-R5 role check: explanation body is not an answer even when
+                # the entry number matches. Do not materialize it as answer.
+                # Only inspect the ENTRY CONTENT (after `N.`) — multi-line
+                # blocks whose continuation lines are explanation sections
+                # (B3c-A bare `1.` + body) must stay intact.
+                _EXPL_BODY_PREFIXES = (
+                    "【分析】", "【解答】", "【解析】", "【详解】", "【点评】",
+                    "【考点】", "【知识点】",
+                )
+                for _raw in _raw_texts:
+                    for _m in _ENTRY_RE.finditer(_raw):
+                        _cs, _ce = _entry_content_bounds(
+                            _raw, _m.start(), len(_raw)
+                        )
+                        _content = _raw[_cs:_ce].strip()
+                        if _content and any(
+                            _content.startswith(p) for p in _EXPL_BODY_PREFIXES
+                        ):
+                            out.add_empty_answer(t, (
+                                "answer evidence is explanation body, not an answer",
+                                f"qn={qn}",
+                                f"evidence_lines={el[0]}-{el[1]}",
+                                f"evidence_text={_raw.strip()[:60]}",
+                                "role=explanation_body",
+                            ))
+                            return
+
             if len(refs) > 1:
                 # Multi-line evidence block: try vertical-format table parsing
                 # with cross-line continuation (P2-R). If found, bind the
@@ -1970,6 +2535,8 @@ class SourceResolver:
                         f"lines={el[0]}-{el[1]}",
                         "structured_answer_table_vertical", f"qn={qn}",
                         f"cell={full_text}",
+                        "ownership=match",
+                        "binding_evidence=table_vertical_qn_column",
                     ]
                     if _dv_printed:
                         _ev.append(f"matched_by=printed({qn}->{self._current_printed})")
@@ -1993,6 +2560,8 @@ class SourceResolver:
                             f"lines={el[0]}-{el[1]}",
                             "structured_answer_table", f"qn={qn}",
                             f"cell={_dt}",
+                            "ownership=match",
+                            "binding_evidence=table_qn_answer_column",
                         ]
                         if _dch_printed:
                             _ev.append(f"matched_by=printed({qn}->{self._current_printed})")
@@ -2011,7 +2580,9 @@ class SourceResolver:
                             ("answer evidence range",
                              f"lines={el[0]}-{el[1]}",
                              "structured_answer_table_headerless", f"qn={qn}",
-                             f"cell={_dt}"),
+                             f"cell={_dt}",
+                             "ownership=match",
+                             "binding_evidence=table_headerless_qn_column"),
                         )
                         return
                 # No structured table match: try scored answer extraction
@@ -2095,8 +2666,48 @@ class SourceResolver:
                                 f"shared_lines={el[0]}-{el[1]}",
                             ))
                             return
+                # P0-R3 ownership: a declared per-unit evidence block whose
+                # entry numbering names a DIFFERENT question AND whose content
+                # is a bare choice token (`12. A`) is a FOREIGN binding.
+                # Do not claim it, and do not silently substitute answer_value.
+                # Multi-part local-numbered bodies (`1.（3分）…`) stay allowed.
+                _combined_all = "\n".join(self._idx.get(r).text for r in refs)
+                _own = _entry_ownership(
+                    [_combined_all], qn,
+                    allow_local_index=getattr(self, "_last_local_ok", False),
+                )
+                if _own == "foreign_question" and el not in self._shared_answer_ranges:
+                    if av is not None:
+                        out.add_empty_answer(t, (
+                            "answer_lines/answer_value conflict: evidence entry "
+                            "numbering does not match target question",
+                            f"qn={qn}",
+                            f"declared_answer_value={av}",
+                            f"evidence_lines={el[0]}-{el[1]}",
+                            f"evidence_entries={sorted(_block_entry_nums(_combined_all), key=lambda x: int(x) if x.isdigit() else 0)}",
+                        ))
+                    else:
+                        out.add_empty_answer(t, (
+                            "answer evidence entry numbering does not match target question",
+                            f"qn={qn}",
+                            f"evidence_lines={el[0]}-{el[1]}",
+                            f"evidence_entries={sorted(_block_entry_nums(_combined_all), key=lambda x: int(x) if x.isdigit() else 0)}",
+                        ))
+                    return
                 # Still no match: bind as multi-line block (no local numbering,
                 # or bare `qn.` multi-line body — B3c-A full-range).
+                # P0-R3 conflict: declared answer_value must not be silently
+                # overridden by a different block text.
+                if av is not None:
+                    _blk = "\n".join(self._idx.get(r).text for r in refs).strip()
+                    if _blk and _blk != av.strip() and not _blk.endswith(av.strip()):
+                        out.add_empty_answer(t, (
+                            "answer_lines/answer_value conflict: block text != declared value",
+                            f"qn={qn}",
+                            f"declared_answer_value={av}",
+                            f"block_text_len={len(_blk)}",
+                        ))
+                        return
                 out.add_span(
                     unit_id, t, refs, "exact",
                     ("answer evidence range",
@@ -2111,6 +2722,12 @@ class SourceResolver:
             dsa = _decode_scored_answer(raw, qn)
             if dsa is not None:
                 d_start, d_end, d_val = dsa
+                if _conflict_with_declared_value(d_val):
+                    out.add_empty_answer(t, (
+                        "answer_lines/answer_value conflict: scored cell != declared value",
+                        f"qn={qn}", f"declared_answer_value={av}", f"cell={d_val}",
+                    ))
+                    return
                 out.add_char_span(
                     unit_id, t, line_ref, d_start, d_end, "exact",
                     ("answer evidence range", f"lines={el[0]}-{el[1]}",
@@ -2121,6 +2738,12 @@ class SourceResolver:
             _rk = decode_range_answer_key(raw, qn)
             if _rk is not None:
                 _ds, _de, _dt = _rk
+                if _conflict_with_declared_value(_dt):
+                    out.add_empty_answer(t, (
+                        "answer_lines/answer_value conflict: range-key cell != declared value",
+                        f"qn={qn}", f"declared_answer_value={av}", f"cell={_dt}",
+                    ))
+                    return
                 out.add_char_span(
                     unit_id, t, line_ref, _ds, _de, "exact",
                     ("answer evidence range", f"lines={el[0]}-{el[1]}",
@@ -2134,6 +2757,13 @@ class SourceResolver:
                 # Strip `N.` / `N\\.` prefix: bind only answer content.
                 _cs, _ce = _entry_content_bounds(raw, offs[0], nxt)
                 if _cs < _ce:
+                    if _conflict_with_declared_value(raw[_cs:_ce]):
+                        out.add_empty_answer(t, (
+                            "answer_lines/answer_value conflict: entry content != declared value",
+                            f"qn={qn}", f"declared_answer_value={av}",
+                            f"entry_content={raw[_cs:_ce].strip()[:80]}",
+                        ))
+                        return
                     out.add_char_span(
                         unit_id, t, line_ref, _cs, _ce, "exact",
                         ("answer evidence range", f"lines={el[0]}-{el[1]}",
@@ -2150,10 +2780,18 @@ class SourceResolver:
                 _used_printed_cell = decoded is not None
             if decoded is not None:
                 d_start, d_end, d_val = decoded
+                if _conflict_with_declared_value(d_val):
+                    out.add_empty_answer(t, (
+                        "answer_lines/answer_value conflict: table cell != declared value",
+                        f"qn={qn}", f"declared_answer_value={av}", f"cell={d_val}",
+                    ))
+                    return
                 _ev = [
                     "answer evidence range", f"lines={el[0]}-{el[1]}",
                     "structured_answer_table", f"qn={qn}",
                     f"cell={d_val}",
+                    "ownership=match",
+                    "binding_evidence=table_qn_answer_column",
                 ]
                 if _used_printed_cell:
                     _ev.append(f"matched_by=printed({qn}->{self._current_printed})")
@@ -2171,7 +2809,9 @@ class SourceResolver:
                     unit_id, t, line_ref, d_start, d_end, "exact",
                     ("answer evidence range", f"lines={el[0]}-{el[1]}",
                      "structured_answer_table_headerless", f"qn={qn}",
-                     f"cell={d_val}"),
+                     f"cell={d_val}",
+                     "ownership=match",
+                     "binding_evidence=table_headerless_qn_column"),
                 )
                 return
             # P2: vertical-format table (题号|答案 column headers, one row
@@ -2187,6 +2827,8 @@ class SourceResolver:
                     "answer evidence range", f"lines={el[0]}-{el[1]}",
                     "structured_answer_table_vertical", f"qn={qn}",
                     f"cell={d_val}",
+                    "ownership=match",
+                    "binding_evidence=table_vertical_qn_column",
                 ]
                 if _used_printed:
                     _ev.append(f"matched_by=printed({qn}->{self._current_printed})")
@@ -2217,6 +2859,74 @@ class SourceResolver:
                             f"shared_lines={el[0]}-{el[1]}",
                         ))
                         return
+            # P0-R3 ownership: a declared line whose entry numbering names a
+            # DIFFERENT question and whose content is a bare choice token
+            # (e.g. `12. A` bound to Q1) is a foreign binding.
+            # Local-numbered multi-part bodies stay allowed (per-unit ranges).
+            _own = _entry_ownership(
+                [raw], qn,
+                allow_local_index=getattr(self, "_last_local_ok", False),
+            )
+            if _own == "foreign_question" and el not in self._shared_answer_ranges:
+                if av is not None:
+                    out.add_empty_answer(t, (
+                        "answer_lines/answer_value conflict: evidence entry "
+                        "numbering does not match target question",
+                        f"qn={qn}",
+                        f"declared_answer_value={av}",
+                        f"evidence_lines={el[0]}-{el[1]}",
+                        f"evidence_text={raw.strip()[:80]}",
+                    ))
+                else:
+                    out.add_empty_answer(t, (
+                        "answer evidence entry numbering does not match target question",
+                        f"qn={qn}",
+                        f"evidence_lines={el[0]}-{el[1]}",
+                        f"evidence_text={raw.strip()[:80]}",
+                    ))
+                return
+            # P0-R3 conflict: bare cell + declared answer_value must agree.
+            if _own == "bare" and av is not None:
+                _cell = raw.strip()
+                if _cell and _cell != av.strip():
+                    # allow cell to be a labeled form of av (e.g. "（A）" vs "A")
+                    _cell_clean = _clean_answer_for_conflict(_cell)
+                    _av_clean = _clean_answer_for_conflict(av)
+                    if _cell_clean != _av_clean:
+                        out.add_empty_answer(t, (
+                            "answer_lines/answer_value conflict: cell text != declared value",
+                            f"qn={qn}",
+                            f"declared_answer_value={av}",
+                            f"evidence_text={_cell[:80]}",
+                        ))
+                        return
+            # P0-R16 F7: try compact answer key (e.g. FGDAE) before
+            # falling through to single-line full. Only for multi-qn
+            # shared ranges — single-letter answers (e.g. "A") are not
+            # compact keys.
+            _qn_list = None
+            if el and el in self._shared_answer_ranges:
+                _raw_qns = self._shared_answer_ranges[el]
+                _qn_list = []
+                for _q in _raw_qns:
+                    try:
+                        _qn_list.append(int(_q))
+                    except (TypeError, ValueError):
+                        pass
+                if not _qn_list or len(_qn_list) < 2:
+                    _qn_list = None
+            if _qn_list is not None:
+                _ck = decode_compact_answer_key(raw, qn, _qn_list)
+                if _ck is not None:
+                    _ck_start, _ck_end, _ck_val = _ck
+                    out.add_char_span(
+                        unit_id, t, line_ref, _ck_start, _ck_end, "exact",
+                        ("answer evidence range", f"lines={el[0]}-{el[1]}",
+                         "compact_answer_key", f"qn={qn}",
+                         f"qns={','.join(str(x) for x in _qn_list)}",
+                         f"cell={_ck_val}"),
+                    )
+                    return
             out.add_span(
                 unit_id, t, [line_ref], "exact",
                 ("answer evidence range", f"lines={el[0]}-{el[1]}",
@@ -2229,60 +2939,59 @@ class SourceResolver:
         # force-bind unrelated answer-section text. Bind an empty (absent)
         # answer span so the unit stays IR-ready without fabricating answers.
         if getattr(t, "answer_fallback_blocked", False):
-            # Bind to an empty source line so the answer text is "" (absent),
-            # not any real content. P1L002 is conventionally the blank line
-            # after the document title in real OCR markdown.
-            _absent_ref = "P1L002"
-            out.resolved.append(
-                ResolvedSpan(
-                    span_id=f"sp-{t.target_id}",
-                    source_version_id=out.svid,
-                    role=t.role,
-                    start_line_ref=_absent_ref,
-                    end_line_ref=_absent_ref,
-                    line_refs=(_absent_ref,),
-                    granularity="line",
-                    start_offset=None,
-                    end_offset=None,
-                    text_hash=_raw_sha256(""),
-                    resolution_status="exact",
-                    evidence=("answer absent: fallback blocked (absent + validation issue)",),
-                )
-            )
+            out.add_empty_answer(t, (
+                "answer absent: fallback blocked (absent + validation issue)",
+            ))
             return
 
-        # Fallback (no declared evidence range): scan answer zone for the
-        # qn-bounded entry. Retained for hand-written annotations / tests.
-        entries: list[tuple[str, int, int]] = []
-        in_zone = False
-        for l in self._idx.lines:
-            norm = normalize_text(l.text)
-            if not in_zone:
-                if is_answer_header(norm):
-                    in_zone = True
-                continue
-            if is_explanation_header(norm):
-                break
-            offs = _entry_offsets(l.text, qn)
-            if offs:
-                # 同行多题答案：本 qn 切片止于本行下一个任意 qn 条目（或无则行尾）。
-                all_off = [m.start() for m in _ENTRY_RE.finditer(l.text)]
-                nxt = next((o for o in all_off if o > offs[0]), len(l.text))
-                # Strip `N.` / `N\\.` prefix: bind only answer content.
-                _cs, _ce = _entry_content_bounds(l.text, offs[0], nxt)
-                if _cs < _ce:
-                    entries.append((l.line_ref, _cs, _ce))
-        if not entries:
-            out.add_unresolved(t, "missing", (f"answer row qn={qn} not found",))
+        # P0-answer: when answer_lines is None AND answer_value is None,
+        # fall back to answer-zone scan BUT reject explanation-looking text.
+        # Never infer answer from 【分析】/【解答】/【解析】 content.
+        if el is None:
+            if getattr(t, "answer_fallback_blocked", False):
+                out.add_empty_answer(t, (
+                    "answer absent: fallback blocked (absent + validation issue)",
+                ))
+                return
+            # Fallback: scan answer zone for qn-bounded entry.
+            # P0-answer: reject entries that look like explanation text.
+            _EXPL_PREFIXES = ("【分析】", "【解答】", "【解析】", "【详解】", "【点评】")
+            entries: list[tuple[str, int, int]] = []
+            in_zone = False
+            for l in self._idx.lines:
+                norm = normalize_text(l.text)
+                if not in_zone:
+                    if is_answer_header(norm):
+                        in_zone = True
+                    continue
+                if is_explanation_header(norm):
+                    break
+                offs = _entry_offsets(l.text, qn)
+                if offs:
+                    all_off = [m.start() for m in _ENTRY_RE.finditer(l.text)]
+                    nxt = next((o for o in all_off if o > offs[0]), len(l.text))
+                    _cs, _ce = _entry_content_bounds(l.text, offs[0], nxt)
+                    if _cs < _ce:
+                        _candidate = l.text[_cs:_ce].strip()
+                        # P0-answer: reject explanation-looking text
+                        if any(_candidate.startswith(p) for p in _EXPL_PREFIXES):
+                            continue
+                        entries.append((l.line_ref, _cs, _ce))
+            if not entries:
+                out.add_unresolved(t, "missing", (
+                    f"answer row qn={qn} not found in answer zone",
+                    "or entry was explanation text (rejected)",
+                ))
+                return
+            distinct_lines = {e[0] for e in entries}
+            if len(distinct_lines) > 1:
+                out.add_unresolved(t, "ambiguous",
+                                   (f"answer row qn={qn} spans multiple lines",))
+                return
+            line_ref, start, end = entries[0]
+            out.add_char_span(unit_id, t, line_ref, start, end, "exact",
+                              ("answer zone fallback", t.zone or "", f"qn={qn}"))
             return
-        distinct_lines = {e[0] for e in entries}
-        if len(distinct_lines) > 1:
-            out.add_unresolved(t, "ambiguous",
-                               (f"answer row qn={qn} spans multiple lines",))
-            return
-        line_ref, start, end = entries[0]
-        out.add_char_span(unit_id, t, line_ref, start, end, "exact",
-                          ("answer zone", t.zone or "", f"qn={qn}"))
 
     def _explanation_span(self, out, unit_id, t):
         qn = t.question_number

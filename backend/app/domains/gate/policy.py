@@ -188,11 +188,12 @@ def evaluate(
     # answer span must not fall into explanation/question structural regions.
     # Resolver produces structural region map via deterministic header grammar;
     # Gate performs span set intersection (contract self-consistency, NOT NLP).
-    # P0-A (Owner 2026-09): overlap is DIAGNOSTIC-ONLY. structural_regions must
-    # not act as a Question auto-eligibility blocker on its own (prior Owner
-    # Decision: structural_regions is not a lifecycle controller). Keep the
-    # reason for audit/debugging; do NOT mutate auto_allowed; do NOT push into
-    # auto_blockers.
+    # P0-R3 (Owner 2026-10): overlap is a REAL provenance failure for auto
+    # eligibility. Fabricated / wrong-region line_refs (e.g. MATH-001 P1L001
+    # answer spans inside the question region) must NOT auto_approve.
+    # Overlap -> auto_allowed=False -> pending_review (file header contract of
+    # test_role_provenance.py: "Overlap -> auto_allowed=False -> pending_review").
+    # Not terminal rejected: human review may still confirm a legitimate bind.
     role_provenance_violations: list[str] = []
     if resolved_run.structural_regions:
         region_by_role: dict[str, set[str]] = {}
@@ -205,6 +206,17 @@ def evaluate(
             if ans_span is None:
                 continue
             ans_lines = set(ans_span.line_refs)
+            if not ans_lines:
+                # value-only / unlocated answer: no verifiable source lines.
+                violation = (
+                    f"leaf {leaf.unit_id!r} answer span {leaf.answer.span_id!r} "
+                    f"has no source line_refs (value-only / unlocated) "
+                    f"(role provenance violation)"
+                )
+                provenance_reasons.append(violation)
+                role_provenance_violations.append(violation)
+                auto_allowed = False
+                continue
             for bad_role in ("explanation", "question"):
                 bad_lines = region_by_role.get(bad_role, set())
                 overlap = ans_lines & bad_lines
@@ -212,19 +224,26 @@ def evaluate(
                     violation = (
                         f"leaf {leaf.unit_id!r} answer span {leaf.answer.span_id!r} "
                         f"overlaps {bad_role} region at lines {sorted(overlap)[:5]} "
-                        f"(role provenance diagnostic)"
+                        f"(role provenance violation)"
                     )
                     provenance_reasons.append(violation)
                     role_provenance_violations.append(violation)
+                    # P0-R3: region overlap is NOT auto-eligible.
+                    auto_allowed = False
 
-    # provenance 层 fail 仅当证据矛盾（text_hash mismatch）；resolution 非 exact/normalized
-    # 只降级 auto（pending），不构成 terminal 矛盾（20 §8.2 contextual 可人工）。
-    # role region overlap 仅 diagnostic（P0-A），不再影响 auto_allowed。
+    # provenance 三态（P0-R4 Owner 语义契约）：
+    #   pass         = 来源证据满足契约（byte-proven + 无 region 重叠 + 行级定位）
+    #   fail         = 明确违反契约（text_hash mismatch 证据矛盾）→ terminal rejected
+    #   insufficient = 证据不足（value-only / region overlap / 非 byte-proven），
+    #                  不能证明来源可靠 → pending_review，不得当作 pass
+    # auto_allowed 与 status 必须一致：insufficient ⟺ 不可 auto。
     hash_broken = any("text_hash mismatch" in r for r in provenance_reasons)
-    provenance = _layer(
-        "pass" if not hash_broken else "fail",
-        provenance_reasons,
-    )
+    if hash_broken:
+        provenance = _layer("fail", provenance_reasons)
+    elif role_provenance_violations or not auto_allowed:
+        provenance = _layer("insufficient", provenance_reasons)
+    else:
+        provenance = _layer("pass", provenance_reasons)
     provenance["auto_allowed"] = bool(auto_allowed)
     provenance["role_region_diagnostics"] = list(role_provenance_violations)
 
@@ -248,9 +267,12 @@ def evaluate(
 
     # ---------------------------------------------------------------- admission
     structural_pass = structural["status"] == "pass"
-    provenance_pass = provenance["status"] == "pass"
+    # P0-R4: only provenance "fail" (evidence contradiction) is terminal.
+    # "insufficient" is a safe downgrade to pending_review — never auto, never
+    # treated as a verified source by downstream.
+    provenance_fail = provenance["status"] == "fail"
     semantic_pass = semantic["status"] == "pass"
-    if not (structural_pass and provenance_pass and semantic_pass):
+    if not structural_pass or provenance_fail or not semantic_pass:
         # 结构/语义矛盾或证据不成立 → terminal rejected（P0-G-002：approve() 必拒）。
         for r in structural_reasons + semantic_reasons + provenance_reasons:
             admission_reasons.append(r)
@@ -259,9 +281,17 @@ def evaluate(
         # 非矛盾路径：逐 leaf 跑 strict-auto grammar（D2：子题递归，composite 全子题过才过）。
         auto_blockers: list[str] = []
         if not auto_allowed:
-            auto_blockers.append("not byte-proven (resolution not in {exact, normalized})")
-        # P0-A: role_provenance_violations are diagnostic-only — they must NOT
-        # enter auto_blockers. Regression tests lock this authority level.
+            auto_blockers.append(
+                "not byte-proven (resolution not in {exact, normalized} "
+                "or answer provenance unverified)"
+            )
+        if provenance["status"] == "insufficient":
+            auto_blockers.append(
+                "provenance insufficient (source evidence not verifiable)"
+            )
+        # P0-R3: role_provenance_violations (region overlap / value-only) already
+        # set auto_allowed=False above — they block auto_approve via the path
+        # above and remain in provenance reasons for audit.
         for leaf in leaves:
             g = _leaf_grammar(leaf)
             if g is not None:
@@ -276,6 +306,13 @@ def evaluate(
             if leaf.answer is None or not leaf.answer.source_located or not leaf.answer.complete:
                 auto_blockers.append(
                     f"leaf {leaf.unit_id!r} answer not source_located+complete"
+                )
+            # P0 CONTRACT-FINAL: auto requires proven ownership.
+            # local_proven is an empty set; only "match" qualifies.
+            _own = getattr(leaf.answer, "ownership", "unknown") if leaf.answer else "unknown"
+            if _own not in ("match", "local_proven"):
+                auto_blockers.append(
+                    f"leaf {leaf.unit_id!r} answer ownership={_own!r} not proven for auto"
                 )
         if auto_blockers:
             for b in auto_blockers:

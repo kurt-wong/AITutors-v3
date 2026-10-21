@@ -30,6 +30,19 @@ def _subject_or_unset(v: str | None) -> str | None:
     return v  # NULL stays NULL; UI renders 未设置
 
 
+def _public_answer_status(status: dict | None) -> dict | None:
+    """Student/consumer API: never expose review-only candidate text or
+    internal trust-chain diagnostics (B4 / P2-API).
+    Frontend only needs verified_correct / ownership / publish for UI trust
+    signaling; publish_seal and binding_fact_id stay server-side.
+    """
+    if not status:
+        return status
+    _drop = {"candidate_text", "publish_seal", "binding_fact_id", "answer_text_hash"}
+    out = {k: v for k, v in status.items() if k not in _drop}
+    return out
+
+
 @router.get("", response_model=QuestionListResponse)
 async def list_questions(
     document_id: uuid.UUID | None = None,
@@ -124,7 +137,7 @@ async def get_question(
                         text=c.text,
                         text_hash=c.text_hash,
                         source_span=c.source_span,
-                        answer_status=c.answer_status,
+                        answer_status=_public_answer_status(c.answer_status),
                     )
                     for c in contents
                 ],

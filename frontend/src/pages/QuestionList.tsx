@@ -45,12 +45,11 @@ export function QuestionList() {
           <table className="w-full text-[13px]">
             <thead className="bg-canvas-parchment text-left text-ink-muted">
               <tr>
-                <th className="px-3 py-2 font-medium">题号</th>
+                <th className="px-3 py-2 font-medium">ID</th>
                 <th className="px-3 py-2 font-medium">类型</th>
                 <th className="px-3 py-2 font-medium">学科</th>
                 <th className="px-3 py-2 font-medium">年级</th>
                 <th className="px-3 py-2 font-medium">来源</th>
-                <th className="px-3 py-2 font-medium">ID</th>
               </tr>
             </thead>
             <tbody>
@@ -62,9 +61,9 @@ export function QuestionList() {
                   <td className="px-3 py-2">
                     <Link
                       to={`/admin/questions/${q.id}`}
-                      className="text-primary hover:underline"
+                      className="text-primary hover:underline font-mono text-[11px]"
                     >
-                      {q.question_number}
+                      {q.id.slice(0, 8)}…
                     </Link>
                   </td>
                   <td className="px-3 py-2">{q.canonical_question_type}</td>
@@ -78,9 +77,6 @@ export function QuestionList() {
                   </td>
                   <td className="px-3 py-2 text-ink-muted">
                     p{q.page_no} · {q.document_id.slice(0, 8)}…
-                  </td>
-                  <td className="px-3 py-2 font-mono text-[11px] text-ink-muted">
-                    {q.id.slice(0, 8)}…
                   </td>
                 </tr>
               ))}

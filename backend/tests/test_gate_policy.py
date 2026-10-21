@@ -118,7 +118,9 @@ def test_contextual_span_not_auto_pending():
     d = _decision(root, ir, snap, run2)
     assert d["decision"] == "pending_review"  # contextual 可人工，不 rejected
     assert any("not byte-proven" in r for r in d["reasons"])
-    assert d["layers"]["provenance"]["status"] == "pass"  # 非矛盾，仅不 auto
+    # P0-R4: non-byte-proven is evidence-insufficient, NOT a silent pass.
+    assert d["layers"]["provenance"]["status"] == "insufficient"
+    assert d["layers"]["provenance"]["auto_allowed"] is False
 
 
 def test_text_hash_mismatch_rejected():
@@ -223,7 +225,9 @@ def test_composite_material_contextual_not_auto():
     d = _decision(root, ir, snap, run2)
     assert d["decision"] == "pending_review"  # contextual material 可人工，不 auto
     assert any("material" in r for r in d["layers"]["provenance"]["reasons"])
-    assert d["layers"]["provenance"]["status"] == "pass"  # 非矛盾，仅不 auto
+    # P0-R4: contextual material is evidence-insufficient.
+    assert d["layers"]["provenance"]["status"] == "insufficient"
+    assert d["layers"]["provenance"]["auto_allowed"] is False
 
 
 def test_composite_one_sub_not_strict_auto_pending():
