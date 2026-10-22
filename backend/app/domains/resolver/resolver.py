@@ -3098,6 +3098,11 @@ class SourceResolver:
                 # shared passage (cloze blanks / reading stems). Not pollution.
                 if ".sub" in (o.span_id or "") and o.role in ("stem", "option"):
                     continue
+                if o.role in ("stem", "option") and (o.span_id or "").startswith("sp-") and (m.span_id or "").startswith("sp-"):
+                    o_pre = o.span_id[3:].rsplit(".", 1)[0]
+                    m_pre = m.span_id[3:].rsplit(".", 1)[0]
+                    if o_pre == m_pre:
+                        continue
                 if frozenset(o.line_refs) & mrefs:
                     conflicts.append(
                         f"overlaps {o.role} span {o.span_id} ({o.line_refs[0]}..{o.line_refs[-1]})"

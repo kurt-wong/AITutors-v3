@@ -258,8 +258,18 @@ class TaskExecutor:
                 role=role,
                 provider=provider,
                 extractor=extractor,
+                # Must match preprocessing_import's seal inputs, or LE hash
+                # forks into a second Source Version for the same content.
+                line_mode=params.get("line_mode", "default"),
+                source_content_sha256=params.get("source_content_sha256") or None,
             )
             await s.commit()
+            expected_sv = params.get("source_version_id")
+            if expected_sv and str(version.id) != str(expected_sv):
+                raise RepositoryError(
+                    "source_version identity fork: task_params.source_version_id="
+                    f"{expected_sv} but seal resolved {version.id}"
+                )
             return version
 
     async def _build_preprocessing_extractor(self, params: dict):

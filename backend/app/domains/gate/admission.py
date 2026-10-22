@@ -368,7 +368,9 @@ class AdmissionService:
                 # compiled_roles —— 从 ir_snapshot 补齐到物化 roles。
                 ir_by_id = {u.get("unit_id"): u for u in (p.get("ir_snapshot") or {}).get("units") or []}
                 parent_ir = ir_by_id.get(unit_id) or {}
-                for c in parent_ir.get("content") or []:
+                _has_real_subs = bool(unit.get("sub_questions") or [])
+                if not _has_real_subs:
+                  for c in parent_ir.get("content") or []:
                     if c.get("role") != "option" or not c.get("label"):
                         continue
                     if any(r.get("role") == "option" and r.get("label") == f"P{c['label']}" for r in roles):
@@ -706,7 +708,13 @@ def _leaf_units(units: list[dict]) -> list[str]:
 
     def walk(u: dict) -> None:
         if u["unit_type"] == "composite_unit":
-            for s in u.get("sub_questions", []):
+            subs = u.get("sub_questions", []) or []
+            if not subs:
+                if u["unit_id"] not in seen:
+                    seen.add(u["unit_id"])
+                    out.append(u["unit_id"])
+                return
+            for s in subs:
                 walk(s)
         elif u["unit_id"] not in seen:
             seen.add(u["unit_id"])
@@ -735,7 +743,11 @@ def _child_unit_ids(u: dict) -> list[str]:
 
     def walk(n: dict) -> None:
         if n.get("unit_type") == "composite_unit":
-            for s in n.get("sub_questions", []) or []:
+            subs = n.get("sub_questions", []) or []
+            if not subs:
+                out.append(n["unit_id"])
+                return
+            for s in subs:
                 walk(s)
         else:
             out.append(n["unit_id"])
@@ -772,8 +784,8 @@ def _aggregate_composite_roles(
     for r in roles_by_unit.get(root["unit_id"], []):
         if r.get("role") == "material":
             roles.append(dict(r))
-        elif r.get("role") == "option" and r.get("text"):
-            # 七选五：共享 A–G 选项挂在父单元
+        elif r.get("role") == "option" and r.get("text") and not child_ids:
+            # Shared parent options only when no child subs carry options.
             lab = str(r.get("label") or "")
             roles.append({
                 **r,

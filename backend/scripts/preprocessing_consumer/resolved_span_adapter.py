@@ -120,9 +120,10 @@ def manifest_to_resolved_spans(
             # 此前 Track B 产出 sp-<uid>.questions / sp-<uid>.answer，在 IRBuilder
             # 中无法解析（IRBuilder 查 sp-<uid>.sub.stem）——已修正为同一约定。
             _try(unit.unit_id, "material", unit.material_lines)
-            sub_id = f"{unit.unit_id}.sub"
-            _try(sub_id, "stem", unit.questions_lines)
-            _try(sub_id, "answer", unit.answer_lines)
-            _try(sub_id, "explanation", unit.explanation_lines)
+            # Parent is the Question body (no fabricated sub).
+            # Span ids = IRBuilder._content_span_id(parent, role).
+            _try(unit.unit_id, "stem", unit.questions_lines)
+            _try(unit.unit_id, "answer", unit.answer_lines)
+            _try(unit.unit_id, "explanation", unit.explanation_lines)
 
     return resolved, unresolved

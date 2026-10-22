@@ -74,12 +74,21 @@ def extract_targets(payload: dict) -> tuple[ResolveTarget, ...]:
         if unit.get("unit_type") == "composite_unit" or sc or subs:
             for sc_key, sc_val in _iter_shared_components(unit):
                 targets.append(_material_target(u_id, sc_key, sc_val))
-            for sub in _iter_sub_questions(unit):
+            subs_list = list(_iter_sub_questions(unit))
+            if not subs_list:
+                # Producer 未拆子题：父节点 content 即题目本体（stem/answer
+                # 等）。与 standalone 同路径提取，避免只提取 options/explanation。
+                _extract_content_targets(
+                    targets, u_id, unit.get("content") or {}
+                )
+            for sub in subs_list:
                 sub_id = _sub_id(unit, sub)
                 _extract_content_targets(targets, sub_id, sub.get("content") or {})
-            # E2E-010: 七选五共享 A–G 选项挂在父 content
+            # E2E-010: 七选五共享 A–G 选项挂在父 content。
+            # 仅当存在 sub_questions 时需要额外提取父级 options/explanation
+            # （无子题时父 content 已在上方整份提取，避免重复 target）。
             parent_content = unit.get("content") or {}
-            if parent_content.get("options"):
+            if subs_list and parent_content.get("options"):
                 opts_range = parent_content.get("options_range")
                 opts_range_tuple = None
                 if isinstance(opts_range, (list, tuple)) and len(opts_range) == 2:
@@ -91,7 +100,7 @@ def extract_targets(payload: dict) -> tuple[ResolveTarget, ...]:
                     _option_target(targets, u_id, opt, opts_range_tuple)
             # R3-C: composite parent explanation must become a ResolveTarget
             # (was only in payload content, never extracted → never resolved).
-            if parent_content.get("explanation"):
+            if subs_list and parent_content.get("explanation"):
                 _explanation_target(targets, u_id, parent_content["explanation"])
         else:
             _extract_content_targets(targets, u_id, unit.get("content") or {})

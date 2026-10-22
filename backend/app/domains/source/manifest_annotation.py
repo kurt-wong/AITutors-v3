@@ -301,9 +301,24 @@ def _expand_subs(bu: "BoundUnit", source_lines: list[str]) -> None:
     is skipped per question. short_answer / non-choice stays unexpanded.
     """
     from app.domains.source.subq_expand import (
+        answer_evidence_mismatches,
         expand_composite_sub_questions,
         specs_to_payload_subs,
     )
+
+    # Shared P0 gate: wrong answer_evidence.value must not expand / auto-approve.
+    mismatch = answer_evidence_mismatches(
+        bu.answer_evidence_value,
+        list(bu.question_numbers or []),
+        source_lines,
+        (bu.ranges["answer"].start, bu.ranges["answer"].end)
+        if bu.ranges.get("answer") is not None
+        else None,
+    )
+    if mismatch:
+        bu.subq_unit_reason = mismatch
+        bu.sub_questions = []
+        return
 
     q_range = None
     if bu.ranges.get("stem") is not None:

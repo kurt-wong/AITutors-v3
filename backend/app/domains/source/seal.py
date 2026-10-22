@@ -75,6 +75,7 @@ class SealService:
         provider: str,
         extractor: Extractor,
         line_mode: str = "default",
+        source_content_sha256: str | None = None,
     ) -> DocumentSourceVersion:
         """返回 sealed DocumentSourceVersion（幂等：同文件+同 role/provider/contract → 既有行）。
 
@@ -105,7 +106,13 @@ class SealService:
                 "seal_contract_version": SEAL_CONTRACT_VERSION,
                 "parser": {"provider": provider, "role": role, "line_mode": line_mode},
             },
-            input_domain={"original_sha256": original_sha256},
+            input_domain={
+                "original_sha256": original_sha256,
+                # Source content identity: same PDF + different sealed
+                # markdown must be a NEW Source Version (not LE reuse).
+                **({"source_content_sha256": source_content_sha256}
+                   if source_content_sha256 else {}),
+            },
         )
 
         existing = await self._repo.find_sealed_version_by_le(

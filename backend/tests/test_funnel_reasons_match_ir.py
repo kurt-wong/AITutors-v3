@@ -35,10 +35,13 @@ def test_multi_q_composite_reason_is_real_validator_reason():
     )
     summary, problems = ir_skip_reasons(node)
     real = collect_validation_problems(node, set())
+    # Core constraint: funnel reasons must match the IR validator (no drift).
     assert problems == real, (problems, real)
-    assert "composite has no sub_questions" in problems
-    assert "stem not declared" not in problems
-    assert "options missing for choice type" not in problems
+    # New composite semantics: empty sub_questions + empty parent content
+    # reports the real missing roles (not a fabricated "no sub_questions").
+    assert "stem not declared" in problems
+    assert "answer not declared" in problems
+    assert "composite has no sub_questions" not in problems
 
 
 def test_standalone_reasons_unchanged():

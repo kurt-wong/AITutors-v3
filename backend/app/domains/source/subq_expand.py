@@ -33,6 +33,57 @@ _HTML_TAG_RE = re.compile(r"<[^>]+>")
 _HTML_IMG_RE = re.compile(r"<img\b", re.I)
 
 
+
+_ANS_TOKEN_RE = re.compile(r"(\d+)\s*[\.．]?\s*([A-Za-z][A-Za-z0-9]*)")
+
+
+def answer_evidence_mismatches(
+    answer_evidence_value: str | None,
+    question_numbers: list[int],
+    line_texts: list[str] | None,
+    answer_range: tuple[int, int] | None,
+) -> str | None:
+    """Shared semantic check for answer_evidence.value (Adapter + Formal Binder).
+
+    Returns a reason string on mismatch, or None when the value is consistent
+    (or absent). Mismatch means: must NOT expand / must NOT auto-approve.
+    Cases:
+      - value covers other question_numbers than declared (9.Z 10.Y vs [1,2])
+      - value is non-token junk (not-an-answer)
+      - value tokens do not appear in the declared answer window
+    """
+    ae_val = (answer_evidence_value or "").strip()
+    if not ae_val:
+        return None
+    toks = _ANS_TOKEN_RE.findall(ae_val)
+    qns = [int(q) for q in question_numbers or []]
+    tok_qns = {int(a) for a, _b in toks}
+    if not toks:
+        return f"answer_evidence.value {ae_val!r} has no qn.answer tokens"
+    if qns and set(qns) - tok_qns:
+        return (
+            f"answer_evidence.value {ae_val!r} covers {sorted(tok_qns)} "
+            f"but unit question_numbers are {qns}"
+        )
+    if line_texts and answer_range and len(answer_range) == 2:
+        lo, hi = int(answer_range[0]), int(answer_range[1])
+        if 1 <= lo <= hi <= len(line_texts):
+            window = re.sub(r"\s+", "", "\n".join(line_texts[lo - 1:hi]))
+            nv = re.sub(r"\s+", "", ae_val)
+            if not (
+                nv in window
+                or all(
+                    re.sub(r"\s+", "", f"{a}.{b}") in window
+                    or re.sub(r"\s+", "", f"{a}{b}") in window
+                    for a, b in toks
+                )
+            ):
+                return (
+                    f"answer_evidence.value {ae_val!r} not found in answer "
+                    f"window {lo}-{hi}"
+                )
+    return None
+
 @dataclass(frozen=True)
 class SubQuestionSpec:
     """One fully-determined sub-question (evidence-backed, no guessing)."""

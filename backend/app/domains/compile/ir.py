@@ -149,7 +149,7 @@ class IRBuilder:
             subs = tuple(IRBuilder._node(s, resolved, original_type) for s in sub_units)
             return IRNode(
                 unit_id=uid, unit_type="composite_unit",
-                question_number=None,
+                question_number=str(unit.get("question_number") or "") or None,
                 question_number_range=unit.get("question_number_range"),
                 original_question_type=original_type,
                 content=_content_items(uid, content, resolved),
@@ -290,9 +290,33 @@ def collect_validation_problems(node: "IRNode", seen: set[str]) -> list[str]:
         if node.sub_questions and sub_has_problems:
             problems.append("composite sub_question not ready")  # invariant 7
         if not node.sub_questions:
-            # 多题 composite 且子题边界未确定时 sub_questions 为空；
-            # 不得把「无子题」当成 ready（会误产空/假 Question）。
-            problems.append("composite has no sub_questions")
+            # Producer 未拆子题：综合题整体 = 一道 Question（产品定义）。
+            # 父节点 content 即题目本体，按 leaf 必填 role 校验，不因缺少
+            # 伪子题而判 incomplete。
+            required_roles = content_roles_for(canonical)
+            if required_roles.get("stem") == "required":
+                c = content_by_role.get("stem")
+                if c is None:
+                    problems.append("stem not declared")
+                elif c.span_id is None:
+                    problems.append("stem unresolved")
+            if required_roles.get("answer") == "required":
+                c = content_by_role.get("answer")
+                if c is None:
+                    problems.append("answer not declared")
+                elif c.span_id is None:
+                    problems.append("answer unresolved")
+            if required_roles.get("options") == "required_for_choice":
+                if not any(c.role == "option" for c in node.content):
+                    problems.append("options missing for choice type")
+            for c in node.content:
+                if c.unsupported:
+                    problems.append(
+                        f"unsupported content role {c.role} "
+                        "(figure_refs/blank deferred, BUG-V3-020)"
+                    )
+                elif c.span_id is None:
+                    problems.append(f"role {c.role} unresolved")
 
     return problems
 

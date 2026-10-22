@@ -38,6 +38,9 @@ def leaf_unit_ids(root: IRNode) -> frozenset[str]:
 
     def walk(n: IRNode) -> None:
         if n.unit_type == "composite_unit":
+            if not n.sub_questions:
+                ids.add(n.unit_id)
+                return
             for s in n.sub_questions:
                 walk(s)
         else:

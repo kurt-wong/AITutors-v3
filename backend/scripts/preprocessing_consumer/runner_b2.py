@@ -298,10 +298,12 @@ def _build_resolved_run(
             _try_options_region(unit)
         else:
             _try(unit.unit_id, "material", unit.material_lines, sv_id)
-            sub_id = f"{unit.unit_id}.sub"
-            _try(sub_id, "stem", unit.questions_lines, sv_id)
-            _try(sub_id, "answer", _answer_span(unit), sv_id)
-            _try(sub_id, "explanation", unit.explanation_lines, sv_id)
+            # Parent is the Question body (no fabricated sub). Span ids
+            # match IRBuilder content roles on the composite parent.
+            _try(unit.unit_id, "stem", unit.questions_lines, sv_id)
+            _try(unit.unit_id, "answer", _answer_span(unit), sv_id)
+            _try(unit.unit_id, "explanation", unit.explanation_lines, sv_id)
+            _try_options_region(unit)
 
     return ResolvedRun(
         source_version_id=sv_id,

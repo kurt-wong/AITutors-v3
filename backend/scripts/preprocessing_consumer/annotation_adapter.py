@@ -297,7 +297,10 @@ def attach_material_boundary_markers(
                 ),
             })
             continue
-        shared["material"] = markers
+        base = dict(shared.get("material") or {})
+        base.update(markers)
+        base.setdefault("role", "material")
+        shared["material"] = base
     return payload
 
 
@@ -350,6 +353,16 @@ def _leaf_content(unit: ManifestUnit) -> dict:
     al = unit.answer_lines or unit.answer_evidence_lines
     if al and len(al) == 2 and int(al[0]) >= 1 and int(al[1]) >= int(al[0]):
         answer["answer_lines"] = [int(al[0]), int(al[1])]
+    # P0-2: pass through Producer answer_evidence (value / type / shared lines).
+    # These are already determined upstream — V3 must consume, not re-guess.
+    if unit.answer_evidence_value is not None:
+        answer["answer_evidence_value"] = unit.answer_evidence_value
+        answer["answer_value"] = unit.answer_evidence_value
+    if unit.answer_evidence_type:
+        answer["answer_evidence_type"] = unit.answer_evidence_type
+    ael = unit.answer_evidence_lines
+    if ael and len(ael) == 2 and int(ael[0]) >= 1 and int(ael[1]) >= int(ael[0]):
+        answer["answer_evidence_lines"] = [int(ael[0]), int(ael[1])]
     content["answer"] = answer
     if unit.explanation_lines:
         expl = {
@@ -422,54 +435,188 @@ def _build_standalone(
     }, _unit_gaps(unit, norm.canonical_unit_type)
 
 
-def _build_composite(
-    unit: ManifestUnit, norm: NormalizedUnitType
-) -> tuple[dict, list[dict]]:
-    """composite 形态 → V3 composite_unit（shared_components + sub_questions）。
+def _recover_composite_ranges(
+    line_texts: list[str],
+    unit: ManifestUnit,
+    qns: list[int],
+    q_range,
+    a_range,
+):
+    """Validate / lightly recover declared ranges. Never rewrite a valid range.
 
-    preprocessing 的 composite 是一个原子单元（material + questions + answer）。
-    V3 的 composite_unit 需要 shared_components + sub_questions。
-    这里把 material 放 shared_components，把整块 questions 区间 1:1 译为单个子题
-    （确定性结构翻译；Producer 无子题拆分证据，不猜拆分）。
+    - questions: keep declared window when it covers all printed question
+      starts; otherwise widen only to locate missing printed entries.
+    - answers: KEEP the declared answer table range when it is in-bounds.
+      Match answer_evidence.value with whitespace normalization against that
+      window. Only if the declared window is out of range or the value cannot
+      correspond at all, search for the value — and never relocate answers
+      into the question area as a substitute for the answer table.
+    """
+    import re as _re
+
+    def _norm(s: str) -> str:
+        return _re.sub(r"\s+", "", s or "")
+
+    n = len(line_texts)
+    qs = tuple(q_range) if q_range and len(q_range) == 2 else None
+    as_ = tuple(a_range) if a_range and len(a_range) == 2 else None
+
+    def _has_all_printed(lo, hi) -> bool:
+        window = "\n".join(line_texts[lo - 1:hi])
+        return all(
+            _re.search(
+                rf"(?:^|\n)\s*{q}\s*[.．、]\s*(?![A-Ga-g](?:\s|$|[.．、,，]))",
+                window,
+            )
+            for q in qns
+        )
+
+    if not (qs and 1 <= qs[0] <= qs[1] <= n and _has_all_printed(qs[0], qs[1])):
+        lo = min([x for x in [qs[0] if qs else None,
+                              unit.material_lines[0] if unit.material_lines else None,
+                              unit.stem_lines[0] if unit.stem_lines else None]
+                  if x] or [1])
+        hi = max([x for x in [qs[1] if qs else None,
+                              unit.material_lines[1] if unit.material_lines else None,
+                              unit.stem_lines[1] if unit.stem_lines else None]
+                  if x] or [n])
+        lo = max(1, lo - 15)
+        hi = min(n, hi + 8)
+        if _has_all_printed(lo, hi):
+            qs = (lo, hi)
+
+    # Answer table: declared range is authoritative when in-bounds.
+    ae_val = (unit.answer_evidence_value or "").strip()
+    if as_ and 1 <= as_[0] <= as_[1] <= n:
+        window = "\n".join(line_texts[as_[0] - 1:as_[1]])
+        if not ae_val or _norm(ae_val) in _norm(window) or _norm(window) in _norm(ae_val):
+            return qs, as_  # keep declared answer table line(s)
+        # Value tokens (e.g. 1.C / 1. C) appear in the window after
+        # whitespace normalization → still the answer table.
+        toks = _re.findall(r"(\d+)\s*[.．]?\s*([A-Za-z][A-Za-z0-9]*)", ae_val)
+        if toks and all(
+            _norm(f"{a}.{b}") in _norm(window) or _norm(f"{a}{b}") in _norm(window)
+            for a, b in toks
+        ):
+            return qs, as_
+        # Declared window is in-bounds but value does not correspond.
+        # Do NOT relocate into the question area; keep the declared table
+        # and let expand / incomplete reporting handle mismatch.
+        return qs, as_
+
+    # Declared answer range missing/out-of-bounds: search for value text.
+    if ae_val:
+        target = _norm(ae_val)
+        for i, line in enumerate(line_texts, 1):
+            if target and target in _norm(line):
+                return qs, (i, i)
+        toks = _re.findall(r"(\d+)\s*[.．]?\s*([A-Za-z][A-Za-z0-9]*)", ae_val)
+        if toks:
+            for i, line in enumerate(line_texts, 1):
+                nl = _norm(line)
+                if all(_norm(f"{a}.{b}") in nl or _norm(f"{a}{b}") in nl for a, b in toks):
+                    return qs, (i, i)
+    return qs, as_
+
+def _build_composite(
+    unit: ManifestUnit, norm: NormalizedUnitType,
+    line_texts: list[str] | None = None,
+) -> tuple[dict, list[dict]]:
+    """composite 形态 → V3 composite_unit。
+
+    产品定义：综合题整体 = 一道 Question；子题是**内部有序结构**，不是独立
+    Question。多题号 composite 用生产端 expand_composite_sub_questions 展开
+    真实子题（各自题干/选项/答案），父节点仍是唯一 Question 身份。
+    展开失败/单题号 → 父节点 content 为本体，不制造伪子题。
     """
     shared: dict = {}
     if unit.material_lines:
-        shared["material"] = {"role": "material"}
-
-    sub = {
-        "unit_id": f"{unit.unit_id}.sub",
-        "unit_type": "standalone_unit",
-        "question_number": _qn(unit),
-        "original_question_type": unit.original_question_type,
-        "content": _leaf_content(unit),
-    }
+        shared["material"] = {
+            "role": "material",
+            "evidence_lines": [int(unit.material_lines[0]), int(unit.material_lines[1])],
+        }
 
     gaps = _unit_gaps(unit, norm.canonical_unit_type)
-    gaps.append({
-        "code": GAP_SUB_QUESTION_DECOMPOSITION,
-        "unit_id": unit.unit_id,
-        "detail": (
-            f"preprocessing does not decompose sub-questions; the single questions "
-            f"region is translated 1:1 into one sub-question ({_SUB_DECOMPOSITION}). "
-            f"No sub-question boundaries are invented."
-        ),
-    })
-
-    return {
+    qns = list(unit.question_numbers or [])
+    parent = {
         "unit_id": unit.unit_id,
         "unit_type": norm.canonical_unit_type,
+        "question_number": _qn(unit),
         "question_number_range": (
-            f"{unit.question_numbers[0]}-{unit.question_numbers[-1]}"
-            if len(unit.question_numbers) > 1
-            else None
+            f"{qns[0]}-{qns[-1]}" if len(qns) > 1 else None
         ),
         "original_question_type": unit.original_question_type,
+        "content": {},
         "shared_components": shared,
-        "sub_questions": [sub],
-    }, gaps
+        "sub_questions": [],
+    }
 
+    # Multi-q composite: real ordered internal sub_questions (GEO U1-2 etc.)
+    # P0: answer_evidence.value must cover declared question_numbers AND
+    # correspond to the answer window. Mismatch → no expand, incomplete.
+    a_range = unit.answer_lines or unit.answer_evidence_lines
+    q_range = unit.questions_lines or unit.stem_lines
+    # Shared P0 gate (same rule as Formal Binder).
+    if line_texts and len(qns) > 1:
+        from app.domains.source.subq_expand import answer_evidence_mismatches
+        mismatch = answer_evidence_mismatches(
+            unit.answer_evidence_value, qns, list(line_texts),
+            tuple(a_range) if a_range and len(a_range) == 2 else None,
+        )
+        if mismatch:
+            gaps.append({
+                "code": "COMPOSITE_ANSWER_EVIDENCE_MISMATCH",
+                "unit_id": unit.unit_id,
+                "detail": mismatch,
+            })
+            return parent, gaps
+    if line_texts and len(qns) > 1:
+        try:
+            from app.domains.source.subq_expand import (
+                expand_composite_sub_questions,
+                specs_to_payload_subs,
+            )
+            q_range = unit.questions_lines or unit.stem_lines
+            a_range = unit.answer_lines or unit.answer_evidence_lines
+            # Recover evidence windows when declared ranges miss declared
+            # question_numbers / answer value (Producer range drift). Not a
+            # silent clamp: we re-locate by printed entry / value text.
+            q_range, a_range = _recover_composite_ranges(
+                line_texts, unit, qns, q_range, a_range
+            )
+            result = expand_composite_sub_questions(
+                list(line_texts),
+                question_numbers=qns,
+                questions_range=tuple(q_range) if q_range else None,
+                answer_range=tuple(a_range) if a_range else None,
+                original_question_type=unit.original_question_type,
+                has_declared_options=bool(unit.options),
+            )
+            if result.sub_questions:
+                parent["sub_questions"] = specs_to_payload_subs(
+                    unit.unit_id,
+                    result.sub_questions,
+                    original_question_type=unit.original_question_type,
+                )
+                if result.skipped:
+                    gaps.append({
+                        "code": "COMPOSITE_SUB_EXPAND_PARTIAL",
+                        "unit_id": unit.unit_id,
+                        "detail": f"skipped question_numbers: {result.skipped}",
+                    })
+                return parent, gaps
+        except Exception as exc:  # noqa: BLE001
+            gaps.append({
+                "code": "COMPOSITE_SUB_EXPAND_FAILED",
+                "unit_id": unit.unit_id,
+                "detail": f"{type(exc).__name__}: {exc}",
+            })
 
-def manifest_to_annotation_payload(manifest: Manifest) -> dict:
+    # Single-q or expand unavailable: parent content is the Question body.
+    parent["content"] = _leaf_content(unit)
+    return parent, gaps
+
+def manifest_to_annotation_payload(manifest: Manifest, line_texts: list[str] | None = None) -> dict:
     """把 preprocessing manifest 转成 V3 annotation payload。
 
     归一化失败（含 legacy 噪声如 `andalone_question`）→ `BoundaryViolation`
@@ -491,7 +638,7 @@ def manifest_to_annotation_payload(manifest: Manifest) -> dict:
         })
 
         if norm.canonical_unit_type == "composite_unit":
-            payload_unit, gaps = _build_composite(unit, norm)
+            payload_unit, gaps = _build_composite(unit, norm, line_texts=line_texts)
         else:
             payload_unit, gaps = _build_standalone(unit, norm)
 

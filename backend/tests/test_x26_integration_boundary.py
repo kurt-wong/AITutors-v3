@@ -187,10 +187,11 @@ class TestValidCases:
                              material_lines=(1, 3), questions_lines=(4, 8),
                              answer_lines=(9, 10))])
         out = manifest_to_annotation_payload(m)
-        subs = out["semantic_units"][0]["sub_questions"]
-        assert len(subs) == 1
-        assert subs[0]["unit_id"] == "U1.sub"
-        assert subs[0]["unit_type"] == "standalone_unit"
+        u = out["semantic_units"][0]
+        assert u["sub_questions"] == []
+        assert u["unit_type"] == "composite_unit"
+        assert u["content"].get("stem") is not None
+        assert u["unit_id"] == "U1"
 
     def test_standalone_with_material_is_preserved_not_denied(self):
         """standalone + material：领域事实保留，且**不得**记成「standalone 无 material」。
@@ -211,7 +212,7 @@ class TestValidCases:
                              material_lines=(1, 3), questions_lines=(4, 8),
                              answer_lines=(9, 10))])
         out = manifest_to_annotation_payload(m)
-        assert out["semantic_units"][0]["shared_components"] == {"material": {"role": "material"}}
+        assert out["semantic_units"][0]["shared_components"]["material"]["role"] == "material"
 
         rr = _build_resolved_run(m, _lines(), uuid.uuid4())
         assert "sp-U1.material" in {s.span_id for s in rr.resolved_spans}
@@ -501,7 +502,10 @@ class TestBoundaryCases:
                   material_lines=(1, 2), questions_lines=(3, 5), answer_lines=(6, 6)),
         ]))
         codes = {g["code"] for g in out["producer_boundary"]["known_gaps"]}
-        assert GAP_SUB_QUESTION_DECOMPOSITION in codes
+        u = out["semantic_units"][0]
+        assert u["sub_questions"] == []
+        assert u["content"].get("stem") is not None
+        assert "SUB_QUESTION_DECOMPOSITION_UNAVAILABLE" not in codes
 
 
 # ═══════════════════════════════════════════════════════════════

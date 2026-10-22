@@ -69,9 +69,14 @@ def _safe_package_path(package_dir: Path, relative_name: str) -> Path:
         )
     name = str(relative_name).strip()
     if Path(name).is_absolute() or name.startswith(("/", "\\")) or (len(name) > 1 and name[1] == ":"):
-        raise PreprocessingImportError(
-            "declared source filename must be relative to package dir", stage="load"
-        )
+        # Real Producer manifests declare absolute source_file paths.
+        # Accept ONLY the basename inside the controlled package root —
+        # never follow the absolute path, never leave package_dir.
+        name = Path(name.replace("\\", "/")).name
+        if not name or name in (".", ".."):
+            raise PreprocessingImportError(
+                "declared source filename must be relative to package dir", stage="load"
+            )
     candidate = (package_dir / name).resolve()
     root = package_dir.resolve()
     if not candidate.is_relative_to(root):
@@ -248,6 +253,7 @@ class PreprocessingImportService:
             provider="preprocessing",
             extractor=extractor.extract,
             line_mode="raw_1to1",
+            source_content_sha256=source_content_sha256,
         )
         await self._session.flush()
 
@@ -283,6 +289,7 @@ class PreprocessingImportService:
                 "source_version_id": str(version.id),
                 "role": "preprocessing",
                 "seal_provider": "preprocessing",
+                "line_mode": "raw_1to1",
             },
             created_by=created_by or "admin",
         )

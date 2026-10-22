@@ -107,6 +107,11 @@ class Compiler:
                     mat = self._compile_material(node, sc)
                     if mat:
                         materials.append(mat)
+            if not node.sub_questions:
+                leaf = self._compile_leaf(node)
+                if leaf:
+                    leaves.append(leaf)
+                return
             for sub in node.sub_questions:
                 if sub.semantic_status == "ready":
                     leaf = self._compile_leaf(sub)
