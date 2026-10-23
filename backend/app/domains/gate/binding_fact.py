@@ -88,6 +88,11 @@ class BindingFact:
     decode_loc: str = ""
     table_qn: str = ""  # diagnostic only, NOT used for ownership
     source_hash: str = ""
+    # Verifiable-binding input: Manifest answer_evidence.value used for the
+    # content-consistency check. Stored so verify_binding_fact can re-derive
+    # ownership with the SAME inputs (never a trust shortcut — the value is
+    # still verified against source lines at derive AND at verify).
+    declared_value: str = ""
     fact_id: str = ""
 
     def to_payload(self) -> dict:
@@ -106,6 +111,7 @@ class BindingFact:
             "decode_loc": self.decode_loc,
             "table_qn": self.table_qn,
             "source_hash": self.source_hash,
+            "declared_value": self.declared_value,
             "fact_id": self.fact_id,
         }
 
@@ -139,6 +145,7 @@ def _fact_digest(
     entry_nums: Sequence[str],
     decode_loc: str,
     answer_text_hash: str,
+    declared_value: str = "",
 ) -> str:
     msg = "\x1f".join(
         [
@@ -152,6 +159,7 @@ def _fact_digest(
             ",".join(entry_nums or ()),
             decode_loc or "",
             answer_text_hash or "",
+            declared_value or "",
         ]
     )
     return hmac.new(_fact_key(), msg.encode("utf-8"), hashlib.sha256).hexdigest()
@@ -185,6 +193,57 @@ def _answer_letter(text: str) -> str:
     """Primary answer letter of a slice (e.g. 'B', '1. B' → 'B')."""
     m = re.search(r"[A-Za-z]", text or "")
     return m.group(0).upper() if m else ""
+
+
+# Entry prefix: "1." / "（1）" / "1、" / "1．" / "1)" etc.
+_ENTRY_PREFIX_RE = re.compile(
+    r"^\s*[\s(（\[]?\d{1,3}\s*[.．、:：)）\]]\s*"
+)
+
+
+def _value_supported_by_lines(value: str, lines: Sequence[str]) -> bool:
+    """Source-line content consistency for the verifiable-binding path.
+
+    Declared answer_evidence.value must be recoverable from the declared
+    answer_evidence.lines content. This is the '源行内容一致性' gate: never
+    upgrade ownership just because a value was declared — the source must
+    actually carry it.
+
+    Single-letter value (choice answers): an answer token in the lines must
+    BE that letter after stripping entry prefixes (`（1）A` → 'A').
+    Multi-char value: contiguous occurrence in the joined lines.
+    Empty value / empty lines → False (nothing to verify).
+    """
+    v = (value or "").strip()
+    if not v:
+        return False
+    src = [x for x in (lines or ()) if x is not None]
+    joined = "\n".join(src)
+    if not joined.strip():
+        return False
+
+    if len(v) == 1 and v.isalpha():
+        for line in src:
+            raw = line or ""
+            # Bare line that IS the letter.
+            if raw.strip().upper() == v.upper():
+                return True
+            # Answer token after entry prefix: "1. A" / "（1）A" / "1、A".
+            cleaned = _ENTRY_PREFIX_RE.sub("", raw).strip()
+            cleaned = cleaned.strip(".．、:：)）（）【】[] \t")
+            if len(cleaned) == 1 and cleaned.isalpha() and cleaned.upper() == v.upper():
+                return True
+            # Standalone letter token in the line (e.g. "答案：A").
+            if re.search(
+                rf"(?<![A-Za-z]){re.escape(v)}(?![A-Za-z])", raw, re.I
+            ):
+                return True
+        return False
+
+    # Multi-char value: contiguous occurrence (whitespace-normalized).
+    _v_norm = re.sub(r"\s+", "", v)
+    _j_norm = re.sub(r"\s+", "", joined)
+    return _v_norm in _j_norm or _v_norm.upper() in _j_norm.upper()
 
 
 def _answer_consistent_with_cell(answer_text: str, cell: str) -> bool:
@@ -321,8 +380,9 @@ def _classify(
     question_number: str,
     decode_loc: str = "",
     answer_text: str = "",
+    declared_value: str = "",
 ) -> str:
-    """Recompute ownership from evidence. Never reads a declared value.
+    """Recompute ownership from evidence. Never trusts a declared ownership.
 
     R16c-FIX: structural evidence in decode_loc only upgrades to match when
     (a) decode_loc.qn == question_number, (b) the source lines independently
@@ -330,6 +390,15 @@ def _classify(
     (c) answer_text agrees with the claimed cell. A bare `cell:` substring is
     NOT proof (`qn:999|cell:Z`, `qn:19|cell:Z` + `1. A`, `19-23` without
     letters, `cell:D` + text `A` must all fail).
+
+    Verifiable-binding path (Manifest answer_evidence contract):
+        unit_id/question_numbers + answer_evidence.value + answer_evidence.lines
+        + source-line content consistency  →  auditable ownership=match.
+    Never upgrades from the mere presence of answer_evidence — the source
+    lines must actually carry the declared value, and entry numbering must
+    not name a different question. Content inconsistency / cross-question
+    conflict / missing lines → reject (unknown / foreign).
+    No reliable evidence → unknown (fail-closed, withheld_review).
     """
     qn = (question_number or "").strip()
     parts = _parse_decode_loc(decode_loc or "")
@@ -338,15 +407,58 @@ def _classify(
     has_cell = bool(cell)
     no_conflict = "__conflict__" not in parts
 
+    _cell_fail_closed = False
     if has_cell and loc_qn and loc_qn == qn and no_conflict:
-        # Declared structural cell: this is the ONLY path to match.
-        # If the cell is unsupported or contradicts the answer body,
-        # do NOT fall through to the entry classifier (which ignores
-        # cell and would wrongly upgrade `19. D` + cell:Z to match).
-        if _answer_consistent_with_cell(answer_text, cell) and (
-            _source_supports_structural_qn(lines, qn, parts)
-        ):
+        # Declared structural cell: upgrade to match when supported.
+        # Cell contradicting the answer body → fail closed (unknown).
+        # Cell agreeing but source not proving structural mapping → fall
+        # through to the verifiable-binding path ONLY (NOT the entry
+        # classifier, which ignores cell and would wrongly upgrade
+        # `19. D` + cell:Z to match).
+        if _answer_consistent_with_cell(answer_text, cell):
+            if _source_supports_structural_qn(lines, qn, parts):
+                return "match"
+            _cell_fail_closed = True
+        else:
+            return "unknown"
+    elif has_cell and loc_qn and loc_qn == qn and not no_conflict:
+        return "unknown"
+
+    # Verifiable binding: declared_value + real source lines + content consistency.
+    # Guard: lines must be real source content, not a value-only placeholder
+    # (add_value_only_answer passes source_lines=[value]).
+    # declared_value is ALWAYS the answer for THIS target at the same semantic
+    # scope — for a single composite question (Chinese Q1), it is the FULL
+    # multi-part block. Never truncate to per-q here.
+    dv = (declared_value or "").strip()
+    src = [x for x in (lines or ()) if x is not None]
+    joined = "\n".join(src)
+    is_value_only_placeholder = (
+        len(src) == 1 and (src[0] or "").strip() == dv and dv != ""
+    )
+    if dv and src and joined.strip() and not is_value_only_placeholder:
+        entry_nums = _extract_entry_nums(src)
+        qn_in = qn in entry_nums if entry_nums else False
+        others = [n for n in entry_nums if n != qn]
+        # Cross-question conflict: entry numbering names ONLY other questions.
+        if entry_nums and not qn_in and others:
+            return "foreign"
+        # Content consistency: declared value must be recoverable from source.
+        content_ok = _value_supported_by_lines(dv, src)
+        if not content_ok:
+            # Declared value contradicts source content → do NOT upgrade.
+            return "unknown"
+        # Entry numbering matches, or no recognizable entry numbering
+        # (e.g. `（1）A` style the entry regex may or may not catch) —
+        # declared binding + content consistency is auditable proof.
+        if qn_in or not entry_nums:
             return "match"
+        # Entry nums exist but qn not among them and no others (edge) → unknown.
+        return "unknown"
+
+    # Structural cell was present but unproven: do NOT let the entry
+    # classifier (which ignores cell) upgrade `19. D` + cell:Z to match.
+    if _cell_fail_closed:
         return "unknown"
 
     own = _resolver_mod.classify_answer_ownership(list(lines or ()), qn)
@@ -363,12 +475,15 @@ def derive_binding_fact(
     answer_text: str,
     evidence_kind: str = "",
     decode_loc: str = "",
+    declared_value: str = "",
 ) -> BindingFact:
     """Sole producer of BindingFact. Resolver-internal derive path ONLY.
 
     Recomputes ownership from source evidence. Never trusts a declared
     ownership string. source_version_id is REQUIRED.
     decode_loc records structural position (cell index / range offset).
+    declared_value is the Manifest answer_evidence.value used for the
+    verifiable-binding content-consistency check (never a trust shortcut).
     """
     if not source_version_id:
         raise ValueError("source_version_id is required for BindingFact")
@@ -391,11 +506,13 @@ def derive_binding_fact(
         else:
             kind = "empty"
 
-    own = _classify(lines, qn, decode_loc, answer_text=ans)
+    own = _classify(
+        lines, qn, decode_loc, answer_text=ans, declared_value=declared_value
+    )
 
     fid = _fact_digest(
         span_id, svid, unit_id, qn, own, kind, sh,
-        entry_nums, decode_loc, ans_h,
+        entry_nums, decode_loc, ans_h, declared_value,
     )
     return BindingFact(
         span_id=span_id or "",
@@ -410,6 +527,7 @@ def derive_binding_fact(
         answer_text_hash=ans_h,
         decode_loc=decode_loc or "",
         source_hash=sh,
+        declared_value=declared_value or "",
         fact_id=fid,
     )
 
@@ -430,6 +548,7 @@ def _fact_from_mapping(fact: Mapping) -> BindingFact | None:
             decode_loc=str(fact.get("decode_loc") or ""),
             table_qn=str(fact.get("table_qn") or ""),
             source_hash=str(fact.get("source_hash") or ""),
+            declared_value=str(fact.get("declared_value") or ""),
             fact_id=str(fact.get("fact_id") or ""),
         )
     except Exception:
@@ -471,9 +590,13 @@ def verify_binding_fact(fact: BindingFact | Mapping | None) -> bool:
     if _sha256_text(fact.answer_text or "") != fact.answer_text_hash:
         return False
 
-    # Source-evidence verification: a declared cell must be supported by
-    # the source lines and must agree with the answer body. A valid HMAC
-    # over a self-inconsistent fact is still a failed fact.
+    # Source-evidence verification: a declared cell must agree with the
+    # answer body, not conflict across questions, AND be supported by the
+    # source lines. Structural proof (_source_supports_structural_qn) is
+    # checked by _classify which falls through to the verifiable-binding
+    # path. Here we require content support: the cell value must appear
+    # in the source (e.g. `故选：A.` supports cell `A`, but `19. D` does
+    # NOT support cell `Z`).
     parts = _parse_decode_loc(fact.decode_loc or "")
     cell = (parts.get("cell") or "").strip()
     if cell:
@@ -484,14 +607,18 @@ def verify_binding_fact(fact: BindingFact | Mapping | None) -> bool:
         loc_qn = (parts.get("qn") or "").strip()
         if loc_qn and loc_qn != (fact.question_number or "").strip():
             return False
+        # Content support: cell must be recoverable from source lines.
+        # Structural support (range-key / compact / entry) OR plain content
+        # consistency (e.g. `故选：A.` carries cell `A`).
         if not _source_supports_structural_qn(
             lines, fact.question_number or "", parts
-        ):
+        ) and not _value_supported_by_lines(cell, lines):
             return False
 
     own = _classify(
         lines, fact.question_number, fact.decode_loc,
         answer_text=fact.answer_text or "",
+        declared_value=fact.declared_value or "",
     )
     if own != (fact.ownership or "unknown"):
         return False
@@ -507,6 +634,7 @@ def verify_binding_fact(fact: BindingFact | Mapping | None) -> bool:
         fact.entry_nums,
         fact.decode_loc,
         fact.answer_text_hash,
+        fact.declared_value or "",
     )
     return hmac.compare_digest(expected, fact.fact_id)
 

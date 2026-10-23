@@ -416,6 +416,152 @@ class ContentRepository(BaseRepository):
         await self.add(role_content)
         return role_content
 
+    async def update_answer_text(
+        self,
+        *,
+        instance_id: uuid.UUID,
+        text: str,
+        text_hash: str,
+        answer_status: dict | None = None,
+    ) -> bool:
+        """Update official answer text on an existing empty answer row.
+
+        Reuse-path fix: when an Instance was materialized by
+        materialize_for_review (empty official answer) and a later
+        Candidate passes Gate with valid answer evidence, the empty
+        answer must be fillable through the existing publish logic.
+
+        Rules:
+        - Only updates rows where current text is EMPTY (never overwrites
+          non-empty official answers).
+        - For non-empty new text, runs the SAME BindingFact / ownership /
+          publish-seal validation as create_role_content.
+        - Returns True if a row was updated, False otherwise.
+        """
+        from sqlalchemy import select as _sa_select
+        from app.models.content import InstanceRoleContent as _IRC
+
+        res = await self._session.execute(
+            _sa_select(_IRC).where(
+                _IRC.instance_id == instance_id,
+                _IRC.role == "answer",
+            )
+        )
+        rows = res.scalars().all()
+        updated = False
+        for row in rows:
+            # Never overwrite non-empty official answer.
+            if (row.text or "").strip():
+                continue
+            if not (text or "").strip():
+                continue
+            # Validate non-empty text through the same gate as create_role_content.
+            status = dict(answer_status or {})
+            own = status.get("ownership") or "unknown"
+            publish = status.get("publish") or "withheld_review"
+            span_id = status.get("span_id") or (row.source_span or {}).get("span_id") or ""
+            fact_id = status.get("binding_fact_id") or ""
+
+            from app.models.content import QuestionInstance as _QI
+            from app.domains.gate.binding_fact import (
+                fact_matches_answer_text,
+                resolve_trusted_binding_fact,
+                verify_binding_fact,
+            )
+            _qi_row = (await self._session.execute(
+                _sa_select(
+                    _QI.source_version_id,
+                    _QI.question_number,
+                    _QI.question_number_range,
+                    _QI.unit_group_id,
+                ).where(_QI.id == instance_id)
+            )).first()
+            if _qi_row is None:
+                raise RepositoryError(
+                    "instance not found — cannot authorize official answer"
+                )
+            _instance_sv = str(_qi_row[0])
+            _instance_qn = str(_qi_row[1] or "")
+            _instance_qn_range = str(_qi_row[2] or "")
+            _instance_ug = _qi_row[3]
+
+            fact = resolve_trusted_binding_fact(
+                source_version_id=_instance_sv,
+                span_id=span_id,
+            )
+            if fact is None:
+                raise RepositoryError(
+                    "no trusted binding fact for (SV, span) — cannot authorize official answer"
+                )
+            if not verify_binding_fact(fact):
+                raise RepositoryError(
+                    "binding fact failed verification — cannot authorize official answer"
+                )
+            if fact.source_version_id != _instance_sv:
+                raise RepositoryError(
+                    "binding fact source_version_id does not match instance —"
+                    " cannot authorize official answer"
+                )
+            if fact_id and fact.fact_id != fact_id:
+                raise RepositoryError(
+                    "binding_fact_id mismatch — cannot authorize official answer"
+                )
+            if own == "foreign":
+                raise RepositoryError(
+                    "foreign answer must not be published (ownership=foreign)"
+                )
+            if publish != "official":
+                raise RepositoryError(
+                    "non-official answer text must be empty "
+                    f"(publish={publish!r}, ownership={own!r})"
+                )
+            if (fact.ownership or "unknown") == "foreign":
+                raise RepositoryError(
+                    "trusted binding fact is foreign — cannot authorize official answer"
+                )
+            if (fact.ownership or "unknown") != (own or "unknown"):
+                raise RepositoryError(
+                    "answer_status ownership disagrees with trusted binding fact "
+                    f"(status={own!r}, fact={fact.ownership!r})"
+                )
+            if not fact_matches_answer_text(fact, text):
+                raise RepositoryError(
+                    "official text does not match binding fact answer_text —"
+                    " cannot authorize official answer"
+                )
+            from app.domains.gate.publish_seal import verify_publish_seal
+            seal = status.get("publish_seal") or ""
+            if not verify_publish_seal(
+                fact=fact,
+                official_text=text,
+                publish=publish,
+                seal=seal,
+            ):
+                raise RepositoryError(
+                    "publish seal missing or invalid — cannot authorize official answer"
+                )
+
+            row.text = text
+            row.text_hash = text_hash
+            merged = dict(row.answer_status or {})
+            merged.update({
+                "source_located": status.get("source_located", merged.get("source_located")),
+                "complete": status.get("complete", merged.get("complete")),
+                "verified_correct": status.get("verified_correct", merged.get("verified_correct")),
+                "ownership": own,
+                "binding_evidence": status.get("binding_evidence", merged.get("binding_evidence", "")),
+                "binding_fact_id": fact_id,
+                "binding_unit_id": status.get("binding_unit_id", merged.get("binding_unit_id", "")),
+                "binding_question_number": status.get("binding_question_number", merged.get("binding_question_number", "")),
+                "answer_text_hash": status.get("answer_text_hash", merged.get("answer_text_hash", "")),
+                "publish_grant": status.get("publish_grant", merged.get("publish_grant", "none")),
+                "publish": publish,
+                "publish_seal": seal,
+            })
+            row.answer_status = merged
+            updated = True
+        return updated
+
     async def update_answer_verified_correct(
         self, *, instance_id: uuid.UUID, verified_correct: bool | None
     ) -> int:

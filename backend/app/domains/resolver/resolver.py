@@ -321,14 +321,71 @@ def _is_local_prose_body(content: str) -> bool:
     return len(re.findall(r"[A-Za-z\u4e00-\u9fff]", t)) >= 4
 
 
+_ANSWER_INDICATOR_RE = re.compile(
+    r"^\s*(?:故选|答案|故答案为|故答案是|应选|选|正确答案(?:为|是)?)\s*[：:，,]?\s*"
+)
+
+
+def _extract_qn_answer_from_value(value: str, qn: str) -> str | None:
+    """Extract the per-question answer substring from a multi-q answer block.
+
+    Manifest answer_evidence.value for composites is the FULL answer block
+    (e.g. "（1）A （2）B （3）C …"), not the single answer for one question.
+    Conflict comparison must use the current unit's answer substring, never
+    the whole block. Handles （N）X / (N)X / N. X / N、X forms.
+    """
+    if not value or not qn:
+        return None
+    qn_s = str(qn).strip()
+    qn_esc = re.escape(qn_s)
+    # （N）X / (N)X / [N]X
+    m = re.search(
+        rf"[（(\[]\s*{qn_esc}\s*[）)\]]\s*([A-Za-z0-9][A-Za-z0-9/]*)",
+        value,
+    )
+    if m:
+        return m.group(1).strip()
+    # N. X / N、X / N．X / N: X
+    m = re.search(
+        rf"(?<!\d){qn_esc}\s*[.．、:：]\s*([A-Za-z0-9][A-Za-z0-9/]*)",
+        value,
+    )
+    if m:
+        return m.group(1).strip()
+    return None
+
+
 def _clean_answer_for_conflict(text: str) -> str:
     """Normalize answer-ish text for conflict comparison (strip qn prefix + noise)."""
     if not text:
         return ""
     t = text.strip()
+    t = _ANSWER_INDICATOR_RE.sub("", t)
     t = re.sub(r"^\s*[0-9]{1,3}\s*(?:\\[.．、:]|[.．、:)])*\s*", "", t)
     t = t.strip().strip("（）()【】[]").strip()
+    t = t.strip().rstrip(".．。：:，,、 \t")
     return t.upper() if len(t) <= 4 else t
+
+
+def _normalize_answer_block(text: str) -> str:
+    """Normalize a full answer block for conflict comparison.
+
+    Strips answer labels (答案:/故选：/etc.), all whitespace, and trailing
+    punctuation — but PRESERVES all content and order. Used for comparing
+    a multi-part answer block (e.g. Chinese composite Q1's 7-item block)
+    against the declared answer_value at the same semantic scope.
+    Never truncates to per-q. A genuine content mismatch (different answers)
+    remains a conflict after normalization.
+    """
+    if not text:
+        return ""
+    t = text.strip()
+    t = _ANSWER_INDICATOR_RE.sub("", t)
+    # Strip a leading "答案:" / "参考答案:" label.
+    t = re.sub(r"^\s*(?:参考?答案|解[答折])\s*[：:]\s*", "", t)
+    # Remove ALL whitespace (newlines, spaces) to unify formatting.
+    t = re.sub(r"\s+", "", t)
+    return t
 
 
 def _entry_content_bounds(raw: str, entry_start: int, entry_end: int) -> tuple[int, int]:
@@ -1110,6 +1167,9 @@ class _Out:
                     answer_text=str(_ans),
                     evidence_kind=_existing_bev or "",
                     decode_loc=_decode_loc,
+                    declared_value=str(
+                        getattr(t, "answer_value", "") or ""
+                    ),
                 )
                 register_trusted_binding_fact(_fact)
                 _fact_own = _fact.ownership or "unknown"
@@ -1136,9 +1196,16 @@ class _Out:
             if not str(e).startswith("ownership=")
             and not str(e).startswith("binding_evidence=")
         )
+        # R2-HANDOFF: persist BindingFact verification inputs in evidence so
+        # a cross-process review path can reconstruct and re-verify the fact.
+        # Never a trust shortcut — verify_binding_fact re-derives ownership.
+        _dv = str(getattr(t, "answer_value", "") or "")
         return cleaned + (
             f"ownership={_fact_own}",
             f"binding_evidence={_fact_bev}",
+            f"fact_declared_value={_dv}",
+            f"fact_decode_loc={_decode_loc}",
+            f"fact_source_hash={_fact.source_hash if _fact else ''}",
         )
 
     def add_span(self, unit_id: str, t, refs, status, evidence, role_hint=None):
@@ -1262,12 +1329,38 @@ class _Out:
         )
 
     def add_empty_answer(self, t, evidence):
-        """Bind an empty answer span so the unit stays IR-ready without fabricating content.
+        """Bind an answer span. When extraction fails but a declared
+        answer_value exists, use it as the answer text (value-passing fix).
+        Otherwise force text="" via cell= evidence so compilation cannot
+        pick up an unrelated line.
 
-        E2E-013 fallback-guard pattern. P0-R3: force text="" via cell= evidence
-        so compilation cannot pick up an unrelated P1L002 line (test fixtures
-        and real docs differ on whether P1L002 is blank).
+        E2E-013 fallback-guard pattern. P0-R3: never fabricate source
+        location for value-only answers.
         """
+        # R2-FIX: when a declared answer_value exists, use it as the answer
+        # text instead of going empty. Register BindingFact via
+        # _seal_answer_ownership so downstream admission can verify.
+        _av = getattr(t, "answer_value", None)
+        _av_s = str(_av).strip() if _av is not None and str(_av).strip() else ""
+        if _av_s:
+            sealed = self._seal_answer_ownership(t, evidence, [_av_s], answer_text=_av_s)
+            self.resolved.append(
+                ResolvedSpan(
+                    span_id=f"sp-{t.target_id}",
+                    source_version_id=self.svid,
+                    role=t.role,
+                    start_line_ref="VALUE-ONLY",
+                    end_line_ref="VALUE-ONLY",
+                    line_refs=(),
+                    granularity="value_only",
+                    start_offset=None,
+                    end_offset=None,
+                    text_hash=_raw_sha256(_av_s),
+                    resolution_status="value_only",
+                    evidence=sealed + (f"cell={_av_s}",),
+                )
+            )
+            return
         self.resolved.append(
             ResolvedSpan(
                 span_id=f"sp-{t.target_id}",
@@ -2364,6 +2457,11 @@ class SourceResolver:
         # (P0-R3: fake P1L001 provenance must not look byte-proven).
         el = getattr(t, "evidence_lines", None)
         av = getattr(t, "answer_value", None)
+        # answer_value is ALWAYS the answer for THIS target. For a single
+        # composite question (e.g. Chinese Q1 with question_numbers=[1]),
+        # the value is the FULL multi-part answer block — never truncate it
+        # to one sub-answer. Per-q extraction is only for multi-q composite
+        # sub-question targets where the caller explicitly needs it.
         if el is None and av is not None:
             out.add_value_only_answer(
                 t, av,
@@ -2700,14 +2798,24 @@ class SourceResolver:
                 # overridden by a different block text.
                 if av is not None:
                     _blk = "\n".join(self._idx.get(r).text for r in refs).strip()
-                    if _blk and _blk != av.strip() and not _blk.endswith(av.strip()):
-                        out.add_empty_answer(t, (
-                            "answer_lines/answer_value conflict: block text != declared value",
-                            f"qn={qn}",
-                            f"declared_answer_value={av}",
-                            f"block_text_len={len(_blk)}",
-                        ))
-                        return
+                    if _blk:
+                        # Compare SAME semantic scope: full block vs full block.
+                        # Normalize whitespace/labels, never truncate to per-q.
+                        # Chinese composite Q1: answer_value IS the full
+                        # 7-item block; block text is the same content with
+                        # newlines + "答案:" header. After normalization they
+                        # must agree. A genuine content mismatch (e.g. block
+                        # says （1）B but value says （1）A) is a real conflict.
+                        _blk_norm = _normalize_answer_block(_blk)
+                        _av_norm = _normalize_answer_block(av)
+                        if _blk_norm != _av_norm:
+                            out.add_empty_answer(t, (
+                                "answer_lines/answer_value conflict: block text != declared value",
+                                f"qn={qn}",
+                                f"declared_answer_value={av[:80]}",
+                                f"block_text_len={len(_blk)}",
+                            ))
+                            return
                 out.add_span(
                     unit_id, t, refs, "exact",
                     ("answer evidence range",
@@ -2927,6 +3035,23 @@ class SourceResolver:
                          f"cell={_ck_val}"),
                     )
                     return
+            # Extract declared answer token from the raw line when av is
+            # present (e.g. `故选：A.` → cell `A`). Binds the token as a
+            # char_span so the answer text is `A`, not the whole line.
+            if av is not None:
+                _av_s = av.strip()
+                if _av_s and _av_s in raw:
+                    _tok_off = raw.find(_av_s)
+                    if _tok_off >= 0:
+                        out.add_char_span(
+                            unit_id, t, line_ref, _tok_off,
+                            _tok_off + len(_av_s), "exact",
+                            ("answer evidence range",
+                             f"lines={el[0]}-{el[1]}",
+                             "answer_token_extracted",
+                             f"qn={qn}", f"cell={_av_s}"),
+                        )
+                        return
             out.add_span(
                 unit_id, t, [line_ref], "exact",
                 ("answer evidence range", f"lines={el[0]}-{el[1]}",

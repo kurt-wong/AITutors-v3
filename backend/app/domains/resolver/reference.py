@@ -295,6 +295,10 @@ def _answer_target(targets: list, unit_id: str, answer) -> None:
     # 不读 question_number（那是 unit 顶层字段）。禁 alias fallback。
     evidence = None
     el = answer.get("answer_lines")
+    if el is None:
+        # v2.4+: answer_evidence.lines fallback (adapter contract:
+        # answer_lines or answer_evidence_lines).
+        el = answer.get("answer_evidence_lines")
     if el is not None:
         if not isinstance(el, (list, tuple)) or len(el) != 2:
             raise ValueError(

@@ -92,6 +92,18 @@ class AdmissionService:
             # P2-CANDIDATE-DEDUP: 防双物化 no-op，但元数据仍需收敛
             # （subject/grade claims 补齐后要到达 Question）。
             await self._converge_candidate_metadata(candidate, annotation_id=annotation_id)
+            # R2-FIX: already-approved candidates must still fill empty
+            # official answers. Previously this early-returned, leaving
+            # empty answers forever after the first pending_review run.
+            await self._update_empty_answers(
+                candidate, grant=source or "none",
+                review_evidence={
+                    "reviewer_id": provenance.get("reviewer_id") or "",
+                    "confirmed_fields": list(provenance.get("confirmed_fields") or []),
+                    "source": source or "",
+                },
+                mark_verified=True,
+            )
             return candidate
         if candidate.decision_status != "pending_review":
             raise RepositoryError(
@@ -309,6 +321,246 @@ class AdmissionService:
             if mat is not None:
                 await self._content.converge_subject_grade(mat, subject=subject, grade=grade)
 
+    # ------------------------------------------------------------------ R2-HANDOFF
+    async def _resolve_fact_with_fallback(
+        self,
+        *,
+        source_version_id: str,
+        span_id: str,
+        answer_payload: dict | None = None,
+        candidate_payload: dict | None = None,
+        allow_fallback: bool = False,
+    ):
+        """Resolve BindingFact from registry; optionally reconstruct from real source.
+
+        allow_fallback=True (approve path only): when registry is empty,
+        reconstruct from REAL source lines in DB (never candidate text).
+        allow_fallback=False (materialize_for_review): registry miss → None
+        (safe withhold, frozen contract).
+        """
+        fact = resolve_trusted_binding_fact(
+            source_version_id=source_version_id,
+            span_id=span_id,
+        )
+        if fact is not None:
+            return fact
+        if not allow_fallback:
+            return None
+        # Registry miss: reconstruct from REAL source lines in DB.
+        # NEVER use candidate answer text as source_lines (self-proof).
+        if not answer_payload and not candidate_payload:
+            return None
+        # Find the span's line_refs from resolved_spans.
+        _spans = (candidate_payload or {}).get("resolved_spans") or []
+        _span = None
+        for s in _spans:
+            if str(s.get("span_id") or "") == span_id:
+                _span = s
+                break
+        if _span is None:
+            return None
+        _line_refs = list(_span.get("line_refs") or ())
+        if not _line_refs:
+            return None
+        # Look up REAL source lines from document_source_lines.
+        _real_lines = []
+        try:
+            from sqlalchemy import select as _sa_select
+            from app.models.source import DocumentSourceLine as _DSL
+            _sess = self._content._session
+            _rows = (await _sess.execute(
+                _sa_select(_DSL.text).where(
+                    _DSL.source_version_id == source_version_id,
+                    _DSL.line_ref.in_(_line_refs),
+                ).order_by(_DSL.seq)
+            )).scalars().all()
+            _real_lines = [str(t or "") for t in _rows]
+        except Exception:
+            return None
+        if not _real_lines:
+            return None
+        # Parse evidence for declared_value and decode_loc.
+        _evidence_list = (candidate_payload or {}).get("evidence") or []
+        _span_ev = None
+        for entry in _evidence_list:
+            if str(entry.get("span_id") or "") == span_id:
+                _span_ev = entry
+                break
+        dv = ""
+        decode_loc = ""
+        if _span_ev is not None:
+            for e in (_span_ev.get("evidence") or ()):
+                s = str(e)
+                if s.startswith("fact_declared_value="):
+                    dv = s.split("=", 1)[1]
+                elif s.startswith("fact_decode_loc="):
+                    decode_loc = s.split("=", 1)[1]
+        _ans = answer_payload or {}
+        _ans_text = str(_ans.get("text") or _ans.get("candidate_text") or "")
+        if not _ans_text:
+            return None
+        try:
+            from app.domains.gate.binding_fact import (
+                derive_binding_fact,
+                verify_binding_fact,
+                register_trusted_binding_fact,
+            )
+            fact = derive_binding_fact(
+                span_id=span_id,
+                source_version_id=source_version_id,
+                unit_id=str(_ans.get("unit_id") or ""),
+                question_number=str(_ans.get("question_number") or ""),
+                source_lines=_real_lines,
+                answer_text=_ans_text,
+                evidence_kind=str(_ans.get("binding_evidence") or ""),
+                decode_loc=decode_loc,
+                declared_value=dv,
+            )
+            if verify_binding_fact(fact):
+                try:
+                    register_trusted_binding_fact(fact)
+                except Exception:
+                    pass
+                return fact
+        except Exception:
+            pass
+        return None
+
+    # ------------------------------------------------------------------ R2-FIX
+    async def _update_empty_answers(
+        self,
+        candidate: AdmissionCandidate,
+        *,
+        grant: str = "none",
+        review_evidence: dict | None = None,
+        mark_verified: bool = True,
+    ) -> None:
+        """Fill empty official answers on reused instances (R2-FIX).
+
+        When an Instance was materialized by materialize_for_review (empty
+        official answer) and a later Candidate passes Gate with valid answer
+        evidence, the empty answer must be fillable through the existing
+        publish logic. Only updates rows where text is currently empty.
+        Never overwrites non-empty official answers.
+        """
+        p = candidate.payload
+        ir = p["ir_snapshot"]
+        units = ir["units"]
+        by_unit: dict[str, dict] = {u["unit_id"]: u for u in units}
+        answers_by_unit: dict[str, dict] = {a["unit_id"]: a for a in p["answer"]}
+        version = await self._source.get_version(candidate.source_version_id)
+        if version is None:
+            return
+
+        for unit_id in _materialization_units(units):
+            unit = by_unit.get(unit_id)
+            if unit is None:
+                continue
+            qn = unit.get("question_number") or ""
+            answers_list = None
+            if unit.get("unit_type") == "composite_unit":
+                # For composites, answers_override is used in _materialize.
+                # Here we use the direct answer map.
+                _one = answers_by_unit.get(unit_id)
+                answers_list = [_one] if _one is not None else []
+            else:
+                _one = answers_by_unit.get(unit_id)
+                answers_list = [_one] if _one is not None else []
+
+            # Find existing instance for this unit
+            from sqlalchemy import select as _sa_select
+            from app.models.content import QuestionInstance as _QI
+            _sess = self._content._session
+            _qi_rows = (await _sess.execute(
+                _sa_select(_QI.id).where(
+                    _QI.source_version_id == candidate.source_version_id,
+                )
+            )).scalars().all()
+            # Match by question_number in instance
+            inst = None
+            for iid in _qi_rows:
+                _qi_row = (await _sess.execute(
+                    _sa_select(_QI.question_number, _QI.question_number_range).where(_QI.id == iid)
+                )).first()
+                if _qi_row is None:
+                    continue
+                _iqn = str(_qi_row[0] or "")
+                _iqnr = str(_qi_row[1] or "")
+                if _iqn == str(qn) or (not _iqn and _iqnr and str(qn) in _iqnr):
+                    inst = iid
+                    break
+            if inst is None:
+                continue
+
+            for ai, ans in enumerate(answers_list):
+                if ans is None or ans.get("text") is None:
+                    continue
+                _fact = await self._resolve_fact_with_fallback(
+                    source_version_id=str(candidate.source_version_id),
+                    span_id=str(ans.get("span_id") or ""),
+                    answer_payload=ans,
+                    candidate_payload=candidate.payload,
+                    allow_fallback=mark_verified and grant in ("human", "golden"),
+                )
+                _cand = (
+                    ans.get("candidate_text")
+                    if ans.get("candidate_text") is not None
+                    else ans.get("text")
+                    or ""
+                )
+                if _fact is None:
+                    _trust_own = "unknown"
+                    _fact_id = ""
+                    _ans_h = ""
+                else:
+                    _trust_own = _fact.ownership or "unknown"
+                    _fact_id = _fact.fact_id
+                    _ans_h = _fact.answer_text_hash
+                    _ans_unit = str(ans.get("unit_id") or "") or str(unit_id)
+                    if _fact.span_id != str(ans.get("span_id") or ""):
+                        _trust_own = "unknown"
+                    elif _ans_unit and _fact.unit_id and _fact.unit_id != _ans_unit:
+                        _trust_own = "unknown"
+                    _check_qn = str(qn or "")
+                    if _check_qn and _fact.question_number and _fact.question_number != _check_qn:
+                        _trust_own = "unknown"
+                    elif not fact_matches_answer_text(_fact, _cand):
+                        _trust_own = "unknown"
+                official_text, publish, write_nonempty = _publish_decision(
+                    ownership=_trust_own,
+                    candidate_text=_cand,
+                    grant=grant,
+                    review_evidence=review_evidence,
+                    content_ok=bool(ans.get("complete")),
+                    source_ok=bool(ans.get("source_located")),
+                )
+                if not write_nonempty:
+                    official_text = ""
+                _seal = issue_publish_seal(
+                    fact=_fact,
+                    official_text=official_text,
+                    publish=publish,
+                )
+                await self._content.update_answer_text(
+                    instance_id=inst,
+                    text=official_text,
+                    text_hash=_raw_sha256(official_text),
+                    answer_status={
+                        "source_located": bool(ans.get("source_located")),
+                        "complete": bool(ans.get("complete")),
+                        "verified_correct": True if mark_verified else ans.get("verified_correct"),
+                        "ownership": _trust_own,
+                        "binding_evidence": _fact.evidence_kind if _fact else "",
+                        "binding_fact_id": _fact_id,
+                        "binding_unit_id": _fact.unit_id if _fact else "",
+                        "binding_question_number": _fact.question_number if _fact else "",
+                        "answer_text_hash": _ans_h,
+                        "publish_grant": grant,
+                        "publish": publish,
+                        "publish_seal": _seal,
+                    },
+                )
+
     # ------------------------------------------------------------------ 物化
     async def _materialize(
         self, candidate: AdmissionCandidate, *, mark_verified: bool = True,
@@ -482,10 +734,184 @@ class AdmissionService:
                     await self._content.update_answer_verified_correct(
                         instance_id=inst.id, verified_correct=True
                     )
+            # R2-FIX: also fill empty official answers on existing instances
+            # when mark_verified=True (approve path). Previously only
+            # verified_correct was updated, leaving empty answers forever.
+            for e in plan:
+                inst = e.get("existing_instance")
+                if inst is None:
+                    continue
+                unit = e["unit"]
+                unit_id = unit["unit_id"]
+                qn = e["qn"]
+                answers_list = e.get("answers_override")
+                if answers_list is None:
+                    _one = answers_by_unit.get(unit_id)
+                    answers_list = [_one] if _one is not None else []
+                for ai, ans in enumerate(answers_list):
+                    if ans is None or ans.get("text") is None:
+                        continue
+                    _fact = await self._resolve_fact_with_fallback(
+                        source_version_id=str(candidate.source_version_id),
+                        span_id=str(ans.get("span_id") or ""),
+                        answer_payload=ans,
+                        candidate_payload=candidate.payload,
+                        allow_fallback=mark_verified and grant in ("human", "golden"),
+                    )
+                    _cand = (
+                        ans.get("candidate_text")
+                        if ans.get("candidate_text") is not None
+                        else ans.get("text")
+                        or ""
+                    )
+                    if _fact is None:
+                        _trust_own = "unknown"
+                        _fact_id = ""
+                        _ans_h = ""
+                    else:
+                        _trust_own = _fact.ownership or "unknown"
+                        _fact_id = _fact.fact_id
+                        _ans_h = _fact.answer_text_hash
+                        _ans_unit = str(ans.get("unit_id") or "") or str(
+                            e.get("unit_id") or unit.get("unit_id") or ""
+                        )
+                        if _fact.span_id != str(ans.get("span_id") or ""):
+                            _trust_own = "unknown"
+                        elif _ans_unit and _fact.unit_id and _fact.unit_id != _ans_unit:
+                            _trust_own = "unknown"
+                        if e.get("answers_override") is not None:
+                            _check_qn = str(ans.get("question_number") or "") or str(qn or "")
+                        else:
+                            _check_qn = str(qn or "")
+                        if _check_qn and _fact.question_number and _fact.question_number != _check_qn:
+                            _trust_own = "unknown"
+                        elif not fact_matches_answer_text(_fact, _cand):
+                            _trust_own = "unknown"
+                    official_text, publish, write_nonempty = _publish_decision(
+                        ownership=_trust_own,
+                        candidate_text=_cand,
+                        grant=grant,
+                        review_evidence=review_evidence,
+                        content_ok=bool(ans.get("complete")),
+                        source_ok=bool(ans.get("source_located")),
+                    )
+                    if not write_nonempty:
+                        official_text = ""
+                    _seal = issue_publish_seal(
+                        fact=_fact,
+                        official_text=official_text,
+                        publish=publish,
+                    )
+                    await self._content.update_answer_text(
+                        instance_id=inst.id,
+                        text=official_text,
+                        text_hash=_raw_sha256(official_text),
+                        answer_status={
+                            "source_located": bool(ans.get("source_located")),
+                            "complete": bool(ans.get("complete")),
+                            "verified_correct": True,
+                            "ownership": _trust_own,
+                            "binding_evidence": _fact.evidence_kind if _fact else "",
+                            "binding_fact_id": _fact_id,
+                            "binding_unit_id": _fact.unit_id if _fact else "",
+                            "binding_question_number": _fact.question_number if _fact else "",
+                            "answer_text_hash": _ans_h,
+                            "publish_grant": grant,
+                            "publish": publish,
+                            "publish_seal": _seal,
+                        },
+                    )
 
         if not any_new_instance:
             # 全量复用：candidate 的 occurrence 均已物化，无新 A 域行（不建 group）。
             # P2-MATERIAL-METADATA: 仍需收敛关联 Material 的 subject/grade。
+            # R2-FIX: reuse path must also UPDATE empty official answers when
+            # the current Candidate passes Gate with valid answer evidence.
+            # Previously this early-returned, leaving empty answers forever.
+            for e in plan:
+                inst = e.get("existing_instance")
+                if inst is None:
+                    continue
+                unit = e["unit"]
+                unit_id = unit["unit_id"]
+                qn = e["qn"]
+                answers_list = e.get("answers_override")
+                if answers_list is None:
+                    _one = answers_by_unit.get(unit_id)
+                    answers_list = [_one] if _one is not None else []
+                for ai, ans in enumerate(answers_list):
+                    if ans is None or ans.get("text") is None:
+                        continue
+                    _fact = await self._resolve_fact_with_fallback(
+                        source_version_id=str(candidate.source_version_id),
+                        span_id=str(ans.get("span_id") or ""),
+                        answer_payload=ans,
+                        candidate_payload=candidate.payload,
+                        allow_fallback=mark_verified and grant in ("human", "golden"),
+                    )
+                    _cand = (
+                        ans.get("candidate_text")
+                        if ans.get("candidate_text") is not None
+                        else ans.get("text")
+                        or ""
+                    )
+                    if _fact is None:
+                        _trust_own = "unknown"
+                        _fact_id = ""
+                        _ans_h = ""
+                    else:
+                        _trust_own = _fact.ownership or "unknown"
+                        _fact_id = _fact.fact_id
+                        _ans_h = _fact.answer_text_hash
+                        _ans_unit = str(ans.get("unit_id") or "") or str(
+                            e.get("unit_id") or unit.get("unit_id") or ""
+                        )
+                        if _fact.span_id != str(ans.get("span_id") or ""):
+                            _trust_own = "unknown"
+                        elif _ans_unit and _fact.unit_id and _fact.unit_id != _ans_unit:
+                            _trust_own = "unknown"
+                        if e.get("answers_override") is not None:
+                            _check_qn = str(ans.get("question_number") or "") or str(qn or "")
+                        else:
+                            _check_qn = str(qn or "")
+                        if _check_qn and _fact.question_number and _fact.question_number != _check_qn:
+                            _trust_own = "unknown"
+                        elif not fact_matches_answer_text(_fact, _cand):
+                            _trust_own = "unknown"
+                    official_text, publish, write_nonempty = _publish_decision(
+                        ownership=_trust_own,
+                        candidate_text=_cand,
+                        grant=grant,
+                        review_evidence=review_evidence,
+                        content_ok=bool(ans.get("complete")),
+                        source_ok=bool(ans.get("source_located")),
+                    )
+                    if not write_nonempty:
+                        official_text = ""
+                    _seal = issue_publish_seal(
+                        fact=_fact,
+                        official_text=official_text,
+                        publish=publish,
+                    )
+                    await self._content.update_answer_text(
+                        instance_id=inst.id,
+                        text=official_text,
+                        text_hash=_raw_sha256(official_text),
+                        answer_status={
+                            "source_located": bool(ans.get("source_located")),
+                            "complete": bool(ans.get("complete")),
+                            "verified_correct": True if mark_verified else ans.get("verified_correct"),
+                            "ownership": _trust_own,
+                            "binding_evidence": _fact.evidence_kind if _fact else "",
+                            "binding_fact_id": _fact_id,
+                            "binding_unit_id": _fact.unit_id if _fact else "",
+                            "binding_question_number": _fact.question_number if _fact else "",
+                            "answer_text_hash": _ans_h,
+                            "publish_grant": grant,
+                            "publish": publish,
+                            "publish_seal": _seal,
+                        },
+                    )
             for m in p["compiled_roles"]:
                 if m["kind"] != "material":
                     continue
@@ -600,9 +1026,12 @@ class AdmissionService:
                 # P0-R12: ownership comes from the INDEPENDENT binding fact
                 # (registry-backed, derived at resolve time). Transport payload
                 # ownership is never a trust input.
-                _fact = resolve_trusted_binding_fact(
+                _fact = await self._resolve_fact_with_fallback(
                     source_version_id=str(candidate.source_version_id),
-                    span_id=str(ans.get("span_id") or "")
+                    span_id=str(ans.get("span_id") or ""),
+                    answer_payload=ans,
+                    candidate_payload=candidate.payload,
+                    allow_fallback=mark_verified and grant in ("human", "golden"),
                 )
                 _cand = (
                     ans.get("candidate_text")

@@ -81,6 +81,10 @@ class BoundUnit:
     # P0-answer: manifest answer_evidence.value (declared answer when
     # answer_lines is None). Used directly — never inferred from explanation.
     answer_evidence_value: str | None = None
+    # P0-answer: manifest answer_evidence.lines (v2.4+ fallback / parallel
+    # evidence range). Consumed like preprocessing_consumer.adapter:
+    # answer_lines or answer_evidence_lines. Never silently dropped.
+    answer_evidence_lines: LineRange | None = None
 
 
 def _sha256_text(text: str) -> str:
@@ -133,6 +137,19 @@ def bind_units_from_manifest(
         if "听力" in section:
             continue
 
+        # P0-answer: parse answer_evidence EARLY so answer_evidence.lines can
+        # serve as the answer range fallback (v2.4+ contract, same as
+        # preprocessing_consumer.adapter: answer_lines or answer_evidence_lines).
+        ae = raw.get("answer_evidence") if isinstance(raw.get("answer_evidence"), dict) else {}
+        ae_absent = ae.get("type") == "absent"
+        # P0-answer: capture declared answer value (e.g. "B", "1/6").
+        # Used when answer_lines is None — never inferred from explanation.
+        ae_value = ae.get("value")
+        ae_value_str = str(ae_value).strip() if ae_value is not None and str(ae_value).strip() else None
+        ae_lines = _as_range(
+            ae.get("lines"), label="answer_evidence.lines", unit_id=unit_id
+        )
+
         ranges = {
             # stem：无 stem_lines 时用 questions_lines（composite 题干窗，Producer 已声明）
             "stem": _as_range(
@@ -143,9 +160,11 @@ def bind_units_from_manifest(
             "options": _as_range(
                 raw.get("options_lines"), label="options_lines", unit_id=unit_id
             ),
+            # answer_lines 优先；fallback 到 answer_evidence.lines（v2.4+）。
+            # 二者都缺 → None（value-only 路径，不伪造行号）。
             "answer": _as_range(
                 raw.get("answer_lines"), label="answer_lines", unit_id=unit_id
-            ),
+            ) or ae_lines,
             "explanation": _as_range(
                 raw.get("explanation_lines"), label="explanation_lines", unit_id=unit_id
             ),
@@ -212,12 +231,7 @@ def bind_units_from_manifest(
         # AND a validation issue references this unit, block the answer-zone
         # fallback scan from force-binding unrelated answer-section text.
         # Match unit_id as complete identifier (Q1 must not match Q10).
-        ae = raw.get("answer_evidence") if isinstance(raw.get("answer_evidence"), dict) else {}
-        ae_absent = ae.get("type") == "absent"
-        # P0-answer: capture declared answer value (e.g. "B", "1/6").
-        # Used when answer_lines is None — never inferred from explanation.
-        ae_value = ae.get("value")
-        ae_value_str = str(ae_value).strip() if ae_value is not None and str(ae_value).strip() else None
+        # (ae / ae_value_str / ae_lines parsed earlier for answer-range fallback.)
         v_issues = (manifest.get("annotation_meta") or {}).get("validation_issues") or []
         _uid_re = re.compile(rf"^{re.escape(unit_id)}(?:[:：\s]|$)")
         has_v_issue = any(_uid_re.match(str(issue).lstrip("! ")) for issue in v_issues)
@@ -238,6 +252,7 @@ def bind_units_from_manifest(
                 answer_fallback_blocked=answer_fallback_blocked,
                 extra_opt_lines=_extra_opt_line,
                 answer_evidence_value=ae_value_str,
+                answer_evidence_lines=ae_lines,
             )
         )
         # GEO-SUBQ: deterministic sub-question expansion (fail-closed per sub).
@@ -451,16 +466,23 @@ def build_annotation_payload_from_bound(
             "answer_zone": "answer_table",
             "fallback_blocked": bu.answer_fallback_blocked,
         }
+        # P0-answer: answer_lines and answer_value are PARALLEL fields (not
+        # if/elif). Adapter contract: both may be present; resolver uses
+        # answer_lines as evidence range and answer_value for conflict check.
         if bu.ranges["answer"] is not None:
             content["answer"]["answer_lines"] = [
                 bu.ranges["answer"].start,
                 bu.ranges["answer"].end,
             ]
-        elif bu.answer_evidence_value is not None:
-            # P0-answer: answer_lines=None but manifest declared the answer
-            # in answer_evidence.value. Pass it directly — resolver must NOT
-            # scan explanation text to find the answer.
+        if bu.answer_evidence_value is not None:
             content["answer"]["answer_value"] = bu.answer_evidence_value
+        # v2.4+: keep the raw answer_evidence.lines declaration for audit
+        # (may equal answer_lines after fallback; never dropped silently).
+        if bu.answer_evidence_lines is not None:
+            content["answer"]["answer_evidence_lines"] = [
+                bu.answer_evidence_lines.start,
+                bu.answer_evidence_lines.end,
+            ]
         # P2-fix-1: map explanation_lines into content (was computed in ranges
         # but never assigned — explanations were lost for all subjects).
         if bu.ranges["explanation"] is not None:
