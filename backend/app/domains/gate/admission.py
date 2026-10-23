@@ -399,6 +399,13 @@ class AdmissionService:
         _ans_text = str(_ans.get("text") or _ans.get("candidate_text") or "")
         if not _ans_text:
             return None
+        # Content consistency gate: answer must be recoverable from real
+        # source lines.  If not, refuse — never return an unknown fact that
+        # a human/golden grant could later publish as official.
+        from app.domains.gate.binding_fact import _value_supported_by_lines
+        _check_val = dv.strip() if dv.strip() else _ans_text.strip()
+        if not _value_supported_by_lines(_check_val, _real_lines):
+            return None
         try:
             from app.domains.gate.binding_fact import (
                 derive_binding_fact,

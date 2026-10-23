@@ -222,6 +222,7 @@ class TestResolveFactFallback:
         assert r is None
 
     async def test_fallback_with_real_lines_succeeds(self, session):
+        """Registry miss + real source lines → must return fact with match ownership."""
         from app.domains.gate.admission import AdmissionService
         from app.domains.gate.binding_fact import get_registry
         get_registry().clear()
@@ -236,10 +237,12 @@ class TestResolveFactFallback:
         assert r is not None
         assert r.source_version_id == SVID
         assert r.span_id == "sp-Q1.answer"
+        assert r.ownership == "match", f"expected match, got {r.ownership}"
 
     async def test_fallback_rejects_answer_not_in_source(self, session):
+        """answer_text='Z' but source says '1. A' → MUST return None."""
         from app.domains.gate.admission import AdmissionService
-        from app.domains.gate.binding_fact import get_registry, verify_binding_fact
+        from app.domains.gate.binding_fact import get_registry
         get_registry().clear()
         await _seed_sv_and_lines(session, lines=["1. A", "2. B"])
         svc = AdmissionService(session)
@@ -250,10 +253,10 @@ class TestResolveFactFallback:
             answer_payload=_make_answer_payload(text="Z"),
             allow_fallback=True,
         )
-        if r is not None:
-            assert r.ownership != "match" or verify_binding_fact(r)
+        assert r is None, "answer not in source must be rejected, got fact"
 
     async def test_fallback_uses_db_lines_not_candidate_text(self, session):
+        """MUST return fact; source_hash from DB line, not candidate text."""
         from app.domains.gate.admission import AdmissionService
         from app.domains.gate.binding_fact import get_registry
         get_registry().clear()
@@ -266,9 +269,9 @@ class TestResolveFactFallback:
             answer_payload=_make_answer_payload(text="A"),
             allow_fallback=True,
         )
-        if r is not None:
-            assert r.source_hash == _sha("1. A")
-            assert r.source_hash != _sha("A")
+        assert r is not None, "fallback must reconstruct from real DB lines"
+        assert r.source_hash == _sha("1. A"), "must hash real DB line, not candidate text"
+        assert r.source_hash != _sha("A"), "must NOT self-proof with candidate text"
 
     async def test_svid_mismatch_rejected(self, session):
         from app.domains.gate.admission import AdmissionService
@@ -284,3 +287,22 @@ class TestResolveFactFallback:
             answer_payload=_make_answer_payload(), allow_fallback=True,
         )
         assert r is None
+
+    async def test_content_gate_blocks_unknown_fact(self, session):
+        """Source says '1. A' but answer is 'Z' → fallback must return None,
+        NOT an unknown fact that human/golden could later publish as official."""
+        from app.domains.gate.admission import AdmissionService
+        from app.domains.gate.binding_fact import get_registry
+        get_registry().clear()
+        await _seed_sv_and_lines(session, lines=["1. A", "2. B", "3. C"])
+        svc = AdmissionService(session)
+        r = await svc._resolve_fact_with_fallback(
+            source_version_id=SVID, span_id="sp-Q1.answer",
+            candidate_payload=_make_candidate_payload(
+                line_refs=["P1L001"], answer_text="Z", evidence_value="Z"),
+            answer_payload=_make_answer_payload(text="Z"),
+            allow_fallback=True,
+        )
+        assert r is None, (
+            f"must reject unsupported answer, got ownership={getattr(r, 'ownership', None)}"
+        )
