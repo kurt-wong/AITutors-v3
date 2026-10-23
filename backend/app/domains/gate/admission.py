@@ -548,6 +548,14 @@ class AdmissionService:
                     official_text=official_text,
                     publish=publish,
                 )
+                # R9-fix: extract line_refs from candidate's resolved_spans
+                # for the answer span, so provenance transfers to DB.
+                _span_id = str(ans.get("span_id") or "")
+                _ans_refs: list[str] = []
+                for _sp in (candidate.payload.get("resolved_spans") or []):
+                    if str(_sp.get("span_id") or "") == _span_id:
+                        _ans_refs = list(_sp.get("line_refs") or [])
+                        break
                 await self._content.update_answer_text(
                     instance_id=inst,
                     text=official_text,
@@ -566,6 +574,7 @@ class AdmissionService:
                         "publish": publish,
                         "publish_seal": _seal,
                     },
+                    line_refs=_ans_refs,
                 )
 
     # ------------------------------------------------------------------ 物化
@@ -809,6 +818,12 @@ class AdmissionService:
                         official_text=official_text,
                         publish=publish,
                     )
+                    _span_id2 = str(ans.get("span_id") or "")
+                    _ans_refs2: list[str] = []
+                    for _sp in (candidate.payload.get("resolved_spans") or []):
+                        if str(_sp.get("span_id") or "") == _span_id2:
+                            _ans_refs2 = list(_sp.get("line_refs") or [])
+                            break
                     await self._content.update_answer_text(
                         instance_id=inst.id,
                         text=official_text,
@@ -827,6 +842,7 @@ class AdmissionService:
                             "publish": publish,
                             "publish_seal": _seal,
                         },
+                        line_refs=_ans_refs2,
                     )
 
         if not any_new_instance:
@@ -900,6 +916,12 @@ class AdmissionService:
                         official_text=official_text,
                         publish=publish,
                     )
+                    _span_id3 = str(ans.get("span_id") or "")
+                    _ans_refs3: list[str] = []
+                    for _sp in (candidate.payload.get("resolved_spans") or []):
+                        if str(_sp.get("span_id") or "") == _span_id3:
+                            _ans_refs3 = list(_sp.get("line_refs") or [])
+                            break
                     await self._content.update_answer_text(
                         instance_id=inst.id,
                         text=official_text,
@@ -918,6 +940,7 @@ class AdmissionService:
                             "publish": publish,
                             "publish_seal": _seal,
                         },
+                        line_refs=_ans_refs3,
                     )
             for m in p["compiled_roles"]:
                 if m["kind"] != "material":

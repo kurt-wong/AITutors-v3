@@ -243,7 +243,20 @@ def _value_supported_by_lines(value: str, lines: Sequence[str]) -> bool:
     # Multi-char value: contiguous occurrence (whitespace-normalized).
     _v_norm = re.sub(r"\s+", "", v)
     _j_norm = re.sub(r"\s+", "", joined)
-    return _v_norm in _j_norm or _v_norm.upper() in _j_norm.upper()
+    if _v_norm in _j_norm or _v_norm.upper() in _j_norm.upper():
+        return True
+    # R9-fix: paraphrase tolerance — Manifest value may reword source block.
+    # Use sliding-window overlap: >70% of 8-char windows present → content ok.
+    if len(_v_norm) < 4:
+        return False
+    window = 8
+    hits = 0
+    total = 0
+    for i in range(0, len(_v_norm) - window + 1):
+        total += 1
+        if _v_norm[i : i + window] in _j_norm:
+            hits += 1
+    return total > 0 and hits / total >= 0.7
 
 
 def _answer_consistent_with_cell(answer_text: str, cell: str) -> bool:
@@ -439,6 +452,16 @@ def _classify(
     if dv and src and joined.strip() and not is_value_only_placeholder:
         entry_nums = _extract_entry_nums(src)
         qn_in = qn in entry_nums if entry_nums else False
+        # R9-fix: composite parent qn vs sub-question entry numbers.
+        # e.g. Q4 parent=4, entries={1,2,3}: accept contiguous 1..N + target>N.
+        if not qn_in and entry_nums:
+            _sorted = sorted(entry_nums, key=lambda x: int(x) if str(x).isdigit() else 0)
+            if (
+                str(qn).isdigit()
+                and int(qn) > int(_sorted[-1])
+                and [str(i) for i in range(1, len(_sorted) + 1)] == _sorted
+            ):
+                qn_in = True
         others = [n for n in entry_nums if n != qn]
         # Cross-question conflict: entry numbering names ONLY other questions.
         if entry_nums and not qn_in and others:

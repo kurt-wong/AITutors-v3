@@ -46,7 +46,7 @@ def _raw_sha256(s: str) -> str:
 # 行内条目形态：题号 token + 分隔符（bounded，防 qn=1 误配 "10."）。offset 基于 raw text。
 # 兼容 Markdown escaped-dot（`27\\. A` ≡ `27. A`），与 is_question_start v1.2 同界。
 # GEO-SUBQ：OCR 分隔符变体 `·`/`，`（实测 `15·`/`20，`）同等对待。
-_ENTRY_RE = re.compile(r"(?<![\d@-])(\d{1,3})\s*(?:\\[.．、:·，]|[.．、:·，])")
+_ENTRY_RE = re.compile(r"(?<![\d@-])(\d{1,3})\s*(?:\\[.．、:·，)）]|[.．、:·，)）])")
 
 # 行中题号入口（真实卷拼接形态）：
 #   …完成 16~17 题。16. 北京…     —— 句号后紧接题号
@@ -242,6 +242,16 @@ def classify_answer_ownership(texts: list[str], qn: str) -> str:
         return OWNERSHIP_UNKNOWN
     if target in entry_nums:
         return OWNERSHIP_MATCH
+    # R9-fix: composite parent qn vs sub-question entry numbers.
+    # e.g. Q4 parent=4, entries={1,2,3}: sub-questions of a composite unit
+    # are numbered 1..N while the parent carries the global qn. Accept when
+    # entry_nums form a contiguous 1..N sequence and target > N.
+    _sorted = sorted(entry_nums)
+    if (
+        target > _sorted[-1]
+        and _sorted == list(range(1, len(_sorted) + 1))
+    ):
+        return OWNERSHIP_MATCH
     # Ambiguous local-label band: small entries vs high target.
     # Not local_proven (no structure evidence) — unknown, never auto-publish.
     if all(e <= 10 for e in entry_nums) and target > 10:
@@ -383,9 +393,35 @@ def _normalize_answer_block(text: str) -> str:
     t = _ANSWER_INDICATOR_RE.sub("", t)
     # Strip a leading "答案:" / "参考答案:" label.
     t = re.sub(r"^\s*(?:参考?答案|解[答折])\s*[：:]\s*", "", t)
+    # Normalize full-width → half-width punctuation for consistent comparison.
+    t = t.replace("（", "(").replace("）", ")")
+    t = t.replace("　", " ")  # full-width space
+    # Strip common annotations like (重点字：X) / (注：X).
+    t = re.sub(r"\(\s*(?:重点字|注|说明|重点)\s*[：:][^)]*\)", "", t)
     # Remove ALL whitespace (newlines, spaces) to unify formatting.
     t = re.sub(r"\s+", "", t)
     return t
+
+
+def _answer_content_overlap(av_norm: str, blk_norm: str) -> bool:
+    """Check if answer_value content is substantially present in block.
+
+    Handles paraphrase: Manifest answer_evidence.value may reword the source
+    block (e.g. 要 vs 需要). Uses sliding-window token presence: if >70% of
+    the value's 8-char windows appear in the block, consider content present.
+    """
+    if not av_norm or not blk_norm:
+        return False
+    if len(av_norm) < 4:
+        return av_norm in blk_norm
+    window = 8
+    hits = 0
+    total = 0
+    for i in range(0, len(av_norm) - window + 1):
+        total += 1
+        if av_norm[i : i + window] in blk_norm:
+            hits += 1
+    return total > 0 and hits / total >= 0.7
 
 
 def _entry_content_bounds(raw: str, entry_start: int, entry_end: int) -> tuple[int, int]:
@@ -2808,7 +2844,16 @@ class SourceResolver:
                         # says （1）B but value says （1）A) is a real conflict.
                         _blk_norm = _normalize_answer_block(_blk)
                         _av_norm = _normalize_answer_block(av)
-                        if _blk_norm != _av_norm:
+                        # R9-fix: block often has MORE content than value
+                        # (headers, explanation, annotations). Check content
+                        # presence: either direction of containment, or
+                        # significant overlap (value is paraphrase of block).
+                        _content_ok = (
+                            _av_norm in _blk_norm
+                            or _blk_norm in _av_norm
+                            or _answer_content_overlap(_av_norm, _blk_norm)
+                        )
+                        if not _content_ok:
                             out.add_empty_answer(t, (
                                 "answer_lines/answer_value conflict: block text != declared value",
                                 f"qn={qn}",

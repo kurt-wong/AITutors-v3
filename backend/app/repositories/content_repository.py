@@ -423,6 +423,7 @@ class ContentRepository(BaseRepository):
         text: str,
         text_hash: str,
         answer_status: dict | None = None,
+        line_refs: list[str] | None = None,
     ) -> bool:
         """Update official answer text on an existing empty answer row.
 
@@ -436,6 +437,8 @@ class ContentRepository(BaseRepository):
           non-empty official answers).
         - For non-empty new text, runs the SAME BindingFact / ownership /
           publish-seal validation as create_role_content.
+        - line_refs: optional list of source line references to merge into
+          source_span.line_refs (transfers provenance from candidate to DB).
         - Returns True if a row was updated, False otherwise.
         """
         from sqlalchemy import select as _sa_select
@@ -543,6 +546,15 @@ class ContentRepository(BaseRepository):
 
             row.text = text
             row.text_hash = text_hash
+            # Transfer line_refs to source_span (R9-fix: provenance transfer).
+            if line_refs:
+                span = dict(row.source_span or {})
+                existing = list(span.get("line_refs") or [])
+                for ref in line_refs:
+                    if ref not in existing:
+                        existing.append(ref)
+                span["line_refs"] = existing
+                row.source_span = span
             merged = dict(row.answer_status or {})
             merged.update({
                 "source_located": status.get("source_located", merged.get("source_located")),
