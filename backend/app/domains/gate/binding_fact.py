@@ -130,6 +130,21 @@ def _extract_entry_nums(lines: Sequence[str]) -> tuple[str, ...]:
     return tuple(nums)
 
 
+def _uses_fw_paren_entries(lines: Sequence[str]) -> bool:
+    """True when entry tokens use full-width paren form （N）.
+
+    Chinese composite sub-questions use `（1）A （2）B …` (local 1..N labels
+    under a global parent qn). Plain `N.` / `N、` entries are different
+    questions and must NOT be treated as composite sub-parts.
+    """
+    for raw in lines or ():
+        for m in _ENTRY_RE.finditer(raw or ""):
+            # Match starts at the delimiter char (（ or whitespace/paren).
+            if m.group(0)[:1] in "（(":
+                return True
+    return False
+
+
 def _source_hash(lines: Sequence[str]) -> str:
     return _sha256_text("\n".join(lines or ()))
 
@@ -469,6 +484,18 @@ def _classify(
     if dv and src and joined.strip() and not is_value_only_placeholder:
         entry_nums = _extract_entry_nums(src)
         qn_in = qn in entry_nums if entry_nums else False
+        # Composite parent qn: Chinese sub-entries `（1）A （2）B …` under a
+        # global parent qn (e.g. Q4 parent=4, entries={1,2,3}). Accept ONLY
+        # when entries use （N） form, are contiguous 1..N, and target > N.
+        if not qn_in and entry_nums:
+            _sorted = sorted(entry_nums, key=lambda x: int(x) if str(x).isdigit() else 0)
+            if (
+                str(qn).isdigit()
+                and int(qn) > int(_sorted[-1])
+                and [str(i) for i in range(1, len(_sorted) + 1)] == _sorted
+                and _uses_fw_paren_entries(src)
+            ):
+                qn_in = True
         others = [n for n in entry_nums if n != qn]
         # Cross-question conflict: entry numbering names ONLY other questions.
         if entry_nums and not qn_in and others:

@@ -149,6 +149,45 @@ class TestValueSupportedNegative:
         assert _value_supported_by_lines(val, [src]) is False
 
 
+# === Composite parent qn (Chinese sub-entries （1）（2）… under global qn) ===
+class TestCompositeParentQn:
+    def test_fw_paren_contiguous_entries_match(self):
+        """Q4-style: parent qn=4, entries （1）（2）（3） contiguous → match."""
+        from app.domains.resolver.resolver import classify_answer_ownership
+        texts = ["（1）D。", "（2）A。", "（3）虎啸龙吟与和缓相对。"]
+        assert classify_answer_ownership(texts, "4") == "match"
+
+    def test_fw_paren_qn6_entries_match(self):
+        """Q6-style: parent qn=6, entries （1）..（5） contiguous → match."""
+        from app.domains.resolver.resolver import classify_answer_ownership
+        texts = ["（1）B。", "（2）D。", "（3）第三段。", "（4）寓意。", "（5）启示。"]
+        assert classify_answer_ownership(texts, "6") == "match"
+
+    def test_plain_period_entries_still_foreign(self):
+        """Plain `N.` entries with target > N are foreign, NOT composite."""
+        from app.domains.resolver.resolver import classify_answer_ownership
+        texts = ["1. A", "2. B", "3. C"]
+        assert classify_answer_ownership(texts, "4") == "foreign"
+
+    def test_non_contiguous_fw_paren_still_foreign(self):
+        """Non-contiguous （1）（3） entries are NOT composite sub-parts."""
+        from app.domains.resolver.resolver import classify_answer_ownership
+        texts = ["（1）A", "（3）B"]
+        assert classify_answer_ownership(texts, "5") == "foreign"
+
+    def test_target_within_entries_still_match(self):
+        """When target IS in entry_nums, direct match wins (no composite path)."""
+        from app.domains.resolver.resolver import classify_answer_ownership
+        texts = ["（2）A", "（3）B"]
+        assert classify_answer_ownership(texts, "2") == "match"
+
+    def test_target_le_max_entry_still_foreign(self):
+        """target ≤ max entry and not in entry_nums → foreign (not composite)."""
+        from app.domains.resolver.resolver import classify_answer_ownership
+        texts = ["（1）A", "（3）B"]
+        assert classify_answer_ownership(texts, "2") == "foreign"
+
+
 # === BindingFact security ===
 class TestBindingFactSecurity:
     def test_derive_requires_svid(self):

@@ -217,6 +217,22 @@ def _entry_nums_of(texts: list[str]) -> set[int]:
     return nums
 
 
+def _uses_fw_paren_entries(texts: list[str]) -> bool:
+    """True when entry tokens use full-width paren form （N）.
+
+    Chinese composite sub-questions use `（1）A （2）B …` (local 1..N labels
+    under a global parent qn). Plain `N.` / `N、` entries are different
+    questions and must NOT be treated as composite sub-parts.
+    """
+    for raw in texts:
+        for m in _ENTRY_RE.finditer(raw):
+            # resolver _ENTRY_RE starts at the digit; the delimiter (（)
+            # sits just before the match.
+            if m.start() > 0 and raw[m.start() - 1] in "（(":
+                return True
+    return False
+
+
 def classify_answer_ownership(texts: list[str], qn: str) -> str:
     """Return OWNERSHIP_MATCH | OWNERSHIP_FOREIGN | OWNERSHIP_UNKNOWN.
 
@@ -241,6 +257,19 @@ def classify_answer_ownership(texts: list[str], qn: str) -> str:
     if not entry_nums:
         return OWNERSHIP_UNKNOWN
     if target in entry_nums:
+        return OWNERSHIP_MATCH
+    # Composite parent qn: Chinese sub-entries `（1）A （2）B …` under a global
+    # parent qn (e.g. Q4 parent=4, entries={1,2,3}). Accept ONLY when:
+    # (a) entries use full-width paren form （N） — Chinese composite sub-parts;
+    # (b) entries form a contiguous 1..N sequence;
+    # (c) target qn > N (the parent carries the global number).
+    # Plain `N.` / `N、` entries are different questions — never match.
+    _sorted = sorted(entry_nums)
+    if (
+        _uses_fw_paren_entries(texts)
+        and _sorted == list(range(1, len(_sorted) + 1))
+        and target > _sorted[-1]
+    ):
         return OWNERSHIP_MATCH
     # Ambiguous local-label band: small entries vs high target.
     # Not local_proven (no structure evidence) — unknown, never auto-publish.
