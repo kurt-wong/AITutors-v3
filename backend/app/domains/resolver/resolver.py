@@ -2971,6 +2971,27 @@ class SourceResolver:
                      "range_answer_key", f"qn={qn}", f"cell={_dt}"),
                 )
                 return
+            # MATH-ANSWER-ROOT-CAUSE (T16): when Producer declared answer_value
+            # and that token appears on the evidence line, bind the token as a
+            # char_span BEFORE entry/ownership conflict checks. Those checks
+            # compare whole-line / false-entry text (e.g. math `=(1,`) against
+            # the declared letter and wrongly empty a correct value-only
+            # declaration. This is the existing AnswerTokenContract extract —
+            # just ordered before whole-line conflict, not a new heuristic.
+            if av is not None:
+                _av_s = av.strip()
+                if _av_s and _av_s in raw:
+                    _tok_off = raw.find(_av_s)
+                    if _tok_off >= 0:
+                        out.add_char_span(
+                            unit_id, t, line_ref, _tok_off,
+                            _tok_off + len(_av_s), "exact",
+                            ("answer evidence range",
+                             f"lines={el[0]}-{el[1]}",
+                             "answer_token_extracted",
+                             f"qn={qn}", f"cell={_av_s}"),
+                        )
+                        return
             offs = _entry_offsets(raw, qn)
             if offs:
                 all_off = [m.start() for m in _ENTRY_RE.finditer(raw)]
