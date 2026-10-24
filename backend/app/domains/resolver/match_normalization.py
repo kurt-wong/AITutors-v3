@@ -63,6 +63,12 @@ def strip_question_prefix(text: str) -> str:
     return text
 
 
+# PDF text-layer page footer `N / M`（如 ` 6 / 12`）。不得识别为题号入口：
+# T2.9 U49-52 实证 ` 6 / 12` 经 bare-digit `\s` 分支命中 `is_question_start('6')`，
+# `_region_end` 在页脚处截断选项窗，跨页的 C/D 选项（下一行）被切掉。
+_PAGE_NUM_FOOTER_RE = re.compile(r"^\d{1,3}\s*/\s*\d{1,3}$")
+
+
 def is_question_start(normalized_line: str) -> str | None:
     """若行首是题号 token（§5.2 题号前后缀），返回题号串，否则 None。
 
@@ -76,7 +82,10 @@ def is_question_start(normalized_line: str) -> str | None:
     回归护栏：OCR 分隔符 `·`/`,` 后紧跟数字（`2·10^3`/`2,3`）是数值表达，不是题号。
     `.`/`．`/`、`/`:` 保留既有语义——`．` 是中文句号（题号分隔），`7.5` 由
     `(?!(\\d))` 拦截（`.` 后紧跟数字是小数），`12．2017年` 不受影响（`．` 无护栏）。
+    T2.9：页脚 `N / M` 整行形态拒绝（见 `_PAGE_NUM_FOOTER_RE`）。
     """
+    if _PAGE_NUM_FOOTER_RE.match(normalized_line):
+        return None
     m = re.match(
         r"^(\d{1,3})\s*(?:"
         r"\\[·,，](?!\d)|"   # escaped OCR separators: reject digit-after

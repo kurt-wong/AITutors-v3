@@ -1207,6 +1207,7 @@ class _Out:
         # fact=match vs compiled=unknown divergence).
         _fact_own = None
         _fact_bev = ""
+        _fact = None
         if _span_id and _svid:
             try:
                 from app.domains.gate.binding_fact import (
