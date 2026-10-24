@@ -218,9 +218,8 @@ def _normalize_for_content_match(text: str) -> str:
     t = t.replace("　", " ")
     # Strip annotations like (重点字：X) / (注：X).
     t = re.sub(r"\(\s*(?:重点字|注|说明|重点)\s*[：:][^)]*\)", "", t)
-    # Strip separators and ALL punctuation (not content).
-    t = t.replace("---", "").replace("—", "").replace("…", "")
-    t = re.sub(r"[。．、，；：！？\.\,\;\:\!\?\s]", "", t)
+    # Remove all whitespace.
+    t = re.sub(r"\s+", "", t)
     return t
 
 
@@ -464,16 +463,6 @@ def _classify(
     if dv and src and joined.strip() and not is_value_only_placeholder:
         entry_nums = _extract_entry_nums(src)
         qn_in = qn in entry_nums if entry_nums else False
-        # R9-fix: composite parent qn vs sub-question entry numbers.
-        # e.g. Q4 parent=4, entries={1,2,3}: accept contiguous 1..N + target>N.
-        if not qn_in and entry_nums:
-            _sorted = sorted(entry_nums, key=lambda x: int(x) if str(x).isdigit() else 0)
-            if (
-                str(qn).isdigit()
-                and int(qn) > int(_sorted[-1])
-                and [str(i) for i in range(1, len(_sorted) + 1)] == _sorted
-            ):
-                qn_in = True
         others = [n for n in entry_nums if n != qn]
         # Cross-question conflict: entry numbering names ONLY other questions.
         if entry_nums and not qn_in and others:

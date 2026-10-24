@@ -242,16 +242,6 @@ def classify_answer_ownership(texts: list[str], qn: str) -> str:
         return OWNERSHIP_UNKNOWN
     if target in entry_nums:
         return OWNERSHIP_MATCH
-    # R9-fix: composite parent qn vs sub-question entry numbers.
-    # e.g. Q4 parent=4, entries={1,2,3}: sub-questions of a composite unit
-    # are numbered 1..N while the parent carries the global qn. Accept when
-    # entry_nums form a contiguous 1..N sequence and target > N.
-    _sorted = sorted(entry_nums)
-    if (
-        target > _sorted[-1]
-        and _sorted == list(range(1, len(_sorted) + 1))
-    ):
-        return OWNERSHIP_MATCH
     # Ambiguous local-label band: small entries vs high target.
     # Not local_proven (no structure evidence) — unknown, never auto-publish.
     if all(e <= 10 for e in entry_nums) and target > 10:
