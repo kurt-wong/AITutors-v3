@@ -98,6 +98,43 @@ class TestValueSupportedByLines:
         assert _value_supported_by_lines("A", []) is False
 
 
+class TestValueSupportedNegative:
+    """Negative tests: tolerance must NOT weaken answer verification."""
+
+    def test_different_answer_rejected(self):
+        """Source says A, value says B → reject."""
+        from app.domains.gate.binding_fact import _value_supported_by_lines
+        assert _value_supported_by_lines("B", ["1. A"]) is False
+
+    def test_different_content_rejected(self):
+        """Source has one answer, value has different answer → reject."""
+        from app.domains.gate.binding_fact import _value_supported_by_lines
+        assert _value_supported_by_lines(
+            "孔子回答子路", ["孟子回答梁惠王"]
+        ) is False
+
+    def test_partial_overlap_rejected(self):
+        """Value shares <70% with source → reject."""
+        from app.domains.gate.binding_fact import _value_supported_by_lines
+        src = "①久在樊笼里复得返自然②无以至今日无以终余年③醉不成欢惨将别别时茫茫江浸月"
+        val = "①久在樊笼里复得返自然②完全不同③完全不同④完全不同"
+        assert _value_supported_by_lines(val, [src]) is False
+
+    def test_paraphrase_with_annotations_allowed(self):
+        """Value with (重点字：X) annotations stripped → allow."""
+        from app.domains.gate.binding_fact import _value_supported_by_lines
+        src = "【解答】①久在樊笼里复得返自然（重点字：返）②无以至今日（重点字：至）"
+        val = "①久在樊笼里复得返自然②无以至今日"
+        assert _value_supported_by_lines(val, [src]) is True
+
+    def test_fullwidth_parens_normalized(self):
+        """Full-width （） vs half-width () → allow after normalization."""
+        from app.domains.gate.binding_fact import _value_supported_by_lines
+        src = "（1）A（2）B（3）C"
+        val = "(1)A(2)B(3)C"
+        assert _value_supported_by_lines(val, [src]) is True
+
+
 # === BindingFact security ===
 class TestBindingFactSecurity:
     def test_derive_requires_svid(self):

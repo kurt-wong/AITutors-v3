@@ -201,6 +201,28 @@ _ENTRY_PREFIX_RE = re.compile(
 )
 
 
+def _normalize_for_content_match(text: str) -> str:
+    """Normalize text for content-presence comparison.
+
+    Strips answer labels, annotations (重点字：X etc.), normalizes full-width
+    parens, and removes all whitespace. Used to compare declared_value against
+    source block without false negatives from formatting differences.
+    """
+    if not text:
+        return ""
+    t = text.strip()
+    # Strip answer labels (答案：, 参考答案：, 解答：, 【解答】, etc.).
+    t = re.sub(r"^\s*【?\s*(?:参考)?(?:答案|解[答折])\s*】?\s*[：:]?\s*", "", t)
+    # Normalize full-width → half-width.
+    t = t.replace("（", "(").replace("）", ")")
+    t = t.replace("　", " ")
+    # Strip annotations like (重点字：X) / (注：X).
+    t = re.sub(r"\(\s*(?:重点字|注|说明|重点)\s*[：:][^)]*\)", "", t)
+    # Remove all whitespace.
+    t = re.sub(r"\s+", "", t)
+    return t
+
+
 def _value_supported_by_lines(value: str, lines: Sequence[str]) -> bool:
     """Source-line content consistency for the verifiable-binding path.
 
@@ -240,13 +262,13 @@ def _value_supported_by_lines(value: str, lines: Sequence[str]) -> bool:
                 return True
         return False
 
-    # Multi-char value: contiguous occurrence (whitespace-normalized).
-    _v_norm = re.sub(r"\s+", "", v)
-    _j_norm = re.sub(r"\s+", "", joined)
+    # Multi-char value: contiguous occurrence after full normalization.
+    _v_norm = _normalize_for_content_match(v)
+    _j_norm = _normalize_for_content_match(joined)
     if _v_norm in _j_norm or _v_norm.upper() in _j_norm.upper():
         return True
-    # R9-fix: paraphrase tolerance — Manifest value may reword source block.
-    # Use sliding-window overlap: >70% of 8-char windows present → content ok.
+    # R9-fix: paraphrase tolerance via sliding-window overlap.
+    # Only used when exact match fails (e.g. block has 。/--- extras).
     if len(_v_norm) < 4:
         return False
     window = 8

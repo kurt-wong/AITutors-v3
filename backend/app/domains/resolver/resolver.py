@@ -2757,6 +2757,12 @@ class SourceResolver:
                     _offs = _entry_offsets(_raw, qn)
                     if len(_offs) == 1:
                         all_off = [m.start() for m in _ENTRY_RE.finditer(_raw)]
+                        # R9-fix: only take packed path when line has MULTIPLE
+                        # entries (e.g. `1.C 2.B 3.C`). Single-entry lines like
+                        # `（1）A` are part of a multi-line block — fall through
+                        # to the full-range block binding.
+                        if len(all_off) <= 1:
+                            continue
                         nxt = next((o for o in all_off if o > _offs[0]), len(_raw))
                         # Strip `N.` / `N\\.` prefix: bind only answer content.
                         _cs, _ce = _entry_content_bounds(_raw, _offs[0], nxt)
