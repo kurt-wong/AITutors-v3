@@ -60,6 +60,12 @@ class IRNode:
     sub_questions: tuple["IRNode", ...] = field(default_factory=tuple)
     relations: tuple[str, ...] = field(default_factory=tuple)  # material_dependency targets
     semantic_status: str = "incomplete"
+    # Expansion integrity evidence from payload group_evidence (T2.5).
+    # Used by collect_validation_problems: declared sub-question numbers that
+    # never expanded must force the composite incomplete (10 §645 atomic group).
+    declared_question_numbers: tuple[int, ...] = ()
+    expanded_question_numbers: tuple[int, ...] = ()
+    subq_skipped: tuple[tuple[str, str], ...] = ()  # (qn_str, reason)
 
 
 @dataclass(frozen=True)
@@ -147,6 +153,19 @@ class IRBuilder:
                 )
             # 子题继承 composite 的题型（sub 通常不重复声明 original_question_type）。
             subs = tuple(IRBuilder._node(s, resolved, original_type) for s in sub_units)
+            # T2.5: expansion integrity evidence from group_evidence (payload).
+            # Declared vs expanded sub-question numbers drive composite atomicity.
+            ge = unit.get("group_evidence") or {}
+            _declared_qns = tuple(
+                int(x) for x in (ge.get("question_numbers") or []) if x is not None
+            )
+            _expanded_qns = tuple(
+                int(x) for x in (ge.get("expanded_question_numbers") or []) if x is not None
+            )
+            _skipped_raw = ge.get("subq_skipped") or {}
+            _skipped = tuple(
+                (str(k), str(v)) for k, v in sorted(_skipped_raw.items(), key=lambda kv: str(kv[0]))
+            )
             return IRNode(
                 unit_id=uid, unit_type="composite_unit",
                 question_number=str(unit.get("question_number") or "") or None,
@@ -157,6 +176,9 @@ class IRBuilder:
                 sub_questions=subs,
                 relations=_declared_relations(uid, unit),
                 semantic_status=initial_status,
+                declared_question_numbers=_declared_qns,
+                expanded_question_numbers=_expanded_qns,
+                subq_skipped=_skipped,
             )
         return IRNode(
             unit_id=uid, unit_type="standalone_unit",
@@ -289,6 +311,40 @@ def collect_validation_problems(node: "IRNode", seen: set[str]) -> list[str]:
                 sub_has_problems = True
         if node.sub_questions and sub_has_problems:
             problems.append("composite sub_question not ready")  # invariant 7
+        # T2.5 P0: expansion integrity (10 §645 atomic group).
+        # Declared sub-question numbers must all be present as actual
+        # sub_questions (set-based, not count-based). Any declared qn that
+        # never expanded forces the whole composite incomplete — a partially
+        # expanded composite must not be ready / published.
+        if node.declared_question_numbers:
+            declared_set = set(node.declared_question_numbers)
+            # Prefer actual sub_questions' numbers; fall back to expanded list.
+            actual_qns: set[int] = set()
+            for s in node.sub_questions:
+                sq = s.question_number
+                if sq is not None and str(sq).strip().isdigit():
+                    actual_qns.add(int(str(sq).strip()))
+            if not actual_qns and node.expanded_question_numbers:
+                actual_qns = set(node.expanded_question_numbers)
+            missing = sorted(declared_set - actual_qns)
+            if missing:
+                skip_map = dict(node.subq_skipped)
+                missing_detail = ", ".join(
+                    f"{q}({skip_map.get(str(q), 'not expanded')})" for q in missing
+                )
+                problems.append(
+                    f"composite incomplete: declared {sorted(declared_set)} "
+                    f"expanded {sorted(actual_qns)}; missing {missing_detail}"
+                )
+            # Cross-check: expanded list and actual subs must agree when both present.
+            elif node.expanded_question_numbers and actual_qns != set(
+                node.expanded_question_numbers
+            ):
+                problems.append(
+                    "composite expanded_question_numbers mismatch with sub_questions: "
+                    f"evidence={sorted(set(node.expanded_question_numbers))} "
+                    f"actual={sorted(actual_qns)}"
+                )
         if not node.sub_questions:
             # Producer 未拆子题：综合题整体 = 一道 Question（产品定义）。
             # 父节点 content 即题目本体，按 leaf 必填 role 校验，不因缺少
@@ -332,6 +388,9 @@ def _validate_node(node: IRNode, seen: set[str]) -> IRNode:
             node.question_number_range, node.original_question_type,
             node.content, node.shared_components, validated_subs,
             node.relations, "unknown",
+            declared_question_numbers=node.declared_question_numbers,
+            expanded_question_numbers=node.expanded_question_numbers,
+            subq_skipped=node.subq_skipped,
         )
 
     validated_subs = tuple(_validate_node(s, seen) for s in node.sub_questions)
@@ -342,4 +401,7 @@ def _validate_node(node: IRNode, seen: set[str]) -> IRNode:
         node.unit_id, node.unit_type, node.question_number, node.question_number_range,
         node.original_question_type, node.content, node.shared_components,
         validated_subs, node.relations, status,
+        declared_question_numbers=node.declared_question_numbers,
+        expanded_question_numbers=node.expanded_question_numbers,
+        subq_skipped=node.subq_skipped,
     )
