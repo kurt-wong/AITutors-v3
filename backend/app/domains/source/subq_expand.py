@@ -128,10 +128,30 @@ def _html_text_content(line: str) -> str:
     return _HTML_TAG_RE.sub(" ", line)
 
 
+def _looks_option_row_start(lines: list[str], seq: int, col: int) -> bool:
+    """True when a sub-start at (seq, col) is an option-row start (same line).
+
+    Cloze passage blanks (`…in it  28  .`) and option rows (`28. A. quickly`)
+    both match _SUBQ_INLINE. Prefer the option-row candidate so the sub window
+    covers the option block instead of a prose fragment (T2.8).
+
+    Only the SAME LINE after the number marker is inspected: a following-line
+    lookahead would see unrelated option blocks under a passage blank.
+    """
+    raw = lines[seq - 1]
+    frag = raw[col:] if 0 <= col < len(raw) else raw
+    frag = re.sub(rf"^\s*\d{{1,2}}\s*{_SUBQ_SEP}\s*", "", frag)
+    return bool(_extract_option_labels(frag))
+
+
 def _find_sub_starts(
     lines: list[str], q_start: int, q_end: int, qn_list: list[int]
 ) -> list[tuple[int, int, int]]:
-    """Locate (seq, question_number, col) for each expected sub-question start."""
+    """Locate (seq, question_number, col) for each expected sub-question start.
+
+    When the same question number appears both as a cloze passage blank and as
+    an option row, prefer the option-row start (T2.8: multi-line option blocks).
+    """
     wanted = set(qn_list)
     hits: list[tuple[int, int, int]] = []
     for seq in range(q_start, q_end + 1):
@@ -151,14 +171,16 @@ def _find_sub_starts(
                 )
                 col = m.start() + m2.start() if m2 else m.start()
                 hits.append((seq, num, col))
-    # first occurrence per number, document order
-    seen: set[int] = set()
-    uniq: list[tuple[int, int, int]] = []
+    # Per number: prefer option-row start over passage blank; else first hit.
+    by_num: dict[int, list[tuple[int, int, int]]] = {}
     for seq, num, col in hits:
-        if num in seen:
-            continue
-        seen.add(num)
-        uniq.append((seq, num, col))
+        by_num.setdefault(num, []).append((seq, num, col))
+    uniq: list[tuple[int, int, int]] = []
+    for num in sorted(by_num):
+        cands = by_num[num]
+        optionish = [c for c in cands if _looks_option_row_start(lines, c[0], c[2])]
+        chosen = optionish[0] if optionish else cands[0]
+        uniq.append(chosen)
     uniq.sort(key=lambda t: (t[0], t[2]))
     return uniq
 
