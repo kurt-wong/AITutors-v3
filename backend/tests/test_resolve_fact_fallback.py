@@ -134,6 +134,20 @@ class TestValueSupportedNegative:
         val = "(1)A(2)B(3)C"
         assert _value_supported_by_lines(val, [src]) is True
 
+    def test_high_overlap_wrong_answer_rejected(self):
+        """CRITICAL: >70% overlap but wrong sub-answer → must reject."""
+        from app.domains.gate.binding_fact import _value_supported_by_lines
+        src = "①久在樊笼里复得返自然②无以至今日无以终余年③醉不成欢惨将别别时茫茫江浸月④千里逢迎高朋满座⑤群贤毕至少长咸集"
+        val = "①久在樊笼里复得返自然②无以至今日无以终余年③醉不成欢惨将别别时茫茫江浸月④千里逢迎高朋满座⑤完全不同完全错误"
+        assert _value_supported_by_lines(val, [src]) is False
+
+    def test_high_overlap_wrong_letter_rejected(self):
+        """CRITICAL: >70% overlap but wrong answer letter → must reject."""
+        from app.domains.gate.binding_fact import _value_supported_by_lines
+        src = "1. A 2. B 3. C 4. D 5. A 6. B 7. C 8. D 9. A 10. B"
+        val = "1. A 2. B 3. C 4. D 5. A 6. B 7. C 8. D 9. A 10. C"
+        assert _value_supported_by_lines(val, [src]) is False
+
 
 # === BindingFact security ===
 class TestBindingFactSecurity:

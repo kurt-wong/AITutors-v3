@@ -218,8 +218,9 @@ def _normalize_for_content_match(text: str) -> str:
     t = t.replace("　", " ")
     # Strip annotations like (重点字：X) / (注：X).
     t = re.sub(r"\(\s*(?:重点字|注|说明|重点)\s*[：:][^)]*\)", "", t)
-    # Remove all whitespace.
-    t = re.sub(r"\s+", "", t)
+    # Strip separators and ALL punctuation (not content).
+    t = t.replace("---", "").replace("—", "").replace("…", "")
+    t = re.sub(r"[。．、，；：！？\.\,\;\:\!\?\s]", "", t)
     return t
 
 
@@ -262,23 +263,12 @@ def _value_supported_by_lines(value: str, lines: Sequence[str]) -> bool:
                 return True
         return False
 
-    # Multi-char value: contiguous occurrence after full normalization.
+    # Multi-char value: exact match after full normalization only.
+    # R9-FIX3: removed 70% overlap — it accepts wrong answers (tested:
+    # 83-96% overlap with changed sub-answer → True). Exact only.
     _v_norm = _normalize_for_content_match(v)
     _j_norm = _normalize_for_content_match(joined)
-    if _v_norm in _j_norm or _v_norm.upper() in _j_norm.upper():
-        return True
-    # R9-fix: paraphrase tolerance via sliding-window overlap.
-    # Only used when exact match fails (e.g. block has 。/--- extras).
-    if len(_v_norm) < 4:
-        return False
-    window = 8
-    hits = 0
-    total = 0
-    for i in range(0, len(_v_norm) - window + 1):
-        total += 1
-        if _v_norm[i : i + window] in _j_norm:
-            hits += 1
-    return total > 0 and hits / total >= 0.7
+    return _v_norm in _j_norm or _v_norm.upper() in _j_norm.upper()
 
 
 def _answer_consistent_with_cell(answer_text: str, cell: str) -> bool:
