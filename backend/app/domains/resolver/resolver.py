@@ -2404,13 +2404,29 @@ class SourceResolver:
                      f"declared={el[0]}-{el[1]}"),
                 )
                 return
+            # T2.10: drop other units' exclusive material lines (e.g. listening
+            # form swallowed by a contiguous cloze window).
+            excl = tuple(getattr(t, "exclude_line_ranges", ()) or ())
+            if excl:
+                def _excluded(seq: int) -> bool:
+                    return any(a <= seq <= b for a, b in excl)
+
+                filtered = [
+                    r for r in refs if not _excluded(self._idx.seq_of(r))
+                ]
+                if filtered:
+                    refs = filtered
+                # if everything was excluded, keep original refs (fail-open on
+                # this edge would empty material; better keep than invent).
             q = sm.get("text")
             st, _hits, extra = self._resolve_marker_cascade(q) if q else ("missing", [], ())
             status = st if _is_resolved(st) else "exact"
             out.add_span(
                 unit_id, t, refs, status,
                 ("material evidence range", f"lines={el[0]}-{el[1]}",
-                 f"marker={q!r}", *extra),
+                 f"marker={q!r}",
+                 *([f"exclude_ranges={list(excl)}"] if excl else ()),
+                 *extra),
             )
             return
         granularity = sm.get("granularity")

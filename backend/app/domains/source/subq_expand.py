@@ -110,13 +110,20 @@ def _is_noise(line: str) -> bool:
 
 
 def _is_trailing_pad(line: str) -> bool:
-    """Only blank / `---` / heading padding — never HTML option bodies.
+    """Only blank / `---` / heading padding / page-marker — never HTML option bodies.
 
     V3-IMG-OPTION-001: image-option rows (`<div>B.</div>`, `<div><img/></div>`)
     are real content; trailing-tighten must not eat them.
+    T2.10: page footers (` 8 / 12`) are layout residue — tighten them out of
+    stem windows (Q59 stem had `---` + `8 / 12` glued on).
     """
     s = line.strip()
-    return (not s) or bool(re.match(r"^\s*---\s*$", s)) or bool(re.match(r"^#+\s", s))
+    return (
+        (not s)
+        or bool(re.match(r"^\s*---\s*$", s))
+        or bool(re.match(r"^#+\s", s))
+        or bool(re.match(r"^\d{1,3}\s*/\s*\d{1,3}$", s))
+    )
 
 
 def _html_text_content(line: str) -> str:

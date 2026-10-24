@@ -48,6 +48,9 @@ class ResolveTarget:
     # P2-fix-2: Producer extra_lines (layout-drifted images/tables/continuation).
     # 1-based inclusive [start, end]. None = not declared.
     extra_lines: tuple[int, int] | None = None
+    # T2.10: other units' exclusive material windows to drop from THIS material
+    # span's line_refs (cross-unit contamination guard).
+    exclude_line_ranges: tuple[tuple[int, int], ...] = ()
 
 
 @dataclass(frozen=True)
@@ -131,6 +134,15 @@ def _iter_sub_questions(unit: dict):
 
 def _material_target(unit_id: str, role: str, val: dict) -> ResolveTarget:
     """shared_components 项 → material target（20 §4.4 完整 reference 形态）。"""
+    excl_raw = val.get("exclude_line_ranges")
+    excl: list[tuple[int, int]] = []
+    if isinstance(excl_raw, (list, tuple)):
+        for item in excl_raw:
+            if isinstance(item, (list, tuple)) and len(item) == 2:
+                try:
+                    excl.append((int(item[0]), int(item[1])))
+                except (TypeError, ValueError):
+                    continue
     return ResolveTarget(
         target_id=f"{unit_id}.{role}",
         unit_id=unit_id,
@@ -144,6 +156,7 @@ def _material_target(unit_id: str, role: str, val: dict) -> ResolveTarget:
             and len(val.get("evidence_lines") or []) == 2
             else None
         ),
+        exclude_line_ranges=tuple(excl),
     )
 
 

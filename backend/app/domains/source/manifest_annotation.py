@@ -85,6 +85,9 @@ class BoundUnit:
     # evidence range). Consumed like preprocessing_consumer.adapter:
     # answer_lines or answer_evidence_lines. Never silently dropped.
     answer_evidence_lines: LineRange | None = None
+    # T2.10: other units' exclusive material line windows to drop from THIS
+    # unit's material text (cross-unit contamination guard).
+    material_exclude_ranges: list[tuple[int, int]] = field(default_factory=list)
 
 
 def _sha256_text(text: str) -> str:
@@ -121,6 +124,21 @@ def bind_units_from_manifest(
     line_count = len(source_lines)
     bound: list[BoundUnit] = []
     seen_ids: set[str] = set()
+
+    # T2.10: index every unit's material_lines (incl. filtered ones) so a
+    # contiguous material window cannot swallow another unit's exclusive
+    # material (U26-40 window [93,138] ate U21-25 listening form [97,115]).
+    all_material_ranges: dict[str, tuple[int, int]] = {}
+    for raw in units_raw:
+        if not isinstance(raw, dict):
+            continue
+        uid = str(raw.get("unit_id") or "").strip()
+        ml = raw.get("material_lines")
+        if uid and isinstance(ml, (list, tuple)) and len(ml) == 2:
+            try:
+                all_material_ranges[uid] = (int(ml[0]), int(ml[1]))
+            except (TypeError, ValueError):
+                pass
 
     for raw in units_raw:
         if not isinstance(raw, dict):
@@ -237,6 +255,20 @@ def bind_units_from_manifest(
         has_v_issue = any(_uid_re.match(str(issue).lstrip("! ")) for issue in v_issues)
         answer_fallback_blocked = ae_absent and has_v_issue
 
+        # T2.10: foreign material exclusion — other units' material_lines that
+        # fall inside THIS unit's material window must not leak into material text.
+        mat_exclude: list[tuple[int, int]] = []
+        mat_rng = ranges.get("material")
+        if mat_rng is not None:
+            for other_id, (o_s, o_e) in all_material_ranges.items():
+                if other_id == unit_id:
+                    continue
+                # overlap with this unit's material window
+                lo = max(mat_rng.start, o_s)
+                hi = min(mat_rng.end, o_e)
+                if lo <= hi:
+                    mat_exclude.append((lo, hi))
+
         bound.append(
             BoundUnit(
                 unit_id=unit_id,
@@ -253,6 +285,7 @@ def bind_units_from_manifest(
                 extra_opt_lines=_extra_opt_line,
                 answer_evidence_value=ae_value_str,
                 answer_evidence_lines=ae_lines,
+                material_exclude_ranges=mat_exclude,
             )
         )
         # GEO-SUBQ: deterministic sub-question expansion (fail-closed per sub).
@@ -293,20 +326,26 @@ def _bind_material_marker(bu: "BoundUnit", source_lines: list[str]) -> None:
     def _hit_count(needle: str) -> int:
         return sum(1 for line in source_lines if needle in line)
 
+    def _shared(exclude: list[tuple[int, int]]) -> dict:
+        d = {
+            "role": "material",
+            # E2E-009R5: full declared passage, not just the marker line.
+            "evidence_lines": [rng.start, rng.end],
+        }
+        # T2.10: drop other units' exclusive material lines from this material text.
+        if exclude:
+            d["exclude_line_ranges"] = [[a, b] for a, b in exclude]
+        return d
+
     for text in candidates:
         if _hit_count(text) == 1:
-            bu.material_shared = {
-                "role": "material",
-                "start_marker": {"text": text, "granularity": "line"},
-                # E2E-009R5: full declared passage, not just the marker line.
-                "evidence_lines": [rng.start, rng.end],
-            }
+            d = _shared(bu.material_exclude_ranges)
+            d["start_marker"] = {"text": text, "granularity": "line"}
+            bu.material_shared = d
             return
-    bu.material_shared = {
-        "role": "material",
-        "start_marker": {"text": candidates[0], "granularity": "line"},
-        "evidence_lines": [rng.start, rng.end],
-    }
+    d = _shared(bu.material_exclude_ranges)
+    d["start_marker"] = {"text": candidates[0], "granularity": "line"}
+    bu.material_shared = d
 
 
 def _expand_subs(bu: "BoundUnit", source_lines: list[str]) -> None:

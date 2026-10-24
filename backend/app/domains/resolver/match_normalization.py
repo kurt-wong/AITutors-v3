@@ -67,6 +67,21 @@ def strip_question_prefix(text: str) -> str:
 # T2.9 U49-52 实证 ` 6 / 12` 经 bare-digit `\s` 分支命中 `is_question_start('6')`，
 # `_region_end` 在页脚处截断选项窗，跨页的 C/D 选项（下一行）被切掉。
 _PAGE_NUM_FOOTER_RE = re.compile(r"^\d{1,3}\s*/\s*\d{1,3}$")
+# T2.10：纯排版分页标记行 — 正文装配时不得并入 material/stem 文本。
+# 仅整行形态；正文中的分数/日期/题号（如 "得分 6 / 12"）不会命中。
+_PAGE_MARKER_LINE_RE = re.compile(
+    r"^\s*(?:"
+    r"---+"                    # markdown horizontal rule
+    r"|\d{1,3}\s*/\s*\d{1,3}"  # `6 / 12` page footer
+    r"|第\s*\d+\s*页"          # `第6页`
+    r"|共\s*\d+\s*页"          # `共12页`
+    r")\s*$"
+)
+
+
+def is_page_marker_line(line: str) -> bool:
+    """整行是纯分页标记/页码 → True。不误伤正文中的分数、日期、题号。"""
+    return bool(_PAGE_MARKER_LINE_RE.match(line))
 
 
 def is_question_start(normalized_line: str) -> str | None:

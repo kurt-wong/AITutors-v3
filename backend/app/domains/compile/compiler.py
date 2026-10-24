@@ -27,6 +27,7 @@ from app.domains.compile.snapshot import (
     CompiledRole,
     CompiledSnapshot,
 )
+from app.domains.resolver.match_normalization import is_page_marker_line
 from app.domains.resolver.span import ResolvedSpan
 
 
@@ -40,6 +41,8 @@ def _slice_span(span: ResolvedSpan, line_by_ref: dict) -> str:
     P2-R：vertical table answer spans carry clean cell text in evidence
     (`cell=...`). Use that instead of raw offset slicing (which would include
     HTML tags and score cells for multi-row/rowspan answers).
+    T2.10：纯分页标记行（`---` / `N / 12`）不进正文文本 — 学生 API 不得
+    暴露排版残渣。line_refs 保留原始行号作为 source 证据，仅文本过滤。
     """
     # P2-R: structured vertical table — return clean answer cell text
     for ev in span.evidence:
@@ -52,7 +55,13 @@ def _slice_span(span: ResolvedSpan, line_by_ref: dict) -> str:
         and len(span.line_refs) == 1
     ):
         return line_by_ref[span.line_refs[0]].text[span.start_offset : span.end_offset]
-    return "\n".join(line_by_ref[r].text for r in span.line_refs)
+    texts = []
+    for r in span.line_refs:
+        t = line_by_ref[r].text
+        if is_page_marker_line(t):
+            continue
+        texts.append(t)
+    return "\n".join(texts)
 
 
 
