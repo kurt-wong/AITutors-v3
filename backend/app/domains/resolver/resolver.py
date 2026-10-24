@@ -2742,17 +2742,43 @@ class SourceResolver:
                 # (`1.C 2.B 3.C 4.D` / `5.(1). …`). Without this, every child
                 # of a Chinese composite received the identical whole-block
                 # answer text + hash (U1-5).
+                # R9-fix: when the evidence range spans MULTIPLE entry-bearing
+                # lines (Chinese composite `（1）A / （2）B / …`), single-entry
+                # lines are sub-answers — fall through to full-range block
+                # binding. When only ONE line carries an entry (e.g. `【答案】`
+                # + `1. A`), that line IS the answer — packed-extract the token.
+                # Exception: shared multi-qn ranges (`1. A` + `2. B` for Q1/Q2)
+                # always take the packed path per-q.
+                _entry_line_count = sum(
+                    1 for _lr_c in refs
+                    if any(int(m.group(1)) >= 1 for m in _ENTRY_RE.finditer(self._idx.get(_lr_c).text))
+                )
+                _is_shared_multi_qn = el in self._shared_answer_ranges
                 for _lr in refs:
                     _raw = self._idx.get(_lr).text
                     _offs = _entry_offsets(_raw, qn)
                     if len(_offs) == 1:
-                        all_off = [m.start() for m in _ENTRY_RE.finditer(_raw)]
-                        # R9-fix: only take packed path when line has MULTIPLE
-                        # entries (e.g. `1.C 2.B 3.C`). Single-entry lines like
-                        # `（1）A` are part of a multi-line block — fall through
-                        # to the full-range block binding.
-                        if len(all_off) <= 1:
+                        all_off = [
+                            m.start() for m in _ENTRY_RE.finditer(_raw)
+                            if int(m.group(1)) >= 1
+                        ]
+                        if (
+                            len(all_off) <= 1
+                            and _entry_line_count > 1
+                            and not _is_shared_multi_qn
+                        ):
                             continue
+                        # R9-fix: single-entry lines with long prose bodies
+                        # (`（28）简析：…`) fall through to block binding.
+                        if len(all_off) <= 1 and not _is_shared_multi_qn:
+                            _nxt_chk = next(
+                                (o for o in all_off if o > _offs[0]), len(_raw)
+                            )
+                            _cs_chk, _ce_chk = _entry_content_bounds(
+                                _raw, _offs[0], _nxt_chk
+                            )
+                            if _ce_chk - _cs_chk > 8:
+                                continue
                         nxt = next((o for o in all_off if o > _offs[0]), len(_raw))
                         # Strip `N.` / `N\\.` prefix: bind only answer content.
                         _cs, _ce = _entry_content_bounds(_raw, _offs[0], nxt)

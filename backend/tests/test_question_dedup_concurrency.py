@@ -13,7 +13,7 @@ from app.db.session import async_session_maker
 from app.repositories.content_repository import ContentRepository
 
 _DEDUP = "d" * 64
-_CLEANUP = ("question_instances", "questions")
+_CLEANUP = ("instance_role_contents", "question_feedbacks", "question_instances", "questions")
 
 
 @pytest.fixture(autouse=True)

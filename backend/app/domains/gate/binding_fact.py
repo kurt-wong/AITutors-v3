@@ -205,8 +205,9 @@ def _normalize_for_content_match(text: str) -> str:
     """Normalize text for content-presence comparison.
 
     Strips answer labels, annotations (重点字：X etc.), normalizes full-width
-    parens, and removes all whitespace. Used to compare declared_value against
-    source block without false negatives from formatting differences.
+    parens, removes separators (---) and trailing sentence punctuation after
+    answer tokens, and removes all whitespace. Used to compare declared_value
+    against source block without false negatives from formatting differences.
     """
     if not text:
         return ""
@@ -218,6 +219,11 @@ def _normalize_for_content_match(text: str) -> str:
     t = t.replace("　", " ")
     # Strip annotations like (重点字：X) / (注：X).
     t = re.sub(r"\(\s*(?:重点字|注|说明|重点)\s*[：:][^)]*\)", "", t)
+    # Strip separators (---, —, …).
+    t = t.replace("---", "").replace("—", "").replace("…", "")
+    # Strip trailing sentence punctuation after single-letter answers:
+    # `D。` / `D.` / `D、` → `D` (the period is not answer content).
+    t = re.sub(r"([A-Za-z])[。．.、]\s*", r"\1", t)
     # Remove all whitespace.
     t = re.sub(r"\s+", "", t)
     return t
