@@ -327,7 +327,7 @@ def evaluate(
                 admission_reasons.append(b)
             decision = "pending_review"
         else:
-            admission_reasons.append("strict-auto: all answers verified_correct=true")
+            admission_reasons.append("auto: all answers passed fidelity/completeness/ownership checks")
             decision = "auto_approve"
     admission = _layer("pass" if decision == "auto_approve" else "fail", admission_reasons)
     admission["decision"] = decision
