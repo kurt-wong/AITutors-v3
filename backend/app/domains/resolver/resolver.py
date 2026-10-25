@@ -2560,6 +2560,26 @@ class SourceResolver:
                 )
                 return
 
+            # T18: declared answer_value present on the single evidence line
+            # binds BEFORE the ownership pre-guard. Fill-in answers like
+            # `1或2.` contain `2.` which `_ENTRY_RE` reads as qn=2 and the
+            # pre-guard wrongly empties a correct declared value. Binding the
+            # declared token is byte-proven source evidence, not a guess.
+            if av is not None and len(refs) == 1:
+                _raw_one = self._idx.get(refs[0]).text
+                _av_one = str(av).strip()
+                if _av_one and _av_one in _raw_one:
+                    _off_one = _raw_one.find(_av_one)
+                    out.add_char_span(
+                        unit_id, t, refs[0], _off_one,
+                        _off_one + len(_av_one), "exact",
+                        ("answer evidence range",
+                         f"lines={el[0]}-{el[1]}",
+                         "answer_token_extracted",
+                         f"qn={qn}", f"cell={_av_one}"),
+                    )
+                    return
+
             # P0-R5d: shared ranges must NOT bypass ownership for a single
             # entry, including a multi-line shared range whose only entry is
             # `1. A` (plus blank/continuation). Multi-entry blocks/tables keep

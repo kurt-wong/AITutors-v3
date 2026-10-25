@@ -74,6 +74,18 @@ def test_math_false_entry_conflict_does_not_block_token_extract():
     assert lines[0].text[a.start_offset : a.end_offset] == "B"
 
 
+def test_fill_in_value_with_embedded_entry_number_binds_token():
+    """Q14-like: `1或2.` contains `2.` which looks like qn=2; still bind 1或2."""
+    raw = "故答案为1或2."
+    lines = mk(raw)
+    run = SourceResolver(source_version_id=SVID, lines=lines, figures=()).resolve(
+        _payload("14", [1, 1], answer_value="1或2")
+    )
+    a = _answer_span(run)
+    assert a.resolution_status == "exact", a.evidence
+    assert lines[0].text[a.start_offset : a.end_offset] == "1或2"
+
+
 def test_explanation_line_with_marker_extracts_declared_token():
     """Q4-like: whole 【解答】 line is not a bare cell; extract A."""
     raw = "【解答】解：由于当自变量相同时，它们的函数值相反，故它们的图象关于x轴对称，故选：A."
