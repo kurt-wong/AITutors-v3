@@ -142,8 +142,8 @@ class TestRoleRegionBlocksAuto:
         assert d["decision"] == "pending_review"
         assert any("byte-proven" in r for r in d["reasons"])
 
-    def test_non_strict_auto_still_pending(self):
-        """P1 boundary unchanged: short_answer is not auto."""
+    def test_non_choice_type_not_auto_blocked_by_type(self):
+        """T20-IMPLEMENT R2：short_answer 证据齐时不再因题型 pending。"""
         lines = _mk("1. short answer?", "答案", "1. some text")
         payload = {"semantic_units": [
             {"unit_id": "Q1", "unit_type": "standalone_unit",
@@ -152,8 +152,7 @@ class TestRoleRegionBlocksAuto:
                          "answer": {"answer_zone": "answer_table", "question_label": "1"}}}]}
         root, ir, compiled, run = _pipeline(lines, payload)
         d = evaluate(root=root, ir=ir, compiled=compiled, resolved_run=run)
-        assert d["decision"] == "pending_review"
-        assert any("not strict-auto" in r for r in d["reasons"])
+        assert not any("not strict-auto" in r for r in d["reasons"]), d["reasons"]
 
     def test_value_only_answer_not_auto(self):
         """P0-R3: answer_value without source line_refs cannot auto_approve."""

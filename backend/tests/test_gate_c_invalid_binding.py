@@ -299,17 +299,25 @@ class TestGateAdmissionIntegration:
             assert result[0] == False, f'Content {content[:20]!r} should fail grammar'
             assert 'not expressible' in result[1], f'Expected failure reason, got {result[1]}'
 
-    def test_leaf_grammar_none_type_returns_none(self):
-        """Non-strict-auto type → _leaf_grammar returns None."""
+    def test_leaf_grammar_free_text_not_type_none(self):
+        """T20-IMPLEMENT：非 choice 型不再因题型返回 None；空答案才失败。"""
         from app.domains.gate.policy import _leaf_grammar
-        
+
         class MockLeaf:
-            canonical_question_type = 'subjective_short'  # not in STRICT_AUTO_TYPES
+            canonical_question_type = 'short_answer'
             answer = type('obj', (object,), {'text': 'Some answer'})()
             options = []
-        
-        result = _leaf_grammar(MockLeaf())
-        assert result is None, f'Expected None for non-strict-auto type, got {result}'
+
+        ok, why = _leaf_grammar(MockLeaf())
+        assert ok is True, f'free-text form should pass, got {(ok, why)}'
+
+        class EmptyLeaf:
+            canonical_question_type = 'short_answer'
+            answer = type('obj', (object,), {'text': ''})()
+            options = []
+
+        ok2, why2 = _leaf_grammar(EmptyLeaf())
+        assert ok2 is False and 'no answer text' in why2
 
     def test_pending_review_blocks_auto_admission(self):
         """核心测试：PENDING_REVIEW 不会自动写入。

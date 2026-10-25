@@ -83,7 +83,7 @@ def test_single_choice_unmappable_answer_pending():
 
 
 def test_fill_in_pending():
-    # fill_in 不开放 strict-auto（D2 / 20 §8.4）→ pending_review。
+    # fill_in「苹果」不在受限形态内 → 表示形式失败 → pending_review（**非**题型门）。
     lines = _mk("1. 填空：___", "【答案】", "1. 苹果")
     payload = {"semantic_units": [
         {"unit_id": "Q1", "unit_type": "standalone_unit", "original_question_type": "fill_in",
@@ -92,7 +92,20 @@ def test_fill_in_pending():
     root, ir, snap, run = _pipeline(lines, payload)
     d = _decision(root, ir, snap, run)
     assert d["decision"] == "pending_review"
-    assert any("not strict-auto" in r for r in d["reasons"])
+    assert any("grammar" in r for r in d["reasons"])
+    assert not any("not strict-auto" in r for r in d["reasons"])
+
+
+def test_fill_in_valid_form_not_blocked_by_type():
+    # R2：fill_in 形态合法 + 证据齐 → 不因题型被拒。
+    lines = _mk("1. 填空：___", "【答案】", "1. 1464")
+    payload = {"semantic_units": [
+        {"unit_id": "Q1", "unit_type": "standalone_unit", "original_question_type": "fill_in",
+         "content": {"stem": {"question_label": "1"},
+                     "answer": {"answer_zone": "answer_table", "question_label": "1"}}}]}
+    root, ir, snap, run = _pipeline(lines, payload, root_unit_id="Q1")
+    d = _decision(root, ir, snap, run)
+    assert not any("not strict-auto" in r for r in d["reasons"]), d["reasons"]
 
 
 def test_true_false_ab_pending_via_grammar_none():
@@ -265,3 +278,107 @@ def test_two_standalone_units_decide_independently():
     d2 = _decision(next(u for u in ir.units if u.unit_id == "Q2"), ir, snap, run)
     assert d1["decision"] == "auto_approve"
     assert d2["decision"] == "pending_review"
+
+
+# ---------------------------------------------------------------- T20-IMPLEMENT R2/R5
+def test_short_answer_not_blocked_by_type():
+    lines = _mk(
+        "26. 已知……求值.",
+        "【答案】",
+        "26. 解：由题意得结论。"
+    )
+    payload = {"semantic_units": [
+        {"unit_id": "Q26", "unit_type": "standalone_unit", "original_question_type": "short_answer",
+         "content": {"stem": {"question_label": "26"},
+                     "answer": {"answer_zone": "answer_table", "question_label": "26"}}}]}
+    root, ir, snap, run = _pipeline(lines, payload, root_unit_id="Q26")
+    d = _decision(root, ir, snap, run)
+    assert not any("not strict-auto" in r for r in d["reasons"]), d["reasons"]
+
+
+def test_multipart_single_value_blocked():
+    # stem 两小问，答案只有一个短值 → 多问覆盖不足，必须拦（与题型无关）
+    lines = _mk(
+        "28. 已知直线……",
+        "（Ⅰ）r=___；",
+        "（Ⅱ）求 r 的值.",
+        "【答案】",
+        "28. 故答案为： $ \\frac{\\sqrt{2}}{2} $。"
+    )
+    payload = {"semantic_units": [
+        {"unit_id": "Q28", "unit_type": "standalone_unit", "original_question_type": "short_answer",
+         "content": {"stem": {"question_label": "28"},
+                     "answer": {"answer_zone": "answer_table", "question_label": "28"}}}]}
+    root, ir, snap, run = _pipeline(lines, payload, root_unit_id="Q28")
+    d = _decision(root, ir, snap, run)
+    assert d["decision"] == "pending_review"
+    assert any("multipart" in r for r in d["reasons"]), d["reasons"]
+
+
+def test_multipart_full_block_not_blocked():
+    # 答案块自带全部小问结构 → 覆盖可证，不得因多问被拒
+    lines = _mk(
+        "28. 已知直线……",
+        "（Ⅰ）r=___；",
+        "（Ⅱ）求 r 的值.",
+        "【答案】",
+        "28. 【解答】（Ⅰ）r=根号2/2；（Ⅱ）r=根号5 或 根号5/5。故结论成立。"
+    )
+    payload = {"semantic_units": [
+        {"unit_id": "Q28", "unit_type": "standalone_unit", "original_question_type": "short_answer",
+         "content": {"stem": {"question_label": "28"},
+                     "answer": {"answer_zone": "answer_table", "question_label": "28"}}}]}
+    root, ir, snap, run = _pipeline(lines, payload, root_unit_id="Q28")
+    d = _decision(root, ir, snap, run)
+    assert not any("multipart" in r for r in d["reasons"]), d["reasons"]
+
+
+def test_truncated_answer_blocked():
+    lines = _mk(
+        "26. 求值.",
+        "【答案】",
+        "26. 解：tan θ = - $ \\frac{"
+    )
+    payload = {"semantic_units": [
+        {"unit_id": "Q26", "unit_type": "standalone_unit", "original_question_type": "short_answer",
+         "content": {"stem": {"question_label": "26"},
+                     "answer": {"answer_zone": "answer_table", "question_label": "26"}}}]}
+    root, ir, snap, run = _pipeline(lines, payload, root_unit_id="Q26")
+    d = _decision(root, ir, snap, run)
+    assert d["decision"] == "pending_review"
+    assert any("incomplete" in r or "truncated" in r for r in d["reasons"]), d["reasons"]
+
+
+def test_form_valid_does_not_replace_source_trust():
+    """R4：形态合法 ≠ 来源可信；value-only / 未定位仍不得 auto。"""
+    lines = _mk("1. 填空：___", "【答案】", "1. 1464")
+    payload = {"semantic_units": [
+        {"unit_id": "Q1", "unit_type": "standalone_unit", "original_question_type": "fill_in",
+         "content": {"stem": {"question_label": "1"},
+                     "answer": {"answer_zone": "answer_table", "question_label": "1"}}}]}
+    root, ir, snap, run = _pipeline(lines, payload, root_unit_id="Q1")
+    bad_spans = tuple(
+        dataclasses.replace(s, resolution_status="value_only")
+        for s in run.resolved_spans
+    )
+    bad_run = dataclasses.replace(run, resolved_spans=bad_spans)
+    d = _decision(root, ir, snap, bad_run)
+    assert d["decision"] == "pending_review"
+    assert any("byte-proven" in r or "provenance" in r for r in d["reasons"]), d["reasons"]
+
+
+def test_ownership_unknown_blocks_even_if_form_ok():
+    """取消题型门后，归属未证仍拦截。"""
+    lines = _mk("1. 填空：___", "【答案】", "1. 1464")
+    payload = {"semantic_units": [
+        {"unit_id": "Q1", "unit_type": "standalone_unit", "original_question_type": "fill_in",
+         "content": {"stem": {"question_label": "1"},
+                     "answer": {"answer_zone": "answer_table", "question_label": "1"}}}]}
+    root, ir, snap, run = _pipeline(lines, payload, root_unit_id="Q1")
+    leaf = snap.leaves[0]
+    ans = dataclasses.replace(leaf.answer, ownership="unknown")
+    leaf2 = dataclasses.replace(leaf, answer=ans)
+    snap2 = CompiledSnapshot(snap.source_version_id, snap.annotation_id, (leaf2,), snap.materials)
+    d = _decision(root, ir, snap2, run)
+    assert d["decision"] == "pending_review"
+    assert any("ownership" in r for r in d["reasons"]), d["reasons"]

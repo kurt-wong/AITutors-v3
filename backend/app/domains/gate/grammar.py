@@ -8,8 +8,11 @@ strict-auto 前置 DoD：对 answer 声明允许 token 集与规范化做**确�
 pending_review）。grammar 失败永不判 rejected——结构/语义明确矛盾才 terminal（policy.py
 Admission 层职责，P0-G-002）。
 
-开放范围（用户裁决 2026-09-06，BUG-V3-023）：single_choice / multiple_choice /
-true_false；其余 canonical type（fill_in/short_answer/essay/共享选项池等）→ None。
+**题型不构成准入门槛（T20-IMPLEMENT / Owner R1–R2）**：本模块只做「答案表示形式」
+校验，**不**因 canonical type 不在某白名单而拒绝。历史 `STRICT_AUTO_TYPES` 门已
+移除——auto 与否由原文证据、归属、完整性等 Gate 条件共同决定，题型本身不得
+阻止自动发布。choice 类型仍走 AnswerTokenContract（表示合法性）；fill_in 走
+五形态；其余文本型答案以「非空源切片」为形式条件。
 
 **AnswerTokenContract（用户裁决 2026-09-13，BUG-V3-044）**：剥除题号前缀后，
 single_choice / multiple_choice 的答案文本必须完全落在白名单形态内（裸字母 /
@@ -40,8 +43,6 @@ from __future__ import annotations
 
 import re
 
-from app.domains.gate import STRICT_AUTO_TYPES
-
 # DISPLAY_CONTRACT §0.2 true_false canonical 映射（禁 true/false/A/B 作 canonical 值）。
 _TRUE_TOKENS = frozenset({"T", "t", "正确", "对", "是", "√", "✓"})
 _FALSE_TOKENS = frozenset({"F", "f", "错误", "错", "否", "×", "✗"})
@@ -49,8 +50,9 @@ _FALSE_TOKENS = frozenset({"F", "f", "错误", "错", "否", "×", "✗"})
 # E answer char-span 从 qn 条目起点切片（20 §5.5），raw answer text 常以题号开头
 # （如 "1. A"）；grammar 先剥离该题号前缀再读答案 token（与 E `_ENTRY_RE` 同界）。
 # G1 parser compatibility：Markdown escaped-dot 前缀 `1\. C` ≡ `1. C`（B3a 同族）。
-# 仅扩展分隔符形态，不改变 canonical token 语义。
-_LEAD_QN_RE = re.compile(r"^\s*[0-9]{1,3}\s*(?:\\[.．、:]|[.．、:)])*\s*")
+# **必须**带分隔符才视为题号前缀（`+` 非 `*`）：`1或2` / `1464` / `0` 是答案值本身，
+# 不得被当成题号剥掉（T20-IMPLEMENT）。
+_LEAD_QN_RE = re.compile(r"^\s*[0-9]{1,3}\s*(?:\\[.．、:]|[.．、:)])+\s*")
 _TRAIL_NOISE_RE = re.compile(r"[。．,，、\s]+$")
 
 # --------------------------------------------------------------------------- #
@@ -189,33 +191,55 @@ def _verify_true_false(token: str) -> bool | None:
     return None
 
 
+# T19 确定性 fill_in 形态（赋值 / LaTeX / 区间 / 多值 / 整数 / 简分数）。超出 fail-closed。
+_FILL_IN_INT_RE = re.compile(r"^[+-]?\d+(?:\.\d+)?$")
+_FILL_IN_FRAC_RE = re.compile(r"^[+-]?\d+/\d+$")
+_FILL_IN_ASSIGN_RE = re.compile(r"^[A-Za-zα-ω\\][A-Za-z0-9_α-ω\\{}^]*\s*=\s*\S+$")
+_FILL_IN_LATEX_RE = re.compile(r"^\$.+\$$", re.S)
+_FILL_IN_MULTIVAL_RE = re.compile(r"^\S+\s*或\s*\S+$")
+_FILL_IN_INTERVAL_RE = re.compile(r"^\$\s*[\(\[].+[\)\]]\s*\$$", re.S)
+
+
+def _verify_fill_in_form(answer_text: str) -> bool:
+    """受限填空形态检查（表示合法；来源/归属/完整性由 Gate 另验）。"""
+    t = (answer_text or "").strip()
+    if not t or len(t) > 80:
+        return False
+    if _FILL_IN_INT_RE.match(t) or _FILL_IN_FRAC_RE.match(t):
+        return True
+    if _FILL_IN_LATEX_RE.match(t) or _FILL_IN_INTERVAL_RE.match(t):
+        return True
+    if _FILL_IN_MULTIVAL_RE.match(t):
+        return True
+    if _FILL_IN_ASSIGN_RE.match(t):
+        return True
+    return False
+
+
 def verify(
     canonical_type: str,
     answer_text: str,
     resolved_option_labels: object = (),
 ) -> bool | None:
-    """Allowed-Answer Grammar 单 leaf 判定。
+    """Allowed-Answer Grammar 单 leaf 判定（表示形式，非学科正确性）。
 
     **输入来源契约（Gate D §6.2 冻结不变量）**：`answer_text` 必须是某个
-    `ResolvedRun` 中 `role=answer` 的 `ResolvedSpan` 文本切片，且该 span 满足
-    `granularity` 为字符切片、`resolution_status ∈ {exact, normalized}`、
-    `text_hash` 与 SealedSource 一致。**不是**裸 source / OCR 文本。
-    生产者可以是 Resolver（Native Path）或 Adapter（Manifest Path），
-    本函数不区分。题号前缀属上游边界产物，由 `_clean_answer()` 剥除。
-    误传裸文本会绕过上游的边界与溯源约束——见 `81_GATE_D_ADAPTER_BOUNDARY.md` §6。
+    `ResolvedRun` 中 `role=answer` 的 `ResolvedSpan` 文本切片。题号前缀由
+    `_clean_answer()` 剥除。
 
-    - single_choice   → AnswerTokenContract 白名单恰好一个字母 ∈ resolved labels。
-    - multiple_choice → AnswerTokenContract 白名单非空字母集 ⊆ resolved labels。
-    - true_false      → 剥题号后映射 ∈ {T,F}（A/B → None，用户裁决）。
-    - 其它 / 无法表达 → None（不开放，pending_review）。
+    **题型不是准入门槛（Owner R1/R2）**：不因 type 不在白名单返回 None。
+    各型只验「答案能否以该型表示形式确定性表达」：
 
-    本函数只验**表示形式合法性**，不判语义对错。
-    E2E-009R5: 撤销 open-text「非空即通过」——非空答案 ≠ 已验证正确。
+    - single_choice / multiple_choice / true_false → AnswerTokenContract。
+    - fill_in → 五形态（整数/赋值/LaTeX/区间/多值）。
+    - 其它 canonical 文本型（short_answer/essay/…）→ 非空源切片即可表达
+      （学科正确性、来源可信、归属、完整性由 Gate 其它条件判定）。
+
+    本函数只验**表示形式合法性**，不判语义对错，也不重新求解。
     """
-    if canonical_type not in STRICT_AUTO_TYPES:
-        return None
-
     cleaned = _clean_answer(answer_text)
+    if not cleaned:
+        return None
 
     if canonical_type == "true_false":
         return _verify_true_false(cleaned)
@@ -225,16 +249,32 @@ def verify(
     if canonical_type == "single_choice":
         letter = _answer_form_single_choice(cleaned)
         if letter is None:
-            # P0-answer: do NOT rescue explanation/stem text via _extract_unique_choice_marker.
-            # If the answer field content is not a clean answer token (bare letter,
-            # parenthesized letter, etc.), it must NOT be auto-approved — even if
-            # "故选：C" appears inside. The stored answer field must be correct,
-            # not just inferrable from the text.
+            # P0-answer: do NOT rescue explanation/stem text via marker heuristics.
             return None
         return True if letter in labels else None
 
-    # multiple_choice
-    letters = _answer_form_multiple_choice(cleaned)
-    if not letters:
-        return None
-    return True if set(letters) <= labels else None
+    if canonical_type == "multiple_choice":
+        letters = _answer_form_multiple_choice(cleaned)
+        if not letters:
+            return None
+        return True if set(letters) <= labels else None
+
+    if canonical_type == "fill_in":
+        return True if _verify_fill_in_form(cleaned) else None
+
+    # Free-text canonical types: short_answer / essay / cloze / reading / …
+    # 非空即可表示；更深的来源/归属/完整性检查在 policy 层，且与题型无关。
+    if canonical_type in (
+        "short_answer",
+        "essay",
+        "cloze",
+        "reading",
+        "grammar_fill",
+        "vocabulary_fill",
+        "seven_to_five",
+        "reading_expression",
+    ):
+        return True
+
+    # 未知 type（不在 CANONICAL_TYPES）→ 无法确定性表达。
+    return None

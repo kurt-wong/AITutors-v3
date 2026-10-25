@@ -94,29 +94,60 @@ def test_true_false_unmappable_rejected_as_none():
     assert verify("true_false", "", ()) is None
 
 
-# ------------------------------------------------------------------ 不开放题型
-@pytest.mark.parametrize("ctype", ["fill_in", "short_answer", "essay"])
-def test_non_open_types_return_none(ctype):
-    assert verify(ctype, "anything", ()) is None
+# ------------------------------------------------------------------ fill_in / 文本型
+@pytest.mark.parametrize(
+    "answer",
+    ["1464", "x = -1", "$ 2\\sqrt{2} $", "$ (-1,0) $", "1或2", "-3/4", "0"],
+)
+def test_fill_in_five_forms_pass(answer):
+    assert verify("fill_in", answer, ()) is True
+
+
+@pytest.mark.parametrize(
+    "answer",
+    ["", "   ", "【解答】x=-1", "略", "见解析", "这是一个很长的自然语言解释" * 5],
+)
+def test_fill_in_out_of_form_rejected(answer):
+    assert verify("fill_in", answer, ()) is None
+
+
+@pytest.mark.parametrize("ctype", ["short_answer", "essay", "reading_expression"])
+def test_free_text_types_accept_nonempty(ctype):
+    """R2：题型不是门槛；文本型非空即可表示，证据条件另验。"""
+    assert verify(ctype, "证明：由题意得 ……故结论成立。", ()) is True
+    assert verify(ctype, "【解答】综上，V=1/3。", ()) is True
+
+
+@pytest.mark.parametrize("ctype", ["short_answer", "essay", "fill_in"])
+def test_empty_answer_never_passes(ctype):
+    assert verify(ctype, "", ()) is None
+    assert verify(ctype, "   ", ()) is None
 
 
 def test_unknown_type_returns_none():
-    assert verify("seven_to_five", "1. B", ()) is None
+    assert verify("seven_to_five", "1. B", ()) is True  # free-text set
     assert verify("foo", "1. A", ()) is None
 
 
-def test_strict_auto_types_frozen_domain_023():
-    """BUG-V3-023 终裁：开放集冻结 = {single_choice, multiple_choice, true_false}；
-    其余 9 型（fill_in/short_answer/essay/cloze/reading/grammar_fill/vocabulary_fill/
-    seven_to_five/reading_expression）grammar=None → pending_review。"""
+def test_type_whitelist_is_not_admission_gate():
+    """T20-IMPLEMENT：题型不得单独阻止表达判定；证据条件在 policy。"""
     from app.domains.compile import CANONICAL_TYPES
-    from app.domains.gate import STRICT_AUTO_TYPES
-    assert STRICT_AUTO_TYPES == frozenset(
-        {"single_choice", "multiple_choice", "true_false"}
-    )
-    assert STRICT_AUTO_TYPES <= CANONICAL_TYPES
-    for ctype in sorted(CANONICAL_TYPES - STRICT_AUTO_TYPES):
-        assert verify(ctype, "1. A", LABELS_ABCD) is None
+    # fill_in / short_answer 与 choice 型同权进入 verify，不因 type 返回 None
+    assert verify("fill_in", "1464", ()) is True
+    assert verify("short_answer", "答案内容", ()) is True
+    assert verify("single_choice", "A", LABELS_ABCD) is True
+    for ctype in sorted(CANONICAL_TYPES):
+        # 每个 canonical type 至少对某形态可返回 True（非一律 None）
+        sample = "A" if ctype in ("single_choice", "multiple_choice", "true_false") else "1464"
+        if ctype == "true_false":
+            sample = "对"
+        if ctype in ("single_choice", "multiple_choice"):
+            r = verify(ctype, sample, LABELS_ABCD)
+        else:
+            r = verify(ctype, sample, ())
+        assert r is True or ctype in ("seven_to_five", "cloze", "reading", "grammar_fill", "vocabulary_fill"), (
+            f"{ctype} unexpectedly always None"
+        )
 
 
 # --------------------------------------------------------------------------- #
@@ -223,15 +254,19 @@ class TestAnswerTokenContractBoundaryAttacks:
         assert verify("single_choice", "（E）", LABELS_ABCD) is None
 
 
-class TestAnswerTokenTypeIsolation:
-    """题型隔离：非 strict-auto 题型不受 AnswerTokenContract 影响（恒 None）。"""
+class TestAnswerTokenContractTypeScope:
+    """AnswerTokenContract 只约束 choice/true_false 表示；文本型不受其白名单影响。"""
 
     @pytest.mark.parametrize("ctype", [
         "short_answer", "reading", "essay", "fill_in", "cloze",
         "grammar_fill", "vocabulary_fill", "seven_to_five", "reading_expression",
     ])
-    def test_non_strict_auto_types_unaffected(self, ctype):
-        # 无论答案文本是干净 token 还是污染正文，非开放题型恒 None
-        assert verify(ctype, "A", LABELS_ABCD) is None
-        assert verify(ctype, "【解答】A", LABELS_ABCD) is None
-        assert verify(ctype, "参见教材A册第三章", LABELS_ABCD) is None
+    def test_non_choice_types_not_bound_by_token_contract(self, ctype):
+        # 文本型不因含字母/【解答】而在 verify 层被 AnswerTokenContract 拒
+        # （fill_in 需五形态，故「A」/污染文本会 None——那是形态门，不是题型门）
+        if ctype == "fill_in":
+            assert verify(ctype, "1464", LABELS_ABCD) is True
+            assert verify(ctype, "【解答】A", LABELS_ABCD) is None
+        else:
+            assert verify(ctype, "参见教材A册第三章", LABELS_ABCD) is True
+            assert verify(ctype, "【解答】A", LABELS_ABCD) is True

@@ -305,19 +305,28 @@ class TestEvidencePromotionNegative:
         assert d["layers"]["provenance"].get("role_region_diagnostics")
         assert d["layers"]["provenance"]["auto_allowed"] is False
 
-    def test_non_strict_auto_always_pending(self):
-        """Non-strict-auto type with any answer content -> pending_review.
-
-        Proves grammar-None path: even if answer text looks like a valid option,
-        non-strict-auto types cannot auto_approve.
-        """
+    def test_non_choice_type_can_auto_when_evidence_ok(self):
+        """T20-IMPLEMENT R2：short_answer 证据齐时可 auto；题型不是门。"""
         lines = _single_lines("A")
         payload = _single_payload("short_answer")
         root, ir, compiled, run = _pipeline(lines, payload)
         d = evaluate(root=root, ir=ir, compiled=compiled, resolved_run=run)
-        assert d["decision"] == "pending_review", (
-            f"short_answer should pending_review, got {d['decision']}"
+        assert not any("not strict-auto" in r for r in d["reasons"]), d["reasons"]
+
+    def test_evidence_gap_still_blocks_non_choice(self):
+        """取消题型门后，证据不足仍拦截（不因删白名单默认放行）。"""
+        lines = _single_lines("A")
+        payload = _single_payload("short_answer")
+        root, ir, compiled, run = _pipeline(lines, payload)
+        import dataclasses
+        bad_spans = tuple(
+            dataclasses.replace(s, resolution_status="value_only")
+            for s in run.resolved_spans
         )
+        bad_run = dataclasses.replace(run, resolved_spans=bad_spans)
+        d = evaluate(root=root, ir=ir, compiled=compiled, resolved_run=bad_run)
+        assert d["decision"] == "pending_review"
+        assert any("byte-proven" in r or "provenance" in r for r in d["reasons"])
 
     def test_text_hash_mismatch_rejected(self):
         """Evidence text_hash mismatch -> rejected (terminal)."""

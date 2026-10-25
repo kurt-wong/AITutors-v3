@@ -455,8 +455,14 @@ class TestBIO001FullLedger:
                 f"{u}: pending item must not be in published_match"
             )
             reasons = str(entry.get("reasons", []))
-            assert "fill_in" in reasons or "not strict-auto" in reasons or "ownership" in reasons, (
-                f"{u}: expected fill_in/ownership reason, got: {reasons}"
+            assert (
+                "fill_in" in reasons
+                or "not strict-auto" in reasons
+                or "ownership" in reasons
+                or "grammar" in reasons
+                or "form" in reasons
+            ), (
+                f"{u}: expected evidence/form/ownership reason, got: {reasons}"
             )
 
         # R4: sub-question analysis after material boundary markers

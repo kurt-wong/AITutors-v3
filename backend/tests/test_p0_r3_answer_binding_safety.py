@@ -320,8 +320,8 @@ class TestNormalQuestionsStillWork:
         )
         assert d["decision"] == "auto_approve"
 
-    def test_fill_in_not_auto_but_bound(self):
-        """fill_in is not strict-auto but the answer should bind cleanly."""
+    def test_fill_in_binds_and_not_type_blocked(self):
+        """T20-IMPLEMENT：fill_in 形态合法且证据齐 → 绑定干净且不因题型 pending。"""
         lines = _mk(
             "1. 1+1=?",
             "答案",
@@ -331,12 +331,11 @@ class TestNormalQuestionsStillWork:
             lines,
             _payload(qn="1", ctype="fill_in", answer_lines=[3, 3], options=""),
         )
-        assert d["decision"] == "pending_review"
         if leaf and leaf.answer:
             assert "2" in leaf.answer.text
-            assert leaf.answer.verified_correct is not True
+        assert not any("not strict-auto" in r for r in d["reasons"]), d["reasons"]
 
-    def test_short_answer_pending(self):
+    def test_short_answer_not_type_blocked(self):
         lines = _mk(
             "1. explain",
             "答案",
@@ -346,7 +345,7 @@ class TestNormalQuestionsStillWork:
             lines,
             _payload(qn="1", ctype="short_answer", answer_lines=[3, 3], options=""),
         )
-        assert d["decision"] == "pending_review"
+        assert not any("not strict-auto" in r for r in d["reasons"]), d["reasons"]
 
 
 # =========================================================================

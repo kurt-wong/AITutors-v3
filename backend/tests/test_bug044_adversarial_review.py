@@ -302,9 +302,11 @@ class TestA7DownstreamIntegration:
         d = self._run("1. 【解答】A")
         assert d["decision"] == "rejected"
 
-    def test_a7_non_strict_auto_types_unaffected_end_to_end(self):
+    def test_a7_non_choice_types_not_blocked_by_type(self):
+        # T20-IMPLEMENT R2：short_answer 不因题型 pending；证据/形态门另在。
         d = self._run("1. A", ctype="short_answer")
-        assert d["decision"] == "pending_review"
+        assert d["decision"] == "auto_approve"
+        assert not any("not strict-auto" in r for r in d["reasons"])
 
 
 # ===========================================================================
@@ -435,8 +437,14 @@ class TestA8NoTestWeakening:
             "_option_letters 仍存在——缺陷源未真正移除"
         )
 
-    def test_a8_non_strict_auto_always_none(self):
+    def test_a8_type_whitelist_not_forced_none(self):
+        """T20-IMPLEMENT：题型不再强制 verify→None；文本型可表示。"""
         from app.domains.compile import CANONICAL_TYPES
         for ctype in sorted(CANONICAL_TYPES - STRICT_AUTO_TYPES):
-            for t in ("A", "【解答】A", "参见教材A册第三章"):
-                assert g.verify(ctype, t, L) is None, ctype
+            if ctype == "fill_in":
+                # fill_in 走受限形态，非形态 → None
+                assert g.verify(ctype, "1464", L) is True
+                assert g.verify(ctype, "【解答】A", L) is None
+            else:
+                # 文本型非空可表示（题型不是门）
+                assert g.verify(ctype, "A", L) is True, ctype

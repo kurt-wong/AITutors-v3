@@ -8,19 +8,21 @@ enforcement 语义，application-level）。
 
 decision 值域（20 §8.2 + P0-G-002）：
 - rejected    = terminal，结构/语义明确矛盾或证据不成立 → approve() 必拒。
-- pending_review = 非矛盾但未达 auto（grammar None / contextual / 非开放题型等）→ 人工。
-- auto_approve = 前三层过 + 全部 answer 达 strict-auto grammar → 可自动 approve。
+- pending_review = 非矛盾但未达 auto（证据/归属/完整性/表示形式不足）→ 人工。
+- auto_approve = 前三层过 + 全部 answer 证据充分且表示形式合法 → 可自动 approve。
+  题型本身不是门槛（Owner R1/R2）。
 incomplete 输入在 Gate 前已截断（service 职责，不产 candidate），本模块防御性仍判 fail。
 """
 
 from __future__ import annotations
 
 import hashlib
+import re
 
 from app.domains.compile import CANONICAL_TYPES
 from app.domains.compile.ir import IR, IRNode
 from app.domains.compile.snapshot import CompiledLeaf, CompiledMaterial, CompiledSnapshot
-from app.domains.gate import GATE_POLICY_VERSION, STRICT_AUTO_TYPES
+from app.domains.gate import GATE_POLICY_VERSION
 from app.domains.gate.grammar import verify
 from app.domains.resolver.span import ResolvedRun, ResolvedSpan
 
@@ -297,15 +299,9 @@ def evaluate(
         # above and remain in provenance reasons for audit.
         for leaf in leaves:
             g = _leaf_grammar(leaf)
-            if g is not None:
-                ok, why = g
-                if not ok:
-                    auto_blockers.append(f"leaf {leaf.unit_id!r} answer grammar: {why}")
-            else:
-                auto_blockers.append(
-                    f"leaf {leaf.unit_id!r} type {leaf.canonical_question_type!r} "
-                    "not strict-auto (grammar None)"
-                )
+            ok, why = g
+            if not ok:
+                auto_blockers.append(f"leaf {leaf.unit_id!r} answer grammar: {why}")
             if leaf.answer is None or not leaf.answer.source_located or not leaf.answer.complete:
                 auto_blockers.append(
                     f"leaf {leaf.unit_id!r} answer not source_located+complete"
@@ -317,6 +313,10 @@ def evaluate(
                 auto_blockers.append(
                     f"leaf {leaf.unit_id!r} answer ownership={_own!r} not proven for auto"
                 )
+            # R5: multi-part coverage must be proven, not assumed from non-empty text.
+            mp_reason = _multipart_incomplete_reason(leaf)
+            if mp_reason:
+                auto_blockers.append(f"leaf {leaf.unit_id!r} {mp_reason}")
         if auto_blockers:
             for b in auto_blockers:
                 admission_reasons.append(b)
@@ -340,21 +340,97 @@ def evaluate(
     }
 
 
-def _leaf_grammar(leaf: CompiledLeaf) -> tuple[bool, str] | None:
-    """单 leaf strict-auto grammar 判定。canonical 不在开放集 → None（pending）。
+def _leaf_grammar(leaf: CompiledLeaf) -> tuple[bool, str]:
+    """单 leaf 答案表示形式判定。题型**不是**准入门槛（Owner R1/R2）。
 
-    E2E-009R5: 撤销 open-text 放量。仅 STRICT_AUTO_TYPES 走自动准入；
-    其它类型 → None（pending_review），即使答案文本非空。
+    仅当答案无法以该 canonical type 的表示形式确定性表达时失败。
+    来源可信 / 归属 / 完整性由 evaluate() 其它条件决定，不在此判断。
     """
-    if leaf.canonical_question_type not in STRICT_AUTO_TYPES:
-        return None
     if leaf.answer is None or not leaf.answer.text:
         return False, "no answer text"
     labels = tuple(str(o.label) for o in leaf.options if o.label)
     result = verify(leaf.canonical_question_type, leaf.answer.text, labels)
     if result is True:
         return True, ""
-    return False, "answer not expressible as canonical value"
+    return False, "answer form not expressible as canonical value"
+
+
+# 多小问标记：（Ⅰ）（Ⅱ）/ (I)(II)(III) / 行首（1）（2）。
+# ①② 与 f(1) 不是小问标记（T19 防误伤）。
+_PART_MARKER_RE = re.compile(
+    r"[（(]\s*(?:[ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ]|[IVX]{1,4})\s*[）)]"
+    r"|^[（(]\s*\d{1,2}\s*[）)]",
+    re.MULTILINE,
+)
+# 故答案为 / 故选 / 答案： —— 答案结论标记（多问时计数）。
+_CONCLUSION_RE = re.compile(r"故答案为|故选|答案\s*[：:]")
+
+
+def _distinct_part_count(text: str) -> int:
+    marks = _PART_MARKER_RE.findall(text or "")
+    return len({m.strip() for m in marks})
+
+
+def _looks_short_single_value(text: str) -> bool:
+    t = (text or "").strip()
+    if not t:
+        return True
+    return len(t) <= 40 and "\n" not in t
+
+
+def _looks_truncated(text: str) -> str | None:
+    """可证实的截断：未闭合 $ / 以未完成 LaTeX 结尾。"""
+    t = text or ""
+    if t.count("$") % 2 == 1:
+        return "unbalanced LaTeX $ delimiters (truncated answer block)"
+    if re.search(r"\\frac\{[^}]*$", t.strip()):
+        return "answer block ends with incomplete \\frac{... (truncated)"
+    return None
+
+
+def _multipart_incomplete_reason(leaf: CompiledLeaf) -> str | None:
+    """R5：多小问完整性正式判定。返回不足原因；完整/单问 → None。
+
+    依据 stem 与 answer 源切片中的小问标记与结论标记，不推断答案应是什么。
+    """
+    if leaf.answer is None:
+        return None
+    stem_text = leaf.stem.text if leaf.stem is not None else ""
+    ans_text = leaf.answer.text or ""
+    trunc = _looks_truncated(ans_text)
+    if trunc:
+        return f"answer incomplete: {trunc}"
+    n_stem = _distinct_part_count(stem_text)
+    n_ans = _distinct_part_count(ans_text)
+    n_parts = max(n_stem, n_ans)
+    if n_parts < 2:
+        return None  # 单问：非空 + 其它条件已覆盖
+    # 多问
+    if _looks_short_single_value(ans_text):
+        return (
+            f"multipart coverage incomplete: stem/answer declares {n_parts} parts "
+            f"but bound answer is a single short value {ans_text.strip()[:40]!r}"
+        )
+    if n_stem >= 2 and n_ans >= n_stem:
+        # 答案块自身标出了全部小问 → 覆盖结构完整
+        return None
+    if n_stem >= 2 and n_ans < n_stem:
+        conc = len(_CONCLUSION_RE.findall(ans_text))
+        if conc >= n_stem:
+            # 多个结论标记覆盖多问
+            return None
+        return (
+            f"multipart coverage incomplete: stem has {n_stem} parts but answer "
+            f"block only marks {n_ans} part(s) and {conc} conclusion(s); "
+            f"coverage not proven from source"
+        )
+    # n_ans >= 2 但 stem 未标（或更少）：以答案块多问为准，要求结论或结构覆盖
+    if n_ans >= 2 and _CONCLUSION_RE.search(ans_text):
+        return None
+    return (
+        f"multipart coverage unproven: answer block has {n_ans} part markers "
+        f"but coverage cannot be verified from source evidence"
+    )
 
 
 def _compiled_hash_checks(leaf: CompiledLeaf) -> list[tuple[str, str, str, str]]:
