@@ -45,7 +45,7 @@ def _pipeline(lines, payload, root_unit_id="Q1"):
 
 def _payload(answer_lines=None, answer_value=None, qn="1",
              ctype="single_choice", options="ABCD"):
-    ans = {"answer_zone": "answer_table", "question_label": qn}
+    ans = {"answer_zone": "answer_table", "question_label": qn, "answer_completeness": "full"}
     if answer_lines is not None:
         ans["answer_lines"] = answer_lines
     if answer_value is not None:
@@ -153,6 +153,7 @@ class TestNumberRelationshipOwnership:
                         "options": [{"label": l} for l in "ABCD"],
                         "answer": {
                             "answer_zone": "answer_table",
+                            "answer_completeness": "full",
                             "question_label": str(target),
                             "answer_lines": [7, 7],
                         },
@@ -189,6 +190,7 @@ class TestNumberRelationshipOwnership:
                     "options": [{"label": l} for l in "ABCD"],
                     "answer": {
                         "answer_zone": "answer_table",
+                        "answer_completeness": "full",
                         "question_label": str(qn),
                         "answer_lines": [ref, ref],
                     },
@@ -226,6 +228,7 @@ class TestNumberRelationshipOwnership:
                     "options": [{"label": l} for l in "ABCD"],
                     "answer": {
                         "answer_zone": "answer_table",
+                        "answer_completeness": "full",
                         "question_label": str(qn),
                         "answer_lines": [ref, ref],
                     },
@@ -257,6 +260,7 @@ class TestNumberRelationshipOwnership:
                 "options": [{"label": l} for l in "ABCD"],
                 "answer": {
                     "answer_zone": "answer_table",
+                    "answer_completeness": "full",
                     "question_label": "12",
                     "answer_lines": [7, 8],
                 },
@@ -291,6 +295,7 @@ class TestNumberRelationshipOwnership:
                     "options": [{"label": l} for l in "ABCD"],
                     "answer": {
                         "answer_zone": "answer_table",
+                        "answer_completeness": "full",
                         "question_label": str(qn),
                         "answer_lines": [22 if qn in (1, 12) else 23,
                                          22 if qn in (1, 12) else 23],
@@ -332,6 +337,7 @@ class TestNumberRelationshipOwnership:
                     "options": [{"label": l} for l in "ABCD"],
                     "answer": {
                         "answer_zone": "answer_table",
+                        "answer_completeness": "full",
                         "question_label": str(qn),
                         "answer_lines": [7, 8],
                     },
@@ -363,6 +369,7 @@ class TestNumberRelationshipOwnership:
                     "options": [{"label": l} for l in "ABCD"],
                     "answer": {
                         "answer_zone": "answer_table",
+                        "answer_completeness": "full",
                         "question_label": str(qn),
                         "answer_lines": [12, 12],
                     },
@@ -395,6 +402,7 @@ class TestNumberRelationshipOwnership:
                 "options": [{"label": l} for l in "ABCD"],
                 "answer": {
                     "answer_zone": "answer_table",
+                    "answer_completeness": "full",
                     "question_label": "12",
                     "answer_lines": [7, 8],
                 },

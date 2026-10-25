@@ -76,9 +76,11 @@ def _single_choice_payload(qn: int, *, answer_lines, question_type="single_choic
                     "options": [{"label": l} for l in options],
                     "answer": {
                         "answer_zone": "answer_table",
+                        "answer_completeness": "full",
                         "question_label": str(qn),
                         "answer_lines": list(answer_lines),
-                    },
+                                            "answer_completeness": "full",
+},
                 },
             }
         ]
@@ -98,9 +100,11 @@ def _range_payload(start: int, end: int, *, answer_lines, options="ABCD",
                     "options": [{"label": l} for l in options],
                     "answer": {
                         "answer_zone": "answer_table",
+                        "answer_completeness": "full",
                         "question_label": str(n),
                         "answer_lines": list(answer_lines),
-                    },
+                                            "answer_completeness": "full",
+},
                 },
             }
             for n in range(start, end + 1)
@@ -268,6 +272,7 @@ class TestRealGateAdmissionDB:
                         "options": [{"label": l} for l in "ABCD"],
                         "answer": {
                             "answer_zone": "answer_table",
+                            "answer_completeness": "full",
                             "question_label": str(n),
                             "answer_lines": [27, 27],
                         },
@@ -349,6 +354,7 @@ class TestRealGateAdmissionDB:
                         "options": [{"label": l} for l in "ABCDEFG"],
                         "answer": {
                             "answer_zone": "answer_table",
+                            "answer_completeness": "full",
                             "question_label": str(i),
                             "answer_lines": [42, 42],
                         },

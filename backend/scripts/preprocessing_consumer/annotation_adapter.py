@@ -360,6 +360,9 @@ def _leaf_content(unit: ManifestUnit) -> dict:
         answer["answer_value"] = unit.answer_evidence_value
     if unit.answer_evidence_type:
         answer["answer_evidence_type"] = unit.answer_evidence_type
+    # T20-BF: pass Producer completeness declaration; missing stays absent.
+    if getattr(unit, "answer_completeness", None):
+        answer["answer_completeness"] = unit.answer_completeness
     ael = unit.answer_evidence_lines
     if ael and len(ael) == 2 and int(ael[0]) >= 1 and int(ael[1]) >= int(ael[0]):
         answer["answer_evidence_lines"] = [int(ael[0]), int(ael[1])]

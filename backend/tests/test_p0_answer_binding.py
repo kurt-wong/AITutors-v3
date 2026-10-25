@@ -51,7 +51,8 @@ def test_answer_value_bound_directly():
                     "answer_zone": "answer_table",
                     "question_label": "1",
                     "answer_value": "B",
-                },
+                                    "answer_completeness": "full",
+},
             },
         }]
     }

@@ -40,7 +40,7 @@ def _single_units():
             "content": {
                 "stem": {"question_label": "1"},
                 "options": [{"label": "A"}, {"label": "B"}, {"label": "C"}, {"label": "D"}],
-                "answer": {"answer_zone": "inline_answer", "question_label": "1"},
+                "answer": {"answer_zone": "inline_answer", "question_label": "1", "answer_completeness": "full"},
             },
         }
     ]

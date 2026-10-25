@@ -57,7 +57,8 @@ def _payload(qn):
                 "answer": {
                     "role": "answer", "answer_zone": "inline_answer",
                     "question_label": str(qn),
-                },
+                                    "answer_completeness": "full",
+},
             },
         }]
     }

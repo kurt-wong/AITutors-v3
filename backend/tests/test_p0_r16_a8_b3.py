@@ -148,7 +148,8 @@ class TestB3RangeCompactAnswers:
                             "answer_zone": "answer_table",
                             "question_label": str(n),
                             "answer_lines": [7, 7],
-                        },
+                                                    "answer_completeness": "full",
+},
                     },
                 }
                 for n in range(19, 24)
@@ -201,7 +202,8 @@ class TestB3RangeCompactAnswers:
                             "answer_zone": "answer_table",
                             "question_label": str(i),
                             "answer_lines": [10, 10],
-                        },
+                                                    "answer_completeness": "full",
+},
                     },
                 }
                 for i in range(1, 6)
@@ -246,7 +248,8 @@ class TestB3RangeCompactAnswers:
                             "answer_zone": "answer_table",
                             "question_label": str(n),
                             "answer_lines": [7, 7],
-                        },
+                                                    "answer_completeness": "full",
+},
                     },
                 }
                 for n in range(19, 24)

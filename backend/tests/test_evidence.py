@@ -125,7 +125,7 @@ class TestAnalyzeEvidence:
     def test_single_candidate_unique(self):
         """只有一个候选 → unique_with_evidence = True。"""
         lines = (_make_line("P1L001", "1"),)
-        spans = {"P1L001": (_make_span("P1L001", "1"),)}
+        spans = {"P1L001": (_make_span("P1L001", "1"),), "answer_completeness": "full"}
         report = analyze_evidence("Q1.stem", "1", lines, spans)
         assert report.total_candidates == 1
         assert report.unique_with_evidence is True
@@ -145,8 +145,7 @@ class TestAnalyzeEvidence:
                 _make_span("P1L001", " A"),
             ),
             "P1L002": (_make_span("P1L002", "1"),),
-            "P1L003": (_make_span("P1L003", "第1题"),),
-        }
+            "P1L003": (_make_span("P1L003", "第1题"),), "answer_completeness": "full"}
         report = analyze_evidence("Q1.stem", "1", lines, spans)
         assert report.total_candidates == 3
         # P1L002 应该排第一（isolated + exact_text_match）
@@ -166,8 +165,7 @@ class TestAnalyzeEvidence:
                 _make_span("P1L002", " A"),
                 _make_span("P1L002", "."),
                 _make_span("P1L002", " B"),
-            ),
-        }
+            ), "answer_completeness": "full"}
         report = analyze_evidence("Q1.stem", "1", lines, spans)
         assert report.total_candidates == 2
         # P1L001: isolated(0.3) + few_spans(0.1) + small_bbox(?) + bold(0.1) + exact(0.35)
@@ -193,8 +191,7 @@ class TestAnalyzeEvidence:
         spans = {
             "P1L001": (_make_span("P1L001", "hello"),),
             "P1L002": (_make_span("P1L002", "world"),),
-            "P1L003": (_make_span("P1L003", "3"),),
-        }
+            "P1L003": (_make_span("P1L003", "3"),), "answer_completeness": "full"}
         report = analyze_evidence("Q1.stem", "", lines, spans)
         assert report.total_candidates == 0
         assert report.top_candidate is None
@@ -203,14 +200,14 @@ class TestAnalyzeEvidence:
     def test_whitespace_marker_returns_no_candidates(self):
         """纯空白 marker 同样不得匹配任何行。"""
         lines = (_make_line("P1L001", "hello"),)
-        spans = {"P1L001": (_make_span("P1L001", "hello"),)}
+        spans = {"P1L001": (_make_span("P1L001", "hello"),), "answer_completeness": "full"}
         report = analyze_evidence("Q1.stem", "   ", lines, spans)
         assert report.total_candidates == 0
 
     def test_normalized_match(self):
         """全角字符 normalized match。"""
         lines = (_make_line("P1L001", "１"),)  # 全角 1
-        spans = {"P1L001": (_make_span("P1L001", "１"),)}
+        spans = {"P1L001": (_make_span("P1L001", "１"),), "answer_completeness": "full"}
         report = analyze_evidence("Q1.stem", "1", lines, spans)
         assert report.total_candidates >= 1
 
@@ -219,7 +216,7 @@ class TestFormatEvidenceReport:
     def test_serializable(self):
         """format_evidence_report 返回 JSON-compatible dict。"""
         lines = (_make_line("P1L001", "1"),)
-        spans = {"P1L001": (_make_span("P1L001", "1"),)}
+        spans = {"P1L001": (_make_span("P1L001", "1"),), "answer_completeness": "full"}
         report = analyze_evidence("Q1.stem", "1", lines, spans)
         d = format_evidence_report(report)
         assert d["reference_id"] == "Q1.stem"

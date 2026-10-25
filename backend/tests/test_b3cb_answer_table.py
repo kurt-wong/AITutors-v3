@@ -92,7 +92,8 @@ class TestAnswerSpanUsesTableDecode:
                         "role": "answer", "question_label": "1",
                         "answer_zone": "answer_table",
                         "answer_lines": [1, 1],
-                    },
+                                            "answer_completeness": "full",
+},
                 },
             }]
         }

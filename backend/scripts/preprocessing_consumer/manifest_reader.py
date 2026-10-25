@@ -53,6 +53,8 @@ class ManifestUnit:
     answer_evidence_type: str | None = None
     answer_evidence_lines: tuple[int, int] | None = None
     answer_evidence_value: str | None = None
+    # T20-BF: Producer answer_completeness (full|partial|unknown). None = not declared.
+    answer_completeness: str | None = None
     # ── provenance（verbatim 保留；不在本层解释）──
     section_ref: str | None = None
     printed_provenance: str | None = None
@@ -113,6 +115,7 @@ def load_manifest(path: Path) -> Manifest:
             answer_evidence_type=ae.get("type"),
             answer_evidence_lines=_pair(ae.get("lines")),
             answer_evidence_value=ae.get("value"),
+            answer_completeness=u.get("answer_completeness"),
             section_ref=u.get("section_ref"),
             printed_provenance=u.get("printed_provenance"),
             basis=u.get("basis"),

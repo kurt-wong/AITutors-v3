@@ -85,6 +85,18 @@ def _parse_answer_ownership(span) -> tuple[str, str]:
     return own, bev
 
 
+def _parse_answer_completeness(span) -> str | None:
+    """T20-BF: Producer answer_completeness from span evidence. None if undeclared."""
+    if span is None:
+        return None
+    for e in span.evidence or ():
+        s = str(e)
+        if s.startswith("answer_completeness="):
+            v = s.split("=", 1)[1].strip().lower()
+            return v if v in ("full", "partial", "unknown") else None
+    return None
+
+
 class Compiler:
     def __init__(
         self,
@@ -187,11 +199,15 @@ class Compiler:
             )
             ownership, binding_evidence = _parse_answer_ownership(span)
             cand = cr.text
+            # T20-BF: completeness comes ONLY from Producer declaration.
+            # Missing/partial/unknown → not complete. Never bool(cand.strip()).
+            ac = _parse_answer_completeness(span)
+            complete = ac == "full"
             # official_text is NOT a copy of candidate: only publish path fills it.
             answer = CompiledAnswer(
                 span_id=cr.span_id, line_refs=cr.line_refs, text=cand,
                 text_hash=cr.text_hash, source_located=located,
-                complete=bool(cand.strip()), verified_correct=None,
+                complete=complete, verified_correct=None,
                 ownership=ownership,
                 binding_evidence=binding_evidence,
                 candidate_text=cand,

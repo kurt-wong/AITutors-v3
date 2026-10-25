@@ -306,6 +306,12 @@ def evaluate(
                 auto_blockers.append(
                     f"leaf {leaf.unit_id!r} answer not source_located+complete"
                 )
+            # T20-BF: completeness must be Producer-declared full; missing ≠ full.
+            if leaf.answer is not None and not leaf.answer.complete:
+                auto_blockers.append(
+                    f"leaf {leaf.unit_id!r} answer_completeness not 'full' "
+                    f"(Producer did not declare full completeness)"
+                )
             # P0 CONTRACT-FINAL: auto requires proven ownership.
             # local_proven is an empty set; only "match" qualifies.
             _own = getattr(leaf.answer, "ownership", "unknown") if leaf.answer else "unknown"

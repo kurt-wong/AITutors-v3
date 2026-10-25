@@ -96,6 +96,7 @@ class TestAnswerFallbackBlocked:
         targets = []
         _answer_target(targets, "U53", {
             "answer_zone": "answer_table",
+            "answer_completeness": "full",
             "question_label": 53,
             "fallback_blocked": True,
         })
@@ -107,6 +108,7 @@ class TestAnswerFallbackBlocked:
         targets = []
         _answer_target(targets, "U54", {
             "answer_zone": "answer_table",
+            "answer_completeness": "full",
             "question_label": 54,
         })
         assert len(targets) == 1

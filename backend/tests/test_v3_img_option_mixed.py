@@ -33,7 +33,7 @@ def _payload(qn="1"):
                 "content": {
                     "stem": {"question_label": qn},
                     "options": [{"label": lab} for lab in ("A", "B", "C", "D")],
-                    "answer": {"answer_zone": "inline_answer", "question_label": qn},
+                    "answer": {"answer_zone": "inline_answer", "question_label": qn, "answer_completeness": "full"},
                 },
             }
         ]

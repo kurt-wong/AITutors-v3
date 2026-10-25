@@ -55,7 +55,7 @@ async def test_resolver_structural_validity():
                 "content": {
                     "stem": {"question_label": "1"},
                     "options": [{"label": "A"}, {"label": "B"}, {"label": "C"}, {"label": "D"}],
-                    "answer": {"answer_zone": "inline_answer", "question_label": "1"},
+                    "answer": {"answer_zone": "inline_answer", "question_label": "1", "answer_completeness": "full"},
                 },
             }
         ]

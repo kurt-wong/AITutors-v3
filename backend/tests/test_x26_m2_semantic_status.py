@@ -50,7 +50,7 @@ def _single_choice_payload(qn="1", original="single_choice", options=("A", "B", 
     content = {
         "stem": {"question_label": qn},
         "options": [{"label": l} for l in options],
-        "answer": {"answer_zone": "answer_table", "question_label": qn},
+        "answer": {"answer_zone": "answer_table", "question_label": qn, "answer_completeness": "full"},
     }
     return {"semantic_units": [{"unit_id": f"Q{qn}", "unit_type": "standalone_unit",
              "original_question_type": original, "content": content}]}

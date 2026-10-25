@@ -40,7 +40,7 @@ def _q1_payload():
                 "content": {
                     "stem": {"question_label": "1"},
                     "options": [{"label": "A"}, {"label": "B"}, {"label": "C"}, {"label": "D"}],
-                    "answer": {"answer_zone": "inline_answer", "question_label": "1"},
+                    "answer": {"answer_zone": "inline_answer", "question_label": "1", "answer_completeness": "full"},
                 },
             }
         ]
@@ -248,13 +248,13 @@ def _two_question_payload():
             {"unit_id": "Q1", "content": {
                 "stem": {"question_label": "1"},
                 "options": [{"label": "A"}, {"label": "B"}],
-                "answer": {"answer_zone": "inline_answer", "question_label": "1"},
+                "answer": {"answer_zone": "inline_answer", "question_label": "1", "answer_completeness": "full"},
                 "explanation": {"explanation_zone": "inline_explanation",
                                 "question_label": "1"}}},
             {"unit_id": "Q2", "content": {
                 "stem": {"question_label": "2"},
                 "options": [{"label": "A"}, {"label": "B"}],
-                "answer": {"answer_zone": "inline_answer", "question_label": "2"},
+                "answer": {"answer_zone": "inline_answer", "question_label": "2", "answer_completeness": "full"},
                 "explanation": {"explanation_zone": "inline_explanation",
                                 "question_label": "2"}}},
         ]
@@ -368,7 +368,7 @@ async def test_prefix_collision_answer_explanation_not_cross():
     # 只问 Q1：answer/explanation 必须各自唯一指向自身行，不得吞 10/11/12。
     payload = {"semantic_units": [{"unit_id": "Q1", "content": {
         "stem": {"question_label": "1"}, "options": [{"label": "A"}],
-        "answer": {"answer_zone": "answer_table", "question_label": "1"},
+        "answer": {"answer_zone": "answer_table", "question_label": "1", "answer_completeness": "full"},
         "explanation": {"explanation_zone": "inline_explanation", "question_label": "1"}}}]}
     run = resolver(lines).resolve(payload)
     a = next(s for s in run.resolved_spans if s.span_id == "sp-Q1.answer")
@@ -475,9 +475,9 @@ async def test_answer_shared_line_multi_qn():
     lines = mk("1. 第一题", "A. 甲", "2. 第二题", "A. 乙", "【答案】", "1. A  2. B")
     payload = {"semantic_units": [
         {"unit_id": "Q1", "content": {"stem": {"question_label": "1"},
-          "options": [], "answer": {"answer_zone": "answer_table", "question_label": "1"}}},
+          "options": [], "answer": {"answer_zone": "answer_table", "question_label": "1", "answer_completeness": "full"}}},
         {"unit_id": "Q2", "content": {"stem": {"question_label": "2"},
-          "options": [], "answer": {"answer_zone": "answer_table", "question_label": "2"}}}]}
+          "options": [], "answer": {"answer_zone": "answer_table", "question_label": "2", "answer_completeness": "full"}}}]}
     run = resolver(lines).resolve(payload)
     a1 = next(s for s in run.resolved_spans if s.span_id == "sp-Q1.answer")
     a2 = next(s for s in run.resolved_spans if s.span_id == "sp-Q2.answer")
@@ -503,7 +503,7 @@ async def test_answer_evidence_lines_multi_line_binds_full_range():
     payload = {"semantic_units": [{"unit_id": "Q1", "content": {
         "stem": {"question_label": "1"}, "options": [{"label": "A"}],
         "answer": {"answer_zone": "answer_table", "question_label": "1",
-                   "answer_lines": [4, 8]}}}]}
+                   "answer_lines": [4, 8], "answer_completeness": "full"}}}]}
     run = resolver(lines).resolve(payload)
     a = next(s for s in run.resolved_spans if s.span_id == "sp-Q1.answer")
     assert a.line_refs == ("P1L004", "P1L005", "P1L006", "P1L007", "P1L008")
@@ -523,10 +523,10 @@ async def test_answer_evidence_lines_single_line_keeps_qn_char_span():
     payload = {"semantic_units": [
         {"unit_id": "Q1", "content": {"stem": {"question_label": "1"}, "options": [],
           "answer": {"answer_zone": "answer_table", "question_label": "1",
-                     "answer_lines": [6, 6]}}},
+                     "answer_lines": [6, 6], "answer_completeness": "full"}}},
         {"unit_id": "Q2", "content": {"stem": {"question_label": "2"}, "options": [],
           "answer": {"answer_zone": "answer_table", "question_label": "2",
-                     "answer_lines": [6, 6]}}}]
+                     "answer_lines": [6, 6], "answer_completeness": "full"}}}]
     }
     run = resolver(lines).resolve(payload)
     a1 = next(s for s in run.resolved_spans if s.span_id == "sp-Q1.answer")
@@ -549,7 +549,7 @@ async def test_answer_evidence_lines_scoped_not_other_unit_block():
     payload = {"semantic_units": [{"unit_id": "Q1", "content": {
         "stem": {"question_label": "1"}, "options": [],
         "answer": {"answer_zone": "answer_table", "question_label": "1",
-                   "answer_lines": [6, 6]}}}]}
+                   "answer_lines": [6, 6], "answer_completeness": "full"}}}]}
     run = resolver(lines).resolve(payload)
     a = next(s for s in run.resolved_spans if s.span_id == "sp-Q1.answer")
     assert a.line_refs == ("P1L006",)
@@ -561,7 +561,7 @@ async def test_answer_evidence_lines_unbound_range_incomplete():
     payload = {"semantic_units": [{"unit_id": "Q1", "content": {
         "stem": {"question_label": "1"}, "options": [],
         "answer": {"answer_zone": "answer_table", "question_label": "1",
-                   "answer_lines": [4, 99]}}}]}
+                   "answer_lines": [4, 99], "answer_completeness": "full"}}}]}
     run = resolver(lines).resolve(payload)
     assert not any(s.span_id == "sp-Q1.answer" for s in run.resolved_spans)
     assert any(u.reference_id == "Q1.answer" and u.resolution_status == "incomplete"
@@ -573,7 +573,7 @@ async def test_answer_without_evidence_lines_keeps_zone_scan():
     lines = mk("1. 题干", "A. 甲", "【答案】", "1. A")
     payload = {"semantic_units": [{"unit_id": "Q1", "content": {
         "stem": {"question_label": "1"}, "options": [],
-        "answer": {"answer_zone": "answer_table", "question_label": "1"}}}]}
+        "answer": {"answer_zone": "answer_table", "question_label": "1", "answer_completeness": "full"}}}]}
     run = resolver(lines).resolve(payload)
     a = next(s for s in run.resolved_spans if s.span_id == "sp-Q1.answer")
     assert a.line_refs == ("P1L004",) and a.granularity == "line_character"
@@ -585,7 +585,7 @@ async def test_answer_evidence_lines_single_line_no_qn_entry_full_line():
     payload = {"semantic_units": [{"unit_id": "Q1", "content": {
         "stem": {"question_label": "1"}, "options": [{"label": "A"}],
         "answer": {"answer_zone": "answer_table", "question_label": "1",
-                   "answer_lines": [4, 4]}}}]}
+                   "answer_lines": [4, 4], "answer_completeness": "full"}}}]}
     run = resolver(lines).resolve(payload)
     a = next(s for s in run.resolved_spans if s.span_id == "sp-Q1.answer")
     assert a.line_refs == ("P1L004",) and a.granularity == "line"
@@ -610,13 +610,13 @@ async def test_explanation_evidence_lines_binds_declared_range():
         {"unit_id": "Q1", "content": {
             "stem": {"question_label": "1"}, "options": [],
             "answer": {"answer_zone": "answer_table", "question_label": "1",
-                       "answer_lines": [5, 5]},
+                       "answer_lines": [5, 5], "answer_completeness": "full"},
             "explanation": {"explanation_zone": "inline_explanation",
                             "question_label": "1", "explanation_lines": [6, 7]}}},
         {"unit_id": "Q2", "content": {
             "stem": {"question_label": "2"}, "options": [],
             "answer": {"answer_zone": "answer_table", "question_label": "2",
-                       "answer_lines": [8, 8]},
+                       "answer_lines": [8, 8], "answer_completeness": "full"},
             "explanation": {"explanation_zone": "inline_explanation",
                             "question_label": "2", "explanation_lines": [9, 10]}}},
     ]}
@@ -685,14 +685,14 @@ async def test_fixture_golden_composite_full_resolution():
                  {"unit_id": "Q1", "question_label": "1", "content": {
                      "stem": {"question_label": "1"},
                      "options": [{"label": "A"}, {"label": "B"}],
-                     "answer": {"answer_zone": "answer_table", "question_label": "1"},
+                     "answer": {"answer_zone": "answer_table", "question_label": "1", "answer_completeness": "full"},
                      "explanation": {"explanation_zone": "inline_explanation",
                                      "question_label": "1"}},
                   "depends_on": [{"type": "material_dependency", "target": "material"}]},
                  {"unit_id": "Q2", "question_label": "2", "content": {
                      "stem": {"question_label": "2"},
                      "options": [{"label": "A"}, {"label": "B"}],
-                     "answer": {"answer_zone": "answer_table", "question_label": "2"},
+                     "answer": {"answer_zone": "answer_table", "question_label": "2", "answer_completeness": "full"},
                      "explanation": {"explanation_zone": "inline_explanation",
                                      "question_label": "2"}},
                   "depends_on": [{"type": "material_dependency", "target": "material"}]},
@@ -746,7 +746,7 @@ async def test_frozen_contract_question_label_only_answer_explanation():
              "options": [{"label": "A", "role": "option", "question_label": "1"},
                          {"label": "B", "role": "option", "question_label": "1"}],
              "answer": {"role": "answer", "question_label": "1",
-                        "answer_zone": "answer_table"},
+                        "answer_zone": "answer_table", "answer_completeness": "full"},
              "explanation": {"role": "explanation", "question_label": "1",
                              "explanation_zone": "inline_explanation"},
          }},

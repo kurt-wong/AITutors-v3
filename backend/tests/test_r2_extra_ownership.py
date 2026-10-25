@@ -50,7 +50,7 @@ class TestExtraOwnershipFilter:
                                    "extra_lines": [5, 7]},
                          "answer": {"answer_zone": "answer_table",
                                      "question_label": "1",
-                                     "answer_lines": [7, 7]}}},
+                                     "answer_lines": [7, 7], "answer_completeness": "full"}}},
             {"unit_id": "Q21", "unit_type": "standalone_question",
              "question_number": "3",
              "content": {"stem": {"question_label": "3",
@@ -58,7 +58,7 @@ class TestExtraOwnershipFilter:
                                    "stem_lines": [3, 3]},
                          "answer": {"answer_zone": "answer_table",
                                      "question_label": "3",
-                                     "answer_lines": [7, 7]}}},
+                                     "answer_lines": [7, 7], "answer_completeness": "full"}}},
             {"unit_id": "Q22", "unit_type": "standalone_question",
              "question_number": "4",
              "content": {"stem": {"question_label": "4",
@@ -66,7 +66,7 @@ class TestExtraOwnershipFilter:
                                    "stem_lines": [4, 4]},
                          "answer": {"answer_zone": "answer_table",
                                      "question_label": "4",
-                                     "answer_lines": [7, 7]}}},
+                                     "answer_lines": [7, 7], "answer_completeness": "full"}}},
         ]}
         run = _resolve(lines, payload)
         q19_stem = next(s for s in run.resolved_spans if s.span_id == "sp-Q19.stem")
@@ -95,7 +95,7 @@ class TestExtraOwnershipFilter:
                                    "extra_lines": [5, 5]},
                          "answer": {"answer_zone": "answer_table",
                                      "question_label": "4",
-                                     "answer_lines": [5, 5]}}},
+                                     "answer_lines": [5, 5], "answer_completeness": "full"}}},
         ]}
         run = _resolve(lines, payload)
         stem = next(s for s in run.resolved_spans if s.span_id == "sp-Q22.stem")
@@ -123,7 +123,7 @@ class TestExtraOwnershipFilter:
                         "options": [{"label": "A"}, {"label": "B"}],
                         "answer": {"answer_zone": "answer_table",
                                     "question_label": "13",
-                                    "answer_lines": [5, 5]}}},
+                                    "answer_lines": [5, 5], "answer_completeness": "full"}}},
         ]}
         run = _resolve(lines, payload)
         stem = next(s for s in run.resolved_spans if s.span_id == "sp-Q13.stem")
@@ -153,7 +153,7 @@ class TestFallbackExtraMerge:
                                   "extra_lines": [4, 4]},
                         "answer": {"answer_zone": "answer_table",
                                     "question_label": "6",
-                                    "answer_lines": [4, 4]}}},
+                                    "answer_lines": [4, 4], "answer_completeness": "full"}}},
         ]}
         run = _resolve(lines, payload)
         stem = next(s for s in run.resolved_spans if s.span_id == "sp-Q6.stem")
@@ -178,7 +178,7 @@ class TestFallbackExtraMerge:
                                    "extra_lines": [3, 4]},  # range covers Q7!
                          "answer": {"answer_zone": "answer_table",
                                      "question_label": "6",
-                                     "answer_lines": [4, 4]}}},
+                                     "answer_lines": [4, 4], "answer_completeness": "full"}}},
             {"unit_id": "Q7", "unit_type": "standalone_question",
              "question_number": "7",
              "content": {"stem": {"question_label": "7",
@@ -186,7 +186,7 @@ class TestFallbackExtraMerge:
                                    "stem_lines": [3, 3]},
                          "answer": {"answer_zone": "answer_table",
                                      "question_label": "7",
-                                     "answer_lines": [4, 4]}}},
+                                     "answer_lines": [4, 4], "answer_completeness": "full"}}},
         ]}
         run = _resolve(lines, payload)
         q6_stem = next(s for s in run.resolved_spans if s.span_id == "sp-Q6.stem")

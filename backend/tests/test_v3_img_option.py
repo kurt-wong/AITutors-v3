@@ -83,7 +83,7 @@ def _payload(qn="8", labels=("A", "B", "C", "D")):
                 "content": {
                     "stem": {"question_label": qn},
                     "options": [{"label": lab} for lab in labels],
-                    "answer": {"answer_zone": "inline_answer", "question_label": qn},
+                    "answer": {"answer_zone": "inline_answer", "question_label": qn, "answer_completeness": "full"},
                 },
             }
         ]

@@ -131,7 +131,8 @@ def _payload(qn: str):
                 "answer": {
                     "role": "answer", "answer_zone": "inline_answer",
                     "question_label": qn,
-                },
+                                    "answer_completeness": "full",
+},
             },
         }]
     }

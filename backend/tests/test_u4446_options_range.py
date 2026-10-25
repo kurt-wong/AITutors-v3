@@ -42,7 +42,7 @@ def _payload(qn, opts_range=None, search_lines=None):
     content = {
         "stem": stem,
         "options": [{"role": "option", "label": x, "question_label": str(qn)} for x in "ABCD"],
-        "answer": {"role": "answer", "answer_zone": "inline_answer", "question_label": str(qn)},
+        "answer": {"role": "answer", "answer_zone": "inline_answer", "question_label": str(qn), "answer_completeness": "full"},
     }
     if opts_range is not None:
         content["options_range"] = list(opts_range)

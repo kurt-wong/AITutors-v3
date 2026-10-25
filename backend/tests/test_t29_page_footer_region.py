@@ -112,7 +112,8 @@ class TestU49OptionRegionNotCutByPageFooter:
                                     "question_label": "49",
                                     "answer_zone": "answer_table",
                                     "answer_lines": [13, 13],
-                                },
+                                                                    "answer_completeness": "full",
+},
                             },
                             "depends_on": [
                                 {"type": "material_dependency", "target": "material"}

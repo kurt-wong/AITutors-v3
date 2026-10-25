@@ -48,7 +48,8 @@ class TestChinesePerChildAnswers:
                             "question_label": "1",
                             "answer_zone": "answer_table",
                             "answer_lines": [10, 10],
-                        },
+                                                    "answer_completeness": "full",
+},
                     },
                 },
                 {
@@ -63,7 +64,8 @@ class TestChinesePerChildAnswers:
                             "question_label": "2",
                             "answer_zone": "answer_table",
                             "answer_lines": [10, 10],
-                        },
+                                                    "answer_completeness": "full",
+},
                     },
                 },
             ]
@@ -108,7 +110,8 @@ class TestChinesePerChildAnswers:
                             "question_label": "99",
                             "answer_zone": "answer_table",
                             "answer_lines": [4, 4],
-                        },
+                                                    "answer_completeness": "full",
+},
                     },
                 }
             ]

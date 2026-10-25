@@ -88,7 +88,7 @@ def _pipeline(lines, payload, root_unit_id="Q1"):
 
 def _payload(answer_lines=None, answer_value=None, qn="1",
              ctype="single_choice", options="ABCD"):
-    ans = {"answer_zone": "answer_table", "question_label": qn}
+    ans = {"answer_zone": "answer_table", "question_label": qn, "answer_completeness": "full"}
     if answer_lines is not None:
         ans["answer_lines"] = answer_lines
     if answer_value is not None:

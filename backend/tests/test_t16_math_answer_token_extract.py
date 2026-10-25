@@ -28,8 +28,7 @@ def _payload(qn: str, answer_lines, answer_value=None):
         "role": "answer",
         "question_label": qn,
         "answer_zone": "answer_table",
-        "answer_lines": list(answer_lines),
-    }
+        "answer_lines": list(answer_lines), "answer_completeness": "full"}
     if answer_value is not None:
         ans["answer_value"] = answer_value
         ans["answer_evidence_lines"] = list(answer_lines)

@@ -80,7 +80,7 @@ class TestPrintedNumberTransport:
                         "question_search_lines": [456, 482],
                     },
                     "answer": {"role": "answer", "question_label": "51",
-                               "answer_zone": "answer_table"},
+                               "answer_zone": "answer_table", "answer_completeness": "full"},
                 },
             }],
         }]}
@@ -97,7 +97,7 @@ class TestPrintedNumberTransport:
             "content": {
                 "stem": {"role": "stem", "question_label": "1"},
                 "answer": {"role": "answer", "question_label": "1",
-                           "answer_zone": "answer_table"},
+                           "answer_zone": "answer_table", "answer_completeness": "full"},
             },
         }]}
         st = next(t for t in extract_targets(payload) if t.kind == "question_label")

@@ -47,7 +47,7 @@ def _mk(*texts):
 
 
 def _payload(qn="1", answer_lines=None, ctype="single_choice", unit_id=None):
-    ans = {"answer_zone": "answer_table", "question_label": qn}
+    ans = {"answer_zone": "answer_table", "question_label": qn, "answer_completeness": "full"}
     if answer_lines is not None:
         ans["answer_lines"] = answer_lines
     return {
@@ -296,6 +296,7 @@ class TestB3Pending:
                     "options": [{"label": l} for l in "ABCD"],
                     "answer": {
                         "answer_zone": "answer_table",
+                        "answer_completeness": "full",
                         "question_label": "12",
                         "answer_lines": [7, 8],
                     },

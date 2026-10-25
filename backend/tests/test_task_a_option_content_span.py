@@ -38,7 +38,7 @@ def _payload(unit_id, qn):
             "content": {
                 "stem": {"role": "stem", "question_label": qn},
                 "options": [{"role": "option", "label": x} for x in "ABCD"],
-                "answer": {"role": "answer", "answer_zone": "inline_answer", "question_label": qn},
+                "answer": {"role": "answer", "answer_zone": "inline_answer", "question_label": qn, "answer_completeness": "full"},
             },
         }]
     }

@@ -80,7 +80,7 @@ class TestBIOQ8OptionRole:
                 "options": [{"label": l, "question_label": "8"} for l in "ABCD"],
                 "options_range": [1, 4],
                 "answer": {"answer_zone": "answer_table", "question_label": "8",
-                            "answer_lines": [4, 4]},
+                            "answer_lines": [4, 4], "answer_completeness": "full"},
             },
         }]}
         run = _resolve(lines, payload)
@@ -108,7 +108,7 @@ class TestBIOQ8OptionRole:
                           "extra_lines": [4, 5]},
                 "options": [{"label": l, "question_label": "8"} for l in "ABC"],
                 "answer": {"answer_zone": "answer_table", "question_label": "8",
-                            "answer_lines": [5, 5]},
+                            "answer_lines": [5, 5], "answer_completeness": "full"},
             },
         }]}
         run = _resolve(lines, payload)

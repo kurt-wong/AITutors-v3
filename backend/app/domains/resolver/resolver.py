@@ -1226,6 +1226,11 @@ class _Out:
                     declared_value=str(
                         getattr(t, "answer_value", "") or ""
                     ),
+                    # T20-BF: Manifest-declared answer range/value = binding declaration.
+                    declared_binding=bool(
+                        getattr(t, "evidence_lines", None)
+                        or getattr(t, "answer_value", None)
+                    ),
                 )
                 register_trusted_binding_fact(_fact)
                 _fact_own = _fact.ownership or "unknown"
@@ -1256,12 +1261,16 @@ class _Out:
         # a cross-process review path can reconstruct and re-verify the fact.
         # Never a trust shortcut — verify_binding_fact re-derives ownership.
         _dv = str(getattr(t, "answer_value", "") or "")
+        _ac = str(getattr(t, "answer_completeness", "") or "")
         return cleaned + (
             f"ownership={_fact_own}",
             f"binding_evidence={_fact_bev}",
             f"fact_declared_value={_dv}",
             f"fact_decode_loc={_decode_loc}",
             f"fact_source_hash={_fact.source_hash if _fact else ''}",
+            # T20-BF: pass Producer completeness through to Compiler/Gate.
+            # Missing → empty tag → Compiler treats as not-full (fail-closed).
+            f"answer_completeness={_ac}" if _ac else "answer_completeness=",
         )
 
     def add_span(self, unit_id: str, t, refs, status, evidence, role_hint=None):

@@ -45,6 +45,8 @@ class ResolveTarget:
     # P0-answer: declared answer value (answer_evidence.value) when answer_lines
     # is None. Resolver binds this directly — never infers from explanation.
     answer_value: str | None = None
+    # T20-BF: Producer answer_completeness (full|partial|unknown). None = not declared.
+    answer_completeness: str | None = None
     # P2-fix-2: Producer extra_lines (layout-drifted images/tables/continuation).
     # 1-based inclusive [start, end]. None = not declared.
     extra_lines: tuple[int, int] | None = None
@@ -332,6 +334,10 @@ def _answer_target(targets: list, unit_id: str, answer) -> None:
     # is None. Resolver must bind this directly — never infer from explanation.
     answer_value = answer.get("answer_value")
     answer_value_str = str(answer_value).strip() if answer_value is not None and str(answer_value).strip() else None
+    ac_raw = answer.get("answer_completeness")
+    ac_str = str(ac_raw).strip().lower() if ac_raw is not None else None
+    if ac_str is not None and ac_str not in ("full", "partial", "unknown"):
+        ac_str = None
     targets.append(
         ResolveTarget(
             target_id=f"{unit_id}.answer", unit_id=unit_id, role="answer",
@@ -342,6 +348,7 @@ def _answer_target(targets: list, unit_id: str, answer) -> None:
             evidence_lines=evidence,
             answer_fallback_blocked=bool(answer.get("fallback_blocked")),
             answer_value=answer_value_str,
+            answer_completeness=ac_str,
         )
     )
 

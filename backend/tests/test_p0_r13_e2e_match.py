@@ -34,7 +34,7 @@ def _mk(*texts):
 
 
 def _payload(qn="1", answer_lines=None, ctype="single_choice", unit_id=None):
-    ans = {"answer_zone": "answer_table", "question_label": qn}
+    ans = {"answer_zone": "answer_table", "question_label": qn, "answer_completeness": "full"}
     if answer_lines is not None:
         ans["answer_lines"] = answer_lines
     return {

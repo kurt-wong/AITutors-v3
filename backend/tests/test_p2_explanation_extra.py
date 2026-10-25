@@ -62,7 +62,7 @@ class TestExplanationMapping:
                           "stem_lines": [1, 1]},
                 "options": [{"label": l, "question_label": "1"} for l in "ABCD"],
                 "answer": {"answer_zone": "answer_table", "question_label": "1",
-                            "answer_lines": [6, 6]},
+                            "answer_lines": [6, 6], "answer_completeness": "full"},
                 "explanation": {"role": "explanation", "question_label": "1",
                                  "explanation_zone": "inline_explanation",
                                  "explanation_lines": [7, 7]},
@@ -128,7 +128,7 @@ class TestExtraLinesUnion:
                     "extra_lines": [5, 6],
                 },
                 "answer": {"answer_zone": "answer_table", "question_label": "4",
-                            "answer_lines": [6, 6]},
+                            "answer_lines": [6, 6], "answer_completeness": "full"},
             },
         }]}
         run = _resolve(lines, payload)
@@ -149,7 +149,7 @@ class TestExtraLinesUnion:
                           "stem_lines": [1, 1]},
                 "options": [{"label": "A", "question_label": "1"}],
                 "answer": {"answer_zone": "answer_table", "question_label": "1",
-                            "answer_lines": [6, 6]},
+                            "answer_lines": [6, 6], "answer_completeness": "full"},
             },
         }]}
         run = _resolve(lines, payload)

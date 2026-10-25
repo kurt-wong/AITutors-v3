@@ -40,7 +40,7 @@ class TestCompositeExplanationChain:
                                   {"label": "C", "question_label": "1"},
                                   {"label": "D", "question_label": "1"}],
                      "answer": {"answer_zone": "answer_table", "question_label": "1",
-                                 "answer_lines": [12, 12]},
+                                 "answer_lines": [12, 12], "answer_completeness": "full"},
                  }},
                 {"unit_id": "U1-2.sub2", "unit_type": "standalone_unit",
                  "question_number": "2",
@@ -51,7 +51,7 @@ class TestCompositeExplanationChain:
                                   {"label": "C", "question_label": "2"},
                                   {"label": "D", "question_label": "2"}],
                      "answer": {"answer_zone": "answer_table", "question_label": "2",
-                                 "answer_lines": [13, 13]},
+                                 "answer_lines": [13, 13], "answer_completeness": "full"},
                  }},
             ],
             "content": {

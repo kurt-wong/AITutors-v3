@@ -38,7 +38,7 @@ def _single_payload(ctype="single_choice"):
         {"unit_id": "Q1", "unit_type": "standalone_unit", "original_question_type": ctype,
          "content": {"stem": {"question_label": "1"},
                      "options": [{"label": l} for l in "ABCD"],
-                     "answer": {"answer_zone": "answer_table", "question_label": "1"}}}]}
+                     "answer": {"answer_zone": "answer_table", "question_label": "1", "answer_completeness": "full"}}}]}
 
 
 def _pipeline(lines, payload, root_unit_id="Q1"):
@@ -88,7 +88,7 @@ def test_fill_in_pending():
     payload = {"semantic_units": [
         {"unit_id": "Q1", "unit_type": "standalone_unit", "original_question_type": "fill_in",
          "content": {"stem": {"question_label": "1"},
-                     "answer": {"answer_zone": "answer_table", "question_label": "1"}}}]}
+                     "answer": {"answer_zone": "answer_table", "question_label": "1", "answer_completeness": "full"}}}]}
     root, ir, snap, run = _pipeline(lines, payload)
     d = _decision(root, ir, snap, run)
     assert d["decision"] == "pending_review"
@@ -102,7 +102,7 @@ def test_fill_in_valid_form_not_blocked_by_type():
     payload = {"semantic_units": [
         {"unit_id": "Q1", "unit_type": "standalone_unit", "original_question_type": "fill_in",
          "content": {"stem": {"question_label": "1"},
-                     "answer": {"answer_zone": "answer_table", "question_label": "1"}}}]}
+                     "answer": {"answer_zone": "answer_table", "question_label": "1", "answer_completeness": "full"}}}]}
     root, ir, snap, run = _pipeline(lines, payload, root_unit_id="Q1")
     d = _decision(root, ir, snap, run)
     assert not any("not strict-auto" in r for r in d["reasons"]), d["reasons"]
@@ -202,12 +202,12 @@ def _composite_payload(sub2_type="single_choice"):
               "original_question_type": "single_choice",
               "content": {"stem": {"question_label": "1"},
                           "options": [{"label": l} for l in "ABC"],
-                          "answer": {"answer_zone": "answer_table", "question_label": "1"}}},
+                          "answer": {"answer_zone": "answer_table", "question_label": "1", "answer_completeness": "full"}}},
              {"unit_id": "Q2", "unit_type": "standalone_unit", "question_label": "2",
               "original_question_type": sub2_type,
               "content": {"stem": {"question_label": "2"},
                           "options": [{"label": l} for l in "ABC"],
-                          "answer": {"answer_zone": "answer_table", "question_label": "2"}}}]}]}
+                          "answer": {"answer_zone": "answer_table", "question_label": "2", "answer_completeness": "full"}}}]}]}
 
 
 def test_composite_all_sub_ready_auto():
@@ -264,11 +264,11 @@ def test_two_standalone_units_decide_independently():
         {"unit_id": "Q1", "unit_type": "standalone_unit",
          "original_question_type": "single_choice",
          "content": {"stem": {"question_label": "1"}, "options": [{"label": "A"}, {"label": "B"}],
-                     "answer": {"answer_zone": "answer_table", "question_label": "1"}}},
+                     "answer": {"answer_zone": "answer_table", "question_label": "1", "answer_completeness": "full"}}},
         {"unit_id": "Q2", "unit_type": "standalone_unit",
          "original_question_type": "single_choice",
          "content": {"stem": {"question_label": "2"}, "options": [{"label": "A"}, {"label": "B"}],
-                     "answer": {"answer_zone": "answer_table", "question_label": "2"}}},
+                     "answer": {"answer_zone": "answer_table", "question_label": "2", "answer_completeness": "full"}}},
     ]}
     run = SourceResolver(source_version_id=SVID, lines=lines).resolve(payload)
     ir = IRBuilder.build(run, payload, SVID, ANN_ID)
@@ -290,7 +290,7 @@ def test_short_answer_not_blocked_by_type():
     payload = {"semantic_units": [
         {"unit_id": "Q26", "unit_type": "standalone_unit", "original_question_type": "short_answer",
          "content": {"stem": {"question_label": "26"},
-                     "answer": {"answer_zone": "answer_table", "question_label": "26"}}}]}
+                     "answer": {"answer_zone": "answer_table", "question_label": "26", "answer_completeness": "full"}}}]}
     root, ir, snap, run = _pipeline(lines, payload, root_unit_id="Q26")
     d = _decision(root, ir, snap, run)
     assert not any("not strict-auto" in r for r in d["reasons"]), d["reasons"]
@@ -308,7 +308,7 @@ def test_multipart_single_value_blocked():
     payload = {"semantic_units": [
         {"unit_id": "Q28", "unit_type": "standalone_unit", "original_question_type": "short_answer",
          "content": {"stem": {"question_label": "28"},
-                     "answer": {"answer_zone": "answer_table", "question_label": "28"}}}]}
+                     "answer": {"answer_zone": "answer_table", "question_label": "28", "answer_completeness": "full"}}}]}
     root, ir, snap, run = _pipeline(lines, payload, root_unit_id="Q28")
     d = _decision(root, ir, snap, run)
     assert d["decision"] == "pending_review"
@@ -327,7 +327,7 @@ def test_multipart_full_block_not_blocked():
     payload = {"semantic_units": [
         {"unit_id": "Q28", "unit_type": "standalone_unit", "original_question_type": "short_answer",
          "content": {"stem": {"question_label": "28"},
-                     "answer": {"answer_zone": "answer_table", "question_label": "28"}}}]}
+                     "answer": {"answer_zone": "answer_table", "question_label": "28", "answer_completeness": "full"}}}]}
     root, ir, snap, run = _pipeline(lines, payload, root_unit_id="Q28")
     d = _decision(root, ir, snap, run)
     assert not any("multipart" in r for r in d["reasons"]), d["reasons"]
@@ -342,7 +342,7 @@ def test_truncated_answer_blocked():
     payload = {"semantic_units": [
         {"unit_id": "Q26", "unit_type": "standalone_unit", "original_question_type": "short_answer",
          "content": {"stem": {"question_label": "26"},
-                     "answer": {"answer_zone": "answer_table", "question_label": "26"}}}]}
+                     "answer": {"answer_zone": "answer_table", "question_label": "26", "answer_completeness": "full"}}}]}
     root, ir, snap, run = _pipeline(lines, payload, root_unit_id="Q26")
     d = _decision(root, ir, snap, run)
     assert d["decision"] == "pending_review"
@@ -355,7 +355,7 @@ def test_form_valid_does_not_replace_source_trust():
     payload = {"semantic_units": [
         {"unit_id": "Q1", "unit_type": "standalone_unit", "original_question_type": "fill_in",
          "content": {"stem": {"question_label": "1"},
-                     "answer": {"answer_zone": "answer_table", "question_label": "1"}}}]}
+                     "answer": {"answer_zone": "answer_table", "question_label": "1", "answer_completeness": "full"}}}]}
     root, ir, snap, run = _pipeline(lines, payload, root_unit_id="Q1")
     bad_spans = tuple(
         dataclasses.replace(s, resolution_status="value_only")
@@ -373,7 +373,7 @@ def test_ownership_unknown_blocks_even_if_form_ok():
     payload = {"semantic_units": [
         {"unit_id": "Q1", "unit_type": "standalone_unit", "original_question_type": "fill_in",
          "content": {"stem": {"question_label": "1"},
-                     "answer": {"answer_zone": "answer_table", "question_label": "1"}}}]}
+                     "answer": {"answer_zone": "answer_table", "question_label": "1", "answer_completeness": "full"}}}]}
     root, ir, snap, run = _pipeline(lines, payload, root_unit_id="Q1")
     leaf = snap.leaves[0]
     ans = dataclasses.replace(leaf.answer, ownership="unknown")

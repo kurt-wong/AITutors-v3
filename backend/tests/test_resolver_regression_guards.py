@@ -250,7 +250,8 @@ class TestStemDeclaredBoundary:
                             "question_label": "21",
                             "answer_zone": "answer_lines",
                             "evidence_lines": [7, 7],
-                        },
+                                                    "answer_completeness": "full",
+},
                     },
                 },
                 {
@@ -269,7 +270,8 @@ class TestStemDeclaredBoundary:
                             "question_label": "22",
                             "answer_zone": "answer_lines",
                             "evidence_lines": [7, 7],
-                        },
+                                                    "answer_completeness": "full",
+},
                     },
                 },
             ]

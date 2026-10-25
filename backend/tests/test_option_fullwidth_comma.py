@@ -58,7 +58,7 @@ class TestFullwidthCommaOptionLabel:
                         ],
                         "answer": {"role": "answer", "question_label": "44",
                                    "answer_zone": "answer_table",
-                                   "answer_lines": [1, 1]},
+                                   "answer_lines": [1, 1], "answer_completeness": "full"},
                     },
                 }],
             }]

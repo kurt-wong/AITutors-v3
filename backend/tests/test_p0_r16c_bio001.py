@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import sys
+import tempfile
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -88,8 +89,22 @@ def _load_bio_declarations():
     {unit_id: {"value": str, "question_numbers": list, "printed": str,
                "unit_type": str}}.
     """
-    manifest = load_manifest(BIO_MANIFEST)
     raw = json.loads(BIO_MANIFEST.read_text(encoding="utf-8"))
+    # T20-BF legacy fixture: stamp Producer-style answer_completeness so this
+    # pre-field corpus behaves like a re-produced package (value+span → full).
+    for u in raw.get("units") or []:
+        if u.get("answer_completeness"):
+            continue
+        ae = u.get("answer_evidence") or {}
+        val = (ae.get("value") or "").strip()
+        if val and ae.get("lines"):
+            u["answer_completeness"] = "full"
+        else:
+            u["answer_completeness"] = "unknown"
+    import tempfile
+    _tmp = Path(tempfile.mkstemp(suffix=".manifest.json")[1])
+    _tmp.write_text(json.dumps(raw, ensure_ascii=False), encoding="utf-8")
+    manifest = load_manifest(_tmp)
     text = BIO_SOURCE.read_text(encoding="utf-8")
     lines = tuple(
         SourceLineView(f"P1L{i+1:03d}", t, i + 1, 1, i + 1)

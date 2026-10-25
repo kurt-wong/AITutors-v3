@@ -43,7 +43,7 @@ def _single_units():
          "content": {"stem": {"question_label": "1"},
                      "options": [{"label": l} for l in "ABCD"],
                      "answer": {"answer_zone": "answer_table", "question_label": "1",
-                                "answer_lines": [6, 7]}}}
+                                "answer_lines": [6, 7], "answer_completeness": "full"}}}
     ]
 
 
@@ -53,7 +53,7 @@ def _fillin_units():
          "original_question_type": "fill_in",
          "content": {"stem": {"question_label": "1"},
                      "answer": {"answer_zone": "answer_table", "question_label": "1",
-                                "answer_lines": [3, 3]}}}
+                                "answer_lines": [3, 3], "answer_completeness": "full"}}}
     ]
 
 
@@ -64,7 +64,7 @@ def _no_answer_lines_units():
          "original_question_type": "single_choice",
          "content": {"stem": {"question_label": "1"},
                      "options": [{"label": l} for l in "ABCD"],
-                     "answer": {"answer_zone": "answer_table", "question_label": "1"}}}
+                     "answer": {"answer_zone": "answer_table", "question_label": "1", "answer_completeness": "full"}}}
     ]
 
 
@@ -75,7 +75,7 @@ def _composite_units():
                 "content": {"stem": {"question_label": qlabel},
                             "options": [{"label": l} for l in "ABC"],
                             "answer": {"answer_zone": "answer_table", "question_label": qn,
-                                       "answer_lines": [13, 14]}}}
+                                       "answer_lines": [13, 14], "answer_completeness": "full"}}}
     return [
         {"unit_id": "U1-1", "unit_type": "composite_unit",
          "original_question_type": "single_choice",
@@ -95,7 +95,7 @@ def _foo_units():
          "content": {"stem": {"question_label": "1"},
                      "options": [{"label": l} for l in "ABCD"],
                      "answer": {"answer_zone": "answer_table", "question_label": "1",
-                                "answer_lines": [6, 7]}}}
+                                "answer_lines": [6, 7], "answer_completeness": "full"}}}
     ]
 
 

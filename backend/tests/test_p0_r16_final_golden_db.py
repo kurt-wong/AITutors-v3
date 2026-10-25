@@ -69,7 +69,7 @@ async def _seed_candidate_with_unknown_fact(session):
             "content": {
                 "stem": {"question_label": "1"},
                 "options": [{"label": l} for l in "ABCD"],
-                "answer": {"answer_zone": "answer_table", "question_label": "1", "answer_lines": [7, 7]},
+                "answer": {"answer_zone": "answer_table", "question_label": "1", "answer_lines": [7, 7], "answer_completeness": "full"},
             },
         }]
     }

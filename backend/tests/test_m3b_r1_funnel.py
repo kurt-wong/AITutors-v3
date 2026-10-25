@@ -79,7 +79,8 @@ async def test_gate_records_skipped_units_in_funnel(session):
                         "role": "answer",
                         "question_label": "9",
                         "answer_zone": "answer_table",
-                    },
+                                            "answer_completeness": "full",
+},
                 },
             }
         ],
@@ -161,7 +162,8 @@ async def test_gate_funnel_records_ready_unit_candidate(session):
                         "role": "answer",
                         "question_label": "8",
                         "answer_lines": [6, 6],
-                    },
+                                            "answer_completeness": "full",
+},
                 },
             }
         ],

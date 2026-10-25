@@ -85,6 +85,9 @@ class BoundUnit:
     # evidence range). Consumed like preprocessing_consumer.adapter:
     # answer_lines or answer_evidence_lines. Never silently dropped.
     answer_evidence_lines: LineRange | None = None
+    # T20-BF: Producer answer_completeness (full|partial|unknown).
+    # Missing/None ≠ full (fail-closed). Gate reads this; V3 never invents it.
+    answer_completeness: str | None = None
     # T2.10: other units' exclusive material line windows to drop from THIS
     # unit's material text (cross-unit contamination guard).
     material_exclude_ranges: list[tuple[int, int]] = field(default_factory=list)
@@ -167,6 +170,14 @@ def bind_units_from_manifest(
         ae_lines = _as_range(
             ae.get("lines"), label="answer_evidence.lines", unit_id=unit_id
         )
+        # T20-BF: consume Producer completeness declaration (missing ≠ full).
+        ac_raw = raw.get("answer_completeness")
+        ac = str(ac_raw).strip().lower() if ac_raw is not None else None
+        if ac is not None and ac not in ("full", "partial", "unknown"):
+            raise ManifestBindingError(
+                f"answer_completeness must be full|partial|unknown, got {ac_raw!r}",
+                unit_id=unit_id,
+            )
 
         ranges = {
             # stem：无 stem_lines 时用 questions_lines（composite 题干窗，Producer 已声明）
@@ -285,6 +296,7 @@ def bind_units_from_manifest(
                 extra_opt_lines=_extra_opt_line,
                 answer_evidence_value=ae_value_str,
                 answer_evidence_lines=ae_lines,
+                answer_completeness=ac,
                 material_exclude_ranges=mat_exclude,
             )
         )
@@ -515,6 +527,10 @@ def build_annotation_payload_from_bound(
             ]
         if bu.answer_evidence_value is not None:
             content["answer"]["answer_value"] = bu.answer_evidence_value
+        # T20-BF: pass Producer completeness declaration to resolver/compile.
+        # Missing stays absent — never defaulted to full.
+        if bu.answer_completeness is not None:
+            content["answer"]["answer_completeness"] = bu.answer_completeness
         # v2.4+: keep the raw answer_evidence.lines declaration for audit
         # (may equal answer_lines after fallback; never dropped silently).
         if bu.answer_evidence_lines is not None:

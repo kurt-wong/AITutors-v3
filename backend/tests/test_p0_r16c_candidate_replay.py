@@ -77,7 +77,8 @@ def _resolve_range_case():
                         "answer_zone": "answer_table",
                         "question_label": str(n),
                         "answer_lines": [27, 27],
-                    },
+                                            "answer_completeness": "full",
+},
                 },
             }
             for n in range(19, 24)

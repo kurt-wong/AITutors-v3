@@ -55,7 +55,8 @@ def _mk_shared_payload(qns: list[str], lines_range):
                     "answer_zone": "answer_table",
                     "question_label": qn,
                     "answer_lines": list(lines_range),
-                },
+                                    "answer_completeness": "full",
+},
             },
         }
         for qn in qns
@@ -89,7 +90,8 @@ class TestSharedLocalNumberingBlockCleared:
                         "answer_zone": "answer_table",
                         "question_label": qn,
                         "answer_lines": list(lines_range),
-                    },
+                                            "answer_completeness": "full",
+},
                 },
             }
             for qn in qns
@@ -174,15 +176,15 @@ class TestPerUnitLocalNumberingPreserved:
             {"unit_id": "U-req1", "content": {
                 "stem": {"question_label": "26"},
                 "answer": {"answer_zone": "answer_table", "question_label": "26",
-                           "answer_lines": [6, 6]}}},
+                           "answer_lines": [6, 6], "answer_completeness": "full"}}},
             {"unit_id": "U-req2", "content": {
                 "stem": {"question_label": "27"},
                 "answer": {"answer_zone": "answer_table", "question_label": "27",
-                           "answer_lines": [8, 8]}}},
+                           "answer_lines": [8, 8], "answer_completeness": "full"}}},
             {"unit_id": "U-req3", "content": {
                 "stem": {"question_label": "28"},
                 "answer": {"answer_zone": "answer_table", "question_label": "28",
-                           "answer_lines": [10, 10]}}},
+                           "answer_lines": [10, 10], "answer_completeness": "full"}}},
         ]}
         run = _resolve(lines, payload)
         for uid, expected_content in [
@@ -214,7 +216,7 @@ class TestPerUnitLocalNumberingPreserved:
             {"unit_id": "U-P2-1.sub", "content": {
                 "stem": {"question_label": "51"},
                 "answer": {"answer_zone": "answer_table", "question_label": "51",
-                           "answer_lines": [4, 7]}}},
+                           "answer_lines": [4, 7], "answer_completeness": "full"}}},
         ]}
         run = _resolve(lines, payload)
         a = next(s for s in run.resolved_spans
@@ -237,11 +239,11 @@ class TestPerUnitLocalNumberingPreserved:
             {"unit_id": "U-req1", "content": {
                 "stem": {"question_label": "26"},
                 "answer": {"answer_zone": "answer_table", "question_label": "26",
-                           "answer_lines": [5, 5]}}},
+                           "answer_lines": [5, 5], "answer_completeness": "full"}}},
             {"unit_id": "U-req2", "content": {
                 "stem": {"question_label": "27"},
                 "answer": {"answer_zone": "answer_table", "question_label": "27",
-                           "answer_lines": [6, 6]}}},
+                           "answer_lines": [6, 6], "answer_completeness": "full"}}},
         ]}
         run = _resolve(lines, payload)
         a1 = next(s for s in run.resolved_spans if s.span_id == "sp-U-req1.answer")
@@ -277,7 +279,7 @@ class TestEntryFalsePositives:
             {"unit_id": "Q28", "content": {
                 "stem": {"question_label": "28"},
                 "answer": {"answer_zone": "answer_table", "question_label": "28",
-                           "answer_lines": [4, 5]}}},
+                           "answer_lines": [4, 5], "answer_completeness": "full"}}},
         ]}
         run = _resolve(lines, payload)
         a = next(s for s in run.resolved_spans if s.span_id == "sp-Q28.answer")
@@ -308,7 +310,7 @@ class TestEntryFalsePositives:
             {"unit_id": "U68", "content": {
                 "stem": {"question_label": "68"},
                 "answer": {"answer_zone": "answer_table", "question_label": "68",
-                           "answer_lines": [4, 9]}}},
+                           "answer_lines": [4, 9], "answer_completeness": "full"}}},
         ]}
         run = _resolve(lines, payload)
         a = next(s for s in run.resolved_spans if s.span_id == "sp-U68.answer")
@@ -381,7 +383,7 @@ class TestEntryPrefixStripped:
             "content": {
                 "stem": {"question_label": "21"},
                 "answer": {"answer_zone": "answer_table", "question_label": "21",
-                           "answer_lines": [4, 4]},
+                           "answer_lines": [4, 4], "answer_completeness": "full"},
             },
         }]}
         run = _resolve(lines, payload)
@@ -396,7 +398,7 @@ class TestEntryPrefixStripped:
             "content": {
                 "stem": {"question_label": "51"},
                 "answer": {"answer_zone": "answer_table", "question_label": "51",
-                           "answer_lines": [4, 4]},
+                           "answer_lines": [4, 4], "answer_completeness": "full"},
             },
         }]}
         run = _resolve(lines, payload)
@@ -411,15 +413,15 @@ class TestEntryPrefixStripped:
             {"unit_id": "Q21", "content": {
                 "stem": {"question_label": "21"},
                 "answer": {"answer_zone": "answer_table", "question_label": "21",
-                           "answer_lines": [6, 6]}}},
+                           "answer_lines": [6, 6], "answer_completeness": "full"}}},
             {"unit_id": "Q22", "content": {
                 "stem": {"question_label": "22"},
                 "answer": {"answer_zone": "answer_table", "question_label": "22",
-                           "answer_lines": [6, 6]}}},
+                           "answer_lines": [6, 6], "answer_completeness": "full"}}},
             {"unit_id": "Q23", "content": {
                 "stem": {"question_label": "23"},
                 "answer": {"answer_zone": "answer_table", "question_label": "23",
-                           "answer_lines": [6, 6]}}},
+                           "answer_lines": [6, 6], "answer_completeness": "full"}}},
         ]}
         run = _resolve(lines, payload)
         by = {s.span_id: s for s in run.resolved_spans}
@@ -434,11 +436,11 @@ class TestEntryPrefixStripped:
             {"unit_id": "Q19", "content": {
                 "stem": {"question_label": "19"},
                 "answer": {"answer_zone": "answer_table", "question_label": "19",
-                           "answer_lines": [5, 5]}}},
+                           "answer_lines": [5, 5], "answer_completeness": "full"}}},
             {"unit_id": "Q23", "content": {
                 "stem": {"question_label": "23"},
                 "answer": {"answer_zone": "answer_table", "question_label": "23",
-                           "answer_lines": [5, 5]}}},
+                           "answer_lines": [5, 5], "answer_completeness": "full"}}},
         ]}
         run = _resolve(lines, payload)
         by = {s.span_id: s for s in run.resolved_spans}
@@ -508,11 +510,11 @@ class TestSixColumnDualBlockTable:
             {"unit_id": "Q19", "content": {
                 "stem": {"question_label": "19", "question_label_printed": "1"},
                 "answer": {"answer_zone": "answer_table", "question_label": "19",
-                           "answer_lines": [5, 5]}}},
+                           "answer_lines": [5, 5], "answer_completeness": "full"}}},
             {"unit_id": "Q20", "content": {
                 "stem": {"question_label": "20", "question_label_printed": "2"},
                 "answer": {"answer_zone": "answer_table", "question_label": "20",
-                           "answer_lines": [5, 5]}}},
+                           "answer_lines": [5, 5], "answer_completeness": "full"}}},
         ]}
         run = _resolve(lines, payload)
         by = {s.span_id: s for s in run.resolved_spans}
@@ -545,7 +547,7 @@ class TestAnswerSlicing:
             {"unit_id": f"Q{qn}", "content": {
                 "stem": {"question_label": str(qn)},
                 "answer": {"answer_zone": "answer_table", "question_label": str(qn),
-                           "answer_lines": [9, 9]}}}
+                           "answer_lines": [9, 9], "answer_completeness": "full"}}}
             for qn in (21, 22, 23, 24, 25)
         ]}
         run = _resolve(lines, payload)
@@ -584,7 +586,7 @@ class TestLegitimateWholeBlockPreserved:
             "content": {
                 "stem": {"question_label": "1"},
                 "answer": {"answer_zone": "answer_table", "question_label": "1",
-                           "answer_lines": [4, 8]},
+                           "answer_lines": [4, 8], "answer_completeness": "full"},
             },
         }]}
         run = _resolve(lines, payload)
@@ -599,7 +601,7 @@ class TestLegitimateWholeBlockPreserved:
             "content": {
                 "stem": {"question_label": "86"},
                 "answer": {"answer_zone": "answer_table", "question_label": "86",
-                           "answer_lines": [4, 6]},
+                           "answer_lines": [4, 6], "answer_completeness": "full"},
             },
         }]}
         run = _resolve(lines, payload)
@@ -694,7 +696,7 @@ class TestStemGateBlocksHeuristicFallback:
                     {"label": "B", "question_label": "6"},
                 ],
                 "answer": {"answer_zone": "answer_table", "question_label": "6",
-                           "answer_lines": [9, 9]},
+                           "answer_lines": [9, 9], "answer_completeness": "full"},
                 "options_range": [9, 10],
             },
         }]}
@@ -734,7 +736,7 @@ class TestStemGateBlocksHeuristicFallback:
                     {"label": "B", "question_label": "99"},
                 ],
                 "answer": {"answer_zone": "answer_table", "question_label": "99",
-                           "answer_lines": [5, 5]},
+                           "answer_lines": [5, 5], "answer_completeness": "full"},
                 "options_range": [5, 6],
             },
         }]}
@@ -765,7 +767,7 @@ class TestStemGateBlocksHeuristicFallback:
                     {"label": "D", "question_label": "1"},
                 ],
                 "answer": {"answer_zone": "answer_table", "question_label": "1",
-                           "answer_lines": [5, 5]},
+                           "answer_lines": [5, 5], "answer_completeness": "full"},
             },
         }]}
         run = _resolve(lines, payload)
@@ -793,7 +795,7 @@ class TestStemGateBlocksHeuristicFallback:
                     {"label": "B", "question_label": "2"},
                 ],
                 "answer": {"answer_zone": "answer_table", "question_label": "2",
-                           "answer_lines": [5, 5]},
+                           "answer_lines": [5, 5], "answer_completeness": "full"},
             },
         }]}
         run = _resolve(lines, payload)
@@ -860,11 +862,11 @@ class TestHorizontalTablePrintedFallback:
             {"unit_id": "Q14a", "content": {
                 "stem": {"question_label": "14", "question_label_printed": "14①"},
                 "answer": {"answer_zone": "answer_table", "question_label": "14",
-                           "answer_lines": [5, 5]}}},
+                           "answer_lines": [5, 5], "answer_completeness": "full"}}},
             {"unit_id": "Q15a", "content": {
                 "stem": {"question_label": "15", "question_label_printed": "15①"},
                 "answer": {"answer_zone": "answer_table", "question_label": "15",
-                           "answer_lines": [5, 5]}}},
+                           "answer_lines": [5, 5], "answer_completeness": "full"}}},
         ]}
         run = _resolve(lines, payload)
         by = {s.span_id: s for s in run.resolved_spans}
@@ -890,7 +892,7 @@ class TestHorizontalTablePrintedFallback:
             "content": {
                 "stem": {"question_label": "1", "question_label_printed": "1"},
                 "answer": {"answer_zone": "answer_table", "question_label": "1",
-                           "answer_lines": [4, 4]},
+                           "answer_lines": [4, 4], "answer_completeness": "full"},
             },
         }]}
         run = _resolve(lines, payload)

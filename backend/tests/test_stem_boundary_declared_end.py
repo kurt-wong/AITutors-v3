@@ -57,7 +57,8 @@ class TestStemDeclaredEndBoundary:
                     "answer_zone": "answer_table",
                     "question_label": "9",
                     "answer_lines": [6, 6],
-                },
+                                    "answer_completeness": "full",
+},
             },
         }]}
         run = _resolve(lines, payload)
@@ -101,7 +102,8 @@ class TestStemDeclaredEndBoundary:
                         "answer_zone": "answer_table",
                         "question_label": "9",
                         "answer_lines": [11, 12],
-                    },
+                                            "answer_completeness": "full",
+},
                 },
             },
             {
@@ -125,7 +127,8 @@ class TestStemDeclaredEndBoundary:
                         "answer_zone": "answer_table",
                         "question_label": "1",
                         "answer_lines": [11, 12],
-                    },
+                                            "answer_completeness": "full",
+},
                 },
             },
         ]}
@@ -170,7 +173,8 @@ class TestStemDeclaredEndBoundary:
                     "answer_zone": "answer_table",
                     "question_label": "1",
                     "answer_lines": [6, 7],
-                },
+                                    "answer_completeness": "full",
+},
             },
         }]}
         run = _resolve(lines, payload)
@@ -206,7 +210,8 @@ class TestStemDeclaredEndBoundary:
                     "answer_zone": "answer_table",
                     "question_label": "1",
                     "answer_lines": [6, 7],
-                },
+                                    "answer_completeness": "full",
+},
             },
         }]}
         run = _resolve(lines, payload)

@@ -67,6 +67,7 @@ class TestPositiveProjection:
             "question_number": "1",
             "question_type": "short_answer",
             "answer_zone": "The answer is 42.",
+            "answer_completeness": "full",
             "answer_line_refs": ["L10"],
         }
         

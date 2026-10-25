@@ -31,7 +31,7 @@ def _standalone_payload():
         "original_question_type": "single_choice",
         "content": {"stem": {"question_label": "1"},
                     "options": [{"label": l} for l in "ABCD"],
-                    "answer": {"answer_zone": "answer_table", "question_label": "1"}}}]}
+                    "answer": {"answer_zone": "answer_table", "question_label": "1", "answer_completeness": "full"}}}]}
 
 
 def _compile(lines, payload):
@@ -68,11 +68,11 @@ async def test_occurrence_and_dedup_differ_fp3():
         {"unit_id": "Q1", "unit_type": "standalone_unit",
          "original_question_type": "single_choice",
          "content": {"stem": {"question_label": "1"}, "options": [{"label": "A"}, {"label": "B"}],
-                     "answer": {"answer_zone": "answer_table", "question_label": "1"}}},
+                     "answer": {"answer_zone": "answer_table", "question_label": "1", "answer_completeness": "full"}}},
         {"unit_id": "Q2", "unit_type": "standalone_unit",
          "original_question_type": "single_choice",
          "content": {"stem": {"question_label": "2"}, "options": [{"label": "A"}, {"label": "B"}],
-                     "answer": {"answer_zone": "answer_table", "question_label": "2"}}},
+                     "answer": {"answer_zone": "answer_table", "question_label": "2", "answer_completeness": "full"}}},
     ]}
     snap = _compile(lines, payload)
     q1, q2 = snap.leaves[0], snap.leaves[1]
@@ -121,7 +121,7 @@ async def test_shared_material_compiled_once_fp2():
                      "content": {
                         "stem": {"question_label": "1"},
                         "options": [{"label": "A"}, {"label": "B"}],
-                        "answer": {"answer_zone": "answer_table", "question_label": "1"}}}
+                        "answer": {"answer_zone": "answer_table", "question_label": "1", "answer_completeness": "full"}}}
                 ],
             }
         ]}

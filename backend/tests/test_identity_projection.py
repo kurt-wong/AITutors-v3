@@ -32,7 +32,7 @@ def _unit(**over) -> dict:
             "stem": {"role": "stem", "question_label": "1"},
             "options": [{"label": "A", "role": "option", "question_label": "1"}],
             "answer": {"role": "answer", "question_label": "1",
-                       "answer_zone": "answer_table"},
+                       "answer_zone": "answer_table", "answer_completeness": "full"},
         },
     }
     unit.update(over)

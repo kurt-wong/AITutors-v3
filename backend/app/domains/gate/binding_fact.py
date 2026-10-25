@@ -426,6 +426,7 @@ def _classify(
     decode_loc: str = "",
     answer_text: str = "",
     declared_value: str = "",
+    declared_binding: bool = False,
 ) -> str:
     """Recompute ownership from evidence. Never trusts a declared ownership.
 
@@ -519,7 +520,14 @@ def _classify(
         return "unknown"
 
     own = _resolver_mod.classify_answer_ownership(list(lines or ()), qn)
-    return _normalize_ownership(own)
+    own = _normalize_ownership(own)
+    # T20-BF: when Producer declared the unit→answer binding (answer range /
+    # answer_evidence for THIS question), the declaration is the ownership
+    # authority. Classifier may only CONTRADICT (foreign); it is not required
+    # to produce the positive conclusion.
+    if declared_binding and own == "unknown":
+        return "match"
+    return own
 
 
 def derive_binding_fact(
@@ -533,6 +541,7 @@ def derive_binding_fact(
     evidence_kind: str = "",
     decode_loc: str = "",
     declared_value: str = "",
+    declared_binding: bool = False,
 ) -> BindingFact:
     """Sole producer of BindingFact. Resolver-internal derive path ONLY.
 
@@ -564,7 +573,8 @@ def derive_binding_fact(
             kind = "empty"
 
     own = _classify(
-        lines, qn, decode_loc, answer_text=ans, declared_value=declared_value
+        lines, qn, decode_loc, answer_text=ans, declared_value=declared_value,
+        declared_binding=declared_binding,
     )
 
     fid = _fact_digest(

@@ -44,7 +44,7 @@ def _pipeline(lines, payload, root_unit_id="Q1"):
 
 def _payload(qn="1", unit_id="Q1", ctype="single_choice",
              answer_lines=None, answer_value=None, options="ABCD"):
-    ans = {"answer_zone": "answer_table", "question_label": qn}
+    ans = {"answer_zone": "answer_table", "question_label": qn, "answer_completeness": "full"}
     if answer_lines is not None:
         ans["answer_lines"] = answer_lines
     if answer_value is not None:
@@ -389,6 +389,7 @@ class TestMutationChecks:
                 "mutation: foreign full-line bind",
                 "ownership=match",  # forged: old path claimed ownership
                 "binding_evidence=mutation-forged-match",
+                "answer_completeness=full",  # forged: old path treated non-empty as complete
             ),
         )
         mutated_spans = tuple(
