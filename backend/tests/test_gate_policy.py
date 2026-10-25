@@ -296,8 +296,31 @@ def test_short_answer_not_blocked_by_type():
     assert not any("not strict-auto" in r for r in d["reasons"]), d["reasons"]
 
 
-def test_multipart_single_value_blocked():
-    # stem 两小问，答案只有一个短值 → 多问覆盖不足，必须拦（与题型无关）
+def test_completeness_not_full_blocks_multipart_short_value():
+    # T20BF-CLOSURE A: 多问短单值不得由 V3 自判；仅当 Producer 未声明 full 时
+    # 以 answer_completeness 理由 withheld，且不得出现 V3 自造的 multipart 理由。
+    lines = _mk(
+        "28. 已知直线……",
+        "（Ⅰ）r=___；",
+        "（Ⅱ）求 r 的值.",
+        "【答案】",
+        "28. 故答案为： $ \\frac{\\sqrt{2}}{2} $。"
+    )
+    payload = {"semantic_units": [
+        {"unit_id": "Q28", "unit_type": "standalone_unit", "original_question_type": "short_answer",
+         "content": {"stem": {"question_label": "28"},
+                     "answer": {"answer_zone": "answer_table", "question_label": "28", "answer_completeness": "unknown"}}}]}
+    root, ir, snap, run = _pipeline(lines, payload, root_unit_id="Q28")
+    d = _decision(root, ir, snap, run)
+    assert d["decision"] == "pending_review"
+    assert any("answer_completeness not 'full'" in r for r in d["reasons"]), d["reasons"]
+    assert not any("multipart" in r for r in d["reasons"]), d["reasons"]
+
+
+def test_completeness_full_does_not_invent_multipart_block():
+    # T20BF-CLOSURE A 关键契约：同样「多问 stem + 短单值」输入，
+    # 旧 V3 会自造 "multipart coverage incomplete"；删除重复推断后，
+    # Producer 声明 full 即不得再被 V3 用文本分析拦截。
     lines = _mk(
         "28. 已知直线……",
         "（Ⅰ）r=___；",
@@ -311,29 +334,14 @@ def test_multipart_single_value_blocked():
                      "answer": {"answer_zone": "answer_table", "question_label": "28", "answer_completeness": "full"}}}]}
     root, ir, snap, run = _pipeline(lines, payload, root_unit_id="Q28")
     d = _decision(root, ir, snap, run)
-    assert d["decision"] == "pending_review"
-    assert any("multipart" in r for r in d["reasons"]), d["reasons"]
-
-
-def test_multipart_full_block_not_blocked():
-    # 答案块自带全部小问结构 → 覆盖可证，不得因多问被拒
-    lines = _mk(
-        "28. 已知直线……",
-        "（Ⅰ）r=___；",
-        "（Ⅱ）求 r 的值.",
-        "【答案】",
-        "28. 【解答】（Ⅰ）r=根号2/2；（Ⅱ）r=根号5 或 根号5/5。故结论成立。"
-    )
-    payload = {"semantic_units": [
-        {"unit_id": "Q28", "unit_type": "standalone_unit", "original_question_type": "short_answer",
-         "content": {"stem": {"question_label": "28"},
-                     "answer": {"answer_zone": "answer_table", "question_label": "28", "answer_completeness": "full"}}}]}
-    root, ir, snap, run = _pipeline(lines, payload, root_unit_id="Q28")
-    d = _decision(root, ir, snap, run)
     assert not any("multipart" in r for r in d["reasons"]), d["reasons"]
+    assert not any("single short value" in r for r in d["reasons"]), d["reasons"]
+    assert not any("coverage incomplete" in r or "coverage unproven" in r for r in d["reasons"]), d["reasons"]
+    assert not any("answer_completeness not 'full'" in r for r in d["reasons"]), d["reasons"]
 
 
-def test_truncated_answer_blocked():
+def test_completeness_partial_blocks_truncated_without_v3_rederive():
+    # 截断是 Producer 事实（应声明 partial）；V3 只消费，不自造 truncated 理由。
     lines = _mk(
         "26. 求值.",
         "【答案】",
@@ -342,11 +350,34 @@ def test_truncated_answer_blocked():
     payload = {"semantic_units": [
         {"unit_id": "Q26", "unit_type": "standalone_unit", "original_question_type": "short_answer",
          "content": {"stem": {"question_label": "26"},
-                     "answer": {"answer_zone": "answer_table", "question_label": "26", "answer_completeness": "full"}}}]}
+                     "answer": {"answer_zone": "answer_table", "question_label": "26", "answer_completeness": "partial"}}}]}
     root, ir, snap, run = _pipeline(lines, payload, root_unit_id="Q26")
     d = _decision(root, ir, snap, run)
     assert d["decision"] == "pending_review"
-    assert any("incomplete" in r or "truncated" in r for r in d["reasons"]), d["reasons"]
+    assert any("answer_completeness not 'full'" in r for r in d["reasons"]), d["reasons"]
+    assert not any("truncated" in r for r in d["reasons"]), d["reasons"]
+    assert not any("unbalanced" in r for r in d["reasons"]), d["reasons"]
+
+
+def test_no_invented_multipart_reason_on_empty_answer():
+    # T20BF 曾出现「空字符串 → 多问短单值」假理由。删除重复推断后不得再现。
+    lines = _mk(
+        "28. 已知直线……",
+        "（Ⅰ）r=___；",
+        "（Ⅱ）求 r 的值.",
+        "【答案】",
+        "28. "
+    )
+    payload = {"semantic_units": [
+        {"unit_id": "Q28", "unit_type": "standalone_unit", "original_question_type": "short_answer",
+         "content": {"stem": {"question_label": "28"},
+                     "answer": {"answer_zone": "answer_table", "question_label": "28", "answer_completeness": "unknown"}}}]}
+    root, ir, snap, run = _pipeline(lines, payload, root_unit_id="Q28")
+    d = _decision(root, ir, snap, run)
+    assert d["decision"] in ("pending_review", "rejected")
+    assert not any("multipart" in r for r in d["reasons"]), d["reasons"]
+    assert not any("single short value" in r for r in d["reasons"]), d["reasons"]
+    assert not any("coverage incomplete" in r or "coverage unproven" in r for r in d["reasons"]), d["reasons"]
 
 
 def test_form_valid_does_not_replace_source_trust():
