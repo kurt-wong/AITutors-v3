@@ -915,6 +915,18 @@ _LABEL_SPACE_SEP_PROSE = re.compile(
 )
 
 
+def _strip_latex_for_caption(s: str) -> str:
+    r"""Strip LaTeX math/command bodies before figure-caption letter counting.
+
+    `\mathrm{H}` / `$ … $` must not contribute bare A–H tokens (Chem Q23).
+    Leaves ordinary prose and HTML untouched.
+    """
+    s = re.sub(r"\$[^$]*\$", " ", s)
+    s = re.sub(r"\\(?:mathrm|text|mathbf|mathrm|operatorname|textbf)\{[^}]*\}", " ", s)
+    s = re.sub(r"\\[a-zA-Z]+\*?", " ", s)
+    return s
+
+
 def _label_offsets(text: str, label: str) -> list[int]:
     """Char offsets of option-label tokens for `label` in `text` (Rules A-C forms)."""
     offs: list[int] = []
@@ -1006,6 +1018,8 @@ _HTML_OPT_LABEL_RE = re.compile(r"^([A-Ha-h])\s*[.．、:，,)）]\s*(.+)$", re.
 _HTML_BARE_LABEL_RE = re.compile(r"^([A-Ha-h])$")
 # page footer / section header -- never option content (Rule A hard guard)
 _PAGE_FOOTER_RE = re.compile(r"第\s*\d+\s*页|共\s*\d+\s*页")
+# figure caption rows (`图 8` / `图8`) — not option labels, not option bodies
+_IMG_CAPTION_RE = re.compile(r"^[图圖]\s*\d+")
 _SECTION_HDR_RE = re.compile(r"^第[一二三四五六七八九十]+[部分章节]")
 
 
@@ -2047,6 +2061,9 @@ class SourceResolver:
 
         def _visible_body(line_text: str, lab: str) -> str:
             visible = tag_re.sub(" ", line_text).strip()
+            # bare letter (`<div>A</div>`) is label-only, not body text
+            if visible == lab:
+                return ""
             return re.sub(
                 rf"^\s*{re.escape(lab)}\s*[.．、:，,)）]\s*", "", visible
             ).strip()
@@ -2059,31 +2076,65 @@ class SourceResolver:
             line = self._idx.get(line_ref)
             if _visible_body(line.text, lab):
                 continue  # real text body — keep as-is
-            # scan forward for a single image row before the next label/prose
+            # Bare `<div>A</div>` (PHY Q16) → image is BEFORE the label.
+            # Labeled `A.` / `<div>B.</div>` (GEO Q8) → image is AFTER.
+            visible = tag_re.sub(" ", line.text).strip()
+            prefer_backward = visible == lab
             img_refs: list[str] = []
-            for nxt in self._idx.lines:
-                if nxt.seq <= line.seq:
-                    continue
-                if region_upper is not None and nxt.seq >= region_upper:
+
+            def _scan_backward() -> list[str]:
+                found_back: list[str] = []
+                for prv in reversed(self._idx.lines):
+                    if prv.seq >= line.seq:
+                        continue
+                    t = prv.text.strip()
+                    if not t or pad_re.match(t):
+                        continue
+                    # skip HTML-wrapped figure captions (`<div>图 8</div>`)
+                    vis = tag_re.sub(" ", t).strip()
+                    if _IMG_CAPTION_RE.match(vis):
+                        continue
+                    if img_re.search(t):
+                        found_back.append(prv.line_ref)
                     break
-                t = nxt.text.strip()
-                if not t or pad_re.match(t):
-                    continue  # blank / `---` pad between label and image
-                if img_re.search(t):
-                    img_refs.append(nxt.line_ref)
-                    continue
-                break  # next label row or prose stops the search
+                return found_back
+
+            def _scan_forward() -> list[str]:
+                found_fwd: list[str] = []
+                for nxt in self._idx.lines:
+                    if nxt.seq <= line.seq:
+                        continue
+                    if region_upper is not None and nxt.seq >= region_upper:
+                        break
+                    t = nxt.text.strip()
+                    if not t or pad_re.match(t):
+                        continue
+                    if img_re.search(t):
+                        found_fwd.append(nxt.line_ref)
+                        continue
+                    break
+                return found_fwd
+
+            if prefer_backward:
+                img_refs = _scan_backward()
+                if not img_refs:
+                    img_refs = _scan_forward()
+            else:
+                img_refs = _scan_forward()
+                if not img_refs:
+                    img_refs = _scan_backward()
             if len(img_refs) == 1:
                 if consumed_out is not None:
                     consumed_out.add(line.seq)  # original label row
-                    for nxt in self._idx.lines:
-                        if nxt.seq <= line.seq:
+                    # pad rows between label and image
+                    img_seq = self._idx.seq_of(img_refs[0])
+                    lo, hi = min(line.seq, img_seq), max(line.seq, img_seq)
+                    for mid in self._idx.lines:
+                        if not (lo < mid.seq < hi):
                             continue
-                        if nxt.line_ref == img_refs[0]:
-                            break
-                        t = nxt.text.strip()
+                        t = mid.text.strip()
                         if not t or pad_re.match(t):
-                            consumed_out.add(nxt.seq)  # blank / `---` pad
+                            consumed_out.add(mid.seq)
                 found[lab] = ("ok", img_refs[0])
         return found
 
@@ -2158,7 +2209,13 @@ class SourceResolver:
                 continue
             # V3-IMG-OPTION-001: bare multi-label caption rows (`A B C 2/11 D`)
             # are figure labels, never option body content.
-            if len(re.findall(r"(?<![A-Za-z0-9])[A-Ha-h](?![A-Za-z0-9])", t)) >= 2:
+            # LaTeX math/command bodies are stripped first: Chem Q23 trailing
+            # equation `$ \mathrm{H}^{+} + \mathrm{Ba}^{2+} … $` carries letter
+            # tokens H/H that must NOT be read as figure-caption labels.
+            if len(re.findall(
+                r"(?<![A-Za-z0-9])[A-Ha-h](?![A-Za-z0-9])",
+                _strip_latex_for_caption(t),
+            )) >= 2:
                 continue
             if re.match(r"^\d+\s*[.．、\\]", t):
                 continue
@@ -2322,6 +2379,130 @@ class SourceResolver:
         out.add_span(unit_id, t, refs, "exact",
                      ("stem start", start_ref, "boundary", "option-or-region-end"))
 
+    def _option_continuation_refs(
+        self,
+        line_ref: str,
+        body_text: str | None = None,
+        option_hits: dict | None = None,
+        out=None,
+    ) -> list[str]:
+        """Absorb line-wrap continuation rows after an option body line.
+
+        Q20 shape: `D. …涉及了氧` then `还原反应`. Absorption is fail-closed:
+        a candidate row is taken ONLY when source attribution is clear.
+
+        Hard stops (never absorb):
+          - Markdown headings / horizontal rules / section headers
+          - question starts, answer/explanation headers, page footers
+          - option-label rows, HTML img/chrome, figure-caption rows
+          - shared-material declaration rows (请阅读…完成第N题)
+          - pure LaTeX display rows (separate equation, not text wrap)
+          - rows already claimed by another option / resolved span
+        Positive evidence required (not just "no label / no terminal punct"):
+          - option body itself is incomplete (no terminal punct, no trailing $)
+          - candidate visible text is short and primarily CJK
+          - after a blank line, evidence bar is raised (≤8 chars, all CJK)
+          - a blank *block* (2+ blanks) ends absorption
+        Never invents content; never crosses into the next question.
+        """
+        line = self._idx.get(line_ref)
+        if body_text is None:
+            body = line.text.strip()
+            # strip a leading label token before checking completeness
+            body_wo = re.sub(r"^\s*[A-Ha-h]\s*[.．、:，,)）]\s*", "", body).strip()
+        else:
+            body_wo = (body_text or "").strip()
+        # complete math close or terminal punct → nothing to continue
+        if not body_wo or re.search(r"[。！？；.!?]$", body_wo) or body_wo.endswith("$"):
+            return []
+        # lines already bound to another option in this unit
+        claimed: set[str] = set()
+        if option_hits:
+            for _lab, ent in option_hits.items():
+                if ent and ent[0] in ("ok", "content", "inline", "cell") and len(ent) >= 2:
+                    claimed.add(ent[1])
+        # lines already in any resolved span (other options / materials)
+        occupied: set[str] = set()
+        if out is not None:
+            for s in getattr(out, "resolved", None) or []:
+                occupied.update(getattr(s, "line_refs", ()) or ())
+        out_refs: list[str] = []
+        blank_run = 0
+        crossed_blank = False
+        for nxt in self._idx.lines:
+            if nxt.seq <= line.seq:
+                continue
+            t = nxt.text.strip()
+            if not t:
+                blank_run += 1
+                if blank_run >= 2:
+                    break  # blank block ends absorption
+                continue
+            blank_run = 0
+            if not out_refs and nxt.seq > line.seq + 1:
+                # we had to skip a blank to reach this row
+                crossed_blank = True
+            # --- hard stops ---
+            if _LABEL_RE.search(nxt.text) or _LABEL_DIGIT_GLUE_RE.search(nxt.text):
+                break
+            if _LABEL_SPACE_SEP_RE.search(nxt.text) or _LABEL_SPACE_SEP_PROSE.search(nxt.text):
+                break
+            if _PAGE_FOOTER_RE.search(t) or _SECTION_HDR_RE.match(t):
+                break
+            # Markdown headings (`### 二. 解答题…`) and thematic breaks (`---`)
+            if re.match(r"^#{1,6}(\s|$)", t) or re.match(r"^(-{3,}|_{3,}|\*{3,}|={3,})$", t):
+                break
+            if is_question_start(normalize_text(t)) is not None:
+                break
+            if is_answer_header(normalize_text(t)) or is_explanation_header(normalize_text(t)):
+                break
+            # shared-material / next-question block declarations
+            if re.search(r"请阅读|阅读下列|阅读下面|阅读以下|完成第\s*\d+", t):
+                break
+            if re.search(r"第\s*\d+\s*题[、,，和及]", t) and re.search(r"完成|阅读", t):
+                break
+            # another option's image body is not this option's continuation
+            if re.search(r"<img\b", t, re.I):
+                break
+            # figure caption rows (`A B C 2/11 D`) are never option body
+            if len(re.findall(
+                r"(?<![A-Za-z0-9])[A-Ha-h](?![A-Za-z0-9])",
+                _strip_latex_for_caption(t),
+            )) >= 2:
+                break
+            if t.startswith("<") or t.startswith("<table"):
+                # HTML chrome — skip figure captions only
+                if re.search(r"图\s*\d+", t):
+                    continue
+                break
+            # pure LaTeX display row = separate equation (e.g. Chem Q23 D), not wrap
+            if t.startswith("$") or t.startswith("\\(") or t.startswith("\\["):
+                break
+            # rows claimed by another option / already resolved elsewhere
+            if nxt.line_ref in claimed or nxt.line_ref in occupied:
+                break
+            # --- positive evidence (cannot rely on "no label / no punct" alone) ---
+            vis = re.sub(r"<[^>]+>", "", t)
+            vis = re.sub(r"\$[^$]*\$", " ", vis)
+            vis = re.sub(r"\\[a-zA-Z]+\{[^}]*\}", " ", vis)
+            vis = re.sub(r"\\[a-zA-Z]+", " ", vis)
+            vis = re.sub(r"[ \t\u3000]+", "", vis)
+            if not vis:
+                break
+            max_len = 8 if crossed_blank else 16
+            if len(vis) > max_len:
+                break
+            cjk = sum(1 for c in vis if "\u4e00" <= c <= "\u9fff")
+            if crossed_blank:
+                if cjk != len(vis):
+                    break
+            elif cjk < max(1, int(len(vis) * 0.6)):
+                break
+            out_refs.append(nxt.line_ref)
+            # one continuation row is the common case
+            break
+        return out_refs
+
     def _option_span(self, out, unit_id, t, option_hits):
         # R3-D: option with direct evidence_lines (e.g. D in extra_lines) binds
         # without searching — avoids options_range expansion / cross-unit bleed.
@@ -2336,10 +2517,30 @@ class SourceResolver:
         entry = option_hits.get(t.label or "", ("incomplete",))
         kind = entry[0]
         if kind == "ok":
-            out.add_span(unit_id, t, [entry[1]], "exact", (f"option label={t.label}",))
+            refs = [entry[1]]
+            # Q20: line-wrap continuation (「涉及了氧」+「还原反应」) stays with
+            # its option instead of being orphaned. Source-local, fail-closed.
+            refs.extend(self._option_continuation_refs(
+                entry[1], option_hits=option_hits, out=out))
+            out.add_span(unit_id, t, refs, "exact", (f"option label={t.label}",))
             return
         if kind == "content":
             # Task A: content span = after label → before next label (line_character)
+            # Only the option's own char-content may drive continuation, not the
+            # whole line (whole-line body would make every sibling on the line
+            # look incomplete and steal the next row).
+            _line_txt = self._idx.get(entry[1]).text
+            body_txt = _line_txt[entry[2]:entry[3]]
+            cont = self._option_continuation_refs(
+                entry[1], body_text=body_txt, option_hits=option_hits, out=out)
+            if cont:
+                # line-wrap continuation present → whole-line span covering
+                # the label row + continuation rows (Q20 D「涉及了氧」+「还原反应」)
+                out.add_span(
+                    unit_id, t, [entry[1], *cont], "exact",
+                    (f"option label={t.label} (content+continuation)",),
+                )
+                return
             out.add_char_span(unit_id, t, entry[1], entry[2], entry[3], "exact",
                               (f"option label={t.label} (content span, line_character)",))
             return

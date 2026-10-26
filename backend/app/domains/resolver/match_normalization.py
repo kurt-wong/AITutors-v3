@@ -154,6 +154,11 @@ def _line_has_option_token(normalized_line: str, label: str) -> bool:
                 line,
             ):
                 return True
+        # V3-IMG-OPTION-001 / PHY Q16: bare letter in HTML wrapper
+        # (`<div>A</div>`) is an option label. Only when this candidate was
+        # produced by stripping tags — never ordinary prose `A`.
+        if line is not candidates[0] and re.fullmatch(re.escape(label), line):
+            return True
     return False
 
 
