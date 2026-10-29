@@ -221,6 +221,46 @@ class PreprocessingImportService:
         existing = await self._source_repo.find_document_by_sha256(original_sha256)
         is_new = existing is None
 
+        # B3-2 幂等冲突检查（Owner 2026-10-29）：同一 original 已入库时——
+        #   同 source_content_sha256 → 幂等返回，不重复 enqueue（防同题两份）；
+        #   不同 source_content_sha256 → 显式冲突拒绝（一原件一内容身份）；
+        #   既有记录缺 source_content_sha256 → fail-closed，拒绝盲重导入。
+        if not is_new:
+            meta0 = dict(existing.upload_meta or {})
+            prev_sha = meta0.get("source_content_sha256")
+            if not prev_sha:
+                raise PreprocessingImportError(
+                    "conflict: existing document lacks source_content_sha256; "
+                    "refusing blind re-ingest (fail-closed)",
+                    stage="identity",
+                )
+            if prev_sha != source_content_sha256:
+                raise PreprocessingImportError(
+                    "conflict: original already ingested with different "
+                    f"source_content_sha256 (stored={prev_sha}, "
+                    f"submitted={source_content_sha256})",
+                    stage="identity",
+                )
+            from sqlalchemy import select
+
+            from app.models.source import DocumentSourceVersion
+
+            prev_ver = (
+                await self._session.execute(
+                    select(DocumentSourceVersion)
+                    .where(DocumentSourceVersion.document_id == existing.id)
+                    .limit(1)
+                )
+            ).scalars().first()
+            return PreprocessingImportResult(
+                document=existing,
+                source_version_id=str(prev_ver.id) if prev_ver else "",
+                original_sha256=original_sha256,
+                source_content_sha256=source_content_sha256,
+                task_id=None,
+                is_new=False,
+            )
+
         # Persist artifacts so the worker can re-open them without re-upload.
         import_dir = Path("data/imports")
         import_dir.mkdir(parents=True, exist_ok=True)

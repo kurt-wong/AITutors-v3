@@ -103,6 +103,9 @@ async def _enqueue(file_path: str) -> uuid.UUID:
                 "file_path": file_path,
                 "file_name": "smoke.pdf",
                 "file_type": "pdf",
+                # B3-2R：显式声明 native（显式 Fallback Path 调试入口；
+                # 禁止缺席推断——缺 source_mode 的任务会被入口契约拒绝）。
+                "source_mode": "native",
                 "role": "native",
                 "seal_provider": "native",
                 "llm_provider": "ollama",

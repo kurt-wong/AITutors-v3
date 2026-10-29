@@ -44,6 +44,57 @@ logger = logging.getLogger(__name__)
 
 _TASK_TYPE = "document_ingest"
 
+# B3-2R：显式入口模式词表。禁止从 role/默认值/文件类型/历史状态推断 source_mode。
+_ENTRY_MODES = ("preprocessing", "native")
+
+
+class EntryContractError(V3Error):
+    """入口契约违规：显式失败，不静默回退（B3-2R：必须在提取/落库之前生效）。"""
+
+    error_type = "validation_error"
+
+
+def _validate_entry_contract(params: dict) -> str:
+    """B3-2R 入口契约前置校验（纯校验，无副作用）。
+
+    规则（Owner 2026-10-29 终版）：
+    - source_mode 必须显式声明且属于 {"preprocessing", "native"}；
+      缺失/空值/未知 → EntryContractError（禁止缺席推断）。
+    - role 与 source_mode 兼容：role 已声明且与 source_mode 矛盾 → 拒绝。
+    - preprocessing 必须提供合法 manifest_path（非空且文件存在）。
+    - 校验必须在任何文件提取与数据库写入之前完成（_process 入口处调用）。
+    """
+    mode = params.get("source_mode")
+    if not isinstance(mode, str) or not mode.strip():
+        raise EntryContractError(
+            "document_ingest requires explicit source_mode "
+            f"(got source_mode={mode!r}); allowed: 'preprocessing' | 'native'. "
+            "Absence-inference is disabled (no silent fallback to native/LLM)"
+        )
+    mode = mode.strip()
+    if mode not in _ENTRY_MODES:
+        raise EntryContractError(
+            f"unknown source_mode={mode!r}; allowed: 'preprocessing' | 'native'"
+        )
+    role = params.get("role")
+    if isinstance(role, str) and role.strip() and role.strip() != mode:
+        raise EntryContractError(
+            f"role/source_mode contradiction (role={role!r}, "
+            f"source_mode={mode!r}); refusing to process"
+        )
+    if mode == "preprocessing":
+        mp = params.get("manifest_path")
+        if not isinstance(mp, str) or not mp.strip():
+            raise EntryContractError(
+                "source_mode='preprocessing' requires manifest_path "
+                f"(got manifest_path={mp!r})"
+            )
+        if not Path(mp).exists():
+            raise EntryContractError(
+                f"source_mode='preprocessing' manifest_path not found: {mp}"
+            )
+    return mode
+
 # BUG-V3-035（Phase 9-3）：仅 retryable failure 可触发 fallback。CancelledError 为
 # BaseException 不在此（直接传播）；LLMProviderError(retryable=False) 为 provider 明确
 # 拒绝，不 fallback（在循环内显式判断）。
@@ -182,6 +233,8 @@ class TaskExecutor:
 
     async def _process(self, task_id: uuid.UUID, worker_id: str, lease_token: str) -> None:
         params = await self._load_params(task_id)
+        # B3-2R F-A：入口契约必须在任何提取/落库/心跳之前生效。
+        _validate_entry_contract(params)
         await self._authorize_live_from_real_context(task_id)
         await self._heartbeat(task_id, worker_id, lease_token)
         version = await self._seal_stage(params)
@@ -234,15 +287,18 @@ class TaskExecutor:
     # -- stage 1: Seal（本地确定性；attempt_id 不贯通，plan Phase 5） --------------
 
     async def _seal_stage(self, params: dict) -> DocumentSourceVersion:
+        # B3-2R 纵深防御：此处再校验一次（正常路径已在 _process 前置校验过）。
+        # 禁止从 role 推断 source_mode；缺契约参数的任务绝不默认路由到
+        # NativeTextProvider（self._ocr_extractor）。
+        mode = _validate_entry_contract(params)
         file_path = params.get("file_path")
         if not file_path:
             raise RepositoryError("task_params.file_path missing (seal requires file bytes)")
         file_bytes = Path(file_path).read_bytes()
-        source_mode = params.get("source_mode")
-        role = params.get("role", "native")
-        provider = params.get("seal_provider", "native")
+        role = params.get("role") or mode
+        provider = params.get("seal_provider") or mode
 
-        if source_mode == "preprocessing" or role == "preprocessing":
+        if mode == "preprocessing":
             # Formal preprocessing path: never re-extract via NativeTextProvider.
             # Prefer the already-sealed version (idempotent LE lookup); if absent,
             # reconstruct from the accepted markdown identity record only.
@@ -456,11 +512,23 @@ class TaskExecutor:
     ) -> SemanticAnnotation:
         # M2-R2: preprocessing manifest units are the authoritative unit source.
         # Do NOT let LLM re-split the document or renumber Producer unit_ids.
-        if params.get("source_mode") == "preprocessing" and params.get("manifest_path"):
+        # B3-2R 纵深防御：契约校验（与 _process 前置同一规则，单一事实源）。
+        # preprocessing → manifest 绑定（唯一主路径）；native → 显式 Fallback
+        # Path（LLM 重切，合法保留）；缺失/未知 → EntryContractError。
+        mode = _validate_entry_contract(params)
+        if mode == "preprocessing":
             return await self._annotation_from_manifest_units(
                 task_id, version, params
             )
+        return await self._annotation_native_llm(task_id, version, params)
 
+    async def _annotation_native_llm(
+        self,
+        task_id: uuid.UUID,
+        version: DocumentSourceVersion,
+        params: dict,
+    ) -> SemanticAnnotation:
+        """Explicit Fallback Path (Native): LLM re-annotation. Declared, never inferred."""
         prompt = build_annotation_prompt(version.body_text)
         # 同一 Task Attempt 贯穿 primary + fallback（BUG-V3-035：fallback 不得改变 Task Attempt）。
         attempt_id = uuid.uuid4()

@@ -1,11 +1,12 @@
 """DocumentImportService：Phase I-2A Import Boundary。
 
-职责边界：
-- 接收文件 bytes → 计算 SHA256 → 创建 Document → 创建 Task(queued)
-- 禁止：OCR、LLM、Resolver、Compiler、任何 pipeline 执行
-
-一个原始文件对应一个 Document 主档（BUG-V3-007 终裁）。
-幂等：同 SHA256 再次导入返回既有 Document + 不重复创建 Task。
+职责边界（B3-2 显式入口策略，Owner 2026-10-29 终版）：
+- 正式链允许两种显式声明的入口：preprocessing 包（唯一主路径，
+  PreprocessingImportService / POST /documents/import-preprocessing），
+  以及显式 source_mode='native' 的任务（Fallback Path，调试/特殊输入）。
+- 禁止缺席推断：mode 缺失一律显式失败，不静默改走 native/LLM（ROUND2 §1.2）。
+- 本服务对新文件显式拒绝（可读错误，可控裁撤），不再创建 document_ingest。
+- 幂等保留：同 SHA256 已存在 → 返回既有 Document（只读），不重复建 Task。
 """
 
 from __future__ import annotations
@@ -60,41 +61,19 @@ class DocumentImportService:
         # 2. 计算 SHA256
         sha256 = hashlib.sha256(file_bytes).hexdigest()
 
-        # 3. 检查是否已存在（幂等）
+        # 3. 检查是否已存在（幂等，只读返回）
         existing = await self._source_repo.find_document_by_sha256(sha256)
         if existing is not None:
             return existing, None, False
 
-        # 4. 存储文件到本地
-        _IMPORT_DIR.mkdir(parents=True, exist_ok=True)
-        object_key = f"{sha256}{ext}"
-        file_path = _IMPORT_DIR / object_key
-        file_path.write_bytes(file_bytes)
-
-        # 5. 创建 Document
-        document = await self._source_repo.create_document(
-            original_object_key=str(file_path),
-            original_sha256=sha256,
-            file_name=file_name,
-            file_type=ext.lstrip("."),
-            upload_meta={
-                "file_size": len(file_bytes),
-                "imported_by": created_by or "admin",
-            },
-            processing_status="imported",
+        # 4. B3-2 显式入口策略（Owner 2026-10-29 终版）：通用上传显式拒绝
+        #（可控裁撤，可读错误，不静默改走 native/LLM）。合法途径：
+        #   - preprocessing 包 → POST /documents/import-preprocessing（唯一主路径）；
+        #   - 或显式声明 source_mode='native' 的任务（Fallback Path，调试/特殊输入）。
+        raise ImportError_(
+            "explicit-entry policy: generic raw upload is rejected (no silent "
+            "reroute); submit a preprocessing package via "
+            "POST /documents/import-preprocessing, or create a task with "
+            f"explicit source_mode='native' (rejected file_name={file_name!r}, "
+            f"sha256={sha256})"
         )
-
-        # 6. 创建 Task（queued，等待 Worker 消费）
-        task = await self._task_service.enqueue(
-            task_type="document_ingest",
-            task_params={
-                "document_id": str(document.id),
-                "original_sha256": sha256,
-                "file_name": file_name,
-                "file_path": str(file_path),
-                "file_type": ext.lstrip("."),
-            },
-            created_by=created_by or "admin",
-        )
-
-        return document, task, True

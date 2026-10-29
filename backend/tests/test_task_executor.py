@@ -94,6 +94,7 @@ async def _enqueue(file_path) -> uuid.UUID:
                 "file_path": str(file_path),
                 "file_name": "t.pdf",
                 "file_type": "pdf",
+                "source_mode": "native",
                 "role": "native",
                 "seal_provider": "native",
                 "model_config_hash": sha256_hex("mc"),
@@ -291,6 +292,7 @@ async def test_model_config_hash_tracks_actual_provider(tmp_path):
             t = await TaskService(s).enqueue(
                 task_type="document_ingest",
                 task_params={"file_path": str(pdf), "file_name": "t.pdf", "file_type": "pdf",
+                             "source_mode": "native",
                              "role": "native", "seal_provider": "native",
                              "llm_provider": provider},  # 不提供 model_config_hash
             )
@@ -351,6 +353,7 @@ async def _enqueue_fallback(
                 "file_path": str(file_path),
                 "file_name": "t.pdf",
                 "file_type": "pdf",
+                "source_mode": "native",
                 "role": "native",
                 "seal_provider": "native",
                 "llm_provider": llm_provider,
