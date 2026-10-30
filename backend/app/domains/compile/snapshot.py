@@ -41,6 +41,13 @@ class CompiledAnswer:
     binding_evidence: str = ""
     candidate_text: str = ""
     official_text: str = ""
+    # B3-4R 溯源贯通（最小可行设计，不重构 IR）：答案决策时可回溯
+    # Producer 声明 → 父级证据 → 子题映射 → 本答案声明。
+    # 键值对（frozen 友好）：parent_unit_id / declared_value / declared_lines /
+    # declared_shared / declared_type / shared_semantics / mapping /
+    # completeness_source（值域 producer_declared | v3_derived | none，见
+    # answer_evidence_mapping；当前恒为 v3_derived，禁止标成 Producer 声明）。
+    provenance: tuple[tuple[str, str], ...] = ()
 
 
 @dataclass(frozen=True)

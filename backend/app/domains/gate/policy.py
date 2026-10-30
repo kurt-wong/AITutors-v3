@@ -306,15 +306,23 @@ def evaluate(
                 auto_blockers.append(
                     f"leaf {leaf.unit_id!r} answer not source_located"
                 )
-            # T20-BF: completeness is a Producer fact (answer_completeness).
-            # V3 consumes it; it does not re-derive multipart/truncation coverage.
+            # T20-BF: completeness is a source-evidence fact
+            # (answer_completeness). B3-4R 校准：真实 Producer 不声明该字段
+            # （0/5067）；值来自 subq_expand.derive_sub_answer_completeness
+            # 的严格 entry/label 证明，或 e2e manifest 的非权威推导字段。
+            # Gate 消费它；不重新推导 multipart/truncation 覆盖。
             # full = may continue other publish checks, not auto-publish.
             # partial/unknown/missing must not pass on non-empty answer text alone.
             if leaf.answer is not None and not leaf.answer.complete:
                 auto_blockers.append(
                     f"leaf {leaf.unit_id!r} answer_completeness not 'full' "
-                    f"(Producer did not declare full completeness)"
+                    f"(no proven full completeness)"
                 )
+            # B3-4R 溯源贯通：决策记录携带映射溯源，可回查
+            # Producer 声明 → 父级证据 → 子题映射 → 本答案声明。
+            if leaf.answer is not None and getattr(leaf.answer, "provenance", ()):
+                _pv = ";".join(f"{k}={v}" for k, v in leaf.answer.provenance)
+                admission_reasons.append(f"leaf {leaf.unit_id!r} answer_provenance: {_pv}")
             # P0 CONTRACT-FINAL: auto requires proven ownership.
             # local_proven is an empty set; only "match" qualifies.
             _own = getattr(leaf.answer, "ownership", "unknown") if leaf.answer else "unknown"

@@ -421,61 +421,106 @@ class TestEntryContractBeforeSeal:
         assert spy == []
         assert await self._counts() == before
 
-    async def _purge(self) -> None:
-        """FK 序清场，排除残留 queued 任务干扰 run_once 认领。"""
+    @pytest.mark.asyncio
+    async def test_seal_provider_contradiction_fails_before_seal(self, tmp_path):
+        """F-2 负向：seal_provider 与已校验 source_mode 矛盾 → 入口拒绝。
+
+        矛盾 provider 若进入 seal 会把 provider 计入 LE hash，同一内容可能
+        形成不同 Source Version——必须在 seal 之前拒绝。
+        """
+        from app.domains.task.executor import EntryContractError
+
+        before = await self._counts()
+        spy: list = []
+        ex = self._make_executor(spy)
+        task_id = await self._enqueue_raw(
+            tmp_path,
+            {"source_mode": "preprocessing", "seal_provider": "native",
+             "manifest_path": str(tmp_path / "nope.manifest.json")},
+        )
+        with pytest.raises(EntryContractError) as ei:
+            await ex._process(task_id, "w1", "tok")
+        assert "seal_provider/source_mode contradiction" in str(ei.value)
+        assert spy == []
+        assert await self._counts() == before
+
+        # 对照：seal_provider 缺省时由 mode 派生，不因缺省而拒绝
+        # （真正缺 manifest 的拒绝属于既有 precondition，不在本用例断言范围）。
+
+    async def _backdate_own_task(self, task_id) -> None:
+        """定向处理本用例数据：把本用例任务回拨 created_at，确保 next_queued_id
+        （order by created_at）优先认领它——替代已被禁用的全局清表。只改本行。"""
         from app.db.session import async_session_maker
 
-        tables = (
-            "admission_events", "instance_role_contents", "material_links",
-            "unit_group_members", "question_feedbacks", "question_instances",
-            "unit_groups", "materials", "validation_events",
-            "admission_candidates", "semantic_annotations",
-            "document_source_lines", "task_claims",
-            "document_source_versions", "documents", "questions", "tasks",
-        )
         async with async_session_maker() as s:
-            for t in tables:
-                await s.execute(text(f"DELETE FROM {t}"))
+            await s.execute(
+                text(
+                    "update tasks set created_at = now() - interval '1 day' "
+                    "where id = :i"
+                ),
+                {"i": task_id},
+            )
+            await s.commit()
+
+    async def _cleanup_own(self, task_id) -> None:
+        """定向清理本用例数据（FK 序）：只删本用例创建的 task/claim 行。"""
+        from app.db.session import async_session_maker
+
+        async with async_session_maker() as s:
+            await s.execute(
+                text("delete from task_claims where task_id = :i"), {"i": task_id}
+            )
+            await s.execute(text("delete from tasks where id = :i"), {"i": task_id})
             await s.commit()
 
     @pytest.mark.asyncio
     async def test_run_once_marks_failed_with_zero_side_effects(self, tmp_path):
-        """真实 run_once 入口：任务显式失败 + provider 零调用 + 零落库。"""
-        await self._purge()
+        """真实 run_once 入口：任务显式失败 + provider 零调用 + 零落库。
+
+        F-1（Owner 2026-10-29）：不得以全局清表（DELETE 17 表）换认领确定性。
+        只定向处理本用例创建的行；认领顺序用本行 created_at 回拨保证。
+        """
         before = await self._counts()
         spy: list = []
         ex = self._make_executor(spy)
         task_id = await self._enqueue_raw(tmp_path, {})
+        await self._backdate_own_task(task_id)
 
-        handled = await ex.run_once(worker_id="w1")
-        assert handled is True
+        try:
+            handled = await ex.run_once(worker_id="w1")
+            assert handled is True
 
-        from app.db.session import async_session_maker
-        from sqlalchemy import text as _t
+            from app.db.session import async_session_maker
+            from sqlalchemy import text as _t
 
-        async with async_session_maker() as s:
-            status = (
-                await s.execute(
-                    _t("select status from tasks where id=:i"), {"i": task_id}
-                )
-            ).scalar_one()
-            row = (
-                await s.execute(
-                    _t(
-                        "select outcome, error_type, lease_snapshot "
-                        "from task_claims where task_id=:i order by start desc limit 1"
-                    ),
-                    {"i": task_id},
-                )
-            ).mappings().first()
-        assert status == "failed"
-        assert row["outcome"] == "failed"
-        assert row["error_type"] == "validation_error"
-        assert "explicit source_mode" in (row["lease_snapshot"] or {}).get(
-            "error_detail", ""
-        )
-        assert spy == [], "NativeTextProvider/extractor calls must be 0"
-        assert await self._counts() == before, "zero committed seal artifacts"
+            async with async_session_maker() as s:
+                status = (
+                    await s.execute(
+                        _t("select status from tasks where id=:i"), {"i": task_id}
+                    )
+                ).scalar_one()
+                row = (
+                    await s.execute(
+                        _t(
+                            "select outcome, error_type, lease_snapshot "
+                            "from task_claims where task_id=:i order by start desc limit 1"
+                        ),
+                        {"i": task_id},
+                    )
+                ).mappings().first()
+            assert status == "failed"
+            assert row["outcome"] == "failed"
+            assert row["error_type"] == "validation_error"
+            snap = row["lease_snapshot"] or {}
+            if isinstance(snap, str):
+                import json as _json
+
+                snap = _json.loads(snap)
+            assert "explicit source_mode" in snap.get("error_detail", "")
+            assert spy == [], "NativeTextProvider/extractor calls must be 0"
+            assert await self._counts() == before, "zero committed seal artifacts"
+        finally:
+            await self._cleanup_own(task_id)
 
     def test_test_db_identity_is_isolated(self):
         """测试库身份检查：只能是隔离测试库 aitutors_testsuite。"""

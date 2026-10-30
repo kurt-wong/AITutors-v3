@@ -81,6 +81,11 @@ class BoundUnit:
     # P0-answer: manifest answer_evidence.value (declared answer when
     # answer_lines is None). Used directly — never inferred from explanation.
     answer_evidence_value: str | None = None
+    # B3-4: Producer answer_evidence.type / .shared 声明事实（此前被丢弃）。
+    # shared=True 表示该答案证据被多个单元/子题共享 —— 中间层必须表示，
+    # 不得由下游按区间重叠自行重推（DSH 四点差异 2026-10-29）。
+    answer_evidence_type: str | None = None
+    answer_evidence_shared: bool | None = None
     # P0-answer: manifest answer_evidence.lines (v2.4+ fallback / parallel
     # evidence range). Consumed like preprocessing_consumer.adapter:
     # answer_lines or answer_evidence_lines. Never silently dropped.
@@ -170,7 +175,9 @@ def bind_units_from_manifest(
         ae_lines = _as_range(
             ae.get("lines"), label="answer_evidence.lines", unit_id=unit_id
         )
-        # T20-BF: consume Producer completeness declaration (missing ≠ full).
+        # T20-BF: read answer_completeness if present. 注意：真实 Producer 产物
+        # 无此字段（0/5067）；e2e 侧 manifest 里的值来自 reslice_pipeline 的
+        # 证据推导（推导值≠上游声明），B3-4 起不得当权威（missing ≠ full）。
         ac_raw = raw.get("answer_completeness")
         ac = str(ac_raw).strip().lower() if ac_raw is not None else None
         if ac is not None and ac not in ("full", "partial", "unknown"):
@@ -178,6 +185,13 @@ def bind_units_from_manifest(
                 f"answer_completeness must be full|partial|unknown, got {ac_raw!r}",
                 unit_id=unit_id,
             )
+        # B3-4: capture answer_evidence.type / .shared declaration facts (was
+        # dropped — the middle layer never represented "answer shared across
+        # units/subs"; see DSH 四点差异 2026-10-29).
+        ae_type_raw = ae.get("type")
+        ae_type = str(ae_type_raw).strip() if ae_type_raw is not None else None
+        ae_shared_raw = ae.get("shared")
+        ae_shared = ae_shared_raw if isinstance(ae_shared_raw, bool) else None
 
         ranges = {
             # stem：无 stem_lines 时用 questions_lines（composite 题干窗，Producer 已声明）
@@ -296,6 +310,8 @@ def bind_units_from_manifest(
                 extra_opt_lines=_extra_opt_line,
                 answer_evidence_value=ae_value_str,
                 answer_evidence_lines=ae_lines,
+                answer_evidence_type=ae_type,
+                answer_evidence_shared=ae_shared,
                 answer_completeness=ac,
                 material_exclude_ranges=mat_exclude,
             )
@@ -408,6 +424,24 @@ def _expand_subs(bu: "BoundUnit", source_lines: list[str]) -> None:
             bu.unit_id,
             result.sub_questions,
             original_question_type=bu.original_question_type,
+        )
+        # B3-4: 父级声明 → 子题显式映射（权威值 + 双证 completeness + 溯源）。
+        from app.domains.source.answer_evidence_mapping import (
+            map_parent_answer_evidence_to_subs,
+        )
+
+        map_parent_answer_evidence_to_subs(
+            bu.sub_questions,
+            parent_value=bu.answer_evidence_value,
+            parent_unit_id=bu.unit_id,
+            parent_lines=(
+                [bu.answer_evidence_lines.start, bu.answer_evidence_lines.end]
+                if bu.answer_evidence_lines is not None
+                else None
+            ),
+            question_numbers=list(bu.question_numbers or []),
+            parent_shared=bu.answer_evidence_shared,
+            parent_type=bu.answer_evidence_type,
         )
 
 
@@ -527,8 +561,9 @@ def build_annotation_payload_from_bound(
             ]
         if bu.answer_evidence_value is not None:
             content["answer"]["answer_value"] = bu.answer_evidence_value
-        # T20-BF: pass Producer completeness declaration to resolver/compile.
-        # Missing stays absent — never defaulted to full.
+        # T20-BF: carry V3-visible completeness value to resolver/compile.
+        # 注意：真实 Producer 无此字段；有值时是 reslice_pipeline 推导值，
+        # 不得当上游权威（B3-4）。Missing stays absent — never defaulted to full.
         if bu.answer_completeness is not None:
             content["answer"]["answer_completeness"] = bu.answer_completeness
         # v2.4+: keep the raw answer_evidence.lines declaration for audit
@@ -538,6 +573,11 @@ def build_annotation_payload_from_bound(
                 bu.answer_evidence_lines.start,
                 bu.answer_evidence_lines.end,
             ]
+        # B3-4: carry answer_evidence.type / .shared declaration facts.
+        if bu.answer_evidence_type is not None:
+            content["answer"]["answer_evidence_type"] = bu.answer_evidence_type
+        if bu.answer_evidence_shared is not None:
+            content["answer"]["answer_evidence_shared"] = bu.answer_evidence_shared
         # P2-fix-1: map explanation_lines into content (was computed in ranges
         # but never assigned — explanations were lost for all subjects).
         if bu.ranges["explanation"] is not None:

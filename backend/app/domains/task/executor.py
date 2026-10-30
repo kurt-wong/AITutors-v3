@@ -61,6 +61,8 @@ def _validate_entry_contract(params: dict) -> str:
     - source_mode 必须显式声明且属于 {"preprocessing", "native"}；
       缺失/空值/未知 → EntryContractError（禁止缺席推断）。
     - role 与 source_mode 兼容：role 已声明且与 source_mode 矛盾 → 拒绝。
+    - seal_provider 与 source_mode 一致：seal_provider 已声明且与 mode 矛盾
+      → 拒绝（B3-4R F-2；缺省时由 mode 派生）。
     - preprocessing 必须提供合法 manifest_path（非空且文件存在）。
     - 校验必须在任何文件提取与数据库写入之前完成（_process 入口处调用）。
     """
@@ -81,6 +83,16 @@ def _validate_entry_contract(params: dict) -> str:
         raise EntryContractError(
             f"role/source_mode contradiction (role={role!r}, "
             f"source_mode={mode!r}); refusing to process"
+        )
+    # B3-4R F-2：seal_provider 必须与已校验 source_mode 一致。
+    # 同一内容不得因矛盾 provider 在 LE hash 上意外形成不同 Source Version
+    # （seal contract 把 provider 计入逻辑执行哈希）。
+    sp = params.get("seal_provider")
+    if isinstance(sp, str) and sp.strip() and sp.strip() != mode:
+        raise EntryContractError(
+            f"seal_provider/source_mode contradiction (seal_provider={sp!r}, "
+            f"source_mode={mode!r}); seal_provider must equal source_mode "
+            "(or be absent to derive from it)"
         )
     if mode == "preprocessing":
         mp = params.get("manifest_path")
@@ -296,7 +308,9 @@ class TaskExecutor:
             raise RepositoryError("task_params.file_path missing (seal requires file bytes)")
         file_bytes = Path(file_path).read_bytes()
         role = params.get("role") or mode
-        provider = params.get("seal_provider") or mode
+        # B3-4R F-2：provider 一律由已校验 source_mode 派生（入口契约已拒绝
+        # 矛盾的 seal_provider）。role/provider 封闭配对见 models.source。
+        provider = mode
 
         if mode == "preprocessing":
             # Formal preprocessing path: never re-extract via NativeTextProvider.
