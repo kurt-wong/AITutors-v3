@@ -28,6 +28,7 @@ Instance + role_contents + material/link + unit_group/member）→ INSERT admiss
 
 from __future__ import annotations
 
+import json
 import re
 import uuid
 from datetime import datetime, timezone
@@ -362,23 +363,45 @@ class AdmissionService:
         _line_refs = list(_span.get("line_refs") or ())
         if not _line_refs:
             return None
+        # 04-C BP-B：完整答案窗 = 同一答案块（同 unit 根）全部 answer 行的
+        # line_refs 并集。单 span 行窗会漏跨行条目号（如 Q8 子问 4 的答案行在
+        # P1L507，该行条目是 (5)-(8)）→ classifier 以「qn 不在条目集」误判
+        # foreign，合法答案被永锁。
+        _ans0 = answer_payload or {}
+        _unit_root = str(_ans0.get("unit_id") or "").split(".")[0]
+        _win_refs: list[str] = []
+        for a in (candidate_payload or {}).get("answer") or []:
+            _a_root = str(a.get("unit_id") or "").split(".")[0]
+            if _unit_root and _a_root and _a_root != _unit_root:
+                continue
+            for r in a.get("line_refs") or ():
+                if r not in _win_refs:
+                    _win_refs.append(r)
+        if not _win_refs:
+            _win_refs = list(_line_refs)
+        for r in _line_refs:
+            if r not in _win_refs:
+                _win_refs.append(r)
         # Look up REAL source lines from document_source_lines.
-        _real_lines = []
+        _ref_text: dict[str, str] = {}
         try:
             from sqlalchemy import select as _sa_select
             from app.models.source import DocumentSourceLine as _DSL
             _sess = self._content._session
             _rows = (await _sess.execute(
-                _sa_select(_DSL.text).where(
+                _sa_select(_DSL.line_ref, _DSL.text).where(
                     _DSL.source_version_id == source_version_id,
-                    _DSL.line_ref.in_(_line_refs),
+                    _DSL.line_ref.in_(_win_refs),
                 ).order_by(_DSL.seq)
-            )).scalars().all()
-            _real_lines = [str(t or "") for t in _rows]
+            )).all()
+            for _lr, _t in _rows:
+                _ref_text[str(_lr)] = str(_t or "")
         except Exception:
             return None
+        _real_lines = [_ref_text[r] for r in _win_refs if r in _ref_text]
         if not _real_lines:
             return None
+        _own_lines = [_ref_text[r] for r in _line_refs if r in _ref_text]
         # Parse evidence for declared_value and decode_loc.
         _evidence_list = (candidate_payload or {}).get("evidence") or []
         _span_ev = None
@@ -399,12 +422,44 @@ class AdmissionService:
         _ans_text = str(_ans.get("text") or _ans.get("candidate_text") or "")
         if not _ans_text:
             return None
-        # Content consistency gate: answer must be recoverable from real
-        # source lines.  If not, refuse — never return an unknown fact that
-        # a human/golden grant could later publish as official.
+        # Content consistency gate (04-C BP-A)：答案必须可从真实源行恢复。
+        # 多段合并子问答案（空格打包）不含 (N) 标记，整串连续恢复无法命中
+        # ——补「连续条目合并折叠全等（分段全证）」与「完整声明块分段核验」
+        # 两条支路；consistent 单独不算归属证据。任一不成立即拒绝——绝不
+        # 返回可被 human/golden 放行的未知事实。
         from app.domains.gate.binding_fact import _value_supported_by_lines
+        from app.domains.source.answer_segment_verify import (
+            split_source_entries,
+            value_recoverable_in_block,
+            verify_declared_vs_source,
+        )
         _check_val = dv.strip() if dv.strip() else _ans_text.strip()
-        if not _value_supported_by_lines(_check_val, _real_lines):
+        _joined = "\n".join(_real_lines)
+        # 命中条目收窄：答案 span 自身行窗的条目号（防跨子问错位）；
+        # 自身行窗无条目号时不收窄（单行答案块形态）。
+        _own_labels = {str(e.label) for e in split_source_entries("\n".join(_own_lines))}
+        _allowed = _own_labels or None
+        _content_ok = _value_supported_by_lines(_check_val, _real_lines)
+        if not _content_ok:
+            _content_ok = value_recoverable_in_block(
+                _check_val, _joined, allowed_labels=_allowed
+            )
+        if not _content_ok:
+            _rep = verify_declared_vs_source(
+                _check_val, _joined,
+                qn=str(_ans.get("question_number") or ""),
+            )
+            _content_ok = (
+                bool(_rep.checks)
+                and not _rep.contra
+                and any(c.declared_raw for c in _rep.checks)
+                and all(
+                    c.status == "verified"
+                    for c in _rep.checks
+                    if c.declared_raw
+                )
+            )
+        if not _content_ok:
             return None
         try:
             from app.domains.gate.binding_fact import (
@@ -412,17 +467,38 @@ class AdmissionService:
                 verify_binding_fact,
                 register_trusted_binding_fact,
             )
+            _sub_qn = str(_ans.get("question_number") or "")
             fact = derive_binding_fact(
                 span_id=span_id,
                 source_version_id=source_version_id,
                 unit_id=str(_ans.get("unit_id") or ""),
-                question_number=str(_ans.get("question_number") or ""),
+                question_number=_sub_qn,
                 source_lines=_real_lines,
                 answer_text=_ans_text,
                 evidence_kind=str(_ans.get("binding_evidence") or ""),
                 decode_loc=decode_loc,
                 declared_value=dv,
             )
+            # 04-C BP-B 双试：子问号分类为 unknown 且父题号不同时以父题号
+            # 重derive（完整答案窗条目号覆盖父题号场景）。foreign 永不救援
+            # ——foreign 是分类器的拒绝结论，不得靠换 qn 放行。
+            if (fact.ownership or "unknown") == "unknown":
+                _units = ((candidate_payload or {}).get("ir_snapshot") or {}).get("units") or []
+                _parent_qn = str(_units[0].get("question_number") or "") if _units else ""
+                if _parent_qn and _parent_qn != _sub_qn:
+                    _alt = derive_binding_fact(
+                        span_id=span_id,
+                        source_version_id=source_version_id,
+                        unit_id=str(_ans.get("unit_id") or ""),
+                        question_number=_parent_qn,
+                        source_lines=_real_lines,
+                        answer_text=_ans_text,
+                        evidence_kind=str(_ans.get("binding_evidence") or ""),
+                        decode_loc=decode_loc,
+                        declared_value=dv,
+                    )
+                    if (_alt.ownership or "unknown") == "match":
+                        fact = _alt
             if verify_binding_fact(fact):
                 try:
                     register_trusted_binding_fact(fact)
@@ -556,25 +632,36 @@ class AdmissionService:
                     if str(_sp.get("span_id") or "") == _span_id:
                         _ans_refs = list(_sp.get("line_refs") or [])
                         break
+                _seg_ver2 = _segment_evidence_from_payload(candidate.payload, _span_id)
+                _ast2 = {
+                    "source_located": bool(ans.get("source_located")),
+                    "complete": bool(ans.get("complete")),
+                    "verified_correct": True if mark_verified else ans.get("verified_correct"),
+                    "ownership": _trust_own,
+                    "binding_evidence": _fact.evidence_kind if _fact else "",
+                    "binding_fact_id": _fact_id,
+                    "binding_unit_id": _fact.unit_id if _fact else "",
+                    "binding_question_number": _fact.question_number if _fact else "",
+                    "answer_text_hash": _ans_h,
+                    "publish_grant": grant,
+                    "publish": publish,
+                    "publish_seal": _seal,
+                }
+                _ast2.update(
+                    _semantic_axis_fields(
+                        candidate.payload, _span_id, bool(ans.get("complete"))
+                    )
+                )
+                if _seg_ver2 is not None:
+                    _seg_ver2.setdefault("line_refs", list(_ans_refs or []))
+                    _ast2["segment_verification"] = _seg_ver2
                 await self._content.update_answer_text(
                     instance_id=inst,
                     text=official_text,
                     text_hash=_raw_sha256(official_text),
-                    answer_status={
-                        "source_located": bool(ans.get("source_located")),
-                        "complete": bool(ans.get("complete")),
-                        "verified_correct": True if mark_verified else ans.get("verified_correct"),
-                        "ownership": _trust_own,
-                        "binding_evidence": _fact.evidence_kind if _fact else "",
-                        "binding_fact_id": _fact_id,
-                        "binding_unit_id": _fact.unit_id if _fact else "",
-                        "binding_question_number": _fact.question_number if _fact else "",
-                        "answer_text_hash": _ans_h,
-                        "publish_grant": grant,
-                        "publish": publish,
-                        "publish_seal": _seal,
-                    },
+                    answer_status=_ast2,
                     line_refs=_ans_refs,
+                    span_id=_span_id or None,
                 )
 
     # ------------------------------------------------------------------ 物化
@@ -824,25 +911,38 @@ class AdmissionService:
                         if str(_sp.get("span_id") or "") == _span_id2:
                             _ans_refs2 = list(_sp.get("line_refs") or [])
                             break
+                    _seg_ver_r1 = _segment_evidence_from_payload(
+                        candidate.payload, _span_id2
+                    )
+                    _ast_r1 = {
+                        "source_located": bool(ans.get("source_located")),
+                        "complete": bool(ans.get("complete")),
+                        "verified_correct": True,
+                        "ownership": _trust_own,
+                        "binding_evidence": _fact.evidence_kind if _fact else "",
+                        "binding_fact_id": _fact_id,
+                        "binding_unit_id": _fact.unit_id if _fact else "",
+                        "binding_question_number": _fact.question_number if _fact else "",
+                        "answer_text_hash": _ans_h,
+                        "publish_grant": grant,
+                        "publish": publish,
+                        "publish_seal": _seal,
+                    }
+                    _ast_r1.update(
+                        _semantic_axis_fields(
+                            candidate.payload, _span_id2, bool(ans.get("complete"))
+                        )
+                    )
+                    if _seg_ver_r1 is not None:
+                        _seg_ver_r1.setdefault("line_refs", list(_ans_refs2 or []))
+                        _ast_r1["segment_verification"] = _seg_ver_r1
                     await self._content.update_answer_text(
                         instance_id=inst.id,
                         text=official_text,
                         text_hash=_raw_sha256(official_text),
-                        answer_status={
-                            "source_located": bool(ans.get("source_located")),
-                            "complete": bool(ans.get("complete")),
-                            "verified_correct": True,
-                            "ownership": _trust_own,
-                            "binding_evidence": _fact.evidence_kind if _fact else "",
-                            "binding_fact_id": _fact_id,
-                            "binding_unit_id": _fact.unit_id if _fact else "",
-                            "binding_question_number": _fact.question_number if _fact else "",
-                            "answer_text_hash": _ans_h,
-                            "publish_grant": grant,
-                            "publish": publish,
-                            "publish_seal": _seal,
-                        },
+                        answer_status=_ast_r1,
                         line_refs=_ans_refs2,
+                        span_id=_span_id2 or None,
                     )
 
         if not any_new_instance:
@@ -922,25 +1022,38 @@ class AdmissionService:
                         if str(_sp.get("span_id") or "") == _span_id3:
                             _ans_refs3 = list(_sp.get("line_refs") or [])
                             break
+                    _seg_ver_r2 = _segment_evidence_from_payload(
+                        candidate.payload, _span_id3
+                    )
+                    _ast_r2 = {
+                        "source_located": bool(ans.get("source_located")),
+                        "complete": bool(ans.get("complete")),
+                        "verified_correct": True if mark_verified else ans.get("verified_correct"),
+                        "ownership": _trust_own,
+                        "binding_evidence": _fact.evidence_kind if _fact else "",
+                        "binding_fact_id": _fact_id,
+                        "binding_unit_id": _fact.unit_id if _fact else "",
+                        "binding_question_number": _fact.question_number if _fact else "",
+                        "answer_text_hash": _ans_h,
+                        "publish_grant": grant,
+                        "publish": publish,
+                        "publish_seal": _seal,
+                    }
+                    _ast_r2.update(
+                        _semantic_axis_fields(
+                            candidate.payload, _span_id3, bool(ans.get("complete"))
+                        )
+                    )
+                    if _seg_ver_r2 is not None:
+                        _seg_ver_r2.setdefault("line_refs", list(_ans_refs3 or []))
+                        _ast_r2["segment_verification"] = _seg_ver_r2
                     await self._content.update_answer_text(
                         instance_id=inst.id,
                         text=official_text,
                         text_hash=_raw_sha256(official_text),
-                        answer_status={
-                            "source_located": bool(ans.get("source_located")),
-                            "complete": bool(ans.get("complete")),
-                            "verified_correct": True if mark_verified else ans.get("verified_correct"),
-                            "ownership": _trust_own,
-                            "binding_evidence": _fact.evidence_kind if _fact else "",
-                            "binding_fact_id": _fact_id,
-                            "binding_unit_id": _fact.unit_id if _fact else "",
-                            "binding_question_number": _fact.question_number if _fact else "",
-                            "answer_text_hash": _ans_h,
-                            "publish_grant": grant,
-                            "publish": publish,
-                            "publish_seal": _seal,
-                        },
+                        answer_status=_ast_r2,
                         line_refs=_ans_refs3,
+                        span_id=_span_id3 or None,
                     )
             for m in p["compiled_roles"]:
                 if m["kind"] != "material":
@@ -1043,7 +1156,12 @@ class AdmissionService:
                     label=r.get("label"),
                     # source_span 用该 role 自身 compiled line_refs（非 stem 的），防
                     # provenance 串行错位（对抗审查 MED：option 行被记成 stem 行）。
-                    source_span=_source_span(r["span_id"], r),
+                    # display_note 等展示层行（display_only）不进 source 证据形态。
+                    source_span=(
+                        {"display_only": True}
+                        if r.get("display_only")
+                        else _source_span(r.get("span_id"), r)
+                    ),
                     answer_status=None,
                 )
             answers_list = e.get("answers_override")
@@ -1115,6 +1233,51 @@ class AdmissionService:
                     official_text=official_text,
                     publish=publish,
                 )
+                # TASK-QCC-ANSWER-EVIDENCE-2 G1：line_refs 缺失时从该 span 的
+                # resolved_spans 回查（真实 Candidate 引用，不凭空生成）。
+                _ans_span = ans
+                if not ans.get("line_refs"):
+                    _sr = spans_by_id.get(str(ans.get("span_id") or "")) or {}
+                    if _sr.get("line_refs"):
+                        _ans_span = {**ans, "line_refs": list(_sr["line_refs"])}
+                # TASK-QCC-ANSWER-EVIDENCE-2 G2：分段核验证据随 Question 持久化
+                # （结构化 answer_status.segment_verification，不依赖 Candidate
+                # payload 复核发布依据）。学生 API 不得暴露本字段。
+                _seg_ver = _segment_evidence_from_payload(
+                    candidate.payload, str(ans.get("span_id") or "")
+                )
+                _ast = {
+                    "source_located": bool(ans.get("source_located")),
+                    "complete": bool(ans.get("complete")),
+                    # 20 §8.3: approved materialize → True.
+                    # E2E-009R7: pending-review materialize keeps null.
+                    "verified_correct": True if mark_verified else ans.get("verified_correct"),
+                    "ownership": _trust_own,
+                    "binding_evidence": _fact.evidence_kind if _fact else "",
+                    "binding_fact_id": _fact_id,
+                    "binding_unit_id": _fact.unit_id if _fact else "",
+                    "binding_question_number": _fact.question_number if _fact else "",
+                    "answer_text_hash": _ans_h,
+                    "publish_grant": grant,
+                    "publish": publish,
+                    "publish_seal": _seal,
+                    # R2: candidate_text lives ONLY in review payload,
+                    # never in the official answer_status row.
+                }
+                # SEMANTICS-1：轴S 留痕 + 轴间冲突记录（不改发布决策）。
+                _ast.update(
+                    _semantic_axis_fields(
+                        candidate.payload,
+                        str(ans.get("span_id") or ""),
+                        bool(ans.get("complete")),
+                    )
+                )
+                if _seg_ver is not None:
+                    # AE3：报告缺 line_refs 时以该 span 的真实引用补齐（源文定位）。
+                    _seg_ver.setdefault(
+                        "line_refs", list(_ans_span.get("line_refs") or [])
+                    )
+                    _ast["segment_verification"] = _seg_ver
                 await self._content.create_role_content(
                     instance_id=instance.id,
                     role="answer",
@@ -1122,25 +1285,8 @@ class AdmissionService:
                     text=official_text,
                     text_hash=_raw_sha256(official_text),
                     label=ans.get("label"),
-                    source_span=_source_span(ans.get("span_id"), ans),
-                    answer_status={
-                        "source_located": bool(ans.get("source_located")),
-                        "complete": bool(ans.get("complete")),
-                        # 20 §8.3: approved materialize → True.
-                        # E2E-009R7: pending-review materialize keeps null.
-                        "verified_correct": True if mark_verified else ans.get("verified_correct"),
-                        "ownership": _trust_own,
-                        "binding_evidence": _fact.evidence_kind if _fact else "",
-                        "binding_fact_id": _fact_id,
-                        "binding_unit_id": _fact.unit_id if _fact else "",
-                        "binding_question_number": _fact.question_number if _fact else "",
-                        "answer_text_hash": _ans_h,
-                        "publish_grant": grant,
-                        "publish": publish,
-                        "publish_seal": _seal,
-                        # R2: candidate_text lives ONLY in review payload,
-                        # never in the official answer_status row.
-                    },
+                    source_span=_source_span(ans.get("span_id"), _ans_span),
+                    answer_status=_ast,
                 )
             for mat, mrole in materials:
                 await self._content.create_material_link(
@@ -1241,7 +1387,14 @@ def _aggregate_composite_roles(
         if r.get("text"):
             roles.append(dict(r))
     for r in roles_by_unit.get(root["unit_id"], []):
-        if r.get("role") == "material":
+        if r.get("role") == "stem" and r.get("text") and stem_meta is None:
+            # 04-A B1：父级共享 stem（题头+指导语）是父 Question 主 stem。
+            # stem_meta 必须是父级——_dedup_key/_occurrence_key/父 stem/span
+            # 均随它定身份；不得用第一个子问 stem 顶替（否则不同复合题若
+            # 子问 1 相同会被错误去重/冲突）。
+            stem_meta = r
+            roles.append(dict(r))
+        elif r.get("role") == "material":
             roles.append(dict(r))
         elif r.get("role") == "option" and r.get("text") and not child_ids:
             # Shared parent options only when no child subs carry options.
@@ -1254,6 +1407,10 @@ def _aggregate_composite_roles(
             })
         elif r.get("role") == "explanation" and r.get("text"):
             # R3-C: composite parent explanation (was silently dropped)
+            roles.append(dict(r))
+        elif r.get("role") == "display_note" and r.get("text"):
+            # 04-A: display annotation（如 Q9 0.110/0.10 原文差异说明）以独立
+            # role 行透传（自由字符串 role，零 schema 变更），不混入 explanation。
             roles.append(dict(r))
 
     # 2) per-child stems + options
@@ -1298,8 +1455,16 @@ def _aggregate_composite_roles(
             roles.append(dict(c_stem))
 
         ans = answers_by_unit.get(cid)
+        qn_label = str((ans or {}).get("question_number") or child_qn)
         if ans is not None and ans.get("text") is not None:
-            qn = str(ans.get("question_number") or child_qn)
+            qn = qn_label
+            # TASK-QCC-ANSWER-EVIDENCE-2 G1：重建答案对象不得丢 line_refs
+            # （此前聚合后 source_span.line_refs 恒空）。Candidate 已有引用
+            # 原样携带；缺失时只从该 span 的 resolved_spans 回查，不凭空生成。
+            _refs = list(ans.get("line_refs") or [])
+            if not _refs:
+                _sp = spans_by_id.get(str(ans.get("span_id") or "")) or {}
+                _refs = list(_sp.get("line_refs") or [])
             answers.append({
                 "role": "answer",
                 "unit_id": cid,  # P0-R15: child unit_id, not parent root
@@ -1307,12 +1472,20 @@ def _aggregate_composite_roles(
                 "text": ans["text"],
                 "text_hash": ans.get("text_hash") or "",
                 "span_id": ans.get("span_id"),
+                "line_refs": _refs,
                 "question_number": qn,  # P0-R15: preserve child qn
                 "source_located": bool(ans.get("source_located")),
                 "complete": bool(ans.get("complete")),
                 # E2E-009R5: never default verified_correct to True
                 "verified_correct": ans.get("verified_correct"),
             })
+
+        # 04-A: 子问级解析独立 role 行（label=题号，与子问答案同构绑定）。
+        # 只在 payload 显式携带子 explanation 时透传——既有 choice 流不产生该行，
+        # 行为不变（additive）。
+        for r in roles_by_unit.get(cid, []):
+            if r.get("role") == "explanation" and r.get("text"):
+                roles.append({**dict(r), "role": "explanation", "label": qn_label})
 
     # E2E-010 七选五：答案键为紧凑字母串 `FGDAE`，按子题顺序拆到各空
     if answers and len(answers) > 1:
@@ -1405,6 +1578,72 @@ def _source_span(span_id: str, span: dict) -> dict:
         # P1-B: real unit identity for Repository cross-check (JSONB, no schema change).
         "unit_id": span.get("unit_id") or "",
     }
+
+
+def _semantic_axis_fields(
+    candidate_payload: dict | None, span_id: str, complete: bool
+) -> dict:
+    """TASK-QCC-ANSWER-SEMANTICS-1 轴S 字段：语义完整性 + 来源 + 轴间冲突。
+
+    轴S（LLM 语义声明，prompt 4c）与轴E（complete，证据覆盖）在此**记录**
+    差异；绝不参与 _publish_decision——发布决策不变（安全边界）。
+    """
+    out: dict = {}
+    if not candidate_payload or not span_id:
+        return out
+    sem = ""
+    sem_src = ""
+    for entry in candidate_payload.get("evidence") or []:
+        if str(entry.get("span_id") or "") != span_id:
+            continue
+        for e in entry.get("evidence") or ():
+            s = str(e)
+            # 长前缀先行（source 标签以无 source 标签为前缀）。
+            if s.startswith("fact_semantic_completeness_source="):
+                sem_src = s.split("=", 1)[1]
+            elif s.startswith("fact_semantic_completeness="):
+                sem = s.split("=", 1)[1]
+    if sem not in ("full", "partial", "unknown"):
+        return out
+    out["semantic_completeness"] = sem
+    out["semantic_completeness_source"] = sem_src or "llm_declared"
+    if sem == "full" and not complete:
+        out["axis_conflict"] = "semantic_full_vs_evidence_incomplete"
+    elif sem == "partial" and complete:
+        out["axis_conflict"] = "semantic_partial_vs_evidence_full"
+    return out
+
+
+def _segment_evidence_from_payload(
+    candidate_payload: dict | None, span_id: str
+) -> dict | None:
+    """回收 answer span 的分段核验结构化证据（TASK-QCC-ANSWER-EVIDENCE-2 G2）。
+
+    resolver 在 span evidence 写 ``segment_evidence=<json>``（answer_segment_verify
+    .report_to_dict）。此处只做解析，不重算核验；解析失败按 unverified 留痕
+    （UNKNOWN is retained data，不 silent drop）。
+    """
+    if not candidate_payload or not span_id:
+        return None
+    for entry in candidate_payload.get("evidence") or []:
+        if str(entry.get("span_id") or "") != span_id:
+            continue
+        for e in entry.get("evidence") or ():
+            s = str(e)
+            if not s.startswith("segment_evidence="):
+                continue
+            raw = s.split("=", 1)[1]
+            try:
+                d = json.loads(raw)
+            except Exception:
+                return {
+                    "rules_version": "",
+                    "verdict": "unverified",
+                    "parse_error": True,
+                }
+            if isinstance(d, dict):
+                return d
+    return None
 
 
 def _raw_sha256(s: str) -> str:

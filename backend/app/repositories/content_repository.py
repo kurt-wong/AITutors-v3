@@ -424,6 +424,7 @@ class ContentRepository(BaseRepository):
         text_hash: str,
         answer_status: dict | None = None,
         line_refs: list[str] | None = None,
+        span_id: str | None = None,
     ) -> bool:
         """Update official answer text on an existing empty answer row.
 
@@ -435,6 +436,10 @@ class ContentRepository(BaseRepository):
         Rules:
         - Only updates rows where current text is EMPTY (never overwrites
           non-empty official answers).
+        - span_id: when provided, only the answer row whose
+          source_span.span_id matches is updated (composite multi-answer
+          instances must fill one row at a time; other rows are skipped,
+          never overwritten with this call's text/status).
         - For non-empty new text, runs the SAME BindingFact / ownership /
           publish-seal validation as create_role_content.
         - line_refs: optional list of source line references to merge into
@@ -458,11 +463,18 @@ class ContentRepository(BaseRepository):
                 continue
             if not (text or "").strip():
                 continue
+            # Composite multi-answer row selection: update ONLY the row this
+            # answer_status/text belongs to; skip the rest (they keep their
+            # own status and are filled by their own calls).
+            if span_id is not None:
+                row_span = (row.source_span or {}).get("span_id") or ""
+                if row_span != span_id:
+                    continue
             # Validate non-empty text through the same gate as create_role_content.
             status = dict(answer_status or {})
             own = status.get("ownership") or "unknown"
             publish = status.get("publish") or "withheld_review"
-            span_id = status.get("span_id") or (row.source_span or {}).get("span_id") or ""
+            row_fact_span = status.get("span_id") or (row.source_span or {}).get("span_id") or ""
             fact_id = status.get("binding_fact_id") or ""
 
             from app.models.content import QuestionInstance as _QI
@@ -490,7 +502,7 @@ class ContentRepository(BaseRepository):
 
             fact = resolve_trusted_binding_fact(
                 source_version_id=_instance_sv,
-                span_id=span_id,
+                span_id=row_fact_span,
             )
             if fact is None:
                 raise RepositoryError(

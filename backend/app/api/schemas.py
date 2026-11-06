@@ -172,6 +172,14 @@ class QuestionSummary(BaseModel):
     page_no: int
     instance_order: int
     created_at: datetime | None = None
+    # QUESTION-VISUAL-INSPECTION-V1：列表可直读的真实内容摘要与发布状态
+    document_file_name: str | None = None
+    stem_excerpt: str = ""
+    option_count: int = 0
+    answer_count: int = 0
+    explanation_count: int = 0
+    # official / withheld_review / mixed / none（按 answer 行 answer_status.publish 聚合）
+    answer_publish: str = "none"
 
 
 class QuestionListResponse(BaseModel):
@@ -215,6 +223,53 @@ class QuestionDetail(BaseModel):
     instances: list[QuestionInstanceInfo]
 
 
+# ------------------------------------------------------------------ Student view (VIS-INSPECT-V1)
+# 学生实际视图出参：只含学生可见内容。无 text_hash / source_span / occurrence_key /
+# answer_status 诊断字段；answer/explanation 文本仅 answer_publish=official 时出非空。
+class StudentRoleContentInfo(BaseModel):
+    role: str
+    label: str | None = None
+    role_index: int
+    text: str
+
+
+class StudentInstanceInfo(BaseModel):
+    question_number: str
+    question_number_range: str
+    page_no: int
+    contents: list[StudentRoleContentInfo]
+
+
+class StudentQuestionDetail(BaseModel):
+    id: uuid.UUID
+    subject: str | None = None
+    grade: str | None = None
+    canonical_question_type: str
+    question_number: str
+    question_number_range: str
+    answer_publish: str  # official / withheld_review / mixed / none
+    student_answer_visible: bool
+    instances: list[StudentInstanceInfo]
+
+
+class StudentQuestionSummary(BaseModel):
+    id: uuid.UUID
+    subject: str | None = None
+    grade: str | None = None
+    canonical_question_type: str
+    question_number: str
+    question_number_range: str
+    page_no: int
+    stem_excerpt: str = ""
+    answer_publish: str = "none"
+    student_answer_visible: bool
+
+
+class StudentQuestionListResponse(BaseModel):
+    questions: list[StudentQuestionSummary]
+    total: int
+
+
 # ------------------------------------------------------------------ Feedback (M3b)
 FEEDBACK_CATEGORY_VALUES = (
     "stem_missing_or_incomplete",
@@ -225,6 +280,10 @@ FEEDBACK_CATEGORY_VALUES = (
     "latex_render_error",
     "identity_or_number_mismatch",
     "subject_grade_wrong_or_unset",
+    # QUESTION-VISUAL-INSPECTION-V1 契约扩展（Owner 任务书列出的反馈类型）
+    "option_html_residue",
+    "image_missing_or_broken",
+    "composite_hierarchy_wrong",
     "other",
 )
 

@@ -6,11 +6,23 @@ EB-008（92号 §5.2）：非 test 环境启动校验 APP_SECRET（review proof 
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routers import admin, candidates, documents, feedback, images, questions, tasks
+from app.api.routers import (
+    admin,
+    candidates,
+    documents,
+    feedback,
+    images,
+    inspect,
+    questions,
+    student_questions,
+    tasks,
+)
+from app.api.deps import effective_db_name
 from app.core.config import settings
+from app.db.session import is_default_db
 from app.domains.evidence.proof import require_app_secret
 
 
@@ -33,13 +45,39 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+# QUESTION-VISUAL-INSPECTION-V1：活动库为隔离卷库（非默认库）时只读保护。
+# 验收卷库只允许 GET 浏览；唯一例外：反馈登记（观测性写入 question_feedbacks）
+# 与 inspect 激活本身。禁止 import / approve / reject 等业务写入触碰验收数据。
+_MUTATION_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
+_MUTATION_ALLOWLIST_PREFIXES = (
+    "/api/feedbacks",       # 反馈登记（观测性，M3b 契约：不改题面/答案/发布）
+    "/api/inspect/activate",
+)
+
+
+@app.middleware("http")
+async def volume_readonly_guard(request: Request, call_next):
+    if request.method in _MUTATION_METHODS and not is_default_db(effective_db_name(request)):
+        path = request.url.path
+        if not any(path.startswith(p) for p in _MUTATION_ALLOWLIST_PREFIXES):
+            return Response(
+                content='{"detail":"isolated volume db is read-only"}',
+                status_code=403,
+                media_type="application/json",
+            )
+    return await call_next(request)
+
+
 app.include_router(documents.router, prefix="/api")
 app.include_router(candidates.router, prefix="/api")
 app.include_router(admin.router, prefix="/api")
 app.include_router(tasks.router, prefix="/api")
 app.include_router(questions.router, prefix="/api")
+app.include_router(student_questions.router, prefix="/api")
 app.include_router(feedback.router, prefix="/api")
 app.include_router(images.router, prefix="/api")
+app.include_router(inspect.router, prefix="/api")
 
 
 @app.get("/health")
