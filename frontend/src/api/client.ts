@@ -3,6 +3,8 @@
 import type {
   AdminStats,
   CandidateDetail,
+  DatabaseInfo,
+  DatabaseListResponse,
   DocumentDetail,
   DocumentListResponse,
   FeedbackCreateRequest,
@@ -12,15 +14,32 @@ import type {
   QuestionListResponse,
   SourceLinesResponse,
   SourceQualityReport,
+  StudentQuestionDetail,
+  StudentQuestionListResponse,
   TaskListResponse,
 } from "./types";
 
 const BASE = "/api";
 
+// DSH-F1 加固：库上下文随请求显式传递（X-Inspect-Db），不依赖进程级活动库，
+// 消除并行任务/脚本切换活动库导致同一 URL 读到另一卷数据的竞态。
+let inspectDb: string | null = null;
+
+export function setInspectDb(name: string | null) {
+  const n = (name ?? "").trim();
+  inspectDb = n || null;
+}
+
+export function getInspectDb(): string | null {
+  return inspectDb;
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (inspectDb) headers["X-Inspect-Db"] = inspectDb;
   const res = await fetch(`${BASE}${path}`, {
-    headers: { "Content-Type": "application/json" },
     ...init,
+    headers: { ...headers, ...((init?.headers as Record<string, string>) ?? {}) },
   });
   if (!res.ok) {
     const body = await res.text().catch(() => "");
@@ -97,11 +116,15 @@ export function getAdminStats(): Promise<AdminStats> {
 // ------------------------------------------------------------------ Questions (M3a)
 export function listQuestions(params?: {
   document_id?: string;
+  subject?: string;
+  publish?: string;
   limit?: number;
   offset?: number;
 }): Promise<QuestionListResponse> {
   const qs = new URLSearchParams();
   if (params?.document_id) qs.set("document_id", params.document_id);
+  if (params?.subject) qs.set("subject", params.subject);
+  if (params?.publish) qs.set("publish", params.publish);
   if (params?.limit != null) qs.set("limit", String(params.limit));
   if (params?.offset != null) qs.set("offset", String(params.offset));
   const suffix = qs.toString() ? `?${qs}` : "";
@@ -110,6 +133,42 @@ export function listQuestions(params?: {
 
 export function getQuestion(id: string): Promise<QuestionDetail> {
   return request(`/questions/${id}`);
+}
+
+// ------------------------------------------------------- Student view (VIS-INSPECT-V1)
+export function listStudentQuestions(params?: {
+  subject?: string;
+  document_id?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<StudentQuestionListResponse> {
+  const qs = new URLSearchParams();
+  if (params?.subject) qs.set("subject", params.subject);
+  if (params?.document_id) qs.set("document_id", params.document_id);
+  if (params?.limit != null) qs.set("limit", String(params.limit));
+  if (params?.offset != null) qs.set("offset", String(params.offset));
+  const suffix = qs.toString() ? `?${qs}` : "";
+  return request(`/student/questions${suffix}`);
+}
+
+export function getStudentQuestion(id: string): Promise<StudentQuestionDetail> {
+  return request(`/student/questions/${id}`);
+}
+
+// ------------------------------------------------------- Inspect volumes (VIS-INSPECT-V1)
+export function listDatabases(): Promise<DatabaseListResponse> {
+  return request("/inspect/databases");
+}
+
+export function activateDatabase(db_name: string): Promise<DatabaseInfo> {
+  return request("/inspect/activate", {
+    method: "POST",
+    body: JSON.stringify({ db_name }),
+  });
+}
+
+export function getActiveDatabase(): Promise<DatabaseInfo> {
+  return request("/inspect/active");
 }
 
 // ------------------------------------------------------------------ Feedback (M3b)

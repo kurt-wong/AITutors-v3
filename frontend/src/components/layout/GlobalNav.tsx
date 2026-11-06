@@ -1,23 +1,26 @@
 /** 全局导航：黑色 44px 条（UI.md §3.1）。 */
 
 import { NavLink } from "react-router-dom";
+import { VolumeSelector } from "./VolumeSelector";
 
 const links = [
   { to: "/admin", label: "Workspace" },
   { to: "/admin/documents", label: "Documents" },
   { to: "/admin/documents/upload", label: "Import" },
   { to: "/admin/questions", label: "Questions" },
+  { to: "/admin/questions-student", label: "StudentView" },
   { to: "/admin/feedbacks", label: "Feedbacks" },
 ];
 
-export function GlobalNav() {
+export function GlobalNav({ onVolumeChanged }: { onVolumeChanged?: () => void }) {
   return (
     <nav className="flex h-11 items-center gap-6 bg-surface-tile px-6 text-[13px] text-white">
       <span className="font-display font-semibold tracking-tight">
         AITutor V3
       </span>
       <span className="text-body-muted">Review Console</span>
-      <div className="ml-auto flex gap-4">
+      <div className="ml-auto flex items-center gap-4">
+        <VolumeSelector onChanged={onVolumeChanged} />
         {links.map((l) => (
           <NavLink
             key={l.to}

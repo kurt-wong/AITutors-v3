@@ -25,6 +25,12 @@ describe("resolveImageSrc — URL mapping", () => {
     );
   });
 
+  it("maps imgs/<file>.jpg (新管线同目录引用, key 保留 imgs/ 段) to /api/images/imgs/<file>.jpg", () => {
+    expect(resolveImageSrc("imgs/img_in_image_box_157_151_247_252.jpg")).toBe(
+      "/api/images/imgs/img_in_image_box_157_151_247_252.jpg",
+    );
+  });
+
   it("keeps already-mapped /api/images/ URLs", () => {
     expect(resolveImageSrc("/api/images/paper/img.jpg")).toBe(
       "/api/images/paper/img.jpg",
@@ -134,10 +140,85 @@ describe("splitHtmlSegments — HTML container tags", () => {
   });
 
   it("unknown tags are consumed, inner text kept", () => {
-    const pieces = splitHtmlSegments("<table><tr><td>foo</td></tr></table>");
+    const pieces = splitHtmlSegments("<foo><bar>foo</bar></foo>");
     const text = pieces.map((p) => (p.kind === "text" ? p.value : "")).join("");
     expect(text).toContain("foo");
-    expect(text).not.toMatch(/<\/?(table|tr|td)/i);
+    expect(text).not.toMatch(/<\/?(foo|bar)/i);
+  });
+});
+
+describe("splitHtmlSegments — 表格结构化渲染（R2X，非压平）", () => {
+  const TABLE =
+    "<table border=1 style='margin: auto;'><tr><td style='text-align: center;'>A 运动</td><td style='text-align: center;'>B 运动</td></tr><tr><td style='text-align: center;'>30 分钟</td><td style='text-align: center;'>20 分钟</td></tr></table>";
+
+  it("成对 <table> 解析为表格 piece，行列矩阵保留", () => {
+    const pieces = splitHtmlSegments(TABLE);
+    expect(pieces).toHaveLength(1);
+    const t = pieces[0];
+    if (t.kind !== "table") throw new Error(`expected table, got ${t.kind}`);
+    expect(t.rows).toHaveLength(2);
+    expect(t.rows[0]).toHaveLength(2);
+    const cellText = (pieces2: typeof t) =>
+      pieces2.rows.map((r) =>
+        r.map((c) =>
+          c.pieces.map((p) => (p.kind === "text" ? p.value : "")).join(""),
+        ),
+      );
+    expect(cellText(t)).toEqual([
+      ["A 运动", "B 运动"],
+      ["30 分钟", "20 分钟"],
+    ]);
+  });
+
+  it("td 对齐与 th 表头保留", () => {
+    const src =
+      "<table><tr><th>题号</th></tr><tr><td style='text-align: right;'>42</td></tr></table>";
+    const pieces = splitHtmlSegments(src);
+    const t = pieces[0];
+    if (t.kind !== "table") throw new Error("expected table");
+    expect(t.rows[0][0].header).toBe(true);
+    expect(t.rows[1][0].header).toBe(false);
+    expect(t.rows[1][0].align).toBe("right");
+    expect(t.rows[1][0].colspan).toBe(1);
+  });
+
+  it("单元内递归：$公式$ 与 <img> 进单元 piece", () => {
+    const src =
+      "<table><tr><td>$x^2$</td><td><img src='../../_imgs/p/i.jpg'></td></tr></table>";
+    const pieces = splitHtmlSegments(src);
+    const t = pieces[0];
+    if (t.kind !== "table") throw new Error("expected table");
+    expect(t.rows[0][0].pieces.some((p) => p.kind === "math")).toBe(true);
+    expect(t.rows[0][1].pieces.some((p) => p.kind === "img")).toBe(true);
+  });
+
+  it("表前后的文本与表格共存", () => {
+    const src = `如表所示：${TABLE}完`;
+    const pieces = splitHtmlSegments(src);
+    expect(pieces.filter((p) => p.kind === "table")).toHaveLength(1);
+    const text = pieces.map((p) => (p.kind === "text" ? p.value : "")).join("");
+    expect(text).toContain("如表所示：");
+    expect(text).toContain("完");
+  });
+
+  it("未闭合 <table> 不产表格 piece，内文保留（fail-visible）", () => {
+    const src = "<table><tr><td>foo</td>";
+    const pieces = splitHtmlSegments(src);
+    expect(pieces.some((p) => p.kind === "table")).toBe(false);
+    const text = pieces.map((p) => (p.kind === "text" ? p.value : "")).join("");
+    expect(text).toContain("foo");
+  });
+
+  it("caption 保留为 pieces", () => {
+    const src = "<table><caption>表 1</caption><tr><td>x</td></tr></table>";
+    const pieces = splitHtmlSegments(src);
+    const t = pieces[0];
+    if (t.kind !== "table") throw new Error("expected table");
+    expect(t.caption).not.toBeNull();
+    const cap = (t.caption ?? [])
+      .map((p) => (p.kind === "text" ? p.value : ""))
+      .join("");
+    expect(cap).toContain("表 1");
   });
 });
 
@@ -159,6 +240,93 @@ describe("splitPieces — regression", () => {
     const pieces = splitPieces(`$E=mc^2$ ${GEO_IMG}`);
     expect(pieces.some((p) => p.kind === "math")).toBe(true);
     expect(pieces.some((p) => p.kind === "img")).toBe(true);
+  });
+});
+
+describe("splitPieces — 表格与公式共存（F3 表格修复）", () => {
+  it("单元格含 $…$ 公式的 <table> 产生 table piece，矩阵保留", () => {
+    const src =
+      '<table><tr><td>$ Fe^{3+} $</td><td>$ SO_4^{2-} $</td></tr><tr><td>pH=2</td><td>$ K^+ $</td></tr></table>';
+    const pieces = splitPieces(src);
+    expect(pieces).toHaveLength(1);
+    const t = pieces[0];
+    if (t.kind !== "table") throw new Error(`expected table, got ${t.kind}`);
+    expect(t.rows).toHaveLength(2);
+    expect(t.rows[0]).toHaveLength(2);
+    expect(t.rows[1]).toHaveLength(2);
+    // 每个含 $…$ 的单元格内有 math piece
+    expect(t.rows[0][0].pieces.some((p) => p.kind === "math")).toBe(true);
+    expect(t.rows[0][1].pieces.some((p) => p.kind === "math")).toBe(true);
+    expect(t.rows[1][1].pieces.some((p) => p.kind === "math")).toBe(true);
+    // 纯文本单元格内容正确
+    const cellText = (cell: typeof t.rows[0][0]) =>
+      cell.pieces.map((p) => (p.kind === "text" ? p.value : p.kind === "math" ? p.value : "")).join("");
+    expect(cellText(t.rows[1][0])).toBe("pH=2");
+  });
+
+  it("表前后文本共存，表格不被公式切碎", () => {
+    const table =
+      "<table><tr><td>$ Fe^{3+} $</td><td>文字</td></tr></table>";
+    const src = `前文 $x^2$ ：${table}后文 $y$ 结束`;
+    const pieces = splitPieces(src);
+    const tables = pieces.filter((p) => p.kind === "table");
+    expect(tables).toHaveLength(1);
+    // 表前后文本与公式都保留
+    const text = pieces.map((p) => (p.kind === "text" ? p.value : "")).join("");
+    expect(text).toContain("前文");
+    expect(text).toContain("后文");
+    expect(text).toContain("结束");
+    const maths = pieces.filter((p) => p.kind === "math");
+    expect(maths.length).toBeGreaterThanOrEqual(2); // x^2 和 y
+  });
+
+  it("未闭合 table 内文保留（splitPieces 路径）", () => {
+    const src = "<table><tr><td>foo $x$ bar</td>";
+    const pieces = splitPieces(src);
+    expect(pieces.some((p) => p.kind === "table")).toBe(false);
+    const text = pieces.map((p) => (p.kind === "text" ? p.value : "")).join("");
+    expect(text).toContain("foo");
+    expect(text).toContain("bar");
+    // 内文公式仍被识别（内文保留，不是整体丢弃）
+    expect(pieces.some((p) => p.kind === "math")).toBe(true);
+  });
+
+  it("纯文本 + 公式回归不破", () => {
+    const text1 = splitPieces("A. 苹果");
+    expect(text1).toHaveLength(1);
+    expect(text1[0]).toMatchObject({ kind: "text", value: "A. 苹果" });
+
+    const text2 = splitPieces("速度 $v=at$ 时刻");
+    const kinds2 = text2.map((p) => p.kind);
+    expect(kinds2).toContain("math");
+    expect(kinds2).toContain("text");
+
+    // 多个表格共存
+    const src =
+      "<table><tr><td>a</td></tr></table>文本<table><tr><td>b</td></tr></table>";
+    const pieces = splitPieces(src);
+    expect(pieces.filter((p) => p.kind === "table")).toHaveLength(2);
+    const text = pieces.map((p) => (p.kind === "text" ? p.value : "")).join("");
+    expect(text).toContain("文本");
+  });
+
+  it("Q8 pH 表 / Q9 盐桥表真实形态（含公式的表格）", () => {
+    // 模拟 Q9 盐桥表：单元格含离子公式
+    const src =
+      '<table border="1"><tr><th>离子</th><th>浓度 / (mol·L⁻¹)</th></tr><tr><td>$ Fe^{3+} $</td><td>0.10</td></tr><tr><td>$ Fe^{2+} $</td><td>0.01</td></tr></table>';
+    const pieces = splitPieces(src);
+    expect(pieces).toHaveLength(1);
+    const t = pieces[0];
+    if (t.kind !== "table") throw new Error(`expected table, got ${t.kind}`);
+    expect(t.rows).toHaveLength(3);
+    // 表头
+    expect(t.rows[0][0].header).toBe(true);
+    // 数据行：含公式
+    expect(t.rows[1][0].pieces.some((p) => p.kind === "math")).toBe(true);
+    expect(t.rows[2][0].pieces.some((p) => p.kind === "math")).toBe(true);
+    // 数值列纯文本
+    const val = t.rows[1][1].pieces.map((p) => (p.kind === "text" ? p.value : "")).join("");
+    expect(val).toBe("0.10");
   });
 });
 

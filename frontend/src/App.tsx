@@ -10,6 +10,8 @@ import DocumentUpload from "./pages/DocumentUpload";
 import { FeedbackList } from "./pages/FeedbackList";
 import { QuestionDetailPage } from "./pages/QuestionDetail";
 import { QuestionList } from "./pages/QuestionList";
+import { StudentQuestionList } from "./pages/StudentQuestionList";
+import { StudentViewPage } from "./pages/StudentView";
 
 export default function App() {
   return (
@@ -22,7 +24,9 @@ export default function App() {
           <Route path="documents/:id" element={<DocumentReview />} />
           <Route path="candidates/:id" element={<CandidateReview />} />
           <Route path="questions" element={<QuestionList />} />
+          <Route path="questions-student" element={<StudentQuestionList />} />
           <Route path="questions/:id" element={<QuestionDetailPage />} />
+          <Route path="questions/:id/student" element={<StudentViewPage />} />
           <Route path="feedbacks" element={<FeedbackList />} />
         </Route>
         <Route path="*" element={<Navigate to="/admin" replace />} />

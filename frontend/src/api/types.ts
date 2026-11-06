@@ -139,6 +139,14 @@ export interface QuestionSummary {
   page_no: number;
   instance_order: number;
   created_at: string | null;
+  // QUESTION-VISUAL-INSPECTION-V1：真实内容摘要 + 发布状态
+  document_file_name: string | null;
+  stem_excerpt: string;
+  option_count: number;
+  answer_count: number;
+  explanation_count: number;
+  /** official / withheld_review / mixed / none（answer 行 answer_status.publish 聚合） */
+  answer_publish: string;
 }
 
 export interface QuestionListResponse {
@@ -212,4 +220,69 @@ export interface FeedbackCreateRequest {
   description: string;
   created_by?: string;
   producer_unit_id?: string | null;
+}
+
+// ------------------------------------------------------- Student view (VIS-INSPECT-V1)
+// 学生实际视图出参：无诊断字段；非 official 答案/解析文本恒空（服务端门控）。
+export interface StudentRoleContentInfo {
+  role: string;
+  label: string | null;
+  role_index: number;
+  text: string;
+}
+
+export interface StudentInstanceInfo {
+  question_number: string;
+  question_number_range: string;
+  page_no: number;
+  contents: StudentRoleContentInfo[];
+}
+
+export interface StudentQuestionDetail {
+  id: string;
+  subject: string | null;
+  grade: string | null;
+  canonical_question_type: string;
+  question_number: string;
+  question_number_range: string;
+  answer_publish: string;
+  student_answer_visible: boolean;
+  instances: StudentInstanceInfo[];
+}
+
+export interface StudentQuestionSummary {
+  id: string;
+  subject: string | null;
+  grade: string | null;
+  canonical_question_type: string;
+  question_number: string;
+  question_number_range: string;
+  page_no: number;
+  stem_excerpt: string;
+  answer_publish: string;
+  student_answer_visible: boolean;
+}
+
+export interface StudentQuestionListResponse {
+  questions: StudentQuestionSummary[];
+  total: number;
+}
+
+// ------------------------------------------------------- Inspect volumes (VIS-INSPECT-V1)
+export interface DatabaseInfo {
+  db_name: string;
+  is_default: boolean;
+  is_active: boolean;
+  series: string | null;
+  subject: string | null;
+  subject_hint: string | null;
+  year: string | null;
+  region: string | null;
+  question_count: number | null;
+}
+
+export interface DatabaseListResponse {
+  databases: DatabaseInfo[];
+  active_db_name: string;
+  default_db_name: string;
 }
