@@ -192,6 +192,25 @@ def is_answer_header(normalized_line: str) -> bool:
     return False
 
 
+# 段内答案标记（R2-B）：`N. 【答案】X` / `.【答案】X` / `【答案】X` 等
+# 每题答案行。比 is_answer_header 宽——不要求独立成行或纯结构后缀。
+# 【答案及解析】是解析头，不算答案标记。
+_ANSWER_MARKER_RE = re.compile(r"(?<![【\w])【答案】")
+
+
+def is_answer_marker(normalized_line: str) -> bool:
+    """每题答案行标记（含 section header）。
+
+    命中即该行是「答案区起点」，供 _compute_regions 分段使用。
+    """
+    if is_answer_header(normalized_line):
+        return True
+    norm = normalized_line.strip()
+    if "【答案及解析】" in norm:
+        return False
+    return bool(_ANSWER_MARKER_RE.search(norm))
+
+
 def is_explanation_header(normalized_line: str) -> bool:
     """详解/解析/解答表头判定（H-3 冻结 Grammar）。bracket 形态精确匹配，无后缀扩展。"""
     norm = normalized_line.strip()

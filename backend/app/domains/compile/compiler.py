@@ -10,6 +10,7 @@ ResolvedSpan.line_refs → SourceLineView.text slice 取正文（不补推、不
 from __future__ import annotations
 
 import hashlib
+import re
 import uuid
 
 from app.domains.compile import map_canonical_type
@@ -95,6 +96,60 @@ def _parse_answer_completeness(span) -> str | None:
             v = s.split("=", 1)[1].strip().lower()
             return v if v in ("full", "partial", "unknown") else None
     return None
+
+
+def _parse_fact_declared_value(span) -> str:
+    """R2X-08 P1-CLOSE: expected entry segment from evidence.
+
+    Reads the P1-CLOSE narrowing tag ``fact_expected_value`` (proven entry
+    segment); falls back to ``fact_declared_value`` (manifest-declared value).
+    """
+    if span is None:
+        return ""
+    out = ""
+    for e in span.evidence or ():
+        s = str(e)
+        if s.startswith("fact_expected_value="):
+            return s.split("=", 1)[1]
+        if s.startswith("fact_declared_value="):
+            out = s.split("=", 1)[1]
+    return out
+
+
+_PROVENANCE_TAG_PREFIXES = (
+    "fact_parent_unit=",
+    "fact_declared_shared=",
+    "fact_declared_type=",
+    "fact_shared_semantics=",
+    "fact_mapping=",
+    "fact_completeness_source=",
+    # B3-4R P-1：原始声明值/声明范围（不与 fact_declared_value 混淆——
+    # 后者是绑定目标 answer_value 的 P1-CLOSE 通道，语义不同）。
+    "fact_prov_declared_value=",
+    "fact_prov_declared_lines=",
+)
+
+
+def _parse_answer_provenance(span) -> tuple[tuple[str, str], ...]:
+    """B3-4R 溯源贯通：从 span 证据串回收映射溯源键值对。
+
+    Compiler 把它落到 CompiledAnswer.provenance —— 答案决策（Gate/Admission）
+    发生时可回溯 Producer 声明 → 父级证据 → 子题映射 → 本答案声明。
+    """
+    if span is None:
+        return ()
+    out: list[tuple[str, str]] = []
+    for e in span.evidence or ():
+        s = str(e)
+        for p in _PROVENANCE_TAG_PREFIXES:
+            if s.startswith(p):
+                out.append((p[:-1], s.split("=", 1)[1]))
+                break
+    return tuple(out)
+
+
+def _norm_ans(s: str) -> str:
+    return re.sub(r"\s+", "", s or "").casefold()
 
 
 class Compiler:
@@ -199,10 +254,29 @@ class Compiler:
             )
             ownership, binding_evidence = _parse_answer_ownership(span)
             cand = cr.text
-            # T20-BF: completeness comes ONLY from Producer declaration.
+            # T20-BF (R2X-08 P1 amendment): completeness comes ONLY from an
+            # answer_completeness value carried on the span — 注意：真实
+            # Producer 不声明该字段（0/5067），值是展开期 V3 推导或 manifest
+            # 非权威字段（B3-4R 校准，不得称 Producer 声明）。
             # Missing/partial/unknown → not complete. Never bool(cand.strip()).
             ac = _parse_answer_completeness(span)
             complete = ac == "full"
+            # R2X-08 P1-CLOSE: a `full` claim is only honored when the
+            # final materialized answer text matches the declared entry value.
+            # B3-4R §4: 分层比对（与 answer_evidence_mapping 同规则）——
+            # 仅语义冲突 fail-closed；表示差异（全半角/空白/大小写）不撤销。
+            if complete:
+                _declared = _parse_fact_declared_value(span)
+                if _declared:
+                    # TASK-QCC-ANSWER-EVIDENCE-1：撤销条件升级为分段折叠核验。
+                    # 仅真实矛盾（串段/声明内容不可恢复且非压缩一致）撤销 full；
+                    # 表示差异（LaTeX/Unicode/打包分隔）与压缩一致不再误杀。
+                    from app.domains.source.answer_segment_verify import (
+                        segments_contradict,
+                    )
+
+                    if segments_contradict(_declared, cand):
+                        complete = False
             # official_text is NOT a copy of candidate: only publish path fills it.
             answer = CompiledAnswer(
                 span_id=cr.span_id, line_refs=cr.line_refs, text=cand,
@@ -212,6 +286,7 @@ class Compiler:
                 binding_evidence=binding_evidence,
                 candidate_text=cand,
                 official_text="",
+                provenance=_parse_answer_provenance(span),
             )
         expl_item = self._role_by(node, "explanation")
         explanation = None

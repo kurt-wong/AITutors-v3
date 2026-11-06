@@ -93,9 +93,22 @@ class BoundUnit:
     # T20-BF: Producer answer_completeness (full|partial|unknown).
     # Missing/None ≠ full (fail-closed). Gate reads this; V3 never invents it.
     answer_completeness: str | None = None
+    # SEMANTICS-1 轴S：语义完整性（LLM 声明，prompt 4c——答案范围是否覆盖
+    # 本题原卷答案内容/小问）。与轴E（answer_completeness 证据推导）分离：
+    # 仅作 Question 级语义留痕与冲突记录，绝不参与 ownership/发布门槛。
+    # 来源见 answer_completeness_semantic_source（llm_declared|warnings_trace）。
+    answer_completeness_semantic: str | None = None
+    answer_completeness_semantic_source: str | None = None
     # T2.10: other units' exclusive material line windows to drop from THIS
     # unit's material text (cross-unit contamination guard).
     material_exclude_ranges: list[tuple[int, int]] = field(default_factory=list)
+    # QCC-FIX-4: manifest.image_assets 消费结果（行号 → 单元/选项）。
+    # 契约：选项配图排在字母行之后（reslice 提示词 8b）。标签前的配图属
+    # 未声明的前置选项 → stem_image_lines（P2-fix-2 extra_lines 通道）；
+    # 标签后的配图按布局序配对声明选项 → opt_image_lines。
+    opt_image_lines: dict[str, list[int]] = field(default_factory=dict)
+    opt_declared_line: dict[str, int] = field(default_factory=dict)
+    stem_image_lines: list[int] = field(default_factory=list)
 
 
 def _sha256_text(text: str) -> str:
@@ -132,6 +145,19 @@ def bind_units_from_manifest(
     line_count = len(source_lines)
     bound: list[BoundUnit] = []
     seen_ids: set[str] = set()
+
+    # SEMANTICS-1 legacy：旧包的 LLM 语义判断被 _assign_answer_completeness
+    # 覆盖，仅存于 annotation_meta.warnings 的 `(was '<val>')` 审计痕迹。
+    # 以严格格式恢复（仅认本管线 note 格式），来源标注 warnings_trace；
+    # 新包以 unit 字段 answer_completeness_semantic 为准（llm_declared）。
+    _sem_warn_re = re.compile(
+        r"^(\S+): answer_completeness=\w+ \(was '(\w+)'\)$"
+    )
+    semantic_from_warnings: dict[str, str] = {}
+    for _w in (manifest.get("annotation_meta") or {}).get("warnings") or []:
+        _m = _sem_warn_re.match(str(_w).strip())
+        if _m and _m.group(2) in ("full", "partial", "unknown"):
+            semantic_from_warnings.setdefault(_m.group(1), _m.group(2))
 
     # T2.10: index every unit's material_lines (incl. filtered ones) so a
     # contiguous material window cannot swallow another unit's exclusive
@@ -185,6 +211,28 @@ def bind_units_from_manifest(
                 f"answer_completeness must be full|partial|unknown, got {ac_raw!r}",
                 unit_id=unit_id,
             )
+        # SEMANTICS-1 轴S：语义完整性（LLM 声明）独立解析；缺失时按 legacy
+        # 审计痕迹恢复。非法值不 raise（语义轴 advisory）——置 None 并留来源；
+        # 原生字段存在但非法时不作一致性回退（保留"声明存在但不可用"事实）。
+        acs_raw = raw.get("answer_completeness_semantic")
+        acs_present = acs_raw is not None
+        acs = str(acs_raw).strip().lower() if acs_raw is not None else None
+        acs_source = None
+        if acs in ("full", "partial", "unknown"):
+            acs_source = str(
+                raw.get("answer_completeness_semantic_source") or "llm_declared"
+            )
+        else:
+            acs = None
+        if acs is None and not acs_present and unit_id in semantic_from_warnings:
+            acs = semantic_from_warnings[unit_id]
+            acs_source = "warnings_trace"
+        elif acs is None and not acs_present and ac is not None and (ae_value_str or ae_absent):
+            # 旧包无覆盖痕迹：_assign 契约下 prev==comp（无 (was …) 即未覆盖）。
+            # T19 setdefault 只作用于无 ae.value 的多问块——ae.value/absent 单元
+            # 在 _assign 前唯一写入者是 LLM，故可作一致性恢复（来源如实标注）。
+            acs = ac
+            acs_source = "pre_assign_agree"
         # B3-4: capture answer_evidence.type / .shared declaration facts (was
         # dropped — the middle layer never represented "answer shared across
         # units/subs"; see DSH 四点差异 2026-10-29).
@@ -245,13 +293,20 @@ def bind_units_from_manifest(
             printed_label = str(printed)
 
         option_labels: list[str] = []
+        opt_line_map: dict[str, int] = {}
         raw_opts = raw.get("options")
         if isinstance(raw_opts, (list, tuple)):
             for o in raw_opts:
                 if isinstance(o, dict):
                     lab = o.get("label")
                     if lab is not None and str(lab).strip():
-                        option_labels.append(str(lab).strip())
+                        lab_s = str(lab).strip()
+                        option_labels.append(lab_s)
+                        try:
+                            if o.get("start_line") is not None:
+                                opt_line_map[lab_s] = int(o["start_line"])
+                        except (TypeError, ValueError):
+                            pass
         # Fix D: scan extra_lines for option-pattern content with MISSING labels
         # (e.g. BIO Q8 "D. $O_2$" drifted into extra_lines).  Only add sequential
         # labels (next letter after current max), never arbitrary letters.
@@ -269,6 +324,31 @@ def bind_units_from_manifest(
                             option_labels.append(next_lab)
                             _extra_opt_line[next_lab] = ln
                             break
+
+        for _lab2, _ln2 in _extra_opt_line.items():
+            opt_line_map.setdefault(_lab2, _ln2)
+
+        # QCC-FIX-4：消费 manifest.image_assets（行号 → 单元/选项）。
+        # 选项配图按布局序与声明选项配对（契约 8b：图在字母行之后）；标签行
+        # 之前的配图属未声明的前置选项 → stem extra_lines（P2-fix-2 通道）。
+        stem_image_lines: list[int] = []
+        opt_image_lines: dict[str, list[int]] = {}
+        _assets = manifest.get("image_assets")
+        _win = ranges.get("options")
+        if isinstance(_assets, list) and _win is not None and opt_line_map:
+            _img_nums = sorted(
+                int(e["line_no"]) for e in _assets
+                if isinstance(e, dict) and e.get("line_no") is not None
+                and _win.start <= int(e["line_no"]) <= _win.end
+            )
+            _ordered_labs = [l for l in option_labels if l in opt_line_map]
+            if _ordered_labs:
+                _first_lab_line = min(opt_line_map[l] for l in _ordered_labs)
+                _pre = [n for n in _img_nums if n < _first_lab_line]
+                _post = [n for n in _img_nums if n >= _first_lab_line]
+                stem_image_lines.extend(_pre)
+                for _n, _lab in zip(_post, _ordered_labs):
+                    opt_image_lines.setdefault(_lab, []).append(_n)
 
         # E2E-013 data-safety: when manifest declares answer_evidence.type=absent
         # AND a validation issue references this unit, block the answer-zone
@@ -313,7 +393,12 @@ def bind_units_from_manifest(
                 answer_evidence_type=ae_type,
                 answer_evidence_shared=ae_shared,
                 answer_completeness=ac,
+                answer_completeness_semantic=acs,
+                answer_completeness_semantic_source=acs_source,
                 material_exclude_ranges=mat_exclude,
+                opt_image_lines=opt_image_lines,
+                opt_declared_line=opt_line_map,
+                stem_image_lines=stem_image_lines,
             )
         )
         # GEO-SUBQ: deterministic sub-question expansion (fail-closed per sub).
@@ -443,6 +528,20 @@ def _expand_subs(bu: "BoundUnit", source_lines: list[str]) -> None:
             parent_shared=bu.answer_evidence_shared,
             parent_type=bu.answer_evidence_type,
         )
+    # SEMANTICS-1 轴S：子题继承父单元的语义完整性（LLM 对单元级答案范围的
+    # 声明，prompt 4c）。只读透传、不重算、不覆盖轴E（子题 answer_completeness
+    # 仍是证据推导）。
+    if bu.answer_completeness_semantic is not None:
+        for _sub in bu.sub_questions or []:
+            _ans = (_sub.get("content") or {}).get("answer")
+            if isinstance(_ans, dict):
+                _ans.setdefault(
+                    "answer_completeness_semantic", bu.answer_completeness_semantic
+                )
+                _ans.setdefault(
+                    "answer_completeness_semantic_source",
+                    bu.answer_completeness_semantic_source or "llm_declared",
+                )
 
 
 def build_annotation_payload_from_bound(
@@ -516,6 +615,15 @@ def build_annotation_payload_from_bound(
         # layout-drifted images/tables/continuation (was silently dropped).
         if bu.ranges.get("extra") is not None:
             stem["extra_lines"] = [bu.ranges["extra"].start, bu.ranges["extra"].end]
+        # QCC-FIX-4b：标签前配图（未声明的前置选项）→ stem extra_lines 通道。
+        if bu.stem_image_lines:
+            _lo = min(bu.stem_image_lines)
+            _hi = max(bu.stem_image_lines)
+            _cur = stem.get("extra_lines")
+            if _cur:
+                _lo = min(_lo, int(_cur[0]))
+                _hi = max(_hi, int(_cur[1]))
+            stem["extra_lines"] = [_lo, _hi]
         content["stem"] = stem
 
         if bu.original_question_type in (
@@ -537,6 +645,21 @@ def build_annotation_payload_from_bound(
                     opt_dict["evidence_lines"] = [
                         bu.extra_opt_lines[lab], bu.extra_opt_lines[lab],
                     ]
+                # QCC-FIX-4c：消费 image_assets —— 配图行并入选项绑定范围
+                # （字节证明不变：绑定的是真实源文行，含 <img> 标记）。
+                _imgs = (bu.opt_image_lines or {}).get(lab) or []
+                if _imgs:
+                    _lo = min(_imgs)
+                    _hi = max(_imgs)
+                    _base = (bu.opt_declared_line or {}).get(lab)
+                    if _base is not None:
+                        _lo = min(_lo, int(_base))
+                        _hi = max(_hi, int(_base))
+                    _prev = opt_dict.get("evidence_lines")
+                    if _prev:
+                        _lo = min(_lo, int(_prev[0]))
+                        _hi = max(_hi, int(_prev[1]))
+                    opt_dict["evidence_lines"] = [_lo, _hi]
                 content["options"].append(opt_dict)
             if bu.ranges["options"] is not None:
                 # R3-D: do NOT unconditionally expand options_range into extras
@@ -566,6 +689,14 @@ def build_annotation_payload_from_bound(
         # 不得当上游权威（B3-4）。Missing stays absent — never defaulted to full.
         if bu.answer_completeness is not None:
             content["answer"]["answer_completeness"] = bu.answer_completeness
+        # SEMANTICS-1 轴S：语义完整性随 content 透传（与轴E 分离；advisory）。
+        if bu.answer_completeness_semantic is not None:
+            content["answer"]["answer_completeness_semantic"] = (
+                bu.answer_completeness_semantic
+            )
+            content["answer"]["answer_completeness_semantic_source"] = (
+                bu.answer_completeness_semantic_source or "llm_declared"
+            )
         # v2.4+: keep the raw answer_evidence.lines declaration for audit
         # (may equal answer_lines after fallback; never dropped silently).
         if bu.answer_evidence_lines is not None:

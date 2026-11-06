@@ -124,6 +124,9 @@ def _extract_entry_nums(lines: Sequence[str]) -> tuple[str, ...]:
     nums: list[str] = []
     for line in lines or ():
         for m in _ENTRY_RE.finditer(line or ""):
+            # QCC-FIX-3：小数/百分数碎片（0.1000 / 63.39%）不是题号条目。
+            if _resolver_mod._entry_match_is_decimal(line or "", m):
+                continue
             n = m.group(1)
             if n not in nums:
                 nums.append(n)
@@ -426,7 +429,6 @@ def _classify(
     decode_loc: str = "",
     answer_text: str = "",
     declared_value: str = "",
-    declared_binding: bool = False,
 ) -> str:
     """Recompute ownership from evidence. Never trusts a declared ownership.
 
@@ -445,6 +447,11 @@ def _classify(
     not name a different question. Content inconsistency / cross-question
     conflict / missing lines → reject (unknown / foreign).
     No reliable evidence → unknown (fail-closed, withheld_review).
+
+    QCC-FIX-5（Owner 2026-01 裁决）：声明绑定（answer_lines/answer_value 的
+    存在性）只用于**定位**，不构成归属证据——原先 fallback 的
+    `declared_binding → unknown 升级 match` 已删除（它违反上段契约，且
+    verify 按设计不复算该声明 → derive/verify 永不一致 → registration_failed）。
     """
     qn = (question_number or "").strip()
     parts = _parse_decode_loc(decode_loc or "")
@@ -483,7 +490,14 @@ def _classify(
         len(src) == 1 and (src[0] or "").strip() == dv and dv != ""
     )
     if dv and src and joined.strip() and not is_value_only_placeholder:
-        entry_nums = _extract_entry_nums(src)
+        # TASK-QCC-ANSWER-EVIDENCE-1：条目号提取与 fallback 分类器同口径
+        # （resolver._entry_nums_of）。本模块 _extract_entry_nums 的空白前缀
+        # 正则漏 `【答案】11.C` 形态条目（`】` 前缀），会让宽值路径比无值
+        # fallback 更严（match→foreign 误判）。决策口径必须一致；
+        # fact.entry_nums 字段仍用 _extract_entry_nums（digest 稳定）。
+        entry_nums = {
+            str(n) for n in _resolver_mod._entry_nums_of(list(src))
+        }
         qn_in = qn in entry_nums if entry_nums else False
         # Composite parent qn: Chinese sub-entries `（1）A （2）B …` under a
         # global parent qn (e.g. Q4 parent=4, entries={1,2,3}). Accept ONLY
@@ -500,9 +514,41 @@ def _classify(
         others = [n for n in entry_nums if n != qn]
         # Cross-question conflict: entry numbering names ONLY other questions.
         if entry_nums and not qn_in and others:
+            # TASK-QCC-ANSWER-EVIDENCE-1：小条目号带（≤10）对高目标题号是
+            # 复合题局部小问标签（Q17 形态 (1)(2)(3)(6)，非连续），与
+            # classify_answer_ownership 的 ambiguous-band 同则 → unknown。
+            # 不得升级 foreign：foreign 永不可人工放行，误判代价不对称。
+            try:
+                _others_int = [int(n) for n in others]
+                _qn_int = int(qn)
+            except (TypeError, ValueError):
+                _others_int, _qn_int = [], 0
+            if _others_int and all(e <= 10 for e in _others_int) and _qn_int > 10:
+                return "unknown"
             return "foreign"
         # Content consistency: declared value must be recoverable from source.
+        # TASK-QCC-ANSWER-EVIDENCE-1：整串连续恢复（_value_supported_by_lines）
+        # 之外，补充分段+表示折叠核验（answer_segment_verify）——语义声明与
+        # 源文序列化差异（LaTeX/Unicode/`；`打包 vs `(N).` 条目）不再整串
+        # 否决。全部声明段折叠后在其源条目内全等恢复才认；压缩一致（consistent）
+        # 不足以证归属，contradiction/任一段未证实 → unknown（fail-closed）。
         content_ok = _value_supported_by_lines(dv, src)
+        if not content_ok:
+            from app.domains.source.answer_segment_verify import (
+                verify_declared_vs_source,
+            )
+
+            _rep = verify_declared_vs_source(dv, joined, qn=qn)
+            content_ok = (
+                bool(_rep.checks)
+                and not _rep.contra
+                and any(c.declared_raw for c in _rep.checks)
+                and all(
+                    c.status == "verified"
+                    for c in _rep.checks
+                    if c.declared_raw
+                )
+            )
         if not content_ok:
             # Declared value contradicts source content → do NOT upgrade.
             return "unknown"
@@ -520,14 +566,7 @@ def _classify(
         return "unknown"
 
     own = _resolver_mod.classify_answer_ownership(list(lines or ()), qn)
-    own = _normalize_ownership(own)
-    # T20-BF: when Producer declared the unit→answer binding (answer range /
-    # answer_evidence for THIS question), the declaration is the ownership
-    # authority. Classifier may only CONTRADICT (foreign); it is not required
-    # to produce the positive conclusion.
-    if declared_binding and own == "unknown":
-        return "match"
-    return own
+    return _normalize_ownership(own)
 
 
 def derive_binding_fact(
@@ -541,7 +580,6 @@ def derive_binding_fact(
     evidence_kind: str = "",
     decode_loc: str = "",
     declared_value: str = "",
-    declared_binding: bool = False,
 ) -> BindingFact:
     """Sole producer of BindingFact. Resolver-internal derive path ONLY.
 
@@ -550,6 +588,8 @@ def derive_binding_fact(
     decode_loc records structural position (cell index / range offset).
     declared_value is the Manifest answer_evidence.value used for the
     verifiable-binding content-consistency check (never a trust shortcut).
+    QCC-FIX-5：声明绑定的存在性不参与归属判定（只用于定位），与
+    verify_binding_fact 同一证据契约复算。
     """
     if not source_version_id:
         raise ValueError("source_version_id is required for BindingFact")
@@ -574,7 +614,6 @@ def derive_binding_fact(
 
     own = _classify(
         lines, qn, decode_loc, answer_text=ans, declared_value=declared_value,
-        declared_binding=declared_binding,
     )
 
     fid = _fact_digest(

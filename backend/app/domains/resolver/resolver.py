@@ -14,12 +14,15 @@ ResolvedRelation。七种 role 各用独立 policy（失败语义不同，不做
 from __future__ import annotations
 
 import hashlib
+import json
 import re
 import uuid
 
 from app.domains.resolver.match_normalization import (
     is_answer_header,
+    is_answer_marker,
     is_explanation_header,
+    is_page_marker_line,
     is_question_start,
     normalize_text,
     option_tokens,
@@ -36,6 +39,12 @@ from app.domains.resolver.span import (
     SourceLineView,
     SourceRegion,
     UnresolvedReference,
+)
+from app.domains.resolver.table_dedup import (
+    audit_tag,
+    classify_extra_table_block,
+    extract_cells,
+    iter_table_blocks,
 )
 
 
@@ -127,14 +136,22 @@ def _find_sibling_marker_seq(idx, start_seq: int, upper: int | None,
 
 
 def _line_has_question_entry(text: str, qn: str) -> bool:
-    """该行是否存在题号 qn 的合法入口（行首 / 句末拼接 / 区间拼接）。
+    """该行是否存在题号 qn 的合法入口（行首 / 句末拼接 / 区间拼接 / 篇章空格）。
 
     确定性：只认已声明的 qn，不猜「最近题号」。行首仍走 is_question_start
     （含 escaped-dot v1.2）；行中仅接受上述两种真实卷拼接形态。
+    T82：完形/语法填空篇章空格 `$ \\underline{N} $` / `___N___` 也是入口。
     """
     if is_question_start(normalize_text(text)) == qn:
         return True
     qn_esc = re.escape(qn)
+    # Passage blank markers (cloze / grammar_fill) bind the sub to its sentence.
+    if re.search(rf"\\underline\s*{{\s*{qn_esc}\s*}}", text):
+        return True
+    if re.search(rf"___\s*{qn_esc}\s*___", text):
+        return True
+    if re.search(rf"(?<!\d)_(?:_{{2,}}|\s*_{{2,}})\s*{qn_esc}\s*_+(?!\d)", text):
+        return True
     if re.search(_MID_SENTENCE_QN_RE_T.format(qn=qn_esc), text):
         return True
     if re.search(_MID_RANGE_QN_RE_T.format(qn=qn_esc), text):
@@ -163,6 +180,84 @@ def _find_paren_question_entry_col(text: str, qn: str) -> int | None:
     if _line_has_paren_question_entry(text, qn):
         return 0
     return None
+
+
+_BLANK_MARK_RE = re.compile(
+    r"\\underline\s*\{\s*(\d{1,3})\s*\}"
+    r"|_{3,}\s*(\d{1,3})\s*_{3,}"
+    r"|(?<![\w])_{3,}(?!\d)"  # unnumbered blank (T82 cloze Q26-29)
+)
+
+
+def _blank_hits(text: str) -> list:
+    """Blank matches, merging `\\underline{N} $____` into one hit (T82)."""
+    hits = list(_BLANK_MARK_RE.finditer(text))
+    merged = []
+    for m in hits:
+        if merged:
+            prev = merged[-1]
+            between = text[prev.end(): m.start()]
+            if (
+                (m.group(1) is None and m.group(2) is None)
+                and re.fullmatch(r"[\s$]*", between or "")
+            ):
+                continue
+        merged.append(m)
+    return merged
+
+
+def _blank_fragment_bounds(text: str, qn: str) -> tuple[int, int] | None:
+    """T82：返回行内「含 qn 空格」的句段 [start, end)。
+
+    同一行多个空格时，以前后空格/句读为界，保证每空句段唯一。
+    无该 qn 空格 → None（调用方回退整行）。
+    """
+    hits = _blank_hits(text)
+    target = None
+    # numbered match first
+    for i, m in enumerate(hits):
+        num = m.group(1) or m.group(2)
+        if num is not None and num == qn:
+            target = m
+            target_idx = i
+            break
+    if target is None:
+        # unnumbered: match by ordinal among unnumbered hits
+        return None
+    prev_end = 0
+    for m in hits:
+        if m.start() < target.start():
+            prev_end = m.end()
+    next_start = len(text)
+    for m in hits:
+        if m.start() > target.start():
+            next_start = m.start()
+            break
+    window = text[prev_end:next_start]
+    starts = [0]
+    for m in re.finditer(r"[.!?;。！？；]", window):
+        starts.append(m.end())
+    local = target.start() - prev_end
+    frag_start = 0
+    for s in starts:
+        if s <= local:
+            frag_start = s
+        else:
+            break
+    frag_end = len(window)
+    for m in re.finditer(r"[.!?;。！？；]", window):
+        if m.start() >= local:
+            frag_end = m.end()
+            break
+    a = prev_end + frag_start
+    b = prev_end + frag_end
+    while a < b and text[a] in " \t":
+        a += 1
+    while b > a and text[b - 1] in " \t":
+        b -= 1
+    if a >= b:
+        return (target.start(), target.end())
+    return (a, b)
 
 
 def _find_question_entry_col(text: str, qn: str) -> int | None:
@@ -203,10 +298,29 @@ LEGACY_FOREIGN = "foreign_question"
 LEGACY_LOCAL = "local_index"
 
 
+def _entry_match_is_decimal(raw: str, m: re.Match) -> bool:
+    r"""QCC-FIX-3：排除小数/百分数碎片（35.5g / 63.39% / 0.1000）被误当题号条目。
+
+    半角 `.` 后紧跟数字 = 小数点，不是题号分隔符；`17\.`（LaTeX 转义点）与
+    全角 `．` 不在此列（保护 `12．2017年` 等真实题号形态，见
+    match_normalization.fold_full_width）。归属分类必须据此过滤，
+    否则含计算数值的解答行会被误判 foreign（借他题答案）。
+    """
+    tok = m.group(0)
+    if not tok.endswith("."):
+        return False
+    if tok.endswith("\\."):
+        return False
+    j = m.end()
+    return j < len(raw) and raw[j].isdigit()
+
+
 def _entry_nums_of(texts: list[str]) -> set[int]:
     nums: set[int] = set()
     for raw in texts:
         for m in _ENTRY_RE.finditer(raw):
+            if _entry_match_is_decimal(raw, m):
+                continue
             try:
                 n = int(m.group(1))
             except ValueError:
@@ -1222,6 +1336,7 @@ class _Out:
         _fact_own = None
         _fact_bev = ""
         _fact = None
+        _reg_reason = ""
         if _span_id and _svid:
             try:
                 from app.domains.gate.binding_fact import (
@@ -1237,14 +1352,18 @@ class _Out:
                     answer_text=str(_ans),
                     evidence_kind=_existing_bev or "",
                     decode_loc=_decode_loc,
+                    # TASK-QCC-ANSWER-EVIDENCE-1：derive 的 declared_value 允许
+                    # 来自 expected_value 通道（U9-10 子题形态：entry-token 分段
+                    # 产物在 expected_value）。注意：evidence 标签
+                    # fact_declared_value 仍只反映 answer_value（P1-CLOSE 通道
+                    # 既有语义），两处不得混淆。
                     declared_value=str(
-                        getattr(t, "answer_value", "") or ""
+                        getattr(t, "answer_value", "")
+                        or getattr(t, "expected_value", "")
+                        or ""
                     ),
-                    # T20-BF: Manifest-declared answer range/value = binding declaration.
-                    declared_binding=bool(
-                        getattr(t, "evidence_lines", None)
-                        or getattr(t, "answer_value", None)
-                    ),
+                    # QCC-FIX-5：声明绑定的存在性只定位、不作归属证据
+                    # （Owner 2026-01 裁决），不再传入 derive。
                 )
                 register_trusted_binding_fact(_fact)
                 _fact_own = _fact.ownership or "unknown"
@@ -1253,10 +1372,14 @@ class _Out:
                     if _fact.evidence_kind
                     else "fact"
                 )
-            except Exception:
+            except Exception as _reg_exc:  # noqa: BLE001
                 # Registration failure → force unknown (fail closed).
+                # QCC-FIX-5：保留失败原因（有界），不再丢失可诊断性。
                 _fact_own = "unknown"
                 _fact_bev = "registration_failed"
+                _reg_reason = (
+                    f"{type(_reg_exc).__name__}: {str(_reg_exc)[:80]}"
+                )
         else:
             # No span/svid (defensive): fall back to local classify only.
             own, bev = bind_answer_text(_lines, qn)
@@ -1274,18 +1397,149 @@ class _Out:
         # R2-HANDOFF: persist BindingFact verification inputs in evidence so
         # a cross-process review path can reconstruct and re-verify the fact.
         # Never a trust shortcut — verify_binding_fact re-derives ownership.
+        # P1-CLOSE 通道既有语义：fact_declared_value 只反映 answer_value；
+        # expected_value 走 fact_expected_value 通道，不得混写。
         _dv = str(getattr(t, "answer_value", "") or "")
-        _ac = str(getattr(t, "answer_completeness", "") or "")
+        # TASK-QCC-ANSWER-EVIDENCE-1：核验/派生用宽值（answer_value 优先，
+        # expected_value 兜底——U9-10 子题形态）。
+        _dv_wide = _dv or str(getattr(t, "expected_value", "") or "")
+        _ac_manifest = str(getattr(t, "answer_completeness", "") or "")
+        # SEMANTICS-1 轴S：语义完整性（LLM 声明）——只读透传。
+        _acs = str(getattr(t, "answer_completeness_semantic", "") or "")
+        _acs_src = str(
+            getattr(t, "answer_completeness_semantic_source", "") or ""
+        ) or ("llm_declared" if _acs else "")
+        # TASK-QCC-ANSWER-EVIDENCE-1：completeness 与 ownership 同源派生——
+        # 分段核验（同一 SegmentReport）推导 ac（v3_derived），manifest 推导值
+        # 降级为 provenance 留痕，不再因表示差异与 ownership 打架。
+        # 值占位（value-only 无源行）不推导，保持 fail-closed。
+        _is_placeholder = (
+            len(_lines) == 1
+            and _dv_wide
+            and (_lines[0] or "").strip() == _dv_wide.strip()
+        )
+        _ac = _ac_manifest
+        _seg_summary = ""
+        _seg_struct = ""
+        if _dv_wide and _lines and not _is_placeholder:
+            from app.domains.source.answer_segment_verify import (
+                derive_answer_completeness,
+                report_to_dict,
+                verify_declared_vs_source,
+            )
+
+            _rep = verify_declared_vs_source(
+                _dv_wide, "\n".join(str(x) for x in _lines), qn=qn
+            )
+            _seg_summary = _rep.summary
+            _seg_ac = derive_answer_completeness(_rep)
+            # TASK-QCC-ANSWER-EVIDENCE-2 G2：结构化核验证据（Question 级持久化
+            # 的传输面；admission 落 answer_status.segment_verification）。
+            try:
+                _seg_struct = json.dumps(
+                    report_to_dict(_rep), ensure_ascii=False, separators=(",", ":")
+                )
+            except Exception:
+                _seg_struct = ""
+            if _rep.contra:
+                # 真实矛盾：撤销主张（P1-CLOSE 同形——空标签，不是 unknown
+                # 声明）。full/partial 不得在矛盾证据上成立。
+                _ac = ""
+            elif _seg_ac:
+                _ac = _seg_ac
+        elif _is_placeholder:
+            # TASK-QCC-ANSWER-EVIDENCE-2 G2：value-only 占位无可核源文 →
+            # 结构化留痕 unverified（UNKNOWN is retained data）。
+            from app.domains.source.answer_segment_verify import RULES_VERSION
+
+            _seg_struct = json.dumps(
+                {
+                    "rules_version": RULES_VERSION,
+                    "mode": "none",
+                    "verdict": "unverified",
+                    "completeness": "",
+                    "reason": "value_only_placeholder",
+                },
+                ensure_ascii=False,
+                separators=(",", ":"),
+            )
+        # R2X-08 P1-CLOSE：full 主张仅在绑定答案文本与声明段无真实矛盾时保留。
+        # B3-4R §4 + TASK-QCC-ANSWER-EVIDENCE-1：分层比对升级为分段折叠核验——
+        # 表示差异/压缩一致不撤销，仅 segment contradiction 撤销。
+        _ev = str(getattr(t, "expected_value", "") or "")
+        if _ac == "full" and _ev:
+            from app.domains.source.answer_segment_verify import (
+                segments_contradict,
+            )
+
+            if segments_contradict(_ev, str(_ans)):
+                _ac = ""
+        # B3-4R 溯源贯通：把映射溯源写进同一证据通道（fact_* 标签），
+        # Compiler/Gate 决策时可回溯 Producer 声明 → 父级证据 → 子题映射。
+        _prov = getattr(t, "answer_evidence_prov", None) or {}
+        # B3-4R P-1：原始声明值/声明范围进入同一证据通道（有界序列化，
+        # 完整原文在 payload answer_evidence，经 fact_parent_unit 回查）。
+        from app.domains.source.answer_evidence_mapping import (
+            clip_declared_value,
+            serialize_declared_lines,
+        )
+
+        _prov_tags = tuple(
+            f"{k}={v}"
+            for k, v in (
+                ("fact_parent_unit", _prov.get("parent_unit_id")),
+                ("fact_declared_shared", _prov.get("declared_shared")),
+                ("fact_declared_type", _prov.get("declared_type")),
+                ("fact_shared_semantics", _prov.get("shared_semantics")),
+                ("fact_mapping", _prov.get("mapping")),
+                ("fact_completeness_source", _prov.get("completeness_source")),
+                (
+                    "fact_prov_declared_value",
+                    clip_declared_value(_prov.get("declared_value")),
+                ),
+                (
+                    "fact_prov_declared_lines",
+                    serialize_declared_lines(_prov.get("declared_lines")),
+                ),
+            )
+            if v is not None
+        )
         return cleaned + (
             f"ownership={_fact_own}",
             f"binding_evidence={_fact_bev}",
             f"fact_declared_value={_dv}",
+            f"fact_expected_value={_ev}",
             f"fact_decode_loc={_decode_loc}",
             f"fact_source_hash={_fact.source_hash if _fact else ''}",
-            # T20-BF: pass Producer completeness through to Compiler/Gate.
+            # T20-BF: pass V3-derived completeness through to Compiler/Gate.
+            # 注意（B3-4 校准）：这不是 Producer 声明——真实 Producer 产物无
+            # answer_completeness 字段（0/5067）；e2e manifest 里的值来自
+            # reslice_pipeline 证据推导。此处经文本序列化再解析回来的是
+            # V3 侧的值，不得表述为上游权威。
             # Missing → empty tag → Compiler treats as not-full (fail-closed).
             f"answer_completeness={_ac}" if _ac else "answer_completeness=",
-        )
+            # TASK-QCC-ANSWER-EVIDENCE-1：manifest 推导值降级为 provenance 留痕。
+            f"fact_prov_manifest_completeness={_ac_manifest}",
+            # TASK-QCC-ANSWER-SEMANTICS-1 轴S：语义完整性（LLM 声明）独立通道。
+            # 只作 Question 级留痕/冲突记录；绝不参与 ownership、_ac 或发布。
+            f"fact_semantic_completeness={_acs}",
+            f"fact_semantic_completeness_source={_acs_src}",
+        ) + (
+            # TASK-QCC-ANSWER-EVIDENCE-1：分段核验审计串（密封点统一口径；
+            # resolver 块检查已写同名标签时不重复）。
+            (f"segment_verify={_seg_summary or 'placeholder'}",)
+            if not any(str(e).startswith("segment_verify=") for e in cleaned)
+            else ()
+        ) + (
+            # TASK-QCC-ANSWER-EVIDENCE-2 G2：结构化核验证据（同上不重复）。
+            (f"segment_evidence={_seg_struct}",)
+            if _seg_struct
+            and not any(str(e).startswith("segment_evidence=") for e in cleaned)
+            else ()
+        ) + (
+            # QCC-FIX-5：注册失败保留原因（有界），便于诊断不再只留标签。
+            (f"registration_error={_reg_reason}",) if _reg_reason else ()
+        ) + _prov_tags
 
     def add_span(self, unit_id: str, t, refs, status, evidence, role_hint=None):
         text = self._slice(refs)
@@ -1294,7 +1548,20 @@ class _Out:
             raw_lines = [self._idx.get(r).text for r in refs]
         except Exception:
             raw_lines = [text]
-        evidence = self._seal_answer_ownership(t, evidence, raw_lines or [text], role=role_v, answer_text=text)
+        # R2X-03: BindingFact 必须封存与编译后学生面文本一致的 answer_text
+        # （compiler._answer_text T2.10 同规则滤除纯分页标记行）。否则答案 span
+        # 含 `---`/页码行时 fact_matches_answer_text 必败 → ownership 降级
+        # unknown → auto_gate 永远 withheld（admission 已批但视图不可见）。
+        # source_lines 仍传原始行，ownership 分类不受影响。
+        if role_v == "answer":
+            face_text = "\n".join(
+                x for x in (raw_lines or [text]) if not is_page_marker_line(x)
+            )
+        else:
+            face_text = text
+        evidence = self._seal_answer_ownership(
+            t, evidence, raw_lines or [text], role=role_v, answer_text=face_text
+        )
         # foreign / never-publish-bind: keep span empty when ownership is foreign
         own = next(
             (str(e).split("=", 1)[1] for e in evidence if str(e).startswith("ownership=")),
@@ -1529,6 +1796,8 @@ class SourceResolver:
         self._current_printed: str | None = None
         # Whether stem location produced an unresolved (ambiguous/missing).
         self._stem_had_unresolved: bool = False
+        # R2X-10 P-2: extra 表块去重审计（unit_id → evidence 串列表）。
+        self._table_dedup_audit: dict[str, list[str]] = {}
         # 题目区终点 = 首个 答案/详解/解析 表头 seq（其后为答案/详解区，不得当题号行）。
         self._qzone_end = next(
             (l.seq for l in self._idx.lines
@@ -1565,6 +1834,8 @@ class SourceResolver:
             for r, qns in _range_qns.items()
             if _range_owners.get(r, 0) >= 2
         }
+        # R2X-10 P-2: extra 表块去重审计（每次 run 重置；证据挂 stem span evidence）。
+        self._table_dedup_audit: dict[str, list[str]] = {}
         # P0-R5b: units with positive local-numbering evidence. A local
         # sub-index label (`1.` for unit 26) is allowed ONLY when:
         # (a) the entry content is a multi-part local body, OR
@@ -1672,44 +1943,55 @@ class SourceResolver:
         **consistency evidence** for the Source Evidence Binding Contract,
         NOT semantic truth. Gate uses it for span-overlap consistency checks.
 
-        No answer header -> only question region (entire source is question zone).
+        R2-B: segmented regions. Document-level map made the first
+        ``【解析】`` swallow every later ``N. 【答案】X`` line into the
+        explanation zone, so legitimate per-question answers looked like
+        role-provenance violations. Each answer/explanation marker now
+        opens a zone that ends at the next marker.
         """
         lines = self._idx.lines
-        answer_hdr_seq: int | None = None
-        explanation_hdr_seq: int | None = None
+        if not lines:
+            return ()
+
+        # (seq, kind) markers in source order. Answer marker covers both
+        # section headers (## 参考答案 / 【答案】) and per-question rows
+        # (N. 【答案】X). Explanation marker is the frozen H-3 header grammar.
+        markers: list[tuple[int, str]] = []
         for l in lines:
             norm = normalize_text(l.text)
-            if answer_hdr_seq is None and is_answer_header(norm):
-                answer_hdr_seq = l.seq
-            if explanation_hdr_seq is None and is_explanation_header(norm):
-                explanation_hdr_seq = l.seq
-            if answer_hdr_seq is not None and explanation_hdr_seq is not None:
-                break
-
-        regions: list[SourceRegion] = []
+            if is_answer_marker(norm):
+                markers.append((l.seq, "answer"))
+            elif is_explanation_header(norm):
+                markers.append((l.seq, "explanation"))
+        markers.sort(key=lambda x: x[0])
 
         def _refs_between(lo: int, hi: int) -> tuple[str, ...]:
             return tuple(l.line_ref for l in lines if lo <= l.seq < hi)
 
-        # question region: [first_seq, answer_hdr or explanation_hdr or +inf)
-        q_end = answer_hdr_seq or explanation_hdr_seq or (lines[-1].seq + 1 if lines else 0)
-        q_refs = _refs_between(lines[0].seq if lines else 0, q_end)
-        if q_refs:
-            regions.append(SourceRegion("question", lines[0].seq if lines else 0, q_end, q_refs))
+        first_seq = lines[0].seq
+        last_end = lines[-1].seq + 1
+        regions: list[SourceRegion] = []
 
-        # answer region: (answer_hdr, explanation_hdr or +inf)
-        if answer_hdr_seq is not None:
-            a_end = explanation_hdr_seq or (lines[-1].seq + 1)
-            a_refs = _refs_between(answer_hdr_seq + 1, a_end)
-            if a_refs:
-                regions.append(SourceRegion("answer", answer_hdr_seq + 1, a_end, a_refs))
+        if not markers:
+            # No headers at all -> entire source is question zone.
+            refs = _refs_between(first_seq, last_end)
+            if refs:
+                regions.append(SourceRegion("question", first_seq, last_end, refs))
+            return tuple(regions)
 
-        # explanation region: (explanation_hdr, +inf)
-        if explanation_hdr_seq is not None:
-            e_end = lines[-1].seq + 1
-            e_refs = _refs_between(explanation_hdr_seq + 1, e_end)
-            if e_refs:
-                regions.append(SourceRegion("explanation", explanation_hdr_seq + 1, e_end, e_refs))
+        # Leading block before the first marker is question zone.
+        if markers[0][0] > first_seq:
+            q_refs = _refs_between(first_seq, markers[0][0])
+            if q_refs:
+                regions.append(SourceRegion("question", first_seq, markers[0][0], q_refs))
+
+        # Each marker opens a zone that runs until the next marker (or EOF).
+        for i, (seq, kind) in enumerate(markers):
+            end = markers[i + 1][0] if i + 1 < len(markers) else last_end
+            # Marker line itself belongs to the zone it opens.
+            refs = _refs_between(seq, end)
+            if refs:
+                regions.append(SourceRegion(kind, seq, end, refs))
 
         return tuple(regions)
 
@@ -1877,11 +2159,17 @@ class SourceResolver:
         found: dict[str, tuple] = {}
         # U44-46: tighten option-search window with declared options_range.
         # Only tightens (min), never expands. options_range=None keeps current behavior.
+        # T82: also tighten the LOWER bound — cloze option rows are per-blank
+        # (`11. A.` … `12. A.`); without lo, Q12's search swallows Q11's row.
+        opt_lo_seq = None
         if options_range is not None:
-            _, hi = options_range
+            lo, hi = options_range
             tightened = hi + 1  # options_range is 1-based inclusive; seq is exclusive upper
             if region_upper is None or tightened < region_upper:
                 region_upper = tightened
+            lo_refs = self._evidence_line_refs(lo, lo)
+            if lo_refs:
+                opt_lo_seq = self._idx.seq_of(lo_refs[0])
         cursor_seq = self._idx.seq_of(start_ref)
         cursor_ref: str | None = None
         cursor_end = 0
@@ -1892,6 +2180,28 @@ class SourceResolver:
         html_hits = self._html_table_options(labels, start_ref, region_upper)
         if html_hits is not None:
             return html_hits
+        # T82: declared options_range is authoritative for per-blank option rows
+        # (`11. A. x B. y C. z D. w`). Those lines do NOT start with `A.`, so the
+        # line-start token search misses them — bind via content bounds instead.
+        if options_range is not None:
+            lo, hi = options_range
+            rng_refs = self._evidence_line_refs(lo, hi)
+            if rng_refs:
+                for ref in rng_refs:
+                    raw = self._idx.get(ref).text
+                    for lab in labels:
+                        if lab in found:
+                            continue
+                        bounds = _option_content_bounds(
+                            raw, lab, prefer_offset=None, boundary_labels=set(labels)
+                        )
+                        if bounds is not None and bounds[1] > bounds[0]:
+                            found[lab] = ("content", ref, bounds[0], bounds[1])
+                if all(
+                    lab in found and found[lab][0] in ("ok", "content", "inline", "cell")
+                    for lab in labels
+                ):
+                    return found
         # E2E-010: options may begin on the start/options-range line itself
         # (七选五 A–G). Include start line in the line-start search window.
         search_from = cursor_seq - 1
@@ -2236,11 +2546,42 @@ class SourceResolver:
             return []
         exclude = exclude_refs or frozenset()
         e_lo, e_hi = extra
+        # R2X-10 P-2: extra 表块去重（判据 table_dedup.py：单元格多重集覆盖≥0.75
+        # 判重复；块粒度全有全无；<img> 块一律保留）。重复块整块不并入 stem，
+        # 未覆盖单元格进审计 evidence（不静默丢）。
+        drop_seqs: set[int] = set()
+        stem_rng = getattr(t, "question_search_lines", None) or getattr(
+            t, "stem_lines", None
+        )
+        stem_cells: list[str] = []
+        if stem_rng:
+            for sl in self._idx.between_incl(stem_rng[0], stem_rng[1]):
+                stem_cells.extend(extract_cells(sl.text))
+        extra_lines = tuple(self._idx.between_incl(e_lo, e_hi))
+        for blk in iter_table_blocks(((l.seq, l.text) for l in extra_lines), e_lo, e_hi):
+            decision = classify_extra_table_block(blk, stem_cells)
+            if decision.action == "drop":
+                drop_seqs.update(range(blk.start_seq, blk.end_seq + 1))
+            self._table_dedup_audit.setdefault(unit_id, []).append(
+                audit_tag(unit_id, decision)
+            )
         # Option pattern: "X." at line start OR inside HTML (e.g. <div>D. ...</div>)
         _opt_line_re = re.compile(r"(?:^|>)\s*[A-Ha-h]\s*[.．。:：、]")
         out_refs: list[str] = []
-        for l in self._idx.between_incl(e_lo, e_hi):
+        for l in extra_lines:
             seq = l.seq
+            if seq in drop_seqs:
+                continue
+            # R2X-10 P-2b: 答案/解析标记行永不并入题干（fail-closed）。
+            # 首证 phy_2020_js Q4：extra=[370,393] 吞 answer 行 L388【答案】A，
+            # 已发布题干尾部直接带着答案（publish=official）。
+            if is_answer_marker(normalize_text(l.text)) or is_explanation_header(
+                normalize_text(l.text)
+            ):
+                self._table_dedup_audit.setdefault(unit_id, []).append(
+                    f"extra_line_blocked=answer_or_explanation_marker@L{seq}"
+                )
+                continue
             # Skip if this line is within another unit's declared stem range
             polluted = False
             for other_uid, (o_lo, o_hi) in getattr(self, "_declared_stem_ranges", {}).items():
@@ -2275,13 +2616,60 @@ class SourceResolver:
                     extra_refs = self._extra_owned_refs(t, unit_id, exclude_refs)
                     merged = list(refs) + [r for r in extra_refs if r not in refs]
                     merged.sort(key=lambda r: self._idx.seq_of(r))
+                    # T82: shared-line passage blanks clip to the blank's sentence.
+                    declared_char = getattr(t, "stem_char_range", None)
+                    if declared_char is not None and len(merged) == 1:
+                        raw = self._idx.get(merged[0]).text
+                        a, b = declared_char
+                        if 0 <= a < b <= len(raw):
+                            out.add_char_span(
+                                unit_id, t, merged[0], a, b, "exact",
+                                ("stem start", "declared question_search_lines",
+                                 "blank-sentence-declared", f"qn={qn}",
+                                 *(self._table_dedup_audit.get(unit_id) or ())),
+                            )
+                            return
+                    if len(merged) == 1:
+                        raw = self._idx.get(merged[0]).text
+                        bounds = _blank_fragment_bounds(raw, str(qn))
+                        if bounds is not None:
+                            out.add_char_span(
+                                unit_id, t, merged[0], bounds[0], bounds[1],
+                                "exact",
+                                ("stem start", "declared question_search_lines",
+                                 "blank-sentence", f"qn={qn}",
+                                 *(self._table_dedup_audit.get(unit_id) or ())),
+                            )
+                            return
                     out.add_span(
                         unit_id, t, merged, "exact",
                         ("stem start", "declared question_search_lines",
-                         f"lines={qs[0]}-{qs[1]}", "extra_merged"),
+                         f"lines={qs[0]}-{qs[1]}", "extra_merged",
+                         *(self._table_dedup_audit.get(unit_id) or ())),
                     )
                     return
             return  # 已由 _locate_question_start 记录 unresolved
+        # T82: Producer-declared in-line blank sentence bounds win over re-clip.
+        declared_char = getattr(t, "stem_char_range", None)
+        if declared_char is not None and start_ref is not None:
+            raw = self._idx.get(start_ref).text
+            a, b = declared_char
+            if 0 <= a < b <= len(raw):
+                out.add_char_span(
+                    unit_id, t, start_ref, a, b, "exact",
+                    ("stem start", start_ref, "blank-sentence-declared", f"qn={qn}"),
+                )
+                return
+        # T82: passage blank on the start line → clip stem to the blank's sentence
+        # so shared-line blanks (grammar_fill 58/59/60) do not repeat the paragraph.
+        start_raw = self._idx.get(start_ref).text
+        bounds = _blank_fragment_bounds(start_raw, str(qn))
+        if bounds is not None:
+            out.add_char_span(
+                unit_id, t, start_ref, bounds[0], bounds[1], "exact",
+                ("stem start", start_ref, "blank-sentence", f"qn={qn}"),
+            )
+            return
         first_option_seq = None
         for lab, entry in option_hits.items():
             # Task A: content/inline hits also carry a line_ref (entry[1])
@@ -2377,7 +2765,8 @@ class SourceResolver:
             out.add_unresolved(t, "incomplete", ("stem span empty",))
             return
         out.add_span(unit_id, t, refs, "exact",
-                     ("stem start", start_ref, "boundary", "option-or-region-end"))
+                     ("stem start", start_ref, "boundary", "option-or-region-end",
+                      *(self._table_dedup_audit.get(unit_id) or ())))
 
     def _option_continuation_refs(
         self,
@@ -2727,6 +3116,49 @@ class SourceResolver:
             refs.append(ref)
         return refs
 
+    def _is_explanation_boundary(self, text: str) -> bool:
+        """QCC-FIX-2b：解析/详解起始（表头或内联标记）——答案块在此终止。"""
+        if is_explanation_header(normalize_text(text)):
+            return True
+        return bool(
+            re.search(r"(?<![【\w])(?:【解析】|【详解】|【解答】|【分析】|【点评】)", text)
+        )
+
+    def _locate_answer_marker_entry(self, refs, value: str):
+        """QCC-FIX-2：在证据区的【答案】标记行内定位声明值条目。
+
+        只接受「标记后条目内容与声明值全等」的唯一命中（去空白与尾随标点后比对）；
+        歧义/未命中返回 None，保持既有绑定路径。单字母值不做无约束子串搜索。
+        返回 (line_ref, start, end) 或 None。
+        """
+        v = str(value).strip()
+        if not v:
+            return None
+        hits: list[tuple[str, int, int]] = []
+        for r in refs:
+            raw = self._idx.get(r).text
+            for m in re.finditer(r"(?<![【\w])【答案】", raw):
+                seg_start = m.end()
+                seg = raw[seg_start:]
+                content = seg.strip().rstrip("。．.；;，,、")
+                if not content or content != v:
+                    continue
+                start = seg_start + seg.index(content)
+                hits.append((r, start, start + len(content)))
+        if len(hits) != 1:
+            return None
+        # QCC-FIX-2b：答案块 = 标记行 → 解析标记之前。块内若存在实质续行
+        # （作文正文等），答案是**块**不是值条目——不得截成首词（r2x03 语义）。
+        hit_ref = hits[0][0]
+        mi = refs.index(hit_ref)
+        for nxt in refs[mi + 1:]:
+            nraw = self._idx.get(nxt).text
+            if self._is_explanation_boundary(nraw):
+                break
+            if nraw.strip() and not is_page_marker_line(nraw):
+                return None
+        return hits[0]
+
     def _answer_span(self, out, unit_id, t):
         qn = t.question_number
         if not qn:
@@ -2787,6 +3219,30 @@ class SourceResolver:
                          f"lines={el[0]}-{el[1]}",
                          "answer_token_extracted",
                          f"qn={qn}", f"cell={_av_one}"),
+                    )
+                    return
+
+            # QCC-FIX-2（TASK-QCC-NEXT 机制 B/C，T18 先例的多行泛化）：
+            # 声明值（answer_evidence.value）或子题期望值（expected_value，
+            # 含 declared_token_only 映射产物）在证据区【答案】标记行内唯一
+            # 全等命中时，绑定该条目 —— 复用上游声明，避免把整块（含重复题干）
+            # 当答案文本。只接受标记后条目与声明值全等的唯一命中；其余路径不变。
+            _loc_val = str(av).strip() if av is not None else ""
+            _loc_src = "declared_value"
+            if not _loc_val:
+                _ev_raw = getattr(t, "expected_value", None)
+                _loc_val = str(_ev_raw).strip() if _ev_raw is not None else ""
+                _loc_src = "expected_value"
+            if _loc_val:
+                _hit = self._locate_answer_marker_entry(refs, _loc_val)
+                if _hit is not None:
+                    _hr, _hs, _he = _hit
+                    out.add_char_span(
+                        unit_id, t, _hr, _hs, _he, "exact",
+                        ("answer evidence range",
+                         f"lines={el[0]}-{el[1]}",
+                         f"{_loc_src}_entry_extracted",
+                         f"qn={qn}", f"cell={_loc_val}"),
                     )
                     return
 
@@ -3128,42 +3584,79 @@ class SourceResolver:
                     return
                 # Still no match: bind as multi-line block (no local numbering,
                 # or bare `qn.` multi-line body — B3c-A full-range).
-                # P0-R3 conflict: declared answer_value must not be silently
-                # overridden by a different block text.
+                # TASK-QCC-ANSWER-EVIDENCE-1：P0-R3 冲突检查升级为分段核验
+                # （answer_segment_verify）。语义声明与源文表示差异（LaTeX/Unicode
+                # 上下标/`；`打包 vs `(N).` 条目/条件注记位置）不再是"内容冲突"；
+                # 只有分段核验判定 contradiction（串段/声明与源矛盾）才清空答案。
+                # verified/consistent/uncovered → 继续走标记内容区/整块绑定，
+                # 源行证据（真实 refs+源切片）完整保留，未证实段如实降级。
+                _seg_ev: tuple = ()
                 if av is not None:
                     _blk = "\n".join(self._idx.get(r).text for r in refs).strip()
                     if _blk:
-                        # Compare SAME semantic scope: full block vs full block.
-                        # Normalize whitespace/labels, never truncate to per-q.
-                        # Chinese composite Q1: answer_value IS the full
-                        # 7-item block; block text is the same content with
-                        # newlines + "答案:" header. After normalization they
-                        # must agree. A genuine content mismatch (e.g. block
-                        # says （1）B but value says （1）A) is a real conflict.
-                        _blk_norm = _normalize_answer_block(_blk)
-                        _av_norm = _normalize_answer_block(av)
-                        # R9-fix: block often has MORE content than value
-                        # (headers, explanation, annotations). Check content
-                        # presence: either direction of containment, or
-                        # significant overlap (value is paraphrase of block).
-                        _content_ok = (
-                            _av_norm in _blk_norm
-                            or _blk_norm in _av_norm
-                            or _answer_content_overlap(_av_norm, _blk_norm)
+                        from app.domains.source.answer_segment_verify import (
+                            verify_declared_vs_source,
                         )
-                        if not _content_ok:
+
+                        _rep = verify_declared_vs_source(av, _blk, qn=qn)
+                        _seg_ev = (
+                            f"segment_verify={_rep.summary}",
+                            f"segment_rules={','.join(sorted({r for c in _rep.checks for r in c.rule_ids}))}",
+                        )
+                        # TASK-QCC-ANSWER-EVIDENCE-2 G2：结构化核验证据。
+                        try:
+                            from app.domains.source.answer_segment_verify import (
+                                report_to_dict,
+                            )
+
+                            _seg_json = json.dumps(
+                                report_to_dict(_rep, line_refs=refs),
+                                ensure_ascii=False,
+                                separators=(",", ":"),
+                            )
+                            _seg_ev = _seg_ev + (f"segment_evidence={_seg_json}",)
+                        except Exception:
+                            pass
+                        if _rep.contra:
                             out.add_empty_answer(t, (
-                                "answer_lines/answer_value conflict: block text != declared value",
+                                "answer_lines/answer_value conflict: segment verify contradiction",
                                 f"qn={qn}",
                                 f"declared_answer_value={av[:80]}",
                                 f"block_text_len={len(_blk)}",
+                                *_seg_ev,
                             ))
                             return
+                # QCC-FIX-2b：声明值/期望值无法字节定位、但证据区恰有一个【答案】
+                # 标记行时，绑定标记行到区间末（答案内容区），不再把重复题干一并
+                # 吞入答案文本（机制 B 的 Q16 形态）。一致性证明仍走上方冲突检查。
+                if _loc_val:
+                    _mk_refs = [
+                        r for r in refs
+                        if is_answer_marker(normalize_text(self._idx.get(r).text))
+                    ]
+                    if len(_mk_refs) == 1:
+                        _mi = refs.index(_mk_refs[0])
+                        # QCC-FIX-2b：内容区止于解析标记（答案块语义），
+                        # 不吞解析/详解正文。
+                        _end = len(refs)
+                        for _j in range(_mi + 1, len(refs)):
+                            if self._is_explanation_boundary(
+                                self._idx.get(refs[_j]).text
+                            ):
+                                _end = _j
+                                break
+                        out.add_span(
+                            unit_id, t, refs[_mi:_end], "exact",
+                            ("answer evidence range",
+                             f"lines={el[0]}-{el[1]}",
+                             "answer_marker_content", f"qn={qn}", *_seg_ev),
+                        )
+                        return
                 out.add_span(
                     unit_id, t, refs, "exact",
                     ("answer evidence range",
                      f"lines={el[0]}-{el[1]}",
-                     "multi-line block (no token extraction)"),
+                     "multi-line block (no token extraction)", *_seg_ev),
                 )
                 return
             # Single-line evidence: try scored answer first (e.g. "17. (BC) 3分"),

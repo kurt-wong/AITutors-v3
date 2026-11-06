@@ -30,6 +30,18 @@ from app.domains.resolver.span import ResolvedRun, ResolvedSpan
 _AUTO_RESOLUTIONS = frozenset({"exact", "normalized"})
 
 
+def _declared_inline_in_explanation(answer) -> bool:
+    """Producer 显式声明 answer_evidence.type=inline_in_explanation（上游事实）。
+
+    该声明表示答案文本合法内嵌于解析行（如「综上所述，答案为B。」），由
+    manifest 经 provenance 通道带入；V3 不推断、不放宽未声明的情形。
+    """
+    for k, v in getattr(answer, "provenance", ()) or ():
+        if k == "fact_declared_type" and v == "inline_in_explanation":
+            return True
+    return False
+
+
 def leaf_unit_ids(root: IRNode) -> frozenset[str]:
     """candidate 树内应产 CompiledLeaf 的 unit_id 集合（20 §6.1 leaf；composite 递归）。
 
@@ -221,7 +233,14 @@ def evaluate(
                 role_provenance_violations.append(violation)
                 auto_allowed = False
                 continue
+            # QCC-FIX-1（真实交付缺陷归因 chem_2020_js Q6/Q13/Q15）：
+            # Producer 显式声明 inline_in_explanation 的答案合法内嵌于解析行，
+            # explanation 区重叠是上游声明事实而非伪造信号——值一致性、归属、
+            # 字节证明仍独立校验。question 区重叠（P0-R3 反伪造目标）保持不变。
+            declared_inline = _declared_inline_in_explanation(leaf.answer)
             for bad_role in ("explanation", "question"):
+                if bad_role == "explanation" and declared_inline:
+                    continue
                 bad_lines = region_by_role.get(bad_role, set())
                 overlap = ans_lines & bad_lines
                 if overlap:

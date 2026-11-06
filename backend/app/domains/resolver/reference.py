@@ -45,14 +45,29 @@ class ResolveTarget:
     # P0-answer: declared answer value (answer_evidence.value) when answer_lines
     # is None. Resolver binds this directly — never infers from explanation.
     answer_value: str | None = None
-    # T20-BF: Producer answer_completeness (full|partial|unknown). None = not declared.
+    # T20-BF/B3-4R: 完整性值（full|partial|unknown）。真实 Producer 不声明此
+    # 字段（0/5067）；有值时是展开期推导或 manifest 非权威字段，不得当 Producer
+    # 声明。None = 未携带（≠ 不完整，≠ 必须 withheld）。
     answer_completeness: str | None = None
+    # SEMANTICS-1 轴S：语义完整性（LLM 声明，prompt 4c）——与轴E（上方
+    # answer_completeness 证据推导）分离。advisory：只作 Question 级语义
+    # 留痕与轴间冲突记录，绝不参与 ownership/发布门槛。
+    answer_completeness_semantic: str | None = None
+    answer_completeness_semantic_source: str | None = None
+    # R2X-08 P1-CLOSE: proven entry segment for compiler consistency guard.
+    expected_value: str | None = None
+    # B3-4R 溯源贯通：答案决策可回溯 Producer 声明 → 父级证据 → 子题映射。
+    # 来源：content.answer.answer_evidence（映射溯源）+ answer_evidence_shared/type
+    # （Producer 声明事实）。只读透传，不在此推导完整性。
+    answer_evidence_prov: dict | None = None
     # P2-fix-2: Producer extra_lines (layout-drifted images/tables/continuation).
     # 1-based inclusive [start, end]. None = not declared.
     extra_lines: tuple[int, int] | None = None
     # T2.10: other units' exclusive material windows to drop from THIS material
     # span's line_refs (cross-unit contamination guard).
     exclude_line_ranges: tuple[tuple[int, int], ...] = ()
+    # T82: optional in-line character bounds for the stem (blank sentence clip).
+    stem_char_range: tuple[int, int] | None = None
 
 
 @dataclass(frozen=True)
@@ -262,6 +277,15 @@ def _stem_target(targets: list, unit_id: str, stem) -> None:
             extra = (int(el[0]), int(el[1]))
         except (TypeError, ValueError):
             extra = None
+    char_range = None
+    cs, ce = stem.get("char_start"), stem.get("char_end")
+    if cs is not None and ce is not None:
+        try:
+            cs_i, ce_i = int(cs), int(ce)
+            if 0 <= cs_i < ce_i:
+                char_range = (cs_i, ce_i)
+        except (TypeError, ValueError):
+            char_range = None
     targets.append(
         ResolveTarget(
             target_id=f"{unit_id}.stem", unit_id=unit_id, role="stem",
@@ -269,6 +293,7 @@ def _stem_target(targets: list, unit_id: str, stem) -> None:
             question_label_printed=str(printed) if printed is not None else None,
             question_search_lines=search_lines,
             extra_lines=extra,
+            stem_char_range=char_range,
         )
     )
 
@@ -338,6 +363,34 @@ def _answer_target(targets: list, unit_id: str, answer) -> None:
     ac_str = str(ac_raw).strip().lower() if ac_raw is not None else None
     if ac_str is not None and ac_str not in ("full", "partial", "unknown"):
         ac_str = None
+    # SEMANTICS-1 轴S：语义完整性独立解析（非法值静默置 None——advisory 轴
+    # 不阻断绑定；轴E 校验仍在 manifest_binding 层）。
+    acs_raw = answer.get("answer_completeness_semantic")
+    acs_str = str(acs_raw).strip().lower() if acs_raw is not None else None
+    if acs_str is not None and acs_str not in ("full", "partial", "unknown"):
+        acs_str = None
+    acs_src_str = (
+        str(answer.get("answer_completeness_semantic_source") or "").strip()
+        or ("llm_declared" if acs_str else None)
+    )
+    # B3-4R: 溯源透传（映射溯源 dict + Producer 声明的 shared/type 事实）。
+    prov_raw = answer.get("answer_evidence")
+    prov: dict | None = dict(prov_raw) if isinstance(prov_raw, dict) else None
+    if prov is not None or (
+        answer.get("answer_evidence_shared") is not None
+        or answer.get("answer_evidence_type") is not None
+    ):
+        prov = dict(prov or {})
+        if answer.get("answer_evidence_shared") is not None:
+            prov.setdefault("declared_shared", answer.get("answer_evidence_shared"))
+        if answer.get("answer_evidence_type") is not None:
+            prov.setdefault("declared_type", answer.get("answer_evidence_type"))
+        # 完整性语义标注：真实 Producer 无 answer_completeness 声明（0/5067），
+        # 任何 full 均为 V3 派生/manifest 非权威字段，禁止标成 Producer 声明。
+        prov.setdefault(
+            "completeness_source",
+            "v3_derived" if ac_str else "none",
+        )
     targets.append(
         ResolveTarget(
             target_id=f"{unit_id}.answer", unit_id=unit_id, role="answer",
@@ -349,6 +402,13 @@ def _answer_target(targets: list, unit_id: str, answer) -> None:
             answer_fallback_blocked=bool(answer.get("fallback_blocked")),
             answer_value=answer_value_str,
             answer_completeness=ac_str,
+            answer_completeness_semantic=acs_str,
+            answer_completeness_semantic_source=acs_src_str,
+            expected_value=(
+                str(answer["expected_value"]).strip()
+                if answer.get("expected_value") else None
+            ),
+            answer_evidence_prov=prov,
         )
     )
 
