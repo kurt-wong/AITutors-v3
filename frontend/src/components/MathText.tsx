@@ -119,7 +119,7 @@ export function resolveImageSrc(raw: string): string | null {
     if (m) {
       // 新管线引用 `imgs/<file>` 本身即资源根下的 key(文件在 <root>/imgs/),
       // 不剥 `imgs/` 段,与 /api/images 的 key 语义一致。
-      idx = m.index + m[1].length;
+      idx = (m.index ?? 0) + m[1].length;
       token = "";
     }
   }
